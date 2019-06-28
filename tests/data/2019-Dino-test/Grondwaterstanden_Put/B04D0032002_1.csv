@@ -1,0 +1,16 @@
+Titel:,,,,,,,,,,,
+Gebruikersnaam:,,,,,,,,,,,
+Periode aangevraagd:,01-01-1800,tot:,08-10-2018,,,,,,,,
+Gegevens beschikbaar:,28-02-2002,tot:,28-02-2002,,,,,,,,
+Datum: ,08-10-2018,,,,,,,,,,
+Referentie:,NAP,,,,,,,,,,
+
+NAP:,Normaal Amsterdams Peil,,,,,,,,,,
+MV:,Maaiveld,,,,,,,,,,
+MP:,Meetpunt,,,,,,,,,,
+
+Locatie,Filternummer,Externe aanduiding,X-coordinaat,Y-coordinaat,Maaiveld (cm t.o.v. NAP),Datum maaiveld gemeten,Startdatum,Einddatum,Meetpunt (cm t.o.v. NAP),Meetpunt (cm t.o.v. MV),Bovenkant filter (cm t.o.v. NAP),Onderkant filter (cm t.o.v. NAP)
+
+
+Locatie,Filternummer,Peildatum,Stand (cm t.o.v. MP),Stand (cm t.o.v. MV),Stand (cm t.o.v. NAP),Bijzonderheid,Opmerking,,,
+B04D0032,002,28-02-2002,,,,W,,,,,
