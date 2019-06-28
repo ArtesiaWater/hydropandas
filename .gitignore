@@ -98,4 +98,5 @@ ENV/
 .idea/inspectionProfiles/Project_Default.xml
 
 # VS Code files
-.vscode
+.vscode/
+.pytest_cache/
