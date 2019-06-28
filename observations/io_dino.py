@@ -5,10 +5,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-# import art_tools as art
-# from art_tools import dino_wsdl
-from .util import unzip_file
-
+from .util import unzip_file, _import_art_tools
 
 
 def read_dino_groundwater_quality_txt(fname, verbose=False):
@@ -79,6 +76,7 @@ def read_dino_groundwater_quality_txt(fname, verbose=False):
 
     return measurements, meta
 
+
 def download_dino_groundwater(name, filternr, tmin, tmax,
                               x=np.nan, y=np.nan, **kwargs):
     """
@@ -106,29 +104,27 @@ def download_dino_groundwater(name, filternr, tmin, tmax,
     meta : dict
         dictionary with metadata
     """
-    try:
+    # attempt art_tools import
+    art = _import_art_tools()
 
     # download data from dino
-    dino = dino_wsdl.DinoWSDL()
+    dino = art.dino_wsdl.DinoWSDL()
 
     if isinstance(filternr, float) or isinstance(filternr, int):
         filternr = "{0:03g}".format(filternr)
 
-    #measurements
+    # measurements
     measurements = dino.findMeetreeks(name, filternr, tmin, tmax,
                                       **kwargs)
 
-    measurements.rename(columns={'_'.join([name, filternr]):'Stand_m_tov_NAP'},
+    measurements.rename(columns={'_'.join([name, filternr]): 'Stand_m_tov_NAP'},
                         inplace=True)
-
-
 
     meta = dino.findTechnischeGegevens(name, filternr)
 
     meta['onderkant_filter'] = meta.pop('BOTTOM_FILTER')
     meta['bovenkant_filter'] = meta.pop('TOP_FILTER')
     meta['meetpunt'] = meta.pop('SFL_HEIGHT')
-
 
     filternr = meta.pop('WELL_TUBE_NR')
     name = meta.pop('WELL_NITG_NR')
@@ -309,7 +305,6 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
                 return measurements, meta
 
 
-
 def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 kind='Grondwaterstand',
                                 tmin=None, tmax=None,
@@ -349,10 +344,8 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         collection of multiple point observations
 
     """
-
-
-
-
+    # attempt art_tools import
+    art = _import_art_tools()
 
     # read locations
     gdf_loc = art.dino_wfs.get_dino_locations(extent=extent, bbox=bbox,
@@ -395,11 +388,11 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
             print('reading -> {}-{}'.format(loc.dino_nr, loc.piezometer_nr))
 
         o = ObsClass.from_dino_server(name=loc.dino_nr,
-                                       filternr=float(loc.piezometer_nr),
-                                       tmin=tmin_t,
-                                       tmax=tmax_t, x=loc['x_rd_crd'],
-                                       y=loc['y_rd_crd'],
-                                       unit=unit)
+                                      filternr=float(loc.piezometer_nr),
+                                      tmin=tmin_t,
+                                      tmax=tmax_t, x=loc['x_rd_crd'],
+                                      y=loc['y_rd_crd'],
+                                      unit=unit)
 
         obs_list.append(o)
 
@@ -409,9 +402,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     obs_df.set_index('name', inplace=True)
 
     return obs_df
-
-
-
 
 
 def read_dino_dir(dirname, ObsClass=None,

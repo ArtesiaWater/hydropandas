@@ -4,7 +4,7 @@ import xml.etree.ElementTree as etree
 
 
 def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
-    """read a FEWS XML-file with measurements
+    """read a FEWS XML-file with measurements, return list of ObsClass objects
 
     Parameters
     ----------
@@ -76,7 +76,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
 
 
 def read_xml_alternative(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
-    """read a FEWS XML-file with measurements
+    """read a FEWS XML-file with measurements, return list of ObsClass objects
 
     Parameters
     ----------

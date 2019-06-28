@@ -6,6 +6,7 @@ additional attributes and methods.
 
 More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
+
 '''
 import os
 import tempfile
@@ -61,17 +62,6 @@ class ObsCollection(pd.DataFrame):
     @property
     def _constructor(self):
         return ObsCollection
-
-    def _import_art_tools(self):
-
-        try:
-            import art_tools as art
-            return art
-        except ModuleNotFoundError:
-            print(
-                'This function is not available please contact Artesia for more information')
-
-            return -1
 
     def _infer_otype(self, verbose=False):
         """Infer observation type from the obs column
@@ -669,7 +659,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        art = self._import_art_tools()
+        art = util._import_art_tools()
         series_list = []
         for o in self.obs.values:
             series = o[column_name]
@@ -1082,7 +1072,8 @@ class ObsCollection(pd.DataFrame):
         gdf : geopandas.GeoDataFrame
 
         """
-        return util.df2gdf(self, xcol, ycol)
+        art = util._import_art_tools()
+        return art.util.df2gdf(self, xcol, ycol)
 
     def to_map(self, ax=None, figsize=(15, 15), label='gws',
                edgecolor='black', facecolor='green',
@@ -1272,7 +1263,8 @@ class ObsCollection(pd.DataFrame):
             column name with y values
 
         """
-        gdf = util.df2gdf(self, xcol, ycol)
+        art = util._import_art_tools()
+        gdf = art.util.df2gdf(self, xcol, ycol)
         gdf.to_file(fname)
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',

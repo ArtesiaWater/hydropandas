@@ -13,6 +13,7 @@ you need the '_constructor' method.
 
 More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
+
 '''
 
 import copy
@@ -21,7 +22,6 @@ import os
 import numpy as np
 from pandas import DataFrame, Series
 
-# from art_tools import dino_wsdl
 from . import io_dino
 
 
