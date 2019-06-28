@@ -100,3 +100,5 @@ ENV/
 # VS Code files
 .vscode/
 .pytest_cache/
+
+*.html
