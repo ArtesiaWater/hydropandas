@@ -306,7 +306,7 @@ class ObsCollection(pd.DataFrame):
         nfiles = len(unzip_fnames)
         for j, ixml in enumerate(unzip_fnames):
             if verbose:
-                print("{0}/{1} read {2}".format(j, nfiles, ixml))
+                print("{0}/{1} read {2}".format(j+1, nfiles, ixml))
             fullpath = os.path.join(dirname, ixml)
             olist = io_xml.read_xml(fullpath, ObsClass=ObsClass, to_mnap=to_mnap,
                                     remove_nan=remove_nan, verbose=False)
