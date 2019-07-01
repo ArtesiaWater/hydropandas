@@ -20,8 +20,11 @@ def test_dino_download_single():
     return measurements, meta
 
 
+
+
+
 def test_dino_download_extent():
-    # %% download extent
+    # download extent
     extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed
 
     import time

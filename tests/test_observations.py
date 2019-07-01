@@ -81,7 +81,7 @@ def test_obscollection_dinozip_gwq():
 
 
 def test_obscollection_dino_download_extent():
-    # %% downlaod
+    # download DINO from extent
     extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed
     dino_gw_extent = oc.ObsCollection.from_dino_server(extent=extent,
                                                        ObsClass=obs.GroundwaterObs,
@@ -90,6 +90,7 @@ def test_obscollection_dino_download_extent():
 
 
 def test_obscollection_dino_download_bbox():
+    # download DINO from bbox
     bbox = [120300, 439000, 120500, 441000]  # Schoonhoven zoomed
     bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
 
