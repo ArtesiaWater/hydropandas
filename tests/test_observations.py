@@ -161,3 +161,15 @@ def test_obscollection_to_map():
     return
 
 
+#%% read WISKI data
+    
+def test_observation_wiskicsv_gw():
+    wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv", verbose=True)
+    
+    return wiski_gw
+    
+def test_obscollection_wiskizip_gw():
+    wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip", verbose=True)
+    
+    return wiski_col
+

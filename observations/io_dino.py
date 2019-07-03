@@ -359,18 +359,21 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     # slice by properties
     if tmin is not None:
         tmin = pd.to_datetime(tmin)
-        mask = gdf.end_date > tmin
-        gdf = gdf.loc[mask]
+        mask = gdf_loc.end_date > tmin
+        gdf_loc = gdf_loc.loc[mask]
     if tmax is not None:
         tmax = pd.to_datetime(tmax)
-        mask = gdf.start_date < tmax
-        gdf = gdf.loc[mask]
+        mask = gdf_loc.start_date < tmax
+        gdf_loc = gdf_loc.loc[mask]
     if zmin is not None:
-        mask = gdf.top_height_nap >= zmin
-        gdf = gdf.loc[mask]
+        mask = gdf_loc.top_height_nap >= zmin
+        gdf_loc = gdf_loc.loc[mask]
     if zmax is not None:
-        mask = gdf.bottom_height_nap <= zmax
-        gdf = gdf.loc[mask]
+        mask = gdf_loc.bottom_height_nap <= zmax
+        gdf_loc = gdf_loc.loc[mask]
+        
+    if gdf_loc.empty:
+        return pd.DataFrame()
 
     # read measurements
     obs_list = []
