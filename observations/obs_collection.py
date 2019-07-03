@@ -852,7 +852,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        _color_cycle = ('blue', 'red', 'orange', 'purple')
+        _color_cycle = ('blue', 'olive', 'lime', 'red', 'orange', 'yellow', 'purple', 'silver', 'powderblue', 'salmon', 'tan')
         _same_loc_list = []
         for o in self.obs.values:
             # check for multiple observations at the same location (usually multiple filters)
@@ -889,7 +889,7 @@ class ObsCollection(pd.DataFrame):
                 same_pb = self[(self.x == o.x) & (self.index != o.name)]
 
                 for i, o_pb in enumerate(same_pb.obs.values):
-                    if i == 4:
+                    if i == 10:
                         raise NotImplementedError(
                             'cannot add more than 4 lines to a single plot')
                     try:
