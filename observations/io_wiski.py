@@ -110,7 +110,7 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv", verbose=True,
             obs_list.append(obs)
         else:
             if verbose:
-                print('not added to collection -> {}'.format(fname))
+                print('not added to collection -> {}'.format(csv))
 
     # create dataframe
     obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
