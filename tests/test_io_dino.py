@@ -35,3 +35,4 @@ def test_dino_download_extent():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return gw_col
+

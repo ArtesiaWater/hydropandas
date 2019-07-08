@@ -66,7 +66,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
             else:
                 x = np.nan
             if "y" in series.keys():
-                y = series["x"]
+                y = series["y"]
             else:
                 y = np.nan
 

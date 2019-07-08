@@ -68,6 +68,8 @@ def read_wiski_file(fname, sep=";", headersep=None,
 
             data[col] = pd.to_numeric(
                 data[col], errors="coerce")
+
+            data.rename(columns={'Value_mNAP':'Stand_m_tov_NAP'}, inplace=True)
         else:
             data = None
 
@@ -116,12 +118,3 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv", verbose=True,
     obs_df.set_index('name', inplace=True)
 
     return obs_df
-
-
-if __name__ == "__main__":
-    fname = r"g:\My Drive\r\01projekt\18038040_WS_BRABANTSE_DELTA_TRA_NNP\03data\BD\1016_PBF.csv"
-    header, data = read_wiski_file(fname)
-
-    zipname = r"g:\My Drive\r\01projekt\18038040_WS_BRABANTSE_DELTA_TRA_NNP\03data\BD\1016_PBF.zip"
-    import art_tools.observations.obs_collection as obs
-    o = obs.ObsCollection.from_wiski(zipname, verbose=True)

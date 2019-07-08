@@ -99,6 +99,17 @@ def test_obscollection_dino_download_bbox():
                                                      verbose=True)
     return dino_gw_bbox
 
+def test_obscollection_dino_download_bbox_empty():
+    # download DINO from bbox
+    bbox = [88596.63500000164, 407224.8449999988, 89623.4149999991, 407804.27800000086]
+    
+
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox,
+                                                     ObsClass=obs.GroundwaterObs,
+                                                     verbose=True)
+    return dino_gw_bbox
+
+
 # %% collection methods
 
 
@@ -128,6 +139,8 @@ def test_obscollection_dino_to_map():
                                zoom_start=9,
                                verbose=True)
     return
+
+
 # %% read FEWS data
 
 
@@ -146,3 +159,17 @@ def test_obscollection_to_map():
                                     plot_freq='D', legend_name='opp water FEWS',
                                     map_label='locationId', map_label_size=10)
     return
+
+
+#%% read WISKI data
+    
+def test_observation_wiskicsv_gw():
+    wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv", verbose=True)
+    
+    return wiski_gw
+    
+def test_obscollection_wiskizip_gw():
+    wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip", verbose=True)
+    
+    return wiski_col
+

@@ -301,6 +301,10 @@ class GroundwaterObs(Obs):
         *args must be input for the pandas.DataFrame constructor,
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
+        
+        if the pandas.DataFrame has a column 'Stand_m_tov_NAP' a lot of
+        plotting and other methods will work automatically without changing
+        the default arguments.
         """
         self.locatie = kwargs.pop('locatie', '')
         self.filternr = kwargs.pop('filternr', '')
