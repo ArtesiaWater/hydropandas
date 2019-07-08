@@ -384,13 +384,7 @@ class GroundwaterObs(Obs):
         from . import io_wiski
 
         header, data = io_wiski.read_wiski_file(fname, **kwargs)
-
-        metadata = {"x": header["LocalX"],
-                    "y": header["LocalY"],
-                    "name": header["Station Number"],
-                    "filename": fname,
-                    "locatie": header["Station Site"]
-                    }
+        metadata = {}
 
         return cls(data, meta=header, **metadata)
 
