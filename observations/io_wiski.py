@@ -7,12 +7,12 @@ import pandas as pd
 from .util import unzip_file
 
 
-def _read_wiski_header(f, headersep=":", header_identifier='#',
-                       break_string=None):
+def _read_wiski_header(f, header_sep=":", header_identifier='#',
+                       end_header_str=None):
     line = f.readline()
     header = dict()
     while header_identifier in line:
-        prop, val = line.split(headersep)
+        prop, val = line.split(header_sep)
         prop = prop.strip()
         val = val.strip()
         try:
@@ -21,33 +21,33 @@ def _read_wiski_header(f, headersep=":", header_identifier='#',
             pass
         header[prop] = val
         line = f.readline()
-        if break_string is not None:
-            if break_string in line:
+        if end_header_str is not None:
+            if end_header_str in line:
                 break
 
     return line, header
 
 
-def read_wiski_file(fname, sep=";", headersep=None, header_identifier='#',
+def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                     read_series=True, infer_datetime_format=True,
                     verbose=False, **kwargs):
     if verbose:
         print('reading -> {}'.format(os.path.split(fname)[-1]))
 
     # manually break header parse at certain point
-    if "break_string" in kwargs.keys():
-        break_string = kwargs.pop("break_string")
+    if "end_header_str" in kwargs.keys():
+        end_header_str = kwargs.pop("end_header_str")
     else:
-        break_string = None
+        end_header_str = None
     # read header
     with open(fname, "r") as f:
-        if headersep is None:
-            line, header = _read_wiski_header(f, break_string=break_string,
+        if header_sep is None:
+            line, header = _read_wiski_header(f, end_header_str=end_header_str,
                                               header_identifier=header_identifier)
         else:
-            line, header = _read_wiski_header(f, headersep=headersep,
+            line, header = _read_wiski_header(f, header_sep=header_sep,
                                               header_identifier=header_identifier,
-                                              break_string=break_string)
+                                              end_header_str=end_header_str)
 
         # get column names of data
         # columns = split(r'\s{2,}', line)
