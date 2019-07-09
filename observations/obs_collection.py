@@ -1088,7 +1088,7 @@ class ObsCollection(pd.DataFrame):
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
                      plot_xlim=None, plot_ylim='bounds', savefig=None,
-                     map_gdf=None, map_gdf_kwargs={}):
+                     map_gdf=None, map_gdf_kwargs={}, verbose=True):
         """make mapgraph plots of obs collection data
 
         Parameters
@@ -1139,7 +1139,7 @@ class ObsCollection(pd.DataFrame):
 
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
-            art.OpenTopo(ax=mg.mapax).plot(alpha=0.75)
+            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75, verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
 
