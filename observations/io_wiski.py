@@ -7,11 +7,11 @@ import pandas as pd
 from .util import unzip_file
 
 
-def _read_wiski_header(f, headersep=":",
+def _read_wiski_header(f, headersep=":", header_identifier='#',
                        break_string=None):
     line = f.readline()
     header = dict()
-    while "#" in line:
+    while header_identifier in line:
         prop, val = line.split(headersep)
         prop = prop.strip()
         val = val.strip()
@@ -28,8 +28,9 @@ def _read_wiski_header(f, headersep=":",
     return line, header
 
 
-def read_wiski_file(fname, sep=";", headersep=None,
-                    read_series=True, verbose=False, **kwargs):
+def read_wiski_file(fname, sep=";", headersep=None, header_identifier='#',
+                    read_series=True, infer_datetime_format=True, 
+                    verbose=False, **kwargs):
     if verbose:
         print('reading -> {}'.format(os.path.split(fname)[-1]))
 
@@ -41,9 +42,11 @@ def read_wiski_file(fname, sep=";", headersep=None,
     # read header
     with open(fname, "r") as f:
         if headersep is None:
-            line, header = _read_wiski_header(f, break_string=break_string)
+            line, header = _read_wiski_header(f, break_string=break_string, 
+                                              header_identifier=header_identifier)
         else:
-            line, header = _read_wiski_header(f, headersep=headersep,
+            line, header = _read_wiski_header(f, headersep=headersep, 
+                                              header_identifier=header_identifier,
                                               break_string=break_string)
 
         # get column names of data
@@ -60,8 +63,10 @@ def read_wiski_file(fname, sep=";", headersep=None,
 
         if read_series:
             # read data
-            data = pd.read_csv(f, sep=sep, header=None, names=columns)
-
+            data = pd.read_csv(f, sep=sep, header=None, names=columns,
+                               infer_datetime_format=infer_datetime_format,
+                               **kwargs)
+            
             # convert Value to float
             col = [icol for icol in data.columns if
                    icol.lower().startswith("value")][0]
