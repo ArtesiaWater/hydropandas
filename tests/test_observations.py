@@ -165,17 +165,23 @@ def test_obscollection_to_map():
     
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv", 
-                                             sep='\s+', headersep=':', 
+                                             sep='\s+', header_sep=':', 
                                              header_identifier=':', 
                                              parse_dates={"datetime": [0,1]},
                                              index_col=["datetime"], 
+                                             translate_dic={'name':'Station Number', 
+                                                           'x':'GlobalX',
+                                                           'y':'GlobalY'},
                                              verbose=True)
     
     return wiski_gw
     
 def test_obscollection_wiskizip_gw():
     wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip", 
-                                            sep='\s+', headersep=':', 
+                                            translate_dic={'name':'Station Number', 
+                                                           'x':'GlobalX',
+                                                           'y':'GlobalY'},
+                                            sep='\s+', header_sep=':', 
                                             header_identifier=':', 
                                             parse_dates={"datetime": [0,1]},
                                             index_col=["datetime"], 
