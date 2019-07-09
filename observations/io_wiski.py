@@ -8,7 +8,7 @@ from .util import unzip_file
 
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',
-                       end_header_str=None):
+                       end_header_str=None, ):
     line = f.readline()
     header = dict()
     while header_identifier in line:
@@ -30,6 +30,7 @@ def _read_wiski_header(f, header_sep=":", header_identifier='#',
 
 def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                     read_series=True, infer_datetime_format=True,
+                    translate_dic={},
                     verbose=False, **kwargs):
     if verbose:
         print('reading -> {}'.format(os.path.split(fname)[-1]))
@@ -48,6 +49,10 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
             line, header = _read_wiski_header(f, header_sep=header_sep,
                                               header_identifier=header_identifier,
                                               end_header_str=end_header_str)
+        
+        # specify names
+        for key, item in translate_dic.items():
+            header[key] = header[item]
 
         # get column names of data
         # columns = split(r'\s{2,}', line)
@@ -81,9 +86,9 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
     return header, data
 
 
-def read_wiski_dir(dirname, ObsClass=None, suffix=".csv", verbose=True,
+def read_wiski_dir(dirname, ObsClass=None, suffix=".csv", 
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
-                   keep_all_obs=True, **kwargs):
+                   keep_all_obs=True, verbose=True, **kwargs):
 
     # unzip dir
     if dirname.endswith('.zip'):
