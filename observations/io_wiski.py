@@ -29,7 +29,7 @@ def _read_wiski_header(f, headersep=":", header_identifier='#',
 
 
 def read_wiski_file(fname, sep=";", headersep=None, header_identifier='#',
-                    read_series=True, infer_datetime_format=True, 
+                    read_series=True, infer_datetime_format=True,
                     verbose=False, **kwargs):
     if verbose:
         print('reading -> {}'.format(os.path.split(fname)[-1]))
@@ -42,10 +42,10 @@ def read_wiski_file(fname, sep=";", headersep=None, header_identifier='#',
     # read header
     with open(fname, "r") as f:
         if headersep is None:
-            line, header = _read_wiski_header(f, break_string=break_string, 
+            line, header = _read_wiski_header(f, break_string=break_string,
                                               header_identifier=header_identifier)
         else:
-            line, header = _read_wiski_header(f, headersep=headersep, 
+            line, header = _read_wiski_header(f, headersep=headersep,
                                               header_identifier=header_identifier,
                                               break_string=break_string)
 
@@ -66,7 +66,7 @@ def read_wiski_file(fname, sep=";", headersep=None, header_identifier='#',
             data = pd.read_csv(f, sep=sep, header=None, names=columns,
                                infer_datetime_format=infer_datetime_format,
                                **kwargs)
-            
+
             # convert Value to float
             col = [icol for icol in data.columns if
                    icol.lower().startswith("value")][0]
@@ -74,7 +74,7 @@ def read_wiski_file(fname, sep=";", headersep=None, header_identifier='#',
             data[col] = pd.to_numeric(
                 data[col], errors="coerce")
 
-            data.rename(columns={'Value_mNAP':'Stand_m_tov_NAP'}, inplace=True)
+            data.rename(columns={col: 'Stand_m_tov_NAP'}, inplace=True)
         else:
             data = None
 
