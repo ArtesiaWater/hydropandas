@@ -208,17 +208,16 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_fews(cls, fname, ObsClass=obs.GroundwaterObs, name='fews',
+    def from_fews(cls, dirname, ObsClass=obs.GroundwaterObs, name='fews',
                   to_mnap=True, remove_nan=True,
                   unpackdir=None, force_unpack=False,
-                  preserve_datetime=False,
-                  verbose=False, ):
-        """ read a XML-file with measurements from FEWS
+                  preserve_datetime=False, verbose=False):
+        """ read one or several XML-files with measurements from FEWS
 
         Parameters
         ----------
-        fname :  str
-            De bestandsnaam van het bestand dat je wilt inlezen
+        dirname :  str
+            De directory met xml bestanden die je wil inlezen
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
@@ -232,6 +231,8 @@ class ObsCollection(pd.DataFrame):
             destination directory to unzip file if fname is a .zip
         force_unpack : boolean, optional
             force unpack if dst already exists
+        preserve_datetime : boolean, optional
+            
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -240,49 +241,6 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-
-        from . import io_xml
-
-        # unzip dir
-        if fname.endswith('.zip'):
-            zipf = fname
-            if unpackdir is None:
-                dirname = tempfile.TemporaryDirectory().name
-            else:
-                dirname = unpackdir
-            util.unzip_file(zipf, dirname, force=force_unpack,
-                            preserve_datetime=preserve_datetime)
-
-            unzip_fnames = os.listdir(dirname)
-            if len(unzip_fnames) == 1:
-                fname = os.path.join(dirname, unzip_fnames[0])
-            elif len(unzip_fnames) > 1:
-                raise ValueError(
-                    'more than one file in zip, use from_fews_dir()')
-            else:
-                raise ValueError('empty zip')
-
-        meta = {'fname': fname,
-                'type': ObsClass,
-                'verbose': verbose
-                }
-
-        obs_list = io_xml.read_xml(fname, ObsClass, to_mnap=to_mnap,
-                                   remove_nan=remove_nan, verbose=verbose)
-
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
-
-        obs_df.set_index('name', inplace=True)
-
-        return cls(obs_df, name=name, meta=meta)
-
-    @classmethod
-    def from_fews_dir(cls, dirname, ObsClass=obs.GroundwaterObs, name='fews',
-                      to_mnap=True, remove_nan=True,
-                      unpackdir=None, force_unpack=False,
-                      preserve_datetime=False, verbose=False):
-
         from . import io_xml
 
         # unzip dir
