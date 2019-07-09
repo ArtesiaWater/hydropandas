@@ -20,7 +20,7 @@ import copy
 import os
 
 import numpy as np
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, datetime
 
 from . import io_dino
 
@@ -268,10 +268,14 @@ class Obs(DataFrame):
         obs_per_year = self.obs_per_year(col=col)
 
         # Add missing years
-        obs_per_year_all = Series(index=range(obs_per_year.index[0],
-                                              obs_per_year.index[-1]+1))
-        obs_per_year_all.loc[obs_per_year.index] = obs_per_year
-
+        if obs_per_year.empty:
+            # no obs, set series to current year with 0 obs
+            obs_per_year_all = Series(index=[datetime.now().year], data=0)        
+        else:
+            obs_per_year_all = Series(index=range(obs_per_year.index[0],
+                                                  obs_per_year.index[-1]+1))
+            obs_per_year_all.loc[obs_per_year.index] = obs_per_year
+            
         mask_obs_per_year = obs_per_year_all >= min_obs
         mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
         mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
