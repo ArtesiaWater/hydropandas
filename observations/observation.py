@@ -390,7 +390,8 @@ class GroundwaterObs(Obs):
         header, data = io_wiski.read_wiski_file(fname, **kwargs)
         metadata = {}
 
-        return cls(data, meta=header, **metadata)
+        return cls(data, meta=header, name=header['name'], 
+                   x=header['x'], y=header['y'], **metadata)
 
     def get_pb_modellayer(self, dis, zgr=None, verbose=False):
         """Add modellayer to meta dictionary
