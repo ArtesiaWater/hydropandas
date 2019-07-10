@@ -232,7 +232,7 @@ class ObsCollection(pd.DataFrame):
         force_unpack : boolean, optional
             force unpack if dst already exists
         preserve_datetime : boolean, optional
-            
+
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -253,12 +253,18 @@ class ObsCollection(pd.DataFrame):
             util.unzip_file(zipf, dirname, force=force_unpack,
                             preserve_datetime=preserve_datetime)
 
-        unzip_fnames = [i for i in os.listdir(dirname) if i.endswith(".xml")]
-
-        meta = {'dirname': dirname,
-                'type': ObsClass,
-                'verbose': verbose
-                }
+        if os.path.isdir(dirname):
+            unzip_fnames = [i for i in os.listdir(dirname) if i.endswith(".xml")]
+            meta = {'dirname': dirname,
+                    'type': ObsClass,
+                    'verbose': verbose
+                    }
+        else:
+            unzip_fnames = [dirname]
+            meta = {'filename': dirname,
+                    'type': ObsClass,
+                    'verbose': verbose
+                    }
 
         obs_list = []
         nfiles = len(unzip_fnames)
