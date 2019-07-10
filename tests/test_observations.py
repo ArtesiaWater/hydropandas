@@ -38,6 +38,7 @@ def test_observation_dino_download():
     return gw2
 
 
+
 def test_interactive_plot():
     gw = test_observation_gw()
     gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
@@ -109,6 +110,10 @@ def test_obscollection_dino_download_bbox_empty():
                                                      verbose=True)
     return dino_gw_bbox
 
+
+def test_mapgraph_plot():
+    gw = test_obscollection_dinozip_gw()
+    gw.to_mapgraphs(plot_ylim='min_dy')
 
 # %% collection methods
 
