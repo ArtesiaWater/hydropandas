@@ -111,9 +111,7 @@ def test_obscollection_dino_download_bbox_empty():
     return dino_gw_bbox
 
 
-def test_mapgraph_plot():
-    gw = test_obscollection_dinozip_gw()
-    gw.to_mapgraphs(plot_ylim='min_dy')
+
 
 # %% collection methods
 
@@ -145,6 +143,11 @@ def test_obscollection_dino_to_map():
                                verbose=True)
     return
 
+def test_obscollection_dino_to_mapgraph():
+    gw = test_obscollection_dinozip_gw()
+    gw.to_mapgraphs(plot_ylim='min_dy')
+    
+    return
 
 # %% read FEWS data
 

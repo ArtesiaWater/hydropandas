@@ -1041,7 +1041,8 @@ class ObsCollection(pd.DataFrame):
 
     def to_map(self, ax=None, figsize=(15, 15), label='gws',
                edgecolor='black', facecolor='green',
-               marker='o', markersize=100, xlim=None, ylim=None, add_topo=True):
+               marker='o', markersize=100, xlim=None, ylim=None, add_topo=True,
+               verbose=False):
         """plot observation points on a map
 
         Parameters
@@ -1085,7 +1086,7 @@ class ObsCollection(pd.DataFrame):
 
         if add_topo:
             import art_tools as art
-            art.OpenTopo(ax=ax).plot(output=False, alpha=0.5)
+            art.OpenTopo(ax=ax, verbose=verbose).plot(verbose=verbose, alpha=0.5)
 
         ax.legend()
 
