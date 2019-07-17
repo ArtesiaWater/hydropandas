@@ -92,7 +92,8 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
                          ObsClass=obs.GroundwaterObs,
-                         name=None, verbose=False, **kwargs
+                         name=None, get_metadata=True,
+                         verbose=False, **kwargs
                          ):
         """ Read dino data from a server
 
@@ -108,6 +109,8 @@ class ObsCollection(pd.DataFrame):
             class of the observations, so far only GroundwaterObs is supported
         name : str, optional
             the name of the observation collection
+        get_metadata : boolean, optional
+
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         kwargs:
@@ -131,6 +134,7 @@ class ObsCollection(pd.DataFrame):
 
         obs_df = io_dino.download_dino_within_extent(extent, bbox,
                                                      ObsClass, kind=kind,
+                                                     get_metadata=get_metadata,
                                                      verbose=verbose, **kwargs)
 
         if bbox is None:
@@ -1051,7 +1055,8 @@ class ObsCollection(pd.DataFrame):
 
     def to_map(self, ax=None, figsize=(15, 15), label='gws',
                edgecolor='black', facecolor='green',
-               marker='o', markersize=100, xlim=None, ylim=None, add_topo=True):
+               marker='o', markersize=100, xlim=None, ylim=None, add_topo=True,
+               verbose=False):
         """plot observation points on a map
 
         Parameters
@@ -1095,7 +1100,7 @@ class ObsCollection(pd.DataFrame):
 
         if add_topo:
             import art_tools as art
-            art.OpenTopo(ax=ax).plot(output=False, alpha=0.5)
+            art.OpenTopo(ax=ax, verbose=verbose).plot(verbose=verbose, alpha=0.5)
 
         ax.legend()
 
@@ -1103,8 +1108,10 @@ class ObsCollection(pd.DataFrame):
 
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
-                     plot_xlim=None, plot_ylim='bounds', savefig=None,
-                     map_gdf=None, map_gdf_kwargs={}, verbose=True):
+                     plot_xlim=None, plot_ylim=(None,None), min_dy=2.0,
+                     vlines=[],
+                     savefig=None, map_gdf=None, map_gdf_kwargs={},
+                     verbose=True):
         """make mapgraph plots of obs collection data
 
         Parameters
@@ -1121,6 +1128,15 @@ class ObsCollection(pd.DataFrame):
             column name of data to be plotted in graphs
         plot_xlim : datetime, optional
             xlim of the graphs
+        plot_ylim : tuple or str, optional
+            the ylim of all the graphs or
+            'max_dy' -> all graphs get the maximum ylim
+            'min_dy' -> all graphs get the same dy unless the series has a dy
+                        bigger than min_dy
+        min_dy : float, optional
+            only used if plot_ylim is 'min_dy'
+        vlines : list, optional
+            list with x values on which a vertical line is plotted
         savefig : str, optional
             path to save the figure. {plot_number}.png will be append to this path
         map_gdf : GeoDataFrame, optional
@@ -1138,35 +1154,54 @@ class ObsCollection(pd.DataFrame):
 
         import art_tools as art
 
-        # get ylim as min-max from plots
-        if plot_ylim == 'bounds':
-            plot_ylim = self.get_min_max(obs_column=plot_column)
-
         if graph is None:
             graph = np.full((4, 4), True)
             graph[1:, 1:-1] = False
 
+        if plot_ylim == 'max_dy':
+            plot_ylim = self.get_min_max(obs_column=plot_column)
+
         mg_list = []
-        # range(1+len(xy)/10):
         for k, xyo in self.groupby(np.arange(self.shape[0])//plots_per_map):
 
-            mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph, figsize=figsize,
-                              extent=extent)
+            mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph,
+                              figsize=figsize, extent=extent)
 
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
-            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(
-                alpha=0.75, verbose=verbose)
+            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75,
+                        verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
 
             for i, o in enumerate(xyo.obs.values):
                 ax = mg.ax[i]
                 pb = o.name
-                o[plot_column].plot(ax=ax, label=pb)
-                ax.set_xlim(plot_xlim)
-                ax.set_ylim(plot_ylim)
+                try:
+                    o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5,
+                     marker='.', markersize=1.,label=pb)
+                except TypeError:
+                    o[plot_column].plot(ax=ax, lw=.5, marker='.',
+                                         markersize=1.,label=pb)
+                    ax.set_xlim(plot_xlim)
+                if plot_ylim == 'min_dy':
+                    ax.autoscale(axis='y', tight=True)
+                    ylim = ax.get_ylim()
+                    dy = ylim[1]-ylim[0]
+                    if dy<min_dy:
+                        ylim=(ylim[0]-(min_dy-dy)/2, ylim[1]+(min_dy-dy)/2)
+                    ax.set_ylim(ylim)
+                else:
+                    ax.set_ylim(plot_ylim)
+
+                for line in vlines:
+                    ylim = ax.get_ylim()
+                    ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
+                              lw=2.0, color='r')
+
+
                 ax.legend(loc='best')
+
 
             mg.figure.tight_layout()
             if savefig is not None:
@@ -1349,7 +1384,7 @@ class ObsCollection(pd.DataFrame):
         self.add_meta_to_df('modellayer')
 
     def within_extent(self, extent, inplace=False):
-        """Slice dataframe by extent
+        """Slice ObsCollection by extent
 
         Parameters
         ----------
@@ -1359,11 +1394,47 @@ class ObsCollection(pd.DataFrame):
         Returns
         -------
         new_oc : obs_collection.ObsCollection
-            dataframe with collection of observations within extent
+            ObsCollection with observations within extent
         """
 
         new_oc = self[(self.x > extent[0]) & (self.x < extent[1])
                       & (self.y > extent[2]) & (self.y < extent[3])]
+        if inplace:
+            self._update_inplace(new_oc)
+        else:
+            return new_oc
+
+    def within_polygon(self, gdf=None, shapefile=None, inplace=False,
+                       **kwargs):
+        """Slice ObsCollection by checking if points are within a shapefile
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame, optional
+            geodataframe containing a single polygon
+        shapefile : str, optional
+            Not yet implemented
+        inplace : bool, default False
+            Modify the ObsCollection in place (do not create a new object).
+        **kwargs :
+            kwargs will be passed to the self.to_gdf() method
+
+        Returns
+        -------
+        new_oc : obs_collection.ObsCollection
+            ObsCollection with observations within polygon
+        """
+
+        if gdf is not None:
+            if gdf.shape[0]!=1:
+                raise NotImplementedError('cannot handle zero or multiple polygons')
+            gdf_oc = self.to_gdf(**kwargs)
+            new_oc = self.loc[gdf_oc.within(gdf.geometry.values[0])]
+        elif shapefile is not None:
+            raise NotImplementedError('shapefiles are not yet implemented')
+        else:
+            raise ValueError('shapefile or gdf must be specified')
+
         if inplace:
             self._update_inplace(new_oc)
         else:

@@ -38,6 +38,13 @@ def test_observation_dino_download():
     return gw2
 
 
+def test_observation_dino_download2():
+    # download dino
+    gw2 = obs.GroundwaterObs.from_dino_server(name="B57B0069", filternr=1.,
+                                              tmin="2000-01-01",
+                                              tmax="2010-01-01", unit="NAP")
+    return gw2
+
 def test_interactive_plot():
     gw = test_observation_gw()
     gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
@@ -110,6 +117,8 @@ def test_obscollection_dino_download_bbox_empty():
     return dino_gw_bbox
 
 
+
+
 # %% collection methods
 
 
@@ -128,6 +137,13 @@ def test_obscollection_to_fieldlogger():
 
     return fdf
 
+def test_within_extent():
+    dino_gw = test_obscollection_dinozip_gw()
+    extent = [210350, 213300, 473300, 474000]
+    dino_gw.within_extent(extent, inplace=True)
+    assert dino_gw.shape[0] == 4
+    return dino_gw
+    
 
 def test_obscollection_dino_to_map():
     dino_gw = test_obscollection_dinozip_gw()
@@ -140,6 +156,11 @@ def test_obscollection_dino_to_map():
                                verbose=True)
     return
 
+def test_obscollection_dino_to_mapgraph():
+    gw = test_obscollection_dinozip_gw()
+    gw.to_mapgraphs(plot_ylim='min_dy')
+    
+    return
 
 # %% read FEWS data
 
