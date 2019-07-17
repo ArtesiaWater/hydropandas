@@ -1,11 +1,10 @@
+from observations import obs_collection as oc
+from observations import observation as obs
+import os
+import numpy as np
 import sys
 sys.path.insert(1, "..")
 
-import numpy as np
-import os
-
-from observations import observation as obs
-from observations import obs_collection as oc
 
 plot_dir = r".\data\2019-Dino-test\plots"
 dinozip = r'.\data\2019-Dino-test\Dino.zip'
@@ -44,6 +43,7 @@ def test_observation_dino_download2():
                                               tmin="2000-01-01",
                                               tmax="2010-01-01", unit="NAP")
     return gw2
+
 
 def test_interactive_plot():
     gw = test_observation_gw()
@@ -106,17 +106,16 @@ def test_obscollection_dino_download_bbox():
                                                      verbose=True)
     return dino_gw_bbox
 
+
 def test_obscollection_dino_download_bbox_empty():
     # download DINO from bbox
-    bbox = [88596.63500000164, 407224.8449999988, 89623.4149999991, 407804.27800000086]
-
+    bbox = [88596.63500000164, 407224.8449999988,
+            89623.4149999991, 407804.27800000086]
 
     dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox,
                                                      ObsClass=obs.GroundwaterObs,
                                                      verbose=True)
     return dino_gw_bbox
-
-
 
 
 # %% collection methods
@@ -137,13 +136,14 @@ def test_obscollection_to_fieldlogger():
 
     return fdf
 
+
 def test_within_extent():
     dino_gw = test_obscollection_dinozip_gw()
     extent = [210350, 213300, 473300, 474000]
     dino_gw.within_extent(extent, inplace=True)
     assert dino_gw.shape[0] == 4
     return dino_gw
-    
+
 
 def test_obscollection_dino_to_map():
     dino_gw = test_obscollection_dinozip_gw()
@@ -156,10 +156,11 @@ def test_obscollection_dino_to_map():
                                verbose=True)
     return
 
+
 def test_obscollection_dino_to_mapgraph():
     gw = test_obscollection_dinozip_gw()
     gw.to_mapgraphs(plot_ylim='min_dy')
-    
+
     return
 
 # %% read FEWS data
@@ -195,33 +196,66 @@ def test_obscollection_to_map():
     return
 
 
-#%% read WISKI data
+# %% read WISKI data
 
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv",
                                              sep='\s+', header_sep=':',
                                              header_identifier=':',
-                                             parse_dates={"datetime": [0,1]},
+                                             parse_dates={"datetime": [0, 1]},
                                              index_col=["datetime"],
-                                             translate_dic={'name':'Station Number',
-                                                           'x':'GlobalX',
-                                                           'y':'GlobalY'},
+                                             translate_dic={'name': 'Station Number',
+                                                            'x': 'GlobalX',
+                                                            'y': 'GlobalY'},
                                              verbose=True)
 
     return wiski_gw
 
+
 def test_obscollection_wiskizip_gw():
     wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip",
-                                            translate_dic={'name':'Station Number',
-                                                           'x':'GlobalX',
-                                                           'y':'GlobalY'},
+                                            translate_dic={'name': 'Station Number',
+                                                           'x': 'GlobalX',
+                                                           'y': 'GlobalY'},
                                             sep='\s+', header_sep=':',
                                             header_identifier=':',
-                                            parse_dates={"datetime": [0,1]},
+                                            parse_dates={"datetime": [0, 1]},
                                             index_col=["datetime"],
                                             verbose=True)
 
     return wiski_col
+
+
+# %% Test Pystore
+
+def test_obscollection_to_pystore():
+    obsc = test_obscollection_fews()
+    obsc.to_pystore("test_pystore", "./data/2019-Pystore-test",
+                    groupby="locationId")
+
+
+def test_obscollection_pystore():
+    obsc = oc.ObsCollection.from_pystore(
+        "test_pystore", "./data/2019-Pystore-test")
+    return obsc
+
+
+def test_obscollection_pystore_only_metadata():
+    obsc = oc.ObsCollection.from_pystore("test_pystore",
+                                         "./data/2019-Pystore-test",
+                                         read_series=False)
+    return obsc
+
+
+def test_obs_from_pystore_item():
+    import pystore
+    pystore.set_path("./data/2019-Pystore-test")
+    store = pystore.store("test_pystore")
+    coll = store.collection(store.collections[0])
+    item = coll.item(coll.list_items()[0])
+    o = obs.GroundwaterObs.from_pystore_item(item)
+    return o
+
 
 if __name__ == "__main__":
     oc = test_obscollection_fews2()
