@@ -137,6 +137,13 @@ def test_obscollection_to_fieldlogger():
 
     return fdf
 
+def test_within_extent():
+    dino_gw = test_obscollection_dinozip_gw()
+    extent = [210350, 213300, 473300, 474000]
+    dino_gw.within_extent(extent, inplace=True)
+    assert dino_gw.shape[0] == 4
+    return dino_gw
+    
 
 def test_obscollection_dino_to_map():
     dino_gw = test_obscollection_dinozip_gw()

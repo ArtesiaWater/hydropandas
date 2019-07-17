@@ -1374,7 +1374,7 @@ class ObsCollection(pd.DataFrame):
         self.add_meta_to_df('modellayer')
 
     def within_extent(self, extent, inplace=False):
-        """Slice dataframe by extent
+        """Slice ObsCollection by extent
 
         Parameters
         ----------
@@ -1384,11 +1384,47 @@ class ObsCollection(pd.DataFrame):
         Returns
         -------
         new_oc : obs_collection.ObsCollection
-            dataframe with collection of observations within extent
+            ObsCollection with observations within extent
         """
 
         new_oc = self[(self.x > extent[0]) & (self.x < extent[1])
                       & (self.y > extent[2]) & (self.y < extent[3])]
+        if inplace:
+            self._update_inplace(new_oc)
+        else:
+            return new_oc
+        
+    def within_polygon(self, gdf=None, shapefile=None, inplace=False,
+                       **kwargs):
+        """Slice ObsCollection by checking if points are within a shapefile
+        
+        Parameters
+        ----------
+        gdf : GeoDataFrame, optional
+            geodataframe containing a single polygon
+        shapefile : str, optional
+            Not yet implemented
+        inplace : bool, default False
+            Modify the ObsCollection in place (do not create a new object).
+        **kwargs :
+            kwargs will be passed to the self.to_gdf() method    
+            
+        Returns
+        -------
+        new_oc : obs_collection.ObsCollection
+            ObsCollection with observations within polygon
+        """
+        
+        if gdf is not None:
+            if gdf.shape[0]!=1:
+                raise NotImplementedError('cannot handle zero or multiple polygons')
+            gdf_oc = self.to_gdf(**kwargs)
+            new_oc = self.loc[gdf_oc.within(gdf.geometry.values[0])]
+        elif shapefile is not None:
+            raise NotImplementedError('shapefiles are not yet implemented')
+        else:
+            raise ValueError('shapefile or gdf must be specified')
+            
         if inplace:
             self._update_inplace(new_oc)
         else:
