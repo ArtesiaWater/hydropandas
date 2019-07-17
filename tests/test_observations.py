@@ -38,6 +38,12 @@ def test_observation_dino_download():
     return gw2
 
 
+def test_observation_dino_download2():
+    # download dino
+    gw2 = obs.GroundwaterObs.from_dino_server(name="B57B0069", filternr=1.,
+                                              tmin="2000-01-01",
+                                              tmax="2010-01-01", unit="NAP")
+    return gw2
 
 def test_interactive_plot():
     gw = test_observation_gw()

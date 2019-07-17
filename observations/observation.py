@@ -328,6 +328,7 @@ class GroundwaterObs(Obs):
     def from_dino_server(cls, name, filternr=1.,
                          tmin="2000-01-01", tmax="2010-01-01",
                          x=np.nan, y=np.nan,
+                         get_metadata=True,
                          **kwargs):
         """download dino data from the server.
 
@@ -354,11 +355,25 @@ class GroundwaterObs(Obs):
                                                                tmin, tmax,
                                                                x, y,
                                                                **kwargs)
+        
+        if get_metadata:
+            import art_tools as art
+            meta_extra = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])[0]
+            for piezometer in meta_extra.pop('levels'):
+                if piezometer['piezometerNr'] == format(filternr, '03'):
+                    meta_extra.update(piezometer)
+                    break
+            maaiveld = meta_extra.pop('surfaceElevation')
+            #meta.update(meta_extra) # please fix this Onno
+        else:
+            maaiveld = np.nan
+        meta['maaiveld'] = maaiveld
 
         return cls(measurements, meta=meta, x=x, y=y,
                    onderkant_filter=meta['onderkant_filter'],
                    bovenkant_filter=meta['bovenkant_filter'],
                    name=meta['name'], locatie=meta['locatie'],
+                   maaiveld=maaiveld,
                    meetpunt=meta['meetpunt'], filternr=meta['filternr'])
 
     @classmethod

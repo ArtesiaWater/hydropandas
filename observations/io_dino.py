@@ -133,7 +133,7 @@ def download_dino_groundwater(name, filternr, tmin, tmax,
     meta['name'] = name
     meta['x'] = x
     meta['y'] = y
-    meta['locatie'] = name
+    meta['locatie'] = name.split('-')[0]
 
     return measurements, meta
 
@@ -309,6 +309,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 kind='Grondwaterstand',
                                 tmin=None, tmax=None,
                                 zmin=None, zmax=None, unit="NAP",
+                                get_metadata=True,
                                 verbose=False):
     """Download DINO data within a certain extent (or a bounding box)
 
@@ -395,7 +396,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                       tmin=tmin_t,
                                       tmax=tmax_t, x=loc['x_rd_crd'],
                                       y=loc['y_rd_crd'],
-                                      unit=unit)
+                                      unit=unit, get_metadata=get_metadata)
 
         obs_list.append(o)
 
