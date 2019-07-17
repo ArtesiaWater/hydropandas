@@ -346,8 +346,16 @@ class GroundwaterObs(Obs):
             the x coördinate of the measurement point (not read from server)
         y : int, float, optional
             the y coördinate of the measurement point (not read from server)
+        get_metadata : boolean, optional
+            download extra metadata from the server (see Notes)
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
+            
+        Notes
+        -----
+        For now only the maaiveld is used from the extra metadata, this method
+        should be improved to add more metadata from the server if get_metadata
+        is True
         """
 
         measurements, meta = io_dino.download_dino_groundwater(name,
