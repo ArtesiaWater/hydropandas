@@ -102,7 +102,7 @@ def test_obscollection_dino_download_bbox():
 def test_obscollection_dino_download_bbox_empty():
     # download DINO from bbox
     bbox = [88596.63500000164, 407224.8449999988, 89623.4149999991, 407804.27800000086]
-    
+
 
     dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox,
                                                      ObsClass=obs.GroundwaterObs,
@@ -146,7 +146,20 @@ def test_obscollection_dino_to_map():
 
 def test_obscollection_fews():
     fews_gw_prod = oc.ObsCollection.from_fews(r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
-                                              verbose=True)
+                                              verbose=True, to_mnap=False,
+                                              remove_nan=False)
+    return fews_gw_prod
+
+
+def test_obscollection_fews2():
+    fews_gw_prod = oc.ObsCollection.from_fews2(r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+                                               verbose=True, locations=None)
+    return fews_gw_prod
+
+
+def test_obscollection_fews2_selection():
+    fews_gw_prod = oc.ObsCollection.from_fews2(r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+                                               verbose=True, locations=("MPN-N-2",))
     return fews_gw_prod
 
 
@@ -162,30 +175,32 @@ def test_obscollection_to_map():
 
 
 #%% read WISKI data
-    
+
 def test_observation_wiskicsv_gw():
-    wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv", 
-                                             sep='\s+', header_sep=':', 
-                                             header_identifier=':', 
+    wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv",
+                                             sep='\s+', header_sep=':',
+                                             header_identifier=':',
                                              parse_dates={"datetime": [0,1]},
-                                             index_col=["datetime"], 
-                                             translate_dic={'name':'Station Number', 
+                                             index_col=["datetime"],
+                                             translate_dic={'name':'Station Number',
                                                            'x':'GlobalX',
                                                            'y':'GlobalY'},
                                              verbose=True)
-    
+
     return wiski_gw
-    
+
 def test_obscollection_wiskizip_gw():
-    wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip", 
-                                            translate_dic={'name':'Station Number', 
+    wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip",
+                                            translate_dic={'name':'Station Number',
                                                            'x':'GlobalX',
                                                            'y':'GlobalY'},
-                                            sep='\s+', header_sep=':', 
-                                            header_identifier=':', 
+                                            sep='\s+', header_sep=':',
+                                            header_identifier=':',
                                             parse_dates={"datetime": [0,1]},
-                                            index_col=["datetime"], 
+                                            index_col=["datetime"],
                                             verbose=True)
-    
+
     return wiski_col
 
+if __name__ == "__main__":
+    oc = test_obscollection_fews2()

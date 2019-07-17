@@ -253,18 +253,22 @@ class ObsCollection(pd.DataFrame):
             util.unzip_file(zipf, dirname, force=force_unpack,
                             preserve_datetime=preserve_datetime)
 
+        # dirname is directory
         if os.path.isdir(dirname):
-            unzip_fnames = [i for i in os.listdir(dirname) if i.endswith(".xml")]
+            unzip_fnames = [i for i in os.listdir(
+                dirname) if i.endswith(".xml")]
             meta = {'dirname': dirname,
                     'type': ObsClass,
                     'verbose': verbose
                     }
         else:
-            unzip_fnames = [dirname]
+            # dirname is actually an xml
+            unzip_fnames = [os.path.basename(dirname)]
             meta = {'filename': dirname,
                     'type': ObsClass,
                     'verbose': verbose
                     }
+            dirname = os.path.dirname(dirname)
 
         obs_list = []
         nfiles = len(unzip_fnames)
@@ -285,10 +289,10 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_fews2(cls, fname, ObsClass=obs.GroundwaterObs, name='fews',
-                   to_mnap=True, remove_nan=True,
+                   locations=None, to_mnap=True, remove_nan=True,
                    unpackdir=None, force_unpack=False,
                    preserve_datetime=False,
-                   verbose=False, ):
+                   verbose=False):
         """ read a XML-file with measurements from FEWS
 
         Parameters
@@ -342,8 +346,9 @@ class ObsCollection(pd.DataFrame):
                 'verbose': verbose
                 }
 
-        obs_list = io_xml.read_xml_alternative(fname, ObsClass, to_mnap=to_mnap,
-                                               remove_nan=remove_nan, verbose=verbose)
+        _, obs_list = io_xml.iterparse_pi_xml(fname, ObsClass,
+                                              locationIds=locations,
+                                              verbose=verbose)
 
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
                               columns=obs_list[0].to_collection_dict().keys())
@@ -816,7 +821,8 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        _color_cycle = ('blue', 'olive', 'lime', 'red', 'orange', 'yellow', 'purple', 'silver', 'powderblue', 'salmon', 'tan')
+        _color_cycle = ('blue', 'olive', 'lime', 'red', 'orange',
+                        'yellow', 'purple', 'silver', 'powderblue', 'salmon', 'tan')
         _same_loc_list = []
         for o in self.obs.values:
             # check for multiple observations at the same location (usually multiple filters)
@@ -1021,6 +1027,10 @@ class ObsCollection(pd.DataFrame):
 
         return m
 
+    def to_pi_xml(self, fname, timezone="", version="1.24"):
+        from . import io_xml
+        io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
+
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame
 
@@ -1145,7 +1155,8 @@ class ObsCollection(pd.DataFrame):
 
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
-            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75, verbose=verbose)
+            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(
+                alpha=0.75, verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
 
