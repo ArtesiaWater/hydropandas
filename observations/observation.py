@@ -270,12 +270,12 @@ class Obs(DataFrame):
         # Add missing years
         if obs_per_year.empty:
             # no obs, set series to current year with 0 obs
-            obs_per_year_all = Series(index=[datetime.now().year], data=0)        
+            obs_per_year_all = Series(index=[datetime.now().year], data=0)
         else:
             obs_per_year_all = Series(index=range(obs_per_year.index[0],
                                                   obs_per_year.index[-1]+1))
             obs_per_year_all.loc[obs_per_year.index] = obs_per_year
-            
+
         mask_obs_per_year = obs_per_year_all >= min_obs
         mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
         mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
@@ -305,7 +305,7 @@ class GroundwaterObs(Obs):
         *args must be input for the pandas.DataFrame constructor,
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
-        
+
         if the pandas.DataFrame has a column 'Stand_m_tov_NAP' a lot of
         plotting and other methods will work automatically without changing
         the default arguments.
@@ -355,16 +355,17 @@ class GroundwaterObs(Obs):
                                                                tmin, tmax,
                                                                x, y,
                                                                **kwargs)
-        
+
         if get_metadata:
             import art_tools as art
-            meta_extra = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])[0]
+            meta_extra = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])[
+                0]
             for piezometer in meta_extra.pop('levels'):
                 if piezometer['piezometerNr'] == format(filternr, '03'):
                     meta_extra.update(piezometer)
                     break
             maaiveld = meta_extra.pop('surfaceElevation')
-            #meta.update(meta_extra) # please fix this Onno
+            # meta.update(meta_extra) # please fix this Onno
         else:
             maaiveld = np.nan
         meta['maaiveld'] = maaiveld
@@ -409,8 +410,34 @@ class GroundwaterObs(Obs):
         header, data = io_wiski.read_wiski_file(fname, **kwargs)
         metadata = {}
 
-        return cls(data, meta=header, name=header['name'], 
+        return cls(data, meta=header, name=header['name'],
                    x=header['x'], y=header['y'], **metadata)
+
+    @classmethod
+    def from_pystore_item(cls, item):
+        """Create GroundwaterObs DataFrame from Pystore item
+
+        Parameters
+        ----------
+        item : pystore.item.Item
+            Pystore item
+
+        Returns
+        -------
+        GroundwaterObs
+            GroundwaterObs DataFrame
+
+        """
+
+        df = item.to_pandas()
+        try:
+            x = item.metadata["x"]
+            y = item.metadata["y"]
+        except KeyError:
+            x = np.nan
+            y = np.nan
+        item.metadata["datastore"] = item.datastore
+        return cls(df, x=x, y=y, meta=item.metadata)
 
     def get_pb_modellayer(self, dis, zgr=None, verbose=False):
         """Add modellayer to meta dictionary

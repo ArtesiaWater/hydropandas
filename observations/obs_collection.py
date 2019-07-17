@@ -603,6 +603,50 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=name, meta=meta)
 
+    @classmethod
+    def from_pystore(cls, storename, pystore_path,
+                     ObsClass=obs.GroundwaterObs,
+                     read_series=True):
+        """Create ObsCollection from pystore store
+
+        Parameters
+        ----------
+        storename : str
+            name of the store
+        pystore_path : str
+            path in which stores are stored
+        ObsClass : type of Obs, optional
+            the Observation type used for reading in the individual series,
+            by default obs.GroundwaterObs
+        read_series : bool, optional
+            if False, read only metadata, default is True which
+            loads the full dataset
+
+        Returns
+        -------
+        ObsCollection
+            Collection of observations
+
+        """
+
+        from . import io_pystore
+        io_pystore.set_pystore_path(pystore_path)
+
+        if read_series:
+            obs_list = io_pystore.store_to_obslist(
+                storename, ObsClass=ObsClass)
+            coldict = [o.to_collection_dict() for o in obs_list]
+            obs_df = pd.DataFrame(coldict, columns=coldict[0].keys())
+            obs_df.set_index('name', inplace=True)
+            meta = {'fname': obs_list[0].meta["datastore"],
+                    'type': obs.GroundwaterObs,
+                    'verbose': True}
+        else:
+            meta_list = io_pystore.read_store_metadata(storename)
+            meta = {}
+            obs_df = pd.DataFrame(meta_list)
+        return cls(obs_df, name=storename, meta=meta)
+
     def data_frequency_plot(self, column_name='Stand_m_tov_NAP', intervals=None,
                             ignore=['seconde', 'minuut', '14-daags'],
                             normtype='log', cmap='viridis_r', set_yticks=False,
@@ -1035,6 +1079,17 @@ class ObsCollection(pd.DataFrame):
         from . import io_xml
         io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
 
+    def to_pystore(self, store_name, pystore_path, groupby):
+        import pystore
+        pystore.set_path(pystore_path)
+        store = pystore.store(store_name)
+        for name, group in self.groupby(by=groupby):
+            # Access a collection (create it if not exist)
+            collection = store.collection(name)
+            for o in group.obs:
+                imeta = o.meta
+                collection.write(o.name, o, metadata=imeta)
+
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame
 
@@ -1100,7 +1155,8 @@ class ObsCollection(pd.DataFrame):
 
         if add_topo:
             import art_tools as art
-            art.OpenTopo(ax=ax, verbose=verbose).plot(verbose=verbose, alpha=0.5)
+            art.OpenTopo(ax=ax, verbose=verbose).plot(
+                verbose=verbose, alpha=0.5)
 
         ax.legend()
 
@@ -1108,7 +1164,7 @@ class ObsCollection(pd.DataFrame):
 
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
-                     plot_xlim=None, plot_ylim=(None,None), min_dy=2.0,
+                     plot_xlim=None, plot_ylim=(None, None), min_dy=2.0,
                      vlines=[],
                      savefig=None, map_gdf=None, map_gdf_kwargs={},
                      verbose=True):
@@ -1170,7 +1226,7 @@ class ObsCollection(pd.DataFrame):
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
             art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75,
-                        verbose=verbose)
+                                                            verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
 
@@ -1179,17 +1235,17 @@ class ObsCollection(pd.DataFrame):
                 pb = o.name
                 try:
                     o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5,
-                     marker='.', markersize=1.,label=pb)
+                                                                   marker='.', markersize=1., label=pb)
                 except TypeError:
                     o[plot_column].plot(ax=ax, lw=.5, marker='.',
-                                         markersize=1.,label=pb)
+                                        markersize=1., label=pb)
                     ax.set_xlim(plot_xlim)
                 if plot_ylim == 'min_dy':
                     ax.autoscale(axis='y', tight=True)
                     ylim = ax.get_ylim()
                     dy = ylim[1]-ylim[0]
-                    if dy<min_dy:
-                        ylim=(ylim[0]-(min_dy-dy)/2, ylim[1]+(min_dy-dy)/2)
+                    if dy < min_dy:
+                        ylim = (ylim[0]-(min_dy-dy)/2, ylim[1]+(min_dy-dy)/2)
                     ax.set_ylim(ylim)
                 else:
                     ax.set_ylim(plot_ylim)
@@ -1199,9 +1255,7 @@ class ObsCollection(pd.DataFrame):
                     ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
                               lw=2.0, color='r')
 
-
                 ax.legend(loc='best')
-
 
             mg.figure.tight_layout()
             if savefig is not None:
@@ -1426,8 +1480,9 @@ class ObsCollection(pd.DataFrame):
         """
 
         if gdf is not None:
-            if gdf.shape[0]!=1:
-                raise NotImplementedError('cannot handle zero or multiple polygons')
+            if gdf.shape[0] != 1:
+                raise NotImplementedError(
+                    'cannot handle zero or multiple polygons')
             gdf_oc = self.to_gdf(**kwargs)
             new_oc = self.loc[gdf_oc.within(gdf.geometry.values[0])]
         elif shapefile is not None:
