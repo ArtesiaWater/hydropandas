@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as etree
+from lxml.etree import iterparse, parse
 
 
 def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
@@ -47,10 +48,8 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
                             if prop == 'locationId':
                                 print('read {}'.format(val))
                 elif root[i][j].tag.endswith('event'):
-                    date.append(root[i][j].attrib['date'])
-                    # flag.append(root[i][j].attrib['flag'])
-                    time.append(root[i][j].attrib['time'])
-                    # value.append(root[i][j].attrib['value'])
+                    date.append(root[i][j].attrib.pop('date'))
+                    time.append(root[i][j].attrib.pop('time'))
                     events.append({**root[i][j].attrib})
             # combine events in a dataframe
             index = pd.to_datetime(
@@ -75,8 +74,11 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
     return obs_list
 
 
-def read_xml_alternative(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
-    """read a FEWS XML-file with measurements, return list of ObsClass objects
+def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
+                     keep_flags=(0, 1), return_df=False,
+                     tags=('series', 'header', 'event'),
+                     verbose=False):
+    """read a FEWS XML-file with measurements, memory efficient
 
     Parameters
     ----------
@@ -84,79 +86,216 @@ def read_xml_alternative(fname, ObsClass, to_mnap=False, remove_nan=False, verbo
         full path to file
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    to_mnap : boolean, optional
-        if True a column with 'Stand_m_tov_NAP' is added to the dataframe
-    remove_nan : boolean, optional
-        remove nan values from measurements, flag information about the
-        nan values is also lost
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
+    locations : tuple or list of str, optional
+        list of locationId's to read from XML file, others are skipped.
+        If None (default) all locations are read.
+    return_events : bool, optional
+        return all event-information in a DataFrame per location, instead of
+        just a Series (defaults to False). Overrules keep_flags kwarg.
+    keep_flags : list of ints, optional
+        keep the values with these flags (defaults to 0 and 1). Only used
+        when return_events is False.
+    tags : list of strings, optional
+        Select the tags to be parsed. Defaults to series, header and event
+    return_df : bool, optional
+        return a DataFame with the data, instead of two lists (defaults to
+        False)
+
 
     Returns
     -------
-    list of ObsClass objects
-        list of timeseries stored in ObsClass objects
+
+    if return_df == True:
+        df : pandas DataFrame
+            a DataFrame containing the metadata and the series
+    else:
+        header_list : list of dictionaries
+            list of metadata
+        series_list : list of pandas Series
+            list of timeseries
 
     """
 
-    from lxml import etree
-    context = etree.iterparse(fname, events=('start',),
-                              tag=("{http://www.wldelft.nl/fews/PI}header",
-                                   "{http://www.wldelft.nl/fews/PI}event"))
+    tags = ['{{http://www.wldelft.nl/fews/PI}}{}'.format(tag) for tag in tags]
+
+    context = iterparse(fname, tag=tags)
 
     header_list = []
-    events = []
+    series_list = []
 
-    for event, element in context:
-        header = {}
-        if element.tag.endswith("header") and event == "start":
+    keep_flags = [str(flag) for flag in keep_flags]
+
+    for _, element in context:
+        if element.tag.endswith("header"):
+            header = {}
             for h_attr in element:
                 tag = h_attr.tag.replace("{{{0}}}".format(
                     "http://www.wldelft.nl/fews/PI"), "")
+                # if specific locations are provided only read those
+                if locationIds is not None and tag.startswith("locationId"):
+                    loc = h_attr.text
+                    if loc not in locationIds:
+                        continue
                 if h_attr.text is not None:
                     header[tag] = h_attr.text
                 elif len(h_attr.attrib) != 0:
                     header[tag] = {**h_attr.attrib}
                 else:
                     header[tag] = None
-                if verbose:
-                    if tag.startswith("locationId"):
-                        print("read {}".format(header[tag]))
-            label = header["locationId"] + "|" + header["parameterId"]
+                if verbose and tag.startswith("locationId"):
+                    print("reading {}".format(header[tag]))
+            events = []
+        elif element.tag.endswith("event"):
+            # if specific locations are provided only read those
+            if locationIds is not None:
+                if loc not in locationIds:
+                    continue
+            events.append({**element.attrib})
+        elif element.tag.endswith('series'):
+            # if specific locations are provided only read those
+            if locationIds is not None:
+                if loc not in locationIds:
+                    continue
+            if len(events) == 0:
+                if return_events:
+                    s = pd.DataFrame()
+                else:
+                    s = pd.Series()
+            else:
+                df = pd.DataFrame(events)
+                df.index = pd.to_datetime(
+                    [d + " " + t for d, t in zip(df['date'], df['time'])])
+                df.drop(columns=["date", "time"], inplace=True)
+                if return_events:
+                    df['value'] = pd.to_numeric(df['value'], errors="coerce")
+                    df['flag'] = pd.to_numeric(df['flag'])
+                    s = df
+                else:
+                    mask = df['flag'].isin(keep_flags)
+                    s = pd.to_numeric(df.loc[mask, 'value'], errors="coerce")
+
+            o = ObsClass(s, name=header['locationId'], meta=header)
             header_list.append(header)
-        elif element.tag.endswith("event") and event == "start":
-            events.append({**element.attrib, "loc_param": label})
+            series_list.append(o)
 
         # Free memory.
         element.clear()
-        while element.getprevious() is not None:
-            del element.getparent()[0]
+        # while element.getprevious() is not None:
+        #    del element.getparent()[0]
 
-    # combine events in a dataframe
-    ts = pd.DataFrame(events)
-    ts["datetime"] = pd.to_datetime(ts["date"] + " " + ts["time"])
-    ts.set_index("datetime", inplace=True)
-    ts.drop(["date", "time"], axis=1, inplace=True)
-    ts["value"] = pd.to_numeric(ts["value"], errors="coerce")
-    ts["flag"] = pd.to_numeric(ts["flag"], errors="coerce")
+    if return_df:
+        for h, s in zip(header_list, series_list):
+            h['series'] = s
+        return pd.DataFrame(header_list)
+    else:
+        return header_list, series_list
 
-    if remove_nan:
-        ts.dropna(subset=['value'], inplace=True)
-    if to_mnap:
-        ts['Stand_m_tov_NAP'] = ts['value']
 
-    obs_list = []
-    for i, (name, _) in enumerate(ts.groupby(by="loc_param")):
-        if "x" in header_list[i].keys():
-            x = header_list[i]["x"]
-        else:
-            x = np.nan
-        if "y" in header_list[i].keys():
-            y = header_list[i]["x"]
-        else:
-            y = np.nan
+def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
+    """
+    Write PiTimeSeries object to PI-XML file.
 
-        obs_list.append(ObsClass(ts, name=header_list[i]['locationId'],
-                                 x=x, y=y, meta=header_list[i]))
+    Parameters
+    ----------
+    fname: path
+        path to XML file to be written
 
-    return obs_list
+    """
+
+    assert fname.endswith(
+        ".xml"), "Output file should have '.xml' extension!"
+
+    # first line of XML file
+    line0 = '<?xml version="1.0" encoding="UTF-8"?>\n'
+
+    # some definitions for timeseries XML file
+    NS = r"http://www.wldelft.nl/fews/PI"
+    FS = r"http://www.wldelft.nl/fews/fs"
+    XSI = r"http://www.w3.org/2001/XMLSchema-instance"
+    schemaLocation = (
+        r"http://fews.wldelft.nl/schemas/version1.0"
+        r"/Pi-schemas/pi_timeseries.xsd"
+    )
+    timeseriesline = ('<TimeSeries xmlns="{NS}" xmlns:xsi="{XSI}" '
+                      'xsi:schemaLocation="{NS} {schema}" version="{version}" '
+                      'xmlns:fs="{FS}">\n')
+
+    # line templates
+    paramline = "<{tag}>{param}</{tag}>\n"
+
+    # write file
+    with open(fname, "w") as f:
+        f.write(line0)
+        f.write(
+            timeseriesline.format(
+                NS=NS, FS=FS, XSI=XSI, schema=schemaLocation, version=version
+            )
+        )
+        tzline = "\t" + \
+            paramline.format(tag="timeZone", param=timezone)
+        f.write(tzline)
+
+        for o in obs_coll.obs:
+            # start series
+            start = "\t" + "<series>\n"
+            f.write(start)
+            # write header
+            hlines = []
+            hstart = 2 * "\t" + "<header>\n"
+            hlines.append(hstart)
+            for htag, hval in o.meta.items():
+                if htag.endswith("Date"):
+                    try:
+                        hdate = hval.strftime("%Y-%m-%d")
+                        htime = hval.strftime("%H:%M:%S")
+                    except AttributeError as e:
+                        if htag.startswith("start"):
+                            hdate = o.index[0].strftime("%Y-%m-%d")
+                            htime = o.index[0].strftime("%H:%M:%S")
+                        elif htag.startswith("end"):
+                            hdate = o.index[-1].strftime("%Y-%m-%d")
+                            htime = o.index[-1].strftime("%H:%M:%S")
+                        else:
+                            raise(e)
+                    hline = '<{tag} date="{date}" time="{time}"/>\n'.format(
+                        tag=htag, date=hdate, time=htime
+                    )
+                elif htag.endswith("timeStep"):
+                    hline = '<{tag} unit="{unit}"/>\n'.format(
+                        tag=htag, unit=hval)
+                else:
+                    hline = paramline.format(tag=htag, param=hval)
+                hlines.append(3 * "\t" + hline)
+            hlines.append(2 * "\t" + "</header>\n")
+            f.writelines(hlines)
+
+            # write timeseries
+            dates = o.reset_index()["index"].apply(
+                lambda s: pd.datetime.strftime(s, "%Y-%m-%d")
+            )
+            times = o.reset_index()["index"].apply(
+                lambda s: pd.datetime.strftime(s, "%H:%M:%S")
+            )
+            # set date and time attributes
+            events = (
+                2 * "\t"
+                + '<event date="'
+                + dates.values
+                + '" time="'
+                + times.values
+            )
+            # loop through columns and add to event
+            for icol in o.columns:
+                val = o[icol].astype(str)
+                events += (
+                    '" {}="'.format(icol)
+                    + val.values
+                )
+            # close event
+            events += '"/>\n'
+            # write to file
+            f.writelines(events)
+            # end series
+            f.write("\t" + "</series>\n")
+        # end Timeseries
+        f.write("</TimeSeries>\n")

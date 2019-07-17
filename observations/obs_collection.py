@@ -110,7 +110,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             the name of the observation collection
         get_metadata : boolean, optional
-        
+
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         kwargs:
@@ -257,18 +257,22 @@ class ObsCollection(pd.DataFrame):
             util.unzip_file(zipf, dirname, force=force_unpack,
                             preserve_datetime=preserve_datetime)
 
+        # dirname is directory
         if os.path.isdir(dirname):
-            unzip_fnames = [i for i in os.listdir(dirname) if i.endswith(".xml")]
+            unzip_fnames = [i for i in os.listdir(
+                dirname) if i.endswith(".xml")]
             meta = {'dirname': dirname,
                     'type': ObsClass,
                     'verbose': verbose
                     }
         else:
-            unzip_fnames = [dirname]
+            # dirname is actually an xml
+            unzip_fnames = [os.path.basename(dirname)]
             meta = {'filename': dirname,
                     'type': ObsClass,
                     'verbose': verbose
                     }
+            dirname = os.path.dirname(dirname)
 
         obs_list = []
         nfiles = len(unzip_fnames)
@@ -289,10 +293,10 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_fews2(cls, fname, ObsClass=obs.GroundwaterObs, name='fews',
-                   to_mnap=True, remove_nan=True,
+                   locations=None, to_mnap=True, remove_nan=True,
                    unpackdir=None, force_unpack=False,
                    preserve_datetime=False,
-                   verbose=False, ):
+                   verbose=False):
         """ read a XML-file with measurements from FEWS
 
         Parameters
@@ -346,8 +350,9 @@ class ObsCollection(pd.DataFrame):
                 'verbose': verbose
                 }
 
-        obs_list = io_xml.read_xml_alternative(fname, ObsClass, to_mnap=to_mnap,
-                                               remove_nan=remove_nan, verbose=verbose)
+        _, obs_list = io_xml.iterparse_pi_xml(fname, ObsClass,
+                                              locationIds=locations,
+                                              verbose=verbose)
 
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
                               columns=obs_list[0].to_collection_dict().keys())
@@ -820,7 +825,8 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        _color_cycle = ('blue', 'olive', 'lime', 'red', 'orange', 'yellow', 'purple', 'silver', 'powderblue', 'salmon', 'tan')
+        _color_cycle = ('blue', 'olive', 'lime', 'red', 'orange',
+                        'yellow', 'purple', 'silver', 'powderblue', 'salmon', 'tan')
         _same_loc_list = []
         for o in self.obs.values:
             # check for multiple observations at the same location (usually multiple filters)
@@ -1025,6 +1031,10 @@ class ObsCollection(pd.DataFrame):
 
         return m
 
+    def to_pi_xml(self, fname, timezone="", version="1.24"):
+        from . import io_xml
+        io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
+
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame
 
@@ -1098,9 +1108,9 @@ class ObsCollection(pd.DataFrame):
 
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
-                     plot_xlim=None, plot_ylim=(None,None), min_dy=2.0, 
+                     plot_xlim=None, plot_ylim=(None,None), min_dy=2.0,
                      vlines=[],
-                     savefig=None, map_gdf=None, map_gdf_kwargs={}, 
+                     savefig=None, map_gdf=None, map_gdf_kwargs={},
                      verbose=True):
         """make mapgraph plots of obs collection data
 
@@ -1119,7 +1129,7 @@ class ObsCollection(pd.DataFrame):
         plot_xlim : datetime, optional
             xlim of the graphs
         plot_ylim : tuple or str, optional
-            the ylim of all the graphs or 
+            the ylim of all the graphs or
             'max_dy' -> all graphs get the maximum ylim
             'min_dy' -> all graphs get the same dy unless the series has a dy
                         bigger than min_dy
@@ -1147,31 +1157,31 @@ class ObsCollection(pd.DataFrame):
         if graph is None:
             graph = np.full((4, 4), True)
             graph[1:, 1:-1] = False
-            
+
         if plot_ylim == 'max_dy':
             plot_ylim = self.get_min_max(obs_column=plot_column)
-        
+
         mg_list = []
         for k, xyo in self.groupby(np.arange(self.shape[0])//plots_per_map):
-        
-            mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph, 
+
+            mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph,
                               figsize=figsize, extent=extent)
-        
+
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
-            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75, 
+            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75,
                         verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
-        
+
             for i, o in enumerate(xyo.obs.values):
                 ax = mg.ax[i]
                 pb = o.name
                 try:
-                    o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5, 
+                    o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5,
                      marker='.', markersize=1.,label=pb)
                 except TypeError:
-                    o[plot_column].plot(ax=ax, lw=.5, marker='.', 
+                    o[plot_column].plot(ax=ax, lw=.5, marker='.',
                                          markersize=1.,label=pb)
                     ax.set_xlim(plot_xlim)
                 if plot_ylim == 'min_dy':
@@ -1183,16 +1193,16 @@ class ObsCollection(pd.DataFrame):
                     ax.set_ylim(ylim)
                 else:
                     ax.set_ylim(plot_ylim)
-                    
+
                 for line in vlines:
                     ylim = ax.get_ylim()
-                    ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--', 
+                    ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
                               lw=2.0, color='r')
 
-        
+
                 ax.legend(loc='best')
- 
-    
+
+
             mg.figure.tight_layout()
             if savefig is not None:
                 mg.figure.savefig(savefig+"{0}.png".format(k),
@@ -1393,11 +1403,11 @@ class ObsCollection(pd.DataFrame):
             self._update_inplace(new_oc)
         else:
             return new_oc
-        
+
     def within_polygon(self, gdf=None, shapefile=None, inplace=False,
                        **kwargs):
         """Slice ObsCollection by checking if points are within a shapefile
-        
+
         Parameters
         ----------
         gdf : GeoDataFrame, optional
@@ -1407,14 +1417,14 @@ class ObsCollection(pd.DataFrame):
         inplace : bool, default False
             Modify the ObsCollection in place (do not create a new object).
         **kwargs :
-            kwargs will be passed to the self.to_gdf() method    
-            
+            kwargs will be passed to the self.to_gdf() method
+
         Returns
         -------
         new_oc : obs_collection.ObsCollection
             ObsCollection with observations within polygon
         """
-        
+
         if gdf is not None:
             if gdf.shape[0]!=1:
                 raise NotImplementedError('cannot handle zero or multiple polygons')
@@ -1424,7 +1434,7 @@ class ObsCollection(pd.DataFrame):
             raise NotImplementedError('shapefiles are not yet implemented')
         else:
             raise ValueError('shapefile or gdf must be specified')
-            
+
         if inplace:
             self._update_inplace(new_oc)
         else:
