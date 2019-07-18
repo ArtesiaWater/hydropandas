@@ -1004,7 +1004,7 @@ class ObsCollection(pd.DataFrame):
                                     color=color,
                                     popup=popup).add_to(group)
 
-                if map_label is not '':
+                if map_label != '':
                     folium.map.Marker([o.meta[col_name_lat], o.meta[col_name_lon]],
                                       icon=DivIcon(icon_size=(150, 36),
                                                    icon_anchor=(0, 0),
