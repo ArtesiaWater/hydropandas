@@ -261,8 +261,11 @@ class Obs(DataFrame):
         return lat, lon
 
     def obs_per_year(self, col):
-        return self.groupby(self.index.year).count()[col]
-
+        if self.empty:
+            return Series()
+        else:
+            return self.groupby(self.index.year).count()[col]
+            
     def consecutive_obs_years(self, col, min_obs=12):
 
         obs_per_year = self.obs_per_year(col=col)

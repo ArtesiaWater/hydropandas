@@ -70,6 +70,14 @@ def test_obscollection_dinozip_gw():
                                              verbose=False)
     return dino_gw
 
+def test_obscollection_dinozip_gw_keep_all_obs():
+    # do not delete empty dataframes
+    dino_gw = oc.ObsCollection.from_dino_dir(dirname=dinozip, ObsClass=obs.GroundwaterObs,
+                                             subdir='Grondwaterstanden_Put',
+                                             suffix='1.csv', keep_all_obs=True,
+                                             verbose=False)
+    return dino_gw
+
 
 def test_obscollection_dinozip_wl():
     # surface water
@@ -163,6 +171,12 @@ def test_obscollection_dino_to_mapgraph():
 
     return
 
+def test_obscollection_consecutive_obs_years():
+    gw = test_obscollection_dinozip_gw_keep_all_obs()
+    coy = gw.consecutive_obs_years()
+    
+    return coy
+
 # %% read FEWS data
 
 
@@ -255,7 +269,3 @@ def test_obs_from_pystore_item():
     item = coll.item(coll.list_items()[0])
     o = obs.GroundwaterObs.from_pystore_item(item)
     return o
-
-
-if __name__ == "__main__":
-    oc = test_obscollection_fews2()
