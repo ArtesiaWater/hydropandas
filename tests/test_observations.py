@@ -177,6 +177,12 @@ def test_obscollection_consecutive_obs_years():
     
     return coy
 
+def test_obscollection_get_seasonal_stats():
+    gw = test_obscollection_dinozip_gw_keep_all_obs()
+    st = gw.get_seasonal_stat(stat='mean')
+    
+    return st
+
 # %% read FEWS data
 
 
@@ -207,7 +213,7 @@ def test_obscollection_to_map():
     fews_gw_prod.to_interactive_map(plot_dir, plot_columns=['value'], fname=fname,
                                     plot_freq='D', legend_name='opp water FEWS',
                                     map_label='locationId', map_label_size=10)
-    return
+    return ax
 
 
 # %% read WISKI data
