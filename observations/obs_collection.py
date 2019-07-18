@@ -1079,7 +1079,24 @@ class ObsCollection(pd.DataFrame):
         from . import io_xml
         io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_pystore(self, store_name, pystore_path, groupby):
+    def to_pystore(self, store_name, pystore_path, groupby, overwrite=False):
+        """Write timeseries and metadata to Pystore format. Series are
+        grouped by 'groupby'. Each group is a Collection, each series within
+        that group an Item.
+
+        Parameters
+        ----------
+        store_name : str
+            name of the store
+        pystore_path : str
+            path where store should be saved
+        groupby : str
+            column name to groupby, (for example, group by location,
+            which would create a collection per location, and write
+            all timeseries at that location as Items into that Collection).
+        overwrite : bool, optional
+            if True overwrite current data in store, by default False
+        """
         import pystore
         pystore.set_path(pystore_path)
         store = pystore.store(store_name)
@@ -1088,7 +1105,8 @@ class ObsCollection(pd.DataFrame):
             collection = store.collection(name)
             for o in group.obs:
                 imeta = o.meta
-                collection.write(o.name, o, metadata=imeta)
+                collection.write(o.name, o, metadata=imeta,
+                                 overwrite=overwrite)
 
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame

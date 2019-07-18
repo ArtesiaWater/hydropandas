@@ -231,7 +231,7 @@ def test_obscollection_wiskizip_gw():
 def test_obscollection_to_pystore():
     obsc = test_obscollection_fews()
     obsc.to_pystore("test_pystore", "./data/2019-Pystore-test",
-                    groupby="locationId")
+                    groupby="locationId", overwrite=True)
 
 
 def test_obscollection_pystore():
