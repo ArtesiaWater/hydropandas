@@ -238,6 +238,7 @@ def test_obscollection_wiskizip_gw():
                                                            'x': 'GlobalX',
                                                            'y': 'GlobalY'},
                                             sep='\s+', header_sep=':',
+                                            dayfirst=True,
                                             header_identifier=':',
                                             parse_dates={"datetime": [0, 1]},
                                             index_col=["datetime"],

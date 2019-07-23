@@ -26,6 +26,23 @@ def test_read_wiski_csv():
 
     return header, data
 
+def test_read_wiski_csv2():
+    # download single file
+
+    header, data = io_wiski.read_wiski_file(r".\data\2019-WISKI-test\8137_PBF.csv",
+                                            sep='\s+', header_sep=':',
+                                            header_identifier=':', verbose=True,
+                                            parse_dates={"datetime": [0, 1]},
+                                            infer_datetime_format=False,
+                                            dayfirst=True,
+                                            index_col=["datetime"],
+                                            translate_dic={'name':'Station Number', 
+                                                           'x':'GlobalX',
+                                                           'y':'GlobalY'})
+
+    return header, data
+
+
 #%%
   
 def test_read_wiski_zip():
