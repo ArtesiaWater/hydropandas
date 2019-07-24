@@ -53,7 +53,8 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
                     events.append({**root[i][j].attrib})
             # combine events in a dataframe
             index = pd.to_datetime(
-                [d + ' ' + t for d, t in zip(date, time)])
+                [d + ' ' + t for d, t in zip(date, time)],
+                errors="coerce")
             ts = pd.DataFrame(events, index=index, dtype=float)
             if remove_nan:
                 ts.dropna(subset=['value'], inplace=True)
@@ -164,7 +165,8 @@ def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
             else:
                 df = pd.DataFrame(events)
                 df.index = pd.to_datetime(
-                    [d + " " + t for d, t in zip(df['date'], df['time'])])
+                    [d + " " + t for d, t in zip(df['date'], df['time'])],
+                    errors="coerce")
                 df.drop(columns=["date", "time"], inplace=True)
                 if return_events:
                     df['value'] = pd.to_numeric(df['value'], errors="coerce")
