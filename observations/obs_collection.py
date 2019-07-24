@@ -212,7 +212,7 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_fews(cls, dirname, ObsClass=obs.GroundwaterObs, name='fews',
+    def from_fews(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
                   to_mnap=True, remove_nan=True,
                   unpackdir=None, force_unpack=False,
                   preserve_datetime=False, verbose=False):
@@ -220,8 +220,8 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        dirname :  str
-            De directory met xml bestanden die je wil inlezen
+        file_or_dir :  str
+            zip, xml or directory with zips or xml files to read
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
@@ -247,32 +247,14 @@ class ObsCollection(pd.DataFrame):
         """
         from . import io_xml
 
-        # unzip dir
-        if dirname.endswith('.zip'):
-            zipf = dirname
-            if unpackdir is None:
-                dirname = tempfile.TemporaryDirectory().name
-            else:
-                dirname = unpackdir
-            util.unzip_file(zipf, dirname, force=force_unpack,
-                            preserve_datetime=preserve_datetime)
-
-        # dirname is directory
-        if os.path.isdir(dirname):
-            unzip_fnames = [i for i in os.listdir(
-                dirname) if i.endswith(".xml")]
-            meta = {'dirname': dirname,
-                    'type': ObsClass,
-                    'verbose': verbose
-                    }
-        else:
-            # dirname is actually an xml
-            unzip_fnames = [os.path.basename(dirname)]
-            meta = {'filename': dirname,
-                    'type': ObsClass,
-                    'verbose': verbose
-                    }
-            dirname = os.path.dirname(dirname)
+        # get files
+        dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
+                                               force_unpack=force_unpack,
+                                               preserve_datetime=preserve_datetime)
+        meta = {'filename': dirname,
+                'type': ObsClass,
+                'verbose': verbose
+                }
 
         obs_list = []
         nfiles = len(unzip_fnames)
@@ -292,7 +274,7 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_fews2(cls, fname, ObsClass=obs.GroundwaterObs, name='fews',
+    def from_fews2(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
                    locations=None, to_mnap=True, remove_nan=True,
                    unpackdir=None, force_unpack=False,
                    preserve_datetime=False,
@@ -301,8 +283,8 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        fname :  str
-            De bestandsnaam van het bestand dat je wilt inlezen
+        file_or_dir : str
+            zip, xml file or directory to read
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
@@ -323,36 +305,29 @@ class ObsCollection(pd.DataFrame):
         -------
         cls(obs_df) : ObsCollection
             collection of multiple point observations
+
         """
         from . import io_xml
 
-        # unzip dir
-        if fname.endswith('.zip'):
-            zipf = fname
-            if unpackdir is None:
-                dirname = tempfile.TemporaryDirectory().name
-            else:
-                dirname = unpackdir
-            util.unzip_file(zipf, dirname, force=force_unpack,
-                            preserve_datetime=preserve_datetime)
-
-            unzip_fnames = os.listdir(dirname)
-            if len(unzip_fnames) == 1:
-                fname = os.path.join(dirname, unzip_fnames[0])
-            elif len(unzip_fnames) > 1:
-                raise ValueError(
-                    'more than one file in zip, use from_fews_dir()')
-            else:
-                raise ValueError('empty zip')
-
-        meta = {'fname': fname,
+        # get files
+        dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
+                                               force_unpack=force_unpack,
+                                               preserve_datetime=preserve_datetime)
+        meta = {'filename': dirname,
                 'type': ObsClass,
                 'verbose': verbose
                 }
 
-        _, obs_list = io_xml.iterparse_pi_xml(fname, ObsClass,
-                                              locationIds=locations,
-                                              verbose=verbose)
+        obs_list = []
+        nfiles = len(unzip_fnames)
+        for j, ixml in enumerate(unzip_fnames):
+            if verbose:
+                print("{0}/{1} read {2}".format(j+1, nfiles, ixml))
+            fullpath = os.path.join(dirname, ixml)
+            _, olist = io_xml.iterparse_pi_xml(fullpath, ObsClass,
+                                               locationIds=locations,
+                                               verbose=verbose)
+            obs_list += olist
 
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
                               columns=obs_list[0].to_collection_dict().keys())
@@ -1079,7 +1054,8 @@ class ObsCollection(pd.DataFrame):
         from . import io_xml
         io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_pystore(self, store_name, pystore_path, groupby, overwrite=False):
+    def to_pystore(self, store_name, pystore_path, groupby, item_name=None,
+                   overwrite=False):
         """Write timeseries and metadata to Pystore format. Series are
         grouped by 'groupby'. Each group is a Collection, each series within
         that group an Item.
@@ -1094,6 +1070,9 @@ class ObsCollection(pd.DataFrame):
             column name to groupby, (for example, group by location,
             which would create a collection per location, and write
             all timeseries at that location as Items into that Collection).
+        item_name : str, optional
+            name of column to use as item name, default is None, Item then
+            takes name from obs.name
         overwrite : bool, optional
             if True overwrite current data in store, by default False
         """
@@ -1105,7 +1084,11 @@ class ObsCollection(pd.DataFrame):
             collection = store.collection(name)
             for o in group.obs:
                 imeta = o.meta
-                collection.write(o.name, o, metadata=imeta,
+                if item_name is None:
+                    name = o.name
+                else:
+                    name = o.meta[item_name]
+                collection.write(name, o, metadata=imeta,
                                  overwrite=overwrite)
 
     def to_gdf(self, xcol='x', ycol='y'):
