@@ -259,10 +259,48 @@ class Obs(DataFrame):
             self.meta['lat'] = lat
 
         return lat, lon
+    
+    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean', 
+                          winter_months=[1,2,3,4,11,12], 
+                          summer_months=[5,6,7,8,9,10]):
+        """get statistics per season
+        
+        Parameters
+        ----------
+        column_name : str, optional
+            column name of the  observation data you want stats for
+        stat : str, optional
+            type of statistics, all statisics from df.describe() are available
+        winter_months : list of int, optional
+            month number of winter months
+        summer_months : list of int, optional
+            month number of summer months
+        
+        
+        Returns
+        -------
+        winter_stats, summer_stats
+            two lists with the statistics for the summer and the winter.
+        
+        """
+
+        if self.empty:
+            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[np.nan], 
+                                                    'summer_{}'.format(stat):[np.nan]})
+        else:
+            winter_stat = self.loc[self.index.month.isin(winter_months)].describe().loc[stat, column_name]
+            summer_stat = self.loc[self.index.month.isin(summer_months)].describe().loc[stat, column_name]
+            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[winter_stat], 
+                                                    'summer_{}'.format(stat):[summer_stat]})
+        
+        return df
 
     def obs_per_year(self, col):
-        return self.groupby(self.index.year).count()[col]
-
+        if self.empty:
+            return Series()
+        else:
+            return self.groupby(self.index.year).count()[col]
+            
     def consecutive_obs_years(self, col, min_obs=12):
 
         obs_per_year = self.obs_per_year(col=col)
@@ -290,7 +328,16 @@ class Obs(DataFrame):
 class GroundwaterObs(Obs):
     """class for groundwater quantity point observations
 
-    Subclass of the Obs class
+    Subclass of the Obs class. Can have the following attributes:
+        - locatie: 2 filters at one piezometer should have the same 'locatie'
+        - filternr: 2 filters at one piezometer should have differente 'filternr'.
+        a higher filter number is preferably deeper than a lower filter number.
+        - bovenkant_filter: top op the filter in m NAP
+        - onderkant_filter: bottom of the filter in m NAP
+        - maaiveld: surface level in m NAP
+        - meetpunt: ? in m NAP
+        - metadata_available: boolean indicating if metadata is available for
+        the measurement point.
 
     """
 
@@ -317,6 +364,8 @@ class GroundwaterObs(Obs):
         self.bovenkant_filter = kwargs.pop('bovenkant_filter', np.nan)
         self.onderkant_filter = kwargs.pop('onderkant_filter', np.nan)
         self.metadata_available = kwargs.pop('metadata_available', np.nan)
+        
+        
 
         super(GroundwaterObs, self).__init__(*args, **kwargs)
 
@@ -417,9 +466,15 @@ class GroundwaterObs(Obs):
 
         header, data = io_wiski.read_wiski_file(fname, **kwargs)
         metadata = {}
+        if 'Station Site' in header.keys():
+            metadata['locatie'] = header['Station Site']
+            header['locatie'] = header['Station Site']
+        metadata['x'] = header['x']
+        metadata['y'] = header['y']
+        metadata['name'] = header['name']
 
-        return cls(data, meta=header, name=header['name'],
-                   x=header['x'], y=header['y'], **metadata)
+
+        return cls(data, meta=header, **metadata)
 
     @classmethod
     def from_pystore_item(cls, item):

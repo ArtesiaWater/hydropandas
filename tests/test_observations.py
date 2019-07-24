@@ -70,6 +70,14 @@ def test_obscollection_dinozip_gw():
                                              verbose=False)
     return dino_gw
 
+def test_obscollection_dinozip_gw_keep_all_obs():
+    # do not delete empty dataframes
+    dino_gw = oc.ObsCollection.from_dino_dir(dirname=dinozip, ObsClass=obs.GroundwaterObs,
+                                             subdir='Grondwaterstanden_Put',
+                                             suffix='1.csv', keep_all_obs=True,
+                                             verbose=False)
+    return dino_gw
+
 
 def test_obscollection_dinozip_wl():
     # surface water
@@ -163,6 +171,18 @@ def test_obscollection_dino_to_mapgraph():
 
     return
 
+def test_obscollection_consecutive_obs_years():
+    gw = test_obscollection_dinozip_gw_keep_all_obs()
+    coy = gw.consecutive_obs_years()
+    
+    return coy
+
+def test_obscollection_get_seasonal_stats():
+    gw = test_obscollection_dinozip_gw_keep_all_obs()
+    st = gw.get_seasonal_stat(stat='mean')
+    
+    return st
+
 # %% read FEWS data
 
 
@@ -193,7 +213,7 @@ def test_obscollection_to_map():
     fews_gw_prod.to_interactive_map(plot_dir, plot_columns=['value'], fname=fname,
                                     plot_freq='D', legend_name='opp water FEWS',
                                     map_label='locationId', map_label_size=10)
-    return
+    return ax
 
 
 # %% read WISKI data
@@ -218,6 +238,7 @@ def test_obscollection_wiskizip_gw():
                                                            'x': 'GlobalX',
                                                            'y': 'GlobalY'},
                                             sep='\s+', header_sep=':',
+                                            dayfirst=True,
                                             header_identifier=':',
                                             parse_dates={"datetime": [0, 1]},
                                             index_col=["datetime"],
@@ -255,7 +276,3 @@ def test_obs_from_pystore_item():
     item = coll.item(coll.list_items()[0])
     o = obs.GroundwaterObs.from_pystore_item(item)
     return o
-
-
-if __name__ == "__main__":
-    oc = test_obscollection_fews2()

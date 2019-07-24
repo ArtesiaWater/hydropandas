@@ -1023,7 +1023,7 @@ class ObsCollection(pd.DataFrame):
                                     color=color,
                                     popup=popup).add_to(group)
 
-                if map_label is not '':
+                if map_label != '':
                     folium.map.Marker([o.meta[col_name_lat], o.meta[col_name_lon]],
                                       icon=DivIcon(icon_size=(150, 36),
                                                    icon_anchor=(0, 0),
@@ -1356,6 +1356,38 @@ class ObsCollection(pd.DataFrame):
         if add_to_df:
             self.add_meta_to_df('lat')
             self.add_meta_to_df('lon')
+            
+    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean', 
+                          winter_months=[1,2,3,4,11,12], 
+                          summer_months=[5,6,7,8,9,10]):
+        """get statistics per season
+        
+        Parameters
+        ----------
+        column_name : str, optional
+            column name of the  observation data you want stats for
+        stat : str, optional
+            type of statistics, all statisics from df.describe() are available
+        winter_months : list of int, optional
+            month number of winter months
+        summer_months : list of int, optional
+            month number of summer months
+        
+        
+        Returns
+        -------
+        DataFrame with stats for summer and winter
+        
+        """
+        
+        
+        df_list = []
+        for o in self.obs.values:
+            df_list.append(o.get_seasonal_stat(column_name, stat, 
+                                               winter_months, summer_months))
+            
+        return pd.concat(df_list)
+        
 
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
                           xcol_obs1='x', ycol_obs1='y',
