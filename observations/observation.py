@@ -259,12 +259,12 @@ class Obs(DataFrame):
             self.meta['lat'] = lat
 
         return lat, lon
-    
-    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean', 
-                          winter_months=[1,2,3,4,11,12], 
+
+    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
+                          winter_months=[1,2,3,4,11,12],
                           summer_months=[5,6,7,8,9,10]):
         """get statistics per season
-        
+
         Parameters
         ----------
         column_name : str, optional
@@ -275,24 +275,24 @@ class Obs(DataFrame):
             month number of winter months
         summer_months : list of int, optional
             month number of summer months
-        
-        
+
+
         Returns
         -------
         winter_stats, summer_stats
             two lists with the statistics for the summer and the winter.
-        
+
         """
 
         if self.empty:
-            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[np.nan], 
+            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[np.nan],
                                                     'summer_{}'.format(stat):[np.nan]})
         else:
             winter_stat = self.loc[self.index.month.isin(winter_months)].describe().loc[stat, column_name]
             summer_stat = self.loc[self.index.month.isin(summer_months)].describe().loc[stat, column_name]
-            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[winter_stat], 
+            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[winter_stat],
                                                     'summer_{}'.format(stat):[summer_stat]})
-        
+
         return df
 
     def obs_per_year(self, col):
@@ -300,7 +300,7 @@ class Obs(DataFrame):
             return Series()
         else:
             return self.groupby(self.index.year).count()[col]
-            
+
     def consecutive_obs_years(self, col, min_obs=12):
 
         obs_per_year = self.obs_per_year(col=col)
@@ -364,8 +364,8 @@ class GroundwaterObs(Obs):
         self.bovenkant_filter = kwargs.pop('bovenkant_filter', np.nan)
         self.onderkant_filter = kwargs.pop('onderkant_filter', np.nan)
         self.metadata_available = kwargs.pop('metadata_available', np.nan)
-        
-        
+
+
 
         super(GroundwaterObs, self).__init__(*args, **kwargs)
 
@@ -399,7 +399,7 @@ class GroundwaterObs(Obs):
             download extra metadata from the server (see Notes)
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
-            
+
         Notes
         -----
         For now only the maaiveld is used from the extra metadata, this method
@@ -469,10 +469,13 @@ class GroundwaterObs(Obs):
         if 'Station Site' in header.keys():
             metadata['locatie'] = header['Station Site']
             header['locatie'] = header['Station Site']
-        metadata['x'] = header['x']
-        metadata['y'] = header['y']
-        metadata['name'] = header['name']
 
+        if 'x' in header.keys():
+            metadata['x'] = header['x']
+        if "y" in header.keys():
+            metadata['y'] = header['y']
+        if 'name' in header.keys():
+            metadata['name'] = header['name']
 
         return cls(data, meta=header, **metadata)
 
