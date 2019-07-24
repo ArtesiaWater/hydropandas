@@ -635,8 +635,13 @@ class ObsCollection(pd.DataFrame):
         if read_series:
             obs_list = io_pystore.store_to_obslist(
                 storename, ObsClass=ObsClass)
-            coldict = [o.to_collection_dict() for o in obs_list]
-            obs_df = pd.DataFrame(coldict, columns=coldict[0].keys())
+            columns = []
+            coldict = []
+            for o in obs_list:
+                d = o.to_collection_dict()
+                coldict.append(d)
+                columns |= d.keys()
+            obs_df = pd.DataFrame(coldict, columns=columns)
             obs_df.set_index('name', inplace=True)
             meta = {'fname': obs_list[0].meta["datastore"],
                     'type': obs.GroundwaterObs,
@@ -1103,8 +1108,12 @@ class ObsCollection(pd.DataFrame):
         for name, group in self.groupby(by=groupby):
             # Access a collection (create it if not exist)
             collection = store.collection(name)
-            for o in group.obs:
-                imeta = o.meta
+            for i, o in enumerate(group.obs):
+                imeta = o.meta.copy()
+                # add extra columns to item metadata
+                for icol in group.columns:
+                    if icol not in imeta.keys() and icol != "obs":
+                        imeta[icol] = group.iloc[i].loc[icol]
                 collection.write(o.name, o, metadata=imeta,
                                  overwrite=overwrite)
 

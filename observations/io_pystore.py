@@ -31,7 +31,10 @@ def item_to_obs(item, ObsClass):
     ObsClass
         DataFrame containing observations
     """
-    df = item.to_pandas()
+    if len(item.data.index)==0:
+        df = pd.DataFrame(columns=item.data.columns)    
+    else:
+        df = item.to_pandas()
     try:
         x = item.metadata["x"]
         y = item.metadata["y"]
@@ -39,7 +42,7 @@ def item_to_obs(item, ObsClass):
         x = np.nan
         y = np.nan
     item.metadata["datastore"] = item.datastore
-    o = ObsClass(df, x=x, y=y, meta=item.metadata)
+    o = ObsClass(df, name=item.item, x=x, y=y, meta=item.metadata)
     return o
 
 
