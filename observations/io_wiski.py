@@ -8,12 +8,12 @@ from .util import unzip_file
 
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',
-                       end_header_str=None, ):
+                       end_header_str=None):
     line = f.readline()
     header = dict()
     while header_identifier in line:
         prop, val = line.split(header_sep)
-        prop = prop.strip()
+        prop = prop.strip().replace(header_identifier, "")
         val = val.strip()
         try:
             val = float(val)
@@ -30,8 +30,8 @@ def _read_wiski_header(f, header_sep=":", header_identifier='#',
 
 def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                     read_series=True, infer_datetime_format=True,
-                    translate_dic={},
-                    verbose=False, **kwargs):
+                    translate_dic={}, verbose=False,
+                    tz_localize=True, to_mnap=True, **kwargs):
     if verbose:
         print('reading -> {}'.format(os.path.split(fname)[-1]))
 
@@ -40,6 +40,7 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
         end_header_str = kwargs.pop("end_header_str")
     else:
         end_header_str = None
+
     # read header
     with open(fname, "r") as f:
         if header_sep is None:
@@ -49,7 +50,7 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
             line, header = _read_wiski_header(f, header_sep=header_sep,
                                               header_identifier=header_identifier,
                                               end_header_str=end_header_str)
-        
+
         # specify names
         for key, item in translate_dic.items():
             header[key] = header[item]
@@ -72,6 +73,9 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                                infer_datetime_format=infer_datetime_format,
                                **kwargs)
 
+            if tz_localize:
+                data.index = data.index.tz_localize(None)
+
             # convert Value to float
             col = [icol for icol in data.columns if
                    icol.lower().startswith("value")][0]
@@ -79,14 +83,15 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
             data[col] = pd.to_numeric(
                 data[col], errors="coerce")
 
-            data.rename(columns={col: 'Stand_m_tov_NAP'}, inplace=True)
+            if to_mnap:
+                data.rename(columns={col: 'Stand_m_tov_NAP'}, inplace=True)
         else:
             data = None
 
     return header, data
 
 
-def read_wiski_dir(dirname, ObsClass=None, suffix=".csv", 
+def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
                    keep_all_obs=True, verbose=True, **kwargs):
 
@@ -111,9 +116,12 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
 
     # gather all obs in list
     obs_list = []
-    for csv in files:
+    for i, csv in enumerate(files):
+        if verbose:
+            print("reading {0}/{1} -> {2}".format(i+1, len(files), csv))
         obs = ObsClass.from_wiski(os.path.join(
-            dirname, csv), verbose=verbose, **kwargs)
+            dirname, csv), verbose=False, **kwargs)
+
         if obs.metadata_available:
             obs_list.append(obs)
         elif keep_all_obs:

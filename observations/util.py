@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import scipy.interpolate as spint
 import scipy.spatial.qhull as qhull
+import tempfile
 
 
 def _import_art_tools():
@@ -23,6 +24,7 @@ def _import_art_tools():
         print(
             'This function is not available please contact Artesia for more information')
         raise(e)
+
 
 def unzip_file(src, dst, force=False, preserve_datetime=False):
     """Unzip file
@@ -93,6 +95,72 @@ def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
                 # (which is the time of extraction by default)
                 tz = time.mktime(info.date_time + (0, 0, -1))
                 os.utime(os.path.join(pathname, info.filename), (tz, tz))
+
+
+def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
+              preserve_datetime=False):
+    """internal method to get list of files with specific
+    extension from dirname.
+
+    Parameters
+    ----------
+    file_or_dir : str
+        file or path to data
+    ext : str
+        extension of filenames to store in list
+    force_unpack : bool, optional
+        force unzip, by default False
+    preserve_datetime : bool, optional
+        preserve datetime of unzipped files, by default False
+        (useful for checking whether data has changed)
+
+    """
+    # check if unpackdir is same as file_or_dir, if same, this can cause
+    # problems when the unpackdir still contains zips that will be unpacked
+    # again.
+    if unpackdir is not None:
+        if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
+            raise ValueError("Please specify a different folder to unpack"
+                             " files!")
+
+    # unzip dir
+    if file_or_dir.endswith('.zip'):
+        zipf = file_or_dir
+        if unpackdir is None:
+            file_or_dir = tempfile.TemporaryDirectory().name
+        else:
+            file_or_dir = unpackdir
+        unzip_file(zipf, file_or_dir, force=force_unpack,
+                   preserve_datetime=preserve_datetime)
+
+    # file_or_dir is directory
+    if os.path.isdir(file_or_dir):
+        # check for zips in dir
+        zip_fnames = [i for i in os.listdir(
+            file_or_dir) if i.endswith(".zip")]
+        if len(zip_fnames) > 0:
+            # unzip zips
+            if unpackdir is None:
+                dirname = tempfile.TemporaryDirectory().name
+            else:
+                dirname = unpackdir
+            for zipf in zip_fnames:
+                unzip_file(os.path.join(file_or_dir, zipf), dirname,
+                           force=force_unpack,
+                           preserve_datetime=preserve_datetime)
+        else:
+            dirname = file_or_dir
+        # get all files with extension ext
+        unzip_fnames = [i for i in os.listdir(
+            dirname) if i.endswith(ext)]
+    elif os.path.isfile(file_or_dir):
+        # file_or_dir is actually an xml
+        unzip_fnames = [os.path.basename(file_or_dir)]  # get file name
+        dirname = os.path.dirname(file_or_dir)  # get directory path
+    else:
+        raise NotImplementedError("Cannot parse 'file_or_dir'!")
+
+    return dirname, unzip_fnames
 
 
 def interp_weights(xy, uv, d=2):
