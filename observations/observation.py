@@ -330,7 +330,7 @@ class GroundwaterObs(Obs):
 
     Subclass of the Obs class. Can have the following attributes:
         - locatie: 2 filters at one piezometer should have the same 'locatie'
-        - filternr: 2 filters at one piezometer should have differente 'filternr'.
+        - filternr: 2 filters at one piezometer should have a different 'filternr'.
         a higher filter number is preferably deeper than a lower filter number.
         - bovenkant_filter: top op the filter in m NAP
         - onderkant_filter: bottom of the filter in m NAP
@@ -538,11 +538,12 @@ class GroundwaterQualityObs(Obs):
     """
 
     _metadata = Obs._metadata + \
-        ['locatie', 'maaiveld', 'metadata_available']
+        ['locatie', 'filternr', 'maaiveld', 'metadata_available']
 
     def __init__(self, *args, **kwargs):
 
         self.locatie = kwargs.pop('locatie', '')
+        self.filternr = kwargs.pop('filternr', '')
         self.maaiveld = kwargs.pop('maaiveld', np.nan)
         self.metadata_available = kwargs.pop('metadata_available', np.nan)
 
