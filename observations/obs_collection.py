@@ -621,6 +621,8 @@ class ObsCollection(pd.DataFrame):
             meta_list = io_pystore.read_store_metadata(storename)
             obs_df = pd.DataFrame(meta_list)
             obs_df.set_index('name', inplace=True)
+            obs_df['x'] = pd.to_numeric(obs_df.x)
+            obs_df['y'] = pd.to_numeric(obs_df.y)
             item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1])
                                 & (obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
         
