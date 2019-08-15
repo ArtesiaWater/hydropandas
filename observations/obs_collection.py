@@ -577,10 +577,12 @@ class ObsCollection(pd.DataFrame):
                                          **kwargs)
 
         return cls(obs_df, name=name, meta=meta)
+    
 
     @classmethod
     def from_pystore(cls, storename, pystore_path,
                      ObsClass=obs.GroundwaterObs,
+                     extent=None, item_names=None,
                      read_series=True):
         """Create ObsCollection from pystore store
 
@@ -593,6 +595,13 @@ class ObsCollection(pd.DataFrame):
         ObsClass : type of Obs, optional
             the Observation type used for reading in the individual series,
             by default obs.GroundwaterObs
+        extent : list or tuple, optional
+            if not None only Observations within this extent are read
+            [xmin, xmax, ymin, ymax]
+        item_names : list of str
+            item (Observation) names that will be extracted from the store.
+            The other items (Observations) will be ignored. if None all items
+            are read.    
         read_series : bool, optional
             if False, read only metadata, default is True which
             loads the full dataset
@@ -606,10 +615,18 @@ class ObsCollection(pd.DataFrame):
 
         from . import io_pystore
         io_pystore.set_pystore_path(pystore_path)
-
+        
+        # obtain item names within extent
+        if extent is not None:
+            meta_list = io_pystore.read_store_metadata(storename)
+            obs_df = pd.DataFrame(meta_list)
+            obs_df.set_index('name', inplace=True)
+            item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1])
+                                & (obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
+        
         if read_series:
             obs_list = io_pystore.store_to_obslist(
-                storename, ObsClass=ObsClass)
+                storename, ObsClass=ObsClass, item_names=item_names)
             columns = []
             coldict = []
             for o in obs_list:
@@ -625,6 +642,8 @@ class ObsCollection(pd.DataFrame):
             meta_list = io_pystore.read_store_metadata(storename)
             meta = {}
             obs_df = pd.DataFrame(meta_list)
+            obs_df.set_index('name', inplace=True)
+            
         return cls(obs_df, name=storename, meta=meta)
 
     def data_frequency_plot(self, column_name='Stand_m_tov_NAP', intervals=None,

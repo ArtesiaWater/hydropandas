@@ -255,7 +255,7 @@ def test_obscollection_to_pystore():
                     groupby="locationId", overwrite=True)
 
 
-def test_obscollection_pystore():
+def test_obscollection_from_pystore():
     obsc = oc.ObsCollection.from_pystore(
         "test_pystore", "./data/2019-Pystore-test")
     return obsc
@@ -267,6 +267,19 @@ def test_obscollection_pystore_only_metadata():
                                          read_series=False)
     return obsc
 
+def test_obscollection_pystore_extent():
+    obsc = oc.ObsCollection.from_pystore("test_pystore",
+                                         "./data/2019-Pystore-test",
+                                         extent=[115534, 115539, 0, 10000000]
+                                         )
+    return obsc
+
+def test_obscollection_pystore_item_names():
+    obsc = oc.ObsCollection.from_pystore("test_pystore",
+                                         "./data/2019-Pystore-test",
+                                         item_names=['MPN-N-2']
+                                         )
+    return obsc
 
 def test_obs_from_pystore_item():
     import pystore
