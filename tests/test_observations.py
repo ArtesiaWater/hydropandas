@@ -45,6 +45,14 @@ def test_observation_dino_download2():
     return gw2
 
 
+def test_observation_dino_download3():
+    # download dino data from pb without extra metadata. For this pb
+    # art.dino_wfs.get_dino_piezometer_metadata() returns an empty list
+    gw3 = obs.GroundwaterObs.from_dino_server(name="B45G1147", filternr=1.,
+                                              tmin="1900-01-01",
+                                              tmax="2020-01-01", unit="NAP")
+    return gw3
+
 def test_interactive_plot():
     gw = test_observation_gw()
     gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
