@@ -415,14 +415,18 @@ class GroundwaterObs(Obs):
 
         if get_metadata:
             import art_tools as art
-            meta_extra = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])[
-                0]
-            for piezometer in meta_extra.pop('levels'):
-                if piezometer['piezometerNr'] == format(filternr, '03'):
-                    meta_extra.update(piezometer)
-                    break
-            maaiveld = meta_extra.pop('surfaceElevation')
-            # meta.update(meta_extra) # please fix this Onno
+            raw_meta = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])
+            if raw_meta != []:
+                meta_extra = raw_meta[0]
+            
+                for piezometer in meta_extra.pop('levels'):
+                    if piezometer['piezometerNr'] == format(filternr, '03'):
+                        meta_extra.update(piezometer)
+                        break
+                maaiveld = meta_extra.pop('surfaceElevation')
+                meta.update(meta_extra) # I guess I (Onno) fixed this
+            else:
+                maaiveld = np.nan
         else:
             maaiveld = np.nan
         meta['maaiveld'] = maaiveld
