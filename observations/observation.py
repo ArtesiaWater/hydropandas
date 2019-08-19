@@ -424,7 +424,13 @@ class GroundwaterObs(Obs):
                         meta_extra.update(piezometer)
                         break
                 maaiveld = meta_extra.pop('surfaceElevation')
-                meta.update(meta_extra) # I guess I (Onno) fixed this
+                # the meta_extra dictionary has a lot
+                # of information, some in nested dictionaries and not always
+                # with the same keys. This will give issues when I automatically
+                # update the meta dictionary. Therefore this is not implemented.
+                # For now only maaiveld is used. If you want to use more info
+                # you have to modify the code here.
+                #meta.update(meta_extra)
             else:
                 maaiveld = np.nan
         else:
