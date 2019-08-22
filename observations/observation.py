@@ -330,7 +330,7 @@ class GroundwaterObs(Obs):
 
     Subclass of the Obs class. Can have the following attributes:
         - locatie: 2 filters at one piezometer should have the same 'locatie'
-        - filternr: 2 filters at one piezometer should have differente 'filternr'.
+        - filternr: 2 filters at one piezometer should have a different 'filternr'.
         a higher filter number is preferably deeper than a lower filter number.
         - bovenkant_filter: top op the filter in m NAP
         - onderkant_filter: bottom of the filter in m NAP
@@ -415,14 +415,24 @@ class GroundwaterObs(Obs):
 
         if get_metadata:
             import art_tools as art
-            meta_extra = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])[
-                0]
-            for piezometer in meta_extra.pop('levels'):
-                if piezometer['piezometerNr'] == format(filternr, '03'):
-                    meta_extra.update(piezometer)
-                    break
-            maaiveld = meta_extra.pop('surfaceElevation')
-            # meta.update(meta_extra) # please fix this Onno
+            raw_meta = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])
+            if raw_meta != []:
+                meta_extra = raw_meta[0]
+            
+                for piezometer in meta_extra.pop('levels'):
+                    if piezometer['piezometerNr'] == format(filternr, '03'):
+                        meta_extra.update(piezometer)
+                        break
+                maaiveld = meta_extra.pop('surfaceElevation')
+                # the meta_extra dictionary has a lot
+                # of information, some in nested dictionaries and not always
+                # with the same keys. This will give issues when I automatically
+                # update the meta dictionary. Therefore this is not implemented.
+                # For now only maaiveld is used. If you want to use more info
+                # you have to modify the code here.
+                #meta.update(meta_extra)
+            else:
+                maaiveld = np.nan
         else:
             maaiveld = np.nan
         meta['maaiveld'] = maaiveld
@@ -538,11 +548,12 @@ class GroundwaterQualityObs(Obs):
     """
 
     _metadata = Obs._metadata + \
-        ['locatie', 'maaiveld', 'metadata_available']
+        ['locatie', 'filternr', 'maaiveld', 'metadata_available']
 
     def __init__(self, *args, **kwargs):
 
         self.locatie = kwargs.pop('locatie', '')
+        self.filternr = kwargs.pop('filternr', '')
         self.maaiveld = kwargs.pop('maaiveld', np.nan)
         self.metadata_available = kwargs.pop('metadata_available', np.nan)
 

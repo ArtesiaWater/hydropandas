@@ -45,6 +45,14 @@ def test_observation_dino_download2():
     return gw2
 
 
+def test_observation_dino_download3():
+    # download dino data from pb without extra metadata. For this pb
+    # art.dino_wfs.get_dino_piezometer_metadata() returns an empty list
+    gw3 = obs.GroundwaterObs.from_dino_server(name="B45G1147", filternr=1.,
+                                              tmin="1900-01-01",
+                                              tmax="2020-01-01", unit="NAP")
+    return gw3
+
 def test_interactive_plot():
     gw = test_observation_gw()
     gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
@@ -255,7 +263,7 @@ def test_obscollection_to_pystore():
                     groupby="locationId", overwrite=True)
 
 
-def test_obscollection_pystore():
+def test_obscollection_from_pystore():
     obsc = oc.ObsCollection.from_pystore(
         "test_pystore", "./data/2019-Pystore-test")
     return obsc
@@ -267,6 +275,19 @@ def test_obscollection_pystore_only_metadata():
                                          read_series=False)
     return obsc
 
+def test_obscollection_pystore_extent():
+    obsc = oc.ObsCollection.from_pystore("test_pystore",
+                                         "./data/2019-Pystore-test",
+                                         extent=[115534, 115539, 0, 10000000]
+                                         )
+    return obsc
+
+def test_obscollection_pystore_item_names():
+    obsc = oc.ObsCollection.from_pystore("test_pystore",
+                                         "./data/2019-Pystore-test",
+                                         item_names=['MPN-N-2']
+                                         )
+    return obsc
 
 def test_obs_from_pystore_item():
     import pystore

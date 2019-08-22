@@ -578,10 +578,12 @@ class ObsCollection(pd.DataFrame):
                                          **kwargs)
 
         return cls(obs_df, name=name, meta=meta)
+    
 
     @classmethod
     def from_pystore(cls, storename, pystore_path,
                      ObsClass=obs.GroundwaterObs,
+                     extent=None, item_names=None,
                      read_series=True):
         """Create ObsCollection from pystore store
 
@@ -594,6 +596,13 @@ class ObsCollection(pd.DataFrame):
         ObsClass : type of Obs, optional
             the Observation type used for reading in the individual series,
             by default obs.GroundwaterObs
+        extent : list or tuple, optional
+            if not None only Observations within this extent are read
+            [xmin, xmax, ymin, ymax]
+        item_names : list of str
+            item (Observation) names that will be extracted from the store.
+            The other items (Observations) will be ignored. if None all items
+            are read.    
         read_series : bool, optional
             if False, read only metadata, default is True which
             loads the full dataset
@@ -607,10 +616,20 @@ class ObsCollection(pd.DataFrame):
 
         from . import io_pystore
         io_pystore.set_pystore_path(pystore_path)
-
+        
+        # obtain item names within extent
+        if extent is not None:
+            meta_list = io_pystore.read_store_metadata(storename)
+            obs_df = pd.DataFrame(meta_list)
+            obs_df.set_index('name', inplace=True)
+            obs_df['x'] = pd.to_numeric(obs_df.x, errors='coerce')
+            obs_df['y'] = pd.to_numeric(obs_df.y, errors='coerce')
+            item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1])
+                                & (obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
+        
         if read_series:
             obs_list = io_pystore.store_to_obslist(
-                storename, ObsClass=ObsClass)
+                storename, ObsClass=ObsClass, item_names=item_names)
             columns = []
             coldict = []
             for o in obs_list:
@@ -626,6 +645,8 @@ class ObsCollection(pd.DataFrame):
             meta_list = io_pystore.read_store_metadata(storename)
             meta = {}
             obs_df = pd.DataFrame(meta_list)
+            obs_df.set_index('name', inplace=True)
+            
         return cls(obs_df, name=storename, meta=meta)
 
     def data_frequency_plot(self, column_name='Stand_m_tov_NAP', intervals=None,
@@ -696,9 +717,7 @@ class ObsCollection(pd.DataFrame):
 
     def get_filternr(self, radius=1, xcol='x', ycol='y', overwrite=False):
         # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
-        straal_pb = 5
-
-        if 'filternr' in self.columns and overwrite:
+        if ('filternr' in self.columns) and (not overwrite):
             raise RuntimeError(
                 "the column 'filternr' already exist, set overwrite=True to replace the current column")
 
@@ -707,15 +726,16 @@ class ObsCollection(pd.DataFrame):
             x = self.loc[name, xcol]
             y = self.loc[name, ycol]
             distance_to_other_filters = np.sqrt(
-                (self[xcol]-x)*(self[xcol]-x) + (self[ycol]-y)*(self[ycol]-y))
-            dup_x = self.loc[distance_to_other_filters < straal_pb]
+                (self[xcol]-x)**2 + (self[ycol]-y)**2)
+            dup_x = self.loc[distance_to_other_filters < radius]
             if dup_x.shape[0] == 1:
                 self.loc[name, 'filternr'] = 1
             else:
                 dup_x2 = dup_x.sort_values('onderkant_filter', ascending=False)
                 for i, pb_dub in enumerate(dup_x2.index):
-                    self.loc[pb_dub, 'filternummer'] = i+1
-
+                    self.loc[pb_dub, 'filternr'] = i+1
+                    
+                    
     def get_first_last_obs_date(self):
         """adds two columns to the ObsCollection with the date of the first
         and the last measurement
@@ -1090,10 +1110,17 @@ class ObsCollection(pd.DataFrame):
             collection = store.collection(name)
             for i, o in enumerate(group.obs):
                 imeta = o.meta.copy()
+                if 'datastore' in imeta.keys():
+                    imeta['datastore'] = str(imeta['datastore'])
                 # add extra columns to item metadata
                 for icol in group.columns:
                     if icol not in imeta.keys() and icol != "obs":
-                        imeta[icol] = group.iloc[i].loc[icol]
+                        #check if type is numpy integer
+                        #numpy integers are not json serializable
+                        if isinstance(group.iloc[i].loc[icol], np.integer): 
+                            imeta[icol] = int(group.iloc[i].loc[icol])
+                        else:
+                            imeta[icol] = group.iloc[i].loc[icol]
                 if item_name is None:
                     name = o.name
                 else:
