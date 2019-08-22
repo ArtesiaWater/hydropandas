@@ -311,6 +311,7 @@ class ObsCollection(pd.DataFrame):
 
         # get files
         dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
+                                               unpackdir=unpackdir,
                                                force_unpack=force_unpack,
                                                preserve_datetime=preserve_datetime)
         meta = {'filename': dirname,
@@ -1097,9 +1098,9 @@ class ObsCollection(pd.DataFrame):
                     name = o.name
                 else:
                     name = o.meta[item_name]
-                collection.write(name, o, metadata=imeta, 
+                collection.write(name, o, metadata=imeta,
                                  overwrite=overwrite)
-            
+
 
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame
@@ -1366,12 +1367,12 @@ class ObsCollection(pd.DataFrame):
         if add_to_df:
             self.add_meta_to_df('lat')
             self.add_meta_to_df('lon')
-            
-    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean', 
-                          winter_months=[1,2,3,4,11,12], 
+
+    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
+                          winter_months=[1,2,3,4,11,12],
                           summer_months=[5,6,7,8,9,10]):
         """get statistics per season
-        
+
         Parameters
         ----------
         column_name : str, optional
@@ -1382,22 +1383,22 @@ class ObsCollection(pd.DataFrame):
             month number of winter months
         summer_months : list of int, optional
             month number of summer months
-        
-        
+
+
         Returns
         -------
         DataFrame with stats for summer and winter
-        
+
         """
-        
-        
+
+
         df_list = []
         for o in self.obs.values:
-            df_list.append(o.get_seasonal_stat(column_name, stat, 
+            df_list.append(o.get_seasonal_stat(column_name, stat,
                                                winter_months, summer_months))
-            
+
         return pd.concat(df_list)
-        
+
 
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
                           xcol_obs1='x', ycol_obs1='y',
