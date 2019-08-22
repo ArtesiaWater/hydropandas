@@ -148,6 +148,8 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
                 unzip_file(os.path.join(file_or_dir, zipf), dirname,
                            force=force_unpack,
                            preserve_datetime=preserve_datetime)
+                # remove intermediate zipfiles
+                os.remove(os.path.join(file_or_dir, zipf))
         else:
             dirname = file_or_dir
         # get all files with extension ext
