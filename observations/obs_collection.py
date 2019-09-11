@@ -578,13 +578,13 @@ class ObsCollection(pd.DataFrame):
                                          **kwargs)
 
         return cls(obs_df, name=name, meta=meta)
-    
 
     @classmethod
     def from_pystore(cls, storename, pystore_path,
                      ObsClass=obs.GroundwaterObs,
-                     extent=None, item_names=None,
-                     read_series=True):
+                     extent=None, collection_names=None,
+                     item_names=None, nameby="item",
+                     read_series=True, verbose=True):
         """Create ObsCollection from pystore store
 
         Parameters
@@ -599,13 +599,18 @@ class ObsCollection(pd.DataFrame):
         extent : list or tuple, optional
             if not None only Observations within this extent are read
             [xmin, xmax, ymin, ymax]
+        collection_names : list of str
+            collection names that will be extracted from the store. Default is
+            None which reads all collections.
         item_names : list of str
             item (Observation) names that will be extracted from the store.
             The other items (Observations) will be ignored. if None all items
-            are read.    
+            are read.
         read_series : bool, optional
             if False, read only metadata, default is True which
             loads the full dataset
+        nameby : str
+            pick whether Obs are named by 'item' or 'collection'
 
         Returns
         -------
@@ -616,7 +621,7 @@ class ObsCollection(pd.DataFrame):
 
         from . import io_pystore
         io_pystore.set_pystore_path(pystore_path)
-        
+
         # obtain item names within extent
         if extent is not None:
             meta_list = io_pystore.read_store_metadata(storename)
@@ -626,10 +631,11 @@ class ObsCollection(pd.DataFrame):
             obs_df['y'] = pd.to_numeric(obs_df.y, errors='coerce')
             item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1])
                                 & (obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
-        
+
         if read_series:
             obs_list = io_pystore.store_to_obslist(
-                storename, ObsClass=ObsClass, item_names=item_names)
+                storename, ObsClass=ObsClass, collection_names=collection_names,
+                item_names=item_names, nameby=nameby, verbose=verbose)
             columns = []
             coldict = []
             for o in obs_list:
@@ -646,7 +652,7 @@ class ObsCollection(pd.DataFrame):
             meta = {}
             obs_df = pd.DataFrame(meta_list)
             obs_df.set_index('name', inplace=True)
-            
+
         return cls(obs_df, name=storename, meta=meta)
 
     def data_frequency_plot(self, column_name='Stand_m_tov_NAP', intervals=None,
@@ -734,8 +740,7 @@ class ObsCollection(pd.DataFrame):
                 dup_x2 = dup_x.sort_values('onderkant_filter', ascending=False)
                 for i, pb_dub in enumerate(dup_x2.index):
                     self.loc[pb_dub, 'filternr'] = i+1
-                    
-                    
+
     def get_first_last_obs_date(self):
         """adds two columns to the ObsCollection with the date of the first
         and the last measurement
@@ -1115,9 +1120,9 @@ class ObsCollection(pd.DataFrame):
                 # add extra columns to item metadata
                 for icol in group.columns:
                     if icol not in imeta.keys() and icol != "obs":
-                        #check if type is numpy integer
-                        #numpy integers are not json serializable
-                        if isinstance(group.iloc[i].loc[icol], np.integer): 
+                        # check if type is numpy integer
+                        # numpy integers are not json serializable
+                        if isinstance(group.iloc[i].loc[icol], np.integer):
                             imeta[icol] = int(group.iloc[i].loc[icol])
                         else:
                             imeta[icol] = group.iloc[i].loc[icol]
@@ -1127,7 +1132,6 @@ class ObsCollection(pd.DataFrame):
                     name = o.meta[item_name]
                 collection.write(name, o, metadata=imeta,
                                  overwrite=overwrite)
-
 
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame
@@ -1347,7 +1351,7 @@ class ObsCollection(pd.DataFrame):
 
         for o in self.obs.values:
             if verbose:
-                print('add to pastas project ->{}'.format(o.name))
+                print('add to pastas project -> {}'.format(o.name))
             series = ps.TimeSeries(o[obs_column], name=o.name, metadata=o.meta)
             pr.add_series(series, kind=kind)
 
@@ -1396,8 +1400,8 @@ class ObsCollection(pd.DataFrame):
             self.add_meta_to_df('lon')
 
     def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
-                          winter_months=[1,2,3,4,11,12],
-                          summer_months=[5,6,7,8,9,10]):
+                          winter_months=[1, 2, 3, 4, 11, 12],
+                          summer_months=[5, 6, 7, 8, 9, 10]):
         """get statistics per season
 
         Parameters
@@ -1418,14 +1422,12 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-
         df_list = []
         for o in self.obs.values:
             df_list.append(o.get_seasonal_stat(column_name, stat,
                                                winter_months, summer_months))
 
         return pd.concat(df_list)
-
 
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
                           xcol_obs1='x', ycol_obs1='y',
