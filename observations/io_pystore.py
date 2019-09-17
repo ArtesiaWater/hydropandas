@@ -74,6 +74,8 @@ def item_to_obs(item, ObsClass, nameby="item"):
         name = item.item
     elif nameby == "collection":
         name = item.collection
+    elif nameby == "both":
+        name = item.collection + "__" + item.item
     o = ObsClass(df, name=name, x=x, y=y, meta=item.metadata)
     return o
 
@@ -99,8 +101,13 @@ def collection_to_obslist(store, collection, ObsClass=GroundwaterObs,
     list : list of ObsClass
         list of ObsClass DataFrames
     """
-    collection = store.collection(collection)
     obs_list = []
+    if collection in store.collections:
+        collection = store.collection(collection)
+    else:
+        if verbose:
+            print("Not in store -> {0}".format(collection))
+        return obs_list
 
     if item_names is None:
         items = collection.items
