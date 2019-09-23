@@ -4,7 +4,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from .util import unzip_file
+from .util import unzip_file, get_files
 
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',
@@ -95,30 +95,20 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
                    keep_all_obs=True, verbose=True, **kwargs):
 
-    # unzip dir
-    if dirname.endswith('.zip'):
-        zipf = dirname
-        if unpackdir is None:
-            dirname = tempfile.TemporaryDirectory().name
-        else:
-            dirname = unpackdir
-        unzip_file(zipf, dirname, force=force_unpack,
-                   preserve_datetime=preserve_datetime)
+    # get files
+    dirname, unzip_fnames = get_files(dirname, ext=suffix,
+                                      force_unpack=force_unpack,
+                                      preserve_datetime=preserve_datetime)
 
-    # read filenames
-    files = os.listdir(os.path.join(dirname))
-    if suffix:
-        files = [f for f in files if f.endswith(suffix)]
-
-    if not files:
-        raise FileNotFoundError('no files were found in {} that end with {}'.format(
+    if not unzip_fnames:
+        raise FileNotFoundError("no files were found in '{}' that end with '{}'".format(
             os.path.join(dirname), suffix))
 
     # gather all obs in list
     obs_list = []
-    for i, csv in enumerate(files):
+    for i, csv in enumerate(unzip_fnames):
         if verbose:
-            print("reading {0}/{1} -> {2}".format(i+1, len(files), csv))
+            print("reading {0}/{1} -> {2}".format(i+1, len(unzip_fnames), csv))
         obs = ObsClass.from_wiski(os.path.join(
             dirname, csv), verbose=False, **kwargs)
 

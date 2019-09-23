@@ -78,7 +78,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
 def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
-                     verbose=False):
+                     skip_errors=True, verbose=False):
     """read a FEWS XML-file with measurements, memory efficient
 
     Parameters
@@ -101,7 +101,8 @@ def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (defaults to
         False)
-
+    skip_errors: bool, optional
+        if True, continue after error, else raise error
 
     Returns
     -------
@@ -126,64 +127,71 @@ def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
 
     keep_flags = [str(flag) for flag in keep_flags]
 
-    for _, element in context:
-        if element.tag.endswith("header"):
-            header = {}
-            for h_attr in element:
-                tag = h_attr.tag.replace("{{{0}}}".format(
-                    "http://www.wldelft.nl/fews/PI"), "")
+    try:
+        for _, element in context:
+            if element.tag.endswith("header"):
+                header = {}
+                for h_attr in element:
+                    tag = h_attr.tag.replace("{{{0}}}".format(
+                        "http://www.wldelft.nl/fews/PI"), "")
+                    # if specific locations are provided only read those
+                    if locationIds is not None and tag.startswith("locationId"):
+                        loc = h_attr.text
+                        if loc not in locationIds:
+                            continue
+                    if h_attr.text is not None:
+                        header[tag] = h_attr.text
+                    elif len(h_attr.attrib) != 0:
+                        header[tag] = {**h_attr.attrib}
+                    else:
+                        header[tag] = None
+                    if verbose and tag.startswith("locationId"):
+                        print("reading {}".format(header[tag]))
+                events = []
+            elif element.tag.endswith("event"):
                 # if specific locations are provided only read those
-                if locationIds is not None and tag.startswith("locationId"):
-                    loc = h_attr.text
+                if locationIds is not None:
                     if loc not in locationIds:
                         continue
-                if h_attr.text is not None:
-                    header[tag] = h_attr.text
-                elif len(h_attr.attrib) != 0:
-                    header[tag] = {**h_attr.attrib}
+                events.append({**element.attrib})
+            elif element.tag.endswith('series'):
+                # if specific locations are provided only read those
+                if locationIds is not None:
+                    if loc not in locationIds:
+                        continue
+                if len(events) == 0:
+                    if return_events:
+                        s = pd.DataFrame()
+                    else:
+                        s = pd.Series()
                 else:
-                    header[tag] = None
-                if verbose and tag.startswith("locationId"):
-                    print("reading {}".format(header[tag]))
-            events = []
-        elif element.tag.endswith("event"):
-            # if specific locations are provided only read those
-            if locationIds is not None:
-                if loc not in locationIds:
-                    continue
-            events.append({**element.attrib})
-        elif element.tag.endswith('series'):
-            # if specific locations are provided only read those
-            if locationIds is not None:
-                if loc not in locationIds:
-                    continue
-            if len(events) == 0:
-                if return_events:
-                    s = pd.DataFrame()
-                else:
-                    s = pd.Series()
-            else:
-                df = pd.DataFrame(events)
-                df.index = pd.to_datetime(
-                    [d + " " + t for d, t in zip(df['date'], df['time'])],
-                    errors="coerce")
-                df.drop(columns=["date", "time"], inplace=True)
-                if return_events:
-                    df['value'] = pd.to_numeric(df['value'], errors="coerce")
-                    df['flag'] = pd.to_numeric(df['flag'])
-                    s = df
-                else:
-                    mask = df['flag'].isin(keep_flags)
-                    s = pd.to_numeric(df.loc[mask, 'value'], errors="coerce")
+                    df = pd.DataFrame(events)
+                    df.index = pd.to_datetime(
+                        [d + " " + t for d, t in zip(df['date'], df['time'])],
+                        errors="coerce")
+                    df.drop(columns=["date", "time"], inplace=True)
+                    if return_events:
+                        df['value'] = pd.to_numeric(df['value'], errors="coerce")
+                        df['flag'] = pd.to_numeric(df['flag'])
+                        s = df
+                    else:
+                        mask = df['flag'].isin(keep_flags)
+                        s = pd.to_numeric(df.loc[mask, 'value'], errors="coerce")
 
-            o = ObsClass(s, name=header['locationId'], meta=header)
-            header_list.append(header)
-            series_list.append(o)
+                o = ObsClass(s, name=header['locationId'], meta=header)
+                header_list.append(header)
+                series_list.append(o)
 
-        # Free memory.
-        element.clear()
-        # while element.getprevious() is not None:
-        #    del element.getparent()[0]
+            # Free memory.
+            element.clear()
+            # while element.getprevious() is not None:
+            #    del element.getparent()[0]
+
+    except Exception as e:
+        if skip_errors:
+            print("ERROR! Skipped {}".format(fname))
+        else:
+            raise(e)
 
     if return_df:
         for h, s in zip(header_list, series_list):

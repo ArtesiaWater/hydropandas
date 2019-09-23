@@ -122,6 +122,11 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
         if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
             raise ValueError("Please specify a different folder to unpack"
                              " files!")
+    # identify whether file_or_dir started as zip
+    if file_or_dir.endswith(".zip"):
+        iszip = True
+    else:
+        iszip = False
 
     # unzip dir
     if file_or_dir.endswith('.zip'):
@@ -146,8 +151,11 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
                 dirname = unpackdir
             for zipf in zip_fnames:
                 unzip_file(os.path.join(file_or_dir, zipf), dirname,
-                           force=force_unpack,
+                           force=True,
                            preserve_datetime=preserve_datetime)
+                # remove intermediate zipfiles if initial file_or_dir was zip
+                if iszip:
+                    os.remove(os.path.join(file_or_dir, zipf))
         else:
             dirname = file_or_dir
         # get all files with extension ext

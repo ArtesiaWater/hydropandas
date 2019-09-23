@@ -4,27 +4,26 @@ A pystore is a datastore for Pandas Dataframes designed to store timeseries.
 The functions in this module aim to save an obs_collection to a pystore. The
 main advantages of a pystore are:
     - smaller file size compared to .csv files
-    - exchangable format, the pystore format is indepedent of the pc 
+    - exchangable format, the pystore format is indepedent of the pc
     (unlike pickle)
 
 A pystore with an ObsCollection has 3 layers:
-    1. directory with name of the pystore with all the information of an  
+    1. directory with name of the pystore with all the information of an
     ObsCollection.
-    
-    2. Inside the pystore directory are directories with the collections of the 
-    pystore. One pystore collection corresponds to a subcollection of an 
+
+    2. Inside the pystore directory are directories with the collections of the
+    pystore. One pystore collection corresponds to a subcollection of an
     ObsCollection (which is an ObsCollection on its own).
-    
+
     You can use pystore collections to group observations from an ObsCollection
     by a certain feature, for example the location of the observation. One
     location can have multiple observations.
-    
-    3. Inside the pystore collection are directories with the items of the 
-    pystore. An item of a pystore contains all the data from an Observation 
+
+    3. Inside the pystore collection are directories with the items of the
+    pystore. An item of a pystore contains all the data from an Observation
     object.
 
 """
-
 
 
 import numpy as np
@@ -45,7 +44,7 @@ def set_pystore_path(pystore_path):
     pystore.set_path(pystore_path)
 
 
-def item_to_obs(item, ObsClass):
+def item_to_obs(item, ObsClass, nameby="item"):
     """convert pystore Item to ObsClass
 
     Parameters
@@ -60,8 +59,8 @@ def item_to_obs(item, ObsClass):
     ObsClass
         DataFrame containing observations
     """
-    if len(item.data.index)==0:
-        df = pd.DataFrame(columns=item.data.columns)    
+    if len(item.data.index) == 0:
+        df = pd.DataFrame(columns=item.data.columns)
     else:
         df = item.to_pandas()
     try:
@@ -71,12 +70,18 @@ def item_to_obs(item, ObsClass):
         x = np.nan
         y = np.nan
     item.metadata["datastore"] = item.datastore
-    o = ObsClass(df, name=item.item, x=x, y=y, meta=item.metadata)
+    if nameby == "item":
+        name = item.item
+    elif nameby == "collection":
+        name = item.collection
+    elif nameby == "both":
+        name = item.collection + "__" + item.item
+    o = ObsClass(df, name=name, x=x, y=y, meta=item.metadata)
     return o
 
 
 def collection_to_obslist(store, collection, ObsClass=GroundwaterObs,
-                          item_names=None):
+                          item_names=None, nameby="item", verbose=True):
     """pystore collection to list of observations
 
     Parameters
@@ -96,22 +101,32 @@ def collection_to_obslist(store, collection, ObsClass=GroundwaterObs,
     list : list of ObsClass
         list of ObsClass DataFrames
     """
-    collection = store.collection(collection)
     obs_list = []
-    
+    if collection in store.collections:
+        collection = store.collection(collection)
+    else:
+        if verbose:
+            print("Not in store -> {0}".format(collection))
+        return obs_list
+
     if item_names is None:
         items = collection.items
     else:
         items = set(item_names) & set(collection.items)
-        
+
     for i in items:
-        item = collection.item(i)
-        o = item_to_obs(item, ObsClass)
-        obs_list.append(o)
+        try:
+            item = collection.item(i)
+            o = item_to_obs(item, ObsClass, nameby=nameby)
+            obs_list.append(o)
+        except Exception:
+            if verbose:
+                print("Skipped -> {0}: {1}".format(collection.collection, i))
     return obs_list
 
 
-def store_to_obslist(store, ObsClass=GroundwaterObs, item_names=None):
+def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
+                     item_names=None, nameby="item", verbose=True):
     """convert pystore to list of ObsClass
 
     Parameters
@@ -124,6 +139,8 @@ def store_to_obslist(store, ObsClass=GroundwaterObs, item_names=None):
         item (Observation) names that will be extracted from the store
         the other items (Observations) will be ignored. if None all items
         are read.
+    nameby : str
+        pick whether obs are named by collection or item name
 
     Returns
     -------
@@ -133,10 +150,15 @@ def store_to_obslist(store, ObsClass=GroundwaterObs, item_names=None):
     """
     store = pystore.store(store)
     obs_list = []
-    for coll in store.collections:
+    if collection_names is None:
+        collections = store.collections
+    else:
+        collections = collection_names
+    for coll in collections:
         obs_list += collection_to_obslist(store, coll,
-                                          ObsClass=ObsClass, 
-                                          item_names=item_names)
+                                          ObsClass=ObsClass,
+                                          item_names=item_names,
+                                          nameby=nameby, verbose=verbose)
     return obs_list
 
 
