@@ -418,7 +418,7 @@ class GroundwaterObs(Obs):
             raw_meta = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])
             if raw_meta != []:
                 meta_extra = raw_meta[0]
-            
+
                 for piezometer in meta_extra.pop('levels'):
                     if piezometer['piezometerNr'] == format(filternr, '03'):
                         meta_extra.update(piezometer)
@@ -638,3 +638,23 @@ class ModelObs(Obs):
     @property
     def _constructor(self):
         return ModelObs
+
+
+class KnmiObs(Obs):
+    """class for KNMI timeseries.
+
+    Subclass of the Obs class
+    """
+
+    _metadata = Obs._metadata + \
+        ['station']
+
+    def __init__(self, *args, **kwargs):
+
+        self.station = kwargs.pop('station', np.nan)
+
+        super(KnmiObs, self).__init__(*args, **kwargs)
+
+    @property
+    def _constructor(self):
+        return KnmiObs
