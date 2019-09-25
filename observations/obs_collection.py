@@ -708,7 +708,7 @@ class ObsCollection(pd.DataFrame):
 
         return ax
 
-    def get_bounding_box(self, xcol='x', ycol='y'):
+    def get_bounding_box(self, xcol='x', ycol='y', buffer=0):
         """returns the bounding box of all observations
 
         Parameters
@@ -717,6 +717,8 @@ class ObsCollection(pd.DataFrame):
             column name with x values
         ycol : str, optional
             column name with y values
+        buffer : int or float, optional
+            add a buffer around the bouding box from the observations
 
         Returns
         -------
@@ -725,10 +727,10 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        xmin = self[xcol].min()
-        xmax = self[xcol].max()
-        ymin = self[ycol].min()
-        ymax = self[ycol].max()
+        xmin = self[xcol].min() - buffer
+        xmax = self[xcol].max() + buffer
+        ymin = self[ycol].min() - buffer
+        ymax = self[ycol].max() + buffer
 
         return (xmin, ymin, xmax, ymax)
 
@@ -1310,12 +1312,19 @@ class ObsCollection(pd.DataFrame):
                               lw=2.0, color='r')
 
                 ax.legend(loc='best')
+            
+            
 
             mg.figure.tight_layout()
             if savefig is not None:
                 mg.figure.savefig(savefig+"{0}.png".format(k),
                                   dpi=300, bbox_inches="tight")
             mg_list.append(mg)
+        
+        #for some reason you have to set the extent at the end again
+        if extent is not None:
+            for mg_m in mg_list:
+                mg_m.mapax.axis(extent)
 
         return mg_list
 
@@ -1416,6 +1425,30 @@ class ObsCollection(pd.DataFrame):
         if add_to_df:
             self.add_meta_to_df('lat')
             self.add_meta_to_df('lon')
+
+    def get_no_of_observations(self, column_name='Stand_m_tov_NAP'):
+        """get number of non-nan values of a column in the observation df
+        
+        Parameters
+        ----------
+        column_name : str, optional
+            column name of the  observation data you want to count
+            
+        Returns
+        -------
+        pandas series with the number of observaitons for each row in the obs
+        collection.
+        """
+        no_obs = []
+        for o in self.obs.values:
+            try:
+                no_obs.append(o[column_name].dropna().count())
+            except KeyError:
+                no_obs.append(0)
+                
+        self['no_obs'] = no_obs
+        
+        return self['no_obs']     
 
     def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
@@ -1623,8 +1656,32 @@ class ObsCollection(pd.DataFrame):
         return df
 
     def consecutive_obs_years(self, min_obs=12, col="Stand_m_tov_NAP"):
-        pblist = {o.name: o.consecutive_obs_years(
-            min_obs=min_obs, col=col) for o in self.obs}
+        """ get the number of consecutive years with more than a minimum of
+        observations.
+        
+        Parameters
+        ----------
+        min_obs : int or str, optional
+            if min_obs is an integer it is the minimum number of observations
+            per year. If min_obs is a string it is the column name of the 
+            obs_collection with minimum number of observation per year per
+            observation.
+        col : str, optional
+            the column of the obs dataframe to get measurements from.
+            
+        Returns
+        -------
+        df : pd.DataFrame
+            dataframe with the observations as column, the years as rows,
+            and the values are the number of consecutive years.        
+        """
+        
+        if type(min_obs) == str:
+            pblist = {o.name: o.consecutive_obs_years(
+                    min_obs=self.loc[o.name,min_obs], col=col) for o in self.obs}
+        else:
+            pblist = {o.name: o.consecutive_obs_years(
+                min_obs=min_obs, col=col) for o in self.obs}
         df = pd.DataFrame.from_dict(pblist)
         return df
 
