@@ -76,6 +76,8 @@ def item_to_obs(item, ObsClass, nameby="item"):
         name = item.collection
     elif nameby == "both":
         name = item.collection + "__" + item.item
+    else:
+        raise ValueError("'{}' is not a valid option for 'nameby'".format(nameby))
     o = ObsClass(df, name=name, x=x, y=y, meta=item.metadata)
     return o
 
@@ -162,13 +164,19 @@ def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
     return obs_list
 
 
-def read_store_metadata(store):
+def read_store_metadata(store, items='all', verbose=False):
     """read only metadata from pystore
 
     Parameters
     ----------
     store : pystore.store
         store containing data
+    items : str, list of str, optional
+        if 'all' read all items
+        if 'first' read first item only
+        if list of str, read those items
+    verbose : bool, optional
+        if True, print progress info
 
     Returns
     -------
@@ -180,9 +188,22 @@ def read_store_metadata(store):
     meta_list = []
     for coll in store.collections:
         c = store.collection(coll)
-        for i in c.list_items():
+        if items == "all":
+            item_list = c.list_items()
+        elif items == 'first':
+            item_list = list(c.list_items())[0:1]
+        else:
+            item_list = items
+        for i in item_list:
             metadata = pystore.utils.read_metadata(c._item_path(i))
-            metadata['name'] = i
+            if metadata is None:
+                if verbose:
+                    print("Cannot read metadata for {0}/{1}".format(coll, i))
+                metadata = dict()
+                metadata['item_name'] = ""
+            else:
+                metadata['item_name'] = i
+            metadata['collection_name'] = coll
             meta_list.append(metadata)
     return meta_list
 
