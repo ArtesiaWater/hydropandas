@@ -648,10 +648,21 @@ class ObsCollection(pd.DataFrame):
                     'type': obs.GroundwaterObs,
                     'verbose': True}
         else:
-            meta_list = io_pystore.read_store_metadata(storename)
+            meta_list = io_pystore.read_store_metadata(storename,
+                                                       items=item_names,
+                                                       verbose=verbose)
             meta = {}
             obs_df = pd.DataFrame(meta_list)
-            obs_df.set_index('name', inplace=True)
+            if nameby == "collection":
+                obs_df.set_index('collection_name', inplace=True)
+            elif nameby == "item":
+                obs_df.set_index('item_name', inplace=True)
+            elif nameby == "both":
+                obs_df["name"] = obs_df["collection_name"] + "__" + \
+                    obs_df["item_name"]
+            else:
+                raise ValueError("'{}' is not a valid option "
+                                 "for 'nameby'".format(nameby))
 
         return cls(obs_df, name=storename, meta=meta)
 
@@ -1352,7 +1363,14 @@ class ObsCollection(pd.DataFrame):
         for o in self.obs.values:
             if verbose:
                 print('add to pastas project -> {}'.format(o.name))
-            series = ps.TimeSeries(o[obs_column], name=o.name, metadata=o.meta)
+            # clean up metadata so there is no dict in dict
+            meta = dict()
+            for k, v in o.meta.items():
+                if isinstance(v, dict):
+                    meta.update(v)
+                else:
+                    meta[k] = v
+            series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
             pr.add_series(series, kind=kind)
 
         return pr
