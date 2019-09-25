@@ -78,7 +78,12 @@ def item_to_obs(item, ObsClass, nameby="item"):
         name = item.collection + "__" + item.item
     else:
         raise ValueError("'{}' is not a valid option for 'nameby'".format(nameby))
-    o = ObsClass(df, name=name, x=x, y=y, meta=item.metadata)
+
+    metadata = item.metadata
+    if not "name" in metadata.keys():
+        metadata["name"] = name
+
+    o = ObsClass(df, name=name, x=x, y=y, meta=metadata)
     return o
 
 
