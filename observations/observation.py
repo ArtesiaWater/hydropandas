@@ -261,8 +261,8 @@ class Obs(DataFrame):
         return lat, lon
 
     def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
-                          winter_months=[1,2,3,4,11,12],
-                          summer_months=[5,6,7,8,9,10]):
+                          winter_months=[1, 2, 3, 4, 11, 12],
+                          summer_months=[5, 6, 7, 8, 9, 10]):
         """get statistics per season
 
         Parameters
@@ -285,13 +285,15 @@ class Obs(DataFrame):
         """
 
         if self.empty:
-            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[np.nan],
-                                                    'summer_{}'.format(stat):[np.nan]})
+            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat): [np.nan],
+                                                    'summer_{}'.format(stat): [np.nan]})
         else:
-            winter_stat = self.loc[self.index.month.isin(winter_months)].describe().loc[stat, column_name]
-            summer_stat = self.loc[self.index.month.isin(summer_months)].describe().loc[stat, column_name]
-            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat):[winter_stat],
-                                                    'summer_{}'.format(stat):[summer_stat]})
+            winter_stat = self.loc[self.index.month.isin(
+                winter_months)].describe().loc[stat, column_name]
+            summer_stat = self.loc[self.index.month.isin(
+                summer_months)].describe().loc[stat, column_name]
+            df = DataFrame(index=[self.name], data={'winter_{}'.format(stat): [winter_stat],
+                                                    'summer_{}'.format(stat): [summer_stat]})
 
         return df
 
@@ -311,7 +313,7 @@ class Obs(DataFrame):
             obs_per_year_all = Series(index=[datetime.now().year], data=0)
         else:
             obs_per_year_all = Series(index=range(obs_per_year.index[0],
-                                                  obs_per_year.index[-1]+1))
+                                                  obs_per_year.index[-1] + 1))
             obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 
         mask_obs_per_year = obs_per_year_all >= min_obs
@@ -365,8 +367,6 @@ class GroundwaterObs(Obs):
         self.onderkant_filter = kwargs.pop('onderkant_filter', np.nan)
         self.metadata_available = kwargs.pop('metadata_available', np.nan)
 
-
-
         super(GroundwaterObs, self).__init__(*args, **kwargs)
 
     @property
@@ -415,7 +415,8 @@ class GroundwaterObs(Obs):
 
         if get_metadata:
             import art_tools as art
-            raw_meta = art.dino_wfs.get_dino_piezometer_metadata([meta['locatie']])
+            raw_meta = art.dino_wfs.get_dino_piezometer_metadata(
+                [meta['locatie']])
             if raw_meta != []:
                 meta_extra = raw_meta[0]
 
@@ -430,7 +431,7 @@ class GroundwaterObs(Obs):
                 # update the meta dictionary. Therefore this is not implemented.
                 # For now only maaiveld is used. If you want to use more info
                 # you have to modify the code here.
-                #meta.update(meta_extra)
+                # meta.update(meta_extra)
             else:
                 maaiveld = np.nan
         else:
@@ -532,8 +533,8 @@ class GroundwaterObs(Obs):
         """
         from .modflow import get_pb_modellayer
         self.meta['modellayer'] = \
-            get_pb_modellayer(np.array([self.x])-dis.sr.xll,
-                              np.array([self.y])-dis.sr.yll,
+            get_pb_modellayer(np.array([self.x]) - dis.sr.xll,
+                              np.array([self.y]) - dis.sr.yll,
                               np.array([self.bovenkant_filter]),
                               np.array([self.onderkant_filter]),
                               dis, zgr, verbose)[0]
@@ -658,3 +659,47 @@ class KnmiObs(Obs):
     @property
     def _constructor(self):
         return KnmiObs
+
+    @classmethod
+    def from_knmi(cls, stn, variable, startdate=None, enddate=None,
+                  normalize_index=True, verbose=False):
+        from . import io_knmi
+
+        ts, meta = io_knmi.get_knmi_timeseries_stn(stn, variable,
+                                                   startdate, enddate,
+                                                   normalize_index=normalize_index,
+                                                   verbose=verbose)
+        return cls(ts, meta=meta, **meta)
+
+    @classmethod
+    def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
+                        normalize_index=True, verbose=False):
+        from . import io_knmi
+
+        ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
+                                                  startdate, enddate,
+                                                  normalize_index=normalize_index,
+                                                  verbose=verbose)
+
+        return cls(ts, meta=meta, **meta)
+
+    @classmethod
+    def from_obs(cls, obs, variable, startdate=None, enddate=None,
+                 normalize_index=True, verbose=False):
+
+        from . import io_knmi
+
+        x = obs.meta["x"]
+        y = obs.meta["y"]
+
+        if startdate is None:
+            startdate = obs.index[0]
+        if enddate is None:
+            enddate = obs.index[-1]
+
+        ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
+                                                  startdate, enddate,
+                                                  normalize_index=normalize_index,
+                                                  verbose=verbose)
+
+        return cls(ts, meta=meta, **meta)
