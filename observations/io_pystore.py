@@ -69,7 +69,7 @@ def item_to_obs(item, ObsClass, nameby="item"):
     except KeyError:
         x = np.nan
         y = np.nan
-    item.metadata["datastore"] = item.datastore
+    item.metadata["datastore"] = str(item.datastore)
     if nameby == "item":
         name = item.item
     elif nameby == "collection":
