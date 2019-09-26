@@ -1209,6 +1209,7 @@ class ObsCollection(pd.DataFrame):
 
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
+                     plot_func=None,
                      plot_xlim=None, plot_ylim=(None, None), min_dy=2.0,
                      vlines=[],
                      savefig=None, map_gdf=None, map_gdf_kwargs={},
@@ -1227,6 +1228,8 @@ class ObsCollection(pd.DataFrame):
             extent of the map [xmin, xmax, ymin, ymax]
         plot_column : str, optional
             column name of data to be plotted in graphs
+        plot_func : function, optional,
+            if not None this function is used to make the plots
         plot_xlim : datetime, optional
             xlim of the graphs
         plot_ylim : tuple or str, optional
@@ -1277,30 +1280,33 @@ class ObsCollection(pd.DataFrame):
 
             for i, o in enumerate(xyo.obs.values):
                 ax = mg.ax[i]
-                pb = o.name
-                try:
-                    o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5,
-                                                                   marker='.', markersize=1., label=pb)
-                except TypeError:
-                    o[plot_column].plot(ax=ax, lw=.5, marker='.',
-                                        markersize=1., label=pb)
-                    ax.set_xlim(plot_xlim)
-                if plot_ylim == 'min_dy':
-                    ax.autoscale(axis='y', tight=True)
-                    ylim = ax.get_ylim()
-                    dy = ylim[1]-ylim[0]
-                    if dy < min_dy:
-                        ylim = (ylim[0]-(min_dy-dy)/2, ylim[1]+(min_dy-dy)/2)
-                    ax.set_ylim(ylim)
+                if plot_func:
+                    ax = plot_func(self, o, ax, plot_column)
                 else:
-                    ax.set_ylim(plot_ylim)
-
-                for line in vlines:
-                    ylim = ax.get_ylim()
-                    ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
-                              lw=2.0, color='r')
-
-                ax.legend(loc='best')
+                    pb = o.name
+                    try:
+                        o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5,
+                                                                       marker='.', markersize=1., label=pb)
+                    except TypeError:
+                        o[plot_column].plot(ax=ax, lw=.5, marker='.',
+                                            markersize=1., label=pb)
+                        ax.set_xlim(plot_xlim)
+                    if plot_ylim == 'min_dy':
+                        ax.autoscale(axis='y', tight=True)
+                        ylim = ax.get_ylim()
+                        dy = ylim[1]-ylim[0]
+                        if dy < min_dy:
+                            ylim = (ylim[0]-(min_dy-dy)/2, ylim[1]+(min_dy-dy)/2)
+                        ax.set_ylim(ylim)
+                    else:
+                        ax.set_ylim(plot_ylim)
+    
+                    for line in vlines:
+                        ylim = ax.get_ylim()
+                        ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
+                                  lw=2.0, color='r')
+    
+                    ax.legend(loc='best')
             
             
 
