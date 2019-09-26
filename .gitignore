@@ -103,3 +103,5 @@ ENV/
 .pytest_cache/
 
 *.html
+
+tests/data/2019-Pystore-test/test_pystore/
