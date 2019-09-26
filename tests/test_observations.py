@@ -1,10 +1,11 @@
-from observations import obs_collection as oc
-from observations import observation as obs
 import os
-import numpy as np
 import sys
 sys.path.insert(1, "..")
 
+import numpy as np
+
+from observations import obs_collection as oc
+from observations import observation as obs
 
 plot_dir = r".\data\2019-Dino-test\plots"
 dinozip = r'.\data\2019-Dino-test\Dino.zip'
@@ -53,6 +54,7 @@ def test_observation_dino_download3():
                                               tmax="2020-01-01", unit="NAP")
     return gw3
 
+
 def test_interactive_plot():
     gw = test_observation_gw()
     gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
@@ -77,6 +79,7 @@ def test_obscollection_dinozip_gw():
                                              suffix='1.csv', keep_all_obs=False,
                                              verbose=False)
     return dino_gw
+
 
 def test_obscollection_dinozip_gw_keep_all_obs():
     # do not delete empty dataframes
@@ -179,16 +182,18 @@ def test_obscollection_dino_to_mapgraph():
 
     return
 
+
 def test_obscollection_consecutive_obs_years():
     gw = test_obscollection_dinozip_gw_keep_all_obs()
     coy = gw.consecutive_obs_years()
-    
+
     return coy
+
 
 def test_obscollection_get_seasonal_stats():
     gw = test_obscollection_dinozip_gw_keep_all_obs()
     st = gw.get_seasonal_stat(stat='mean')
-    
+
     return st
 
 # %% read FEWS data
@@ -275,12 +280,14 @@ def test_obscollection_pystore_only_metadata():
                                          read_series=False)
     return obsc
 
+
 def test_obscollection_pystore_extent():
     obsc = oc.ObsCollection.from_pystore("test_pystore",
                                          "./data/2019-Pystore-test",
                                          extent=[115534, 115539, 0, 10000000]
                                          )
     return obsc
+
 
 def test_obscollection_pystore_item_names():
     obsc = oc.ObsCollection.from_pystore("test_pystore",
@@ -289,11 +296,27 @@ def test_obscollection_pystore_item_names():
                                          )
     return obsc
 
+
 def test_obs_from_pystore_item():
     import pystore
     pystore.set_path("./data/2019-Pystore-test")
     store = pystore.store("test_pystore")
     coll = store.collection(store.collections[0])
-    item = coll.item(coll.list_items()[0])
+    item = coll.item(list(coll.list_items())[0])
     o = obs.GroundwaterObs.from_pystore_item(item)
     return o
+
+# %% Test KNMI Obs
+
+
+def test_knmi_obs_from_stn():
+    return obs.KnmiObs.from_knmi(829, "RD")
+
+
+def test_knmi_obs_from_xy():
+    return obs.KnmiObs.from_nearest_xy(100000, 350000, "RD")
+
+
+def test_knmi_obs_from_obs():
+    pb = test_observation_gw()
+    return obs.KnmiObs.from_obs(pb, "EV24")

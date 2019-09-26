@@ -624,9 +624,10 @@ class ObsCollection(pd.DataFrame):
 
         # obtain item names within extent
         if extent is not None:
-            meta_list = io_pystore.read_store_metadata(storename)
+            meta_list = io_pystore.read_store_metadata(
+                storename, items="first")
             obs_df = pd.DataFrame(meta_list)
-            obs_df.set_index('name', inplace=True)
+            obs_df.set_index('item_name', inplace=True)
             obs_df['x'] = pd.to_numeric(obs_df.x, errors='coerce')
             obs_df['y'] = pd.to_numeric(obs_df.y, errors='coerce')
             item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1])
@@ -648,10 +649,23 @@ class ObsCollection(pd.DataFrame):
                     'type': obs.GroundwaterObs,
                     'verbose': True}
         else:
-            meta_list = io_pystore.read_store_metadata(storename)
+            if item_names is None:
+                item_names = "all"
+            meta_list = io_pystore.read_store_metadata(storename,
+                                                       items=item_names,
+                                                       verbose=verbose)
             meta = {}
             obs_df = pd.DataFrame(meta_list)
-            obs_df.set_index('name', inplace=True)
+            if nameby == "collection":
+                obs_df.set_index('collection_name', inplace=True)
+            elif nameby == "item":
+                obs_df.set_index('item_name', inplace=True)
+            elif nameby == "both":
+                obs_df["name"] = obs_df["collection_name"] + "__" + \
+                    obs_df["item_name"]
+            else:
+                raise ValueError("'{}' is not a valid option "
+                                 "for 'nameby'".format(nameby))
 
         return cls(obs_df, name=storename, meta=meta)
 
@@ -1296,27 +1310,25 @@ class ObsCollection(pd.DataFrame):
                         ylim = ax.get_ylim()
                         dy = ylim[1]-ylim[0]
                         if dy < min_dy:
-                            ylim = (ylim[0]-(min_dy-dy)/2, ylim[1]+(min_dy-dy)/2)
+                            ylim = (ylim[0]-(min_dy-dy)/2,
+                                    ylim[1]+(min_dy-dy)/2)
                         ax.set_ylim(ylim)
                     else:
                         ax.set_ylim(plot_ylim)
-    
+
                     for line in vlines:
                         ylim = ax.get_ylim()
                         ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
                                   lw=2.0, color='r')
-    
                     ax.legend(loc='best')
-            
-            
 
             mg.figure.tight_layout()
             if savefig is not None:
                 mg.figure.savefig(savefig+"{0}.png".format(k),
                                   dpi=300, bbox_inches="tight")
             mg_list.append(mg)
-        
-        #for some reason you have to set the extent at the end again
+
+        # for some reason you have to set the extent at the end again
         if extent is not None:
             for mg_m in mg_list:
                 mg_m.mapax.axis(extent)
@@ -1367,7 +1379,14 @@ class ObsCollection(pd.DataFrame):
         for o in self.obs.values:
             if verbose:
                 print('add to pastas project -> {}'.format(o.name))
-            series = ps.TimeSeries(o[obs_column], name=o.name, metadata=o.meta)
+            # clean up metadata so there is no dict in dict
+            meta = dict()
+            for k, v in o.meta.items():
+                if isinstance(v, dict):
+                    meta.update(v)
+                else:
+                    meta[k] = v
+            series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
             pr.add_series(series, kind=kind)
 
         return pr
@@ -1416,12 +1435,12 @@ class ObsCollection(pd.DataFrame):
 
     def get_no_of_observations(self, column_name='Stand_m_tov_NAP'):
         """get number of non-nan values of a column in the observation df
-        
+
         Parameters
         ----------
         column_name : str, optional
             column name of the  observation data you want to count
-            
+
         Returns
         -------
         pandas series with the number of observaitons for each row in the obs
@@ -1433,10 +1452,10 @@ class ObsCollection(pd.DataFrame):
                 no_obs.append(o[column_name].dropna().count())
             except KeyError:
                 no_obs.append(0)
-                
+
         self['no_obs'] = no_obs
-        
-        return self['no_obs']     
+
+        return self['no_obs']
 
     def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
@@ -1646,27 +1665,27 @@ class ObsCollection(pd.DataFrame):
     def consecutive_obs_years(self, min_obs=12, col="Stand_m_tov_NAP"):
         """ get the number of consecutive years with more than a minimum of
         observations.
-        
+
         Parameters
         ----------
         min_obs : int or str, optional
             if min_obs is an integer it is the minimum number of observations
-            per year. If min_obs is a string it is the column name of the 
+            per year. If min_obs is a string it is the column name of the
             obs_collection with minimum number of observation per year per
             observation.
         col : str, optional
             the column of the obs dataframe to get measurements from.
-            
+
         Returns
         -------
         df : pd.DataFrame
             dataframe with the observations as column, the years as rows,
-            and the values are the number of consecutive years.        
+            and the values are the number of consecutive years.
         """
-        
+
         if type(min_obs) == str:
             pblist = {o.name: o.consecutive_obs_years(
-                    min_obs=self.loc[o.name,min_obs], col=col) for o in self.obs}
+                min_obs=self.loc[o.name, min_obs], col=col) for o in self.obs}
         else:
             pblist = {o.name: o.consecutive_obs_years(
                 min_obs=min_obs, col=col) for o in self.obs}
