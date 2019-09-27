@@ -20,6 +20,7 @@ from . import observation as obs
 from . import util
 
 
+
 class ObsCollection(pd.DataFrame):
     """class for a collection of point observations
 
@@ -175,7 +176,8 @@ class ObsCollection(pd.DataFrame):
         preserve_datetime : boolean, optional
             use date of the zipfile for the destination file
         keep_all_obs : boolean, optional
-            add all observation points to the collection, even without metadata
+            add all observation points to the collection, even without data or
+            metadata
         name : str, optional
             the name of the observation collection
         verbose : boolean, optional
