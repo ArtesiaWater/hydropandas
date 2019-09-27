@@ -439,7 +439,8 @@ def read_dino_dir(dirname, ObsClass=None,
     verbose : boolean, optional
         Print additional information to the screen (default is False)
     keep_all_obs : boolean, optional
-        add all observation points to the collection, even without metadata
+        add all observation points to the collection, even without data or
+        metadata
     **kwargs: dict, optional
         Extra arguments are passed to ObsClass.from_dino_file()
 
@@ -474,7 +475,7 @@ def read_dino_dir(dirname, ObsClass=None,
     for _, file in enumerate(files):
         fname = os.path.join(dirname, subdir, file)
         obs = ObsClass.from_dino_file(fname=fname, verbose=verbose, **kwargs)
-        if obs.metadata_available:
+        if obs.metadata_available and (not obs.empty):
             obs_list.append(obs)
         elif keep_all_obs:
             obs_list.append(obs)
