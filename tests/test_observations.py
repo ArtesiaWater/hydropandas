@@ -1,11 +1,16 @@
 import os
+from observations import observation as obs
+from observations import obs_collection as oc
+import numpy as np
 import sys
 sys.path.insert(1, "..")
 
-import numpy as np
 
-from observations import obs_collection as oc
-from observations import observation as obs
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
+sys.path.insert(0, PROJECT_DIR)
+os.chdir(TEST_DIR)
+
 
 plot_dir = r".\data\2019-Dino-test\plots"
 dinozip = r'.\data\2019-Dino-test\Dino.zip'
@@ -74,44 +79,55 @@ def test_obscollection_fieldlogger():
 
 def test_obscollection_dinozip_gw():
     # groundwater quantity
-    dino_gw = oc.ObsCollection.from_dino_dir(dirname=dinozip, ObsClass=obs.GroundwaterObs,
-                                             subdir='Grondwaterstanden_Put',
-                                             suffix='1.csv', keep_all_obs=False,
-                                             verbose=False)
+    dino_gw = oc.ObsCollection.from_dino_dir(
+        dirname=dinozip,
+        ObsClass=obs.GroundwaterObs,
+        subdir='Grondwaterstanden_Put',
+        suffix='1.csv',
+        keep_all_obs=False,
+        verbose=False)
     return dino_gw
 
 
 def test_obscollection_dinozip_gw_keep_all_obs():
     # do not delete empty dataframes
-    dino_gw = oc.ObsCollection.from_dino_dir(dirname=dinozip, ObsClass=obs.GroundwaterObs,
-                                             subdir='Grondwaterstanden_Put',
-                                             suffix='1.csv', keep_all_obs=True,
-                                             verbose=False)
+    dino_gw = oc.ObsCollection.from_dino_dir(
+        dirname=dinozip,
+        ObsClass=obs.GroundwaterObs,
+        subdir='Grondwaterstanden_Put',
+        suffix='1.csv',
+        keep_all_obs=True,
+        verbose=False)
     return dino_gw
 
 
 def test_obscollection_dinozip_wl():
     # surface water
-    dino_ps = oc.ObsCollection.from_dino_dir(dirname=dinozip, ObsClass=obs.WaterlvlObs,
-                                             subdir='Peilschaal', suffix='.csv',
-                                             verbose=True)
+    dino_ps = oc.ObsCollection.from_dino_dir(
+        dirname=dinozip,
+        ObsClass=obs.WaterlvlObs,
+        subdir='Peilschaal',
+        suffix='.csv',
+        verbose=True)
     return dino_ps
 
 
 def test_obscollection_dinozip_gwq():
     # groundwater quality
-    dino_gwq = oc.ObsCollection.from_dino_dir(dirname=dinozip, ObsClass=obs.GroundwaterQualityObs,
-                                              subdir='Grondwatersamenstellingen_Put',
-                                              suffix='.txt', verbose=True)
+    dino_gwq = oc.ObsCollection.from_dino_dir(
+        dirname=dinozip,
+        ObsClass=obs.GroundwaterQualityObs,
+        subdir='Grondwatersamenstellingen_Put',
+        suffix='.txt',
+        verbose=True)
     return dino_gwq
 
 
 def test_obscollection_dino_download_extent():
     # download DINO from extent
     extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed
-    dino_gw_extent = oc.ObsCollection.from_dino_server(extent=extent,
-                                                       ObsClass=obs.GroundwaterObs,
-                                                       verbose=True)
+    dino_gw_extent = oc.ObsCollection.from_dino_server(
+        extent=extent, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_extent
 
 
@@ -120,9 +136,8 @@ def test_obscollection_dino_download_bbox():
     bbox = [120300, 439000, 120500, 441000]  # Schoonhoven zoomed
     bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
 
-    dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox,
-                                                     ObsClass=obs.GroundwaterObs,
-                                                     verbose=True)
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(
+        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_bbox
 
 
@@ -131,9 +146,8 @@ def test_obscollection_dino_download_bbox_empty():
     bbox = [88596.63500000164, 407224.8449999988,
             89623.4149999991, 407804.27800000086]
 
-    dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox,
-                                                     ObsClass=obs.GroundwaterObs,
-                                                     verbose=True)
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(
+        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_bbox
 
 
@@ -200,21 +214,29 @@ def test_obscollection_get_seasonal_stats():
 
 
 def test_obscollection_fews():
-    fews_gw_prod = oc.ObsCollection.from_fews(r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
-                                              verbose=True, to_mnap=False,
-                                              remove_nan=False)
+    fews_gw_prod = oc.ObsCollection.from_fews(
+        r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        verbose=True,
+        to_mnap=False,
+        remove_nan=False)
     return fews_gw_prod
 
 
 def test_obscollection_fews2():
-    fews_gw_prod = oc.ObsCollection.from_fews2(r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
-                                               verbose=True, locations=None)
+    fews_gw_prod = oc.ObsCollection.from_fews2(
+        r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        verbose=True,
+        locations=None)
     return fews_gw_prod
 
 
 def test_obscollection_fews2_selection():
-    fews_gw_prod = oc.ObsCollection.from_fews2(r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
-                                               verbose=True, locations=("MPN-N-2",))
+    fews_gw_prod = oc.ObsCollection.from_fews2(
+        r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        verbose=True,
+        locations=(
+            "MPN-N-2",
+        ))
     return fews_gw_prod
 
 
@@ -223,39 +245,56 @@ def test_obscollection_to_map():
     plot_dir = r".\data\2019-FEWS-test\plots"
     fews_gw_prod = test_obscollection_fews()
     ax = fews_gw_prod.to_map()
-    fews_gw_prod.to_interactive_map(plot_dir, plot_columns=['value'], fname=fname,
-                                    plot_freq='D', legend_name='opp water FEWS',
-                                    map_label='locationId', map_label_size=10)
+    fews_gw_prod.to_interactive_map(
+        plot_dir,
+        plot_columns=['value'],
+        fname=fname,
+        plot_freq='D',
+        legend_name='opp water FEWS',
+        map_label='locationId',
+        map_label_size=10)
     return ax
 
 
 # %% read WISKI data
 
 def test_observation_wiskicsv_gw():
-    wiski_gw = obs.GroundwaterObs.from_wiski(r".\data\2019-WISKI-test\1016_PBF.csv",
-                                             sep='\s+', header_sep=':',
-                                             header_identifier=':',
-                                             parse_dates={"datetime": [0, 1]},
-                                             index_col=["datetime"],
-                                             translate_dic={'name': 'Station Number',
-                                                            'x': 'GlobalX',
-                                                            'y': 'GlobalY'},
-                                             verbose=True)
+    wiski_gw = obs.GroundwaterObs.from_wiski(
+        r".\data\2019-WISKI-test\1016_PBF.csv",
+        sep=r'\s+',
+        header_sep=':',
+        header_identifier=':',
+        parse_dates={
+            "datetime": [
+                0,
+                1]},
+        index_col=["datetime"],
+        translate_dic={
+            'name': 'Station Number',
+            'x': 'GlobalX',
+            'y': 'GlobalY'},
+        verbose=True)
 
     return wiski_gw
 
 
 def test_obscollection_wiskizip_gw():
-    wiski_col = oc.ObsCollection.from_wiski(r".\data\2019-WISKI-test\1016_PBF.zip",
-                                            translate_dic={'name': 'Station Number',
-                                                           'x': 'GlobalX',
-                                                           'y': 'GlobalY'},
-                                            sep='\s+', header_sep=':',
-                                            dayfirst=True,
-                                            header_identifier=':',
-                                            parse_dates={"datetime": [0, 1]},
-                                            index_col=["datetime"],
-                                            verbose=True)
+    wiski_col = oc.ObsCollection.from_wiski(
+        r".\data\2019-WISKI-test\1016_PBF.zip",
+        translate_dic={
+            'name': 'Station Number',
+            'x': 'GlobalX',
+            'y': 'GlobalY'},
+        sep=r'\s+',
+        header_sep=':',
+        dayfirst=True,
+        header_identifier=':',
+        parse_dates={
+            "datetime": [
+                0,
+                1]},
+        index_col=["datetime"],
+        verbose=True)
 
     return wiski_col
 
