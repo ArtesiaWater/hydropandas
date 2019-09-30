@@ -74,7 +74,7 @@ def test_obscollection_fieldlogger():
         r'.\data\2019-Dino-test\fieldlogger\locations.csv')
     return fl
 
-# %% read dino directories
+# read dino directories
 
 
 def test_obscollection_dinozip_gw():
@@ -151,7 +151,7 @@ def test_obscollection_dino_download_bbox_empty():
     return dino_gw_bbox
 
 
-# %% collection methods
+# collection methods
 
 
 def test_get_nearest_point():
@@ -159,6 +159,12 @@ def test_get_nearest_point():
     fl = test_obscollection_fieldlogger()
     dino_gw[['nearest point', 'distance nearest point']
             ] = dino_gw.get_nearest_point(fl)
+    return dino_gw
+
+
+def test_get_filternr():
+    dino_gw = test_obscollection_dinozip_gw()
+    dino_gw.get_filternr(if_exists='replace')
     return dino_gw
 
 
@@ -210,7 +216,7 @@ def test_obscollection_get_seasonal_stats():
 
     return st
 
-# %% read FEWS data
+# read FEWS data
 
 
 def test_obscollection_fews():
@@ -256,7 +262,7 @@ def test_obscollection_to_map():
     return ax
 
 
-# %% read WISKI data
+# read WISKI data
 
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(
@@ -299,7 +305,7 @@ def test_obscollection_wiskizip_gw():
     return wiski_col
 
 
-# %% Test Pystore
+# Test Pystore
 
 def test_obscollection_to_pystore():
     obsc = test_obscollection_fews()
@@ -345,7 +351,7 @@ def test_obs_from_pystore_item():
     o = obs.GroundwaterObs.from_pystore_item(item)
     return o
 
-# %% Test KNMI Obs
+# Test KNMI Obs
 
 
 def test_knmi_obs_from_stn():

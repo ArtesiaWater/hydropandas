@@ -20,7 +20,6 @@ from . import observation as obs
 from . import util
 
 
-
 class ObsCollection(pd.DataFrame):
     """class for a collection of point observations
 
@@ -150,11 +149,19 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, bbox=bbox, meta=meta)
 
     @classmethod
-    def from_dino_dir(cls, dirname=None, ObsClass=obs.GroundwaterObs,
-                      subdir='Grondwaterstanden_Put', suffix='1.csv',
-                      unpackdir=None, force_unpack=False, preserve_datetime=False,
-                      keep_all_obs=True, name=None, verbose=False,
-                      **kwargs):
+    def from_dino_dir(
+            cls,
+            dirname=None,
+            ObsClass=obs.GroundwaterObs,
+            subdir='Grondwaterstanden_Put',
+            suffix='1.csv',
+            unpackdir=None,
+            force_unpack=False,
+            preserve_datetime=False,
+            keep_all_obs=True,
+            name=None,
+            verbose=False,
+            **kwargs):
         """ Read a dino directory
 
         Parameters
@@ -206,10 +213,17 @@ class ObsCollection(pd.DataFrame):
                 'keep_all_obs': keep_all_obs
                 }
 
-        obs_df = io_dino.read_dino_dir(dirname, ObsClass, subdir, suffix,
-                                       unpackdir, force_unpack, preserve_datetime,
-                                       verbose, keep_all_obs,
-                                       **kwargs)
+        obs_df = io_dino.read_dino_dir(
+            dirname,
+            ObsClass,
+            subdir,
+            suffix,
+            unpackdir,
+            force_unpack,
+            preserve_datetime,
+            verbose,
+            keep_all_obs,
+            **kwargs)
 
         return cls(obs_df, name=name, meta=meta)
 
@@ -262,10 +276,14 @@ class ObsCollection(pd.DataFrame):
         nfiles = len(unzip_fnames)
         for j, ixml in enumerate(unzip_fnames):
             if verbose:
-                print("{0}/{1} read {2}".format(j+1, nfiles, ixml))
+                print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
             fullpath = os.path.join(dirname, ixml)
-            olist = io_xml.read_xml(fullpath, ObsClass=ObsClass, to_mnap=to_mnap,
-                                    remove_nan=remove_nan, verbose=False)
+            olist = io_xml.read_xml(
+                fullpath,
+                ObsClass=ObsClass,
+                to_mnap=to_mnap,
+                remove_nan=remove_nan,
+                verbose=False)
             obs_list += olist
 
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
@@ -325,7 +343,7 @@ class ObsCollection(pd.DataFrame):
         nfiles = len(unzip_fnames)
         for j, ixml in enumerate(unzip_fnames):
             if verbose:
-                print("{0}/{1} read {2}".format(j+1, nfiles, ixml))
+                print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
             fullpath = os.path.join(dirname, ixml)
             _, olist = io_xml.iterparse_pi_xml(fullpath, ObsClass,
                                                locationIds=locations,
@@ -410,9 +428,12 @@ class ObsCollection(pd.DataFrame):
             # loop over timesteps
             for t, date in enumerate(mtime):
                 head_idf = 'head_{}_l{}.idf'.format(
-                    date.strftime('%Y%m%d'), m+1)
+                    date.strftime('%Y%m%d'), m + 1)
                 fname = os.path.join(
-                    model_ws, runfile.data['OUTPUTDIRECTORY'], 'head', head_idf)
+                    model_ws,
+                    runfile.data['OUTPUTDIRECTORY'],
+                    'head',
+                    head_idf)
                 if verbose:
                     print('read {}'.format(fname))
                 ihds, _attrs = imod.idf.read(fname)
@@ -421,10 +442,16 @@ class ObsCollection(pd.DataFrame):
 
         mo_list = []
         for i, name in enumerate(obs_collection.index):
-            mo = obs.ModelObs(index=mtime, data=hm_ts[i], name=name, model=modelname,
+            mo = obs.ModelObs(index=mtime,
+                              data=hm_ts[i],
+                              name=name,
+                              model=modelname,
                               x=obs_collection.loc[name,
-                                                   'x'], y=obs_collection.loc[name, 'y'],
-                              meta=obs_collection.loc[name, 'obs'].meta)
+                                                   'x'],
+                              y=obs_collection.loc[name,
+                                                   'y'],
+                              meta=obs_collection.loc[name,
+                                                      'obs'].meta)
             mo_list.append(mo)
 
         mobs_df = pd.DataFrame([mo.to_collection_dict() for mo in mo_list],
@@ -487,10 +514,16 @@ class ObsCollection(pd.DataFrame):
 
         mo_list = []
         for i, name in enumerate(obs_collection.index):
-            mo = obs.ModelObs(index=mtime, data=hm_ts[i], name=name, model=modelname,
+            mo = obs.ModelObs(index=mtime,
+                              data=hm_ts[i],
+                              name=name,
+                              model=modelname,
                               x=obs_collection.loc[name,
-                                                   'x'], y=obs_collection.loc[name, 'y'],
-                              meta=obs_collection.loc[name, 'obs'].meta)
+                                                   'x'],
+                              y=obs_collection.loc[name,
+                                                   'y'],
+                              meta=obs_collection.loc[name,
+                                                      'obs'].meta)
             mo_list.append(mo)
 
         mobs_df = pd.DataFrame([mo.to_collection_dict() for mo in mo_list],
@@ -632,8 +665,8 @@ class ObsCollection(pd.DataFrame):
             obs_df.set_index('item_name', inplace=True)
             obs_df['x'] = pd.to_numeric(obs_df.x, errors='coerce')
             obs_df['y'] = pd.to_numeric(obs_df.y, errors='coerce')
-            item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1])
-                                & (obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
+            item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1]) & (
+                obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
 
         if read_series:
             obs_list = io_pystore.store_to_obslist(
@@ -671,10 +704,21 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=storename, meta=meta)
 
-    def data_frequency_plot(self, column_name='Stand_m_tov_NAP', intervals=None,
-                            ignore=['seconde', 'minuut', '14-daags'],
-                            normtype='log', cmap='viridis_r', set_yticks=False,
-                            figsize=(10, 8), **kwargs):
+    def data_frequency_plot(
+            self,
+            column_name='Stand_m_tov_NAP',
+            intervals=None,
+            ignore=[
+                'seconde',
+                'minuut',
+                '14-daags'],
+            normtype='log',
+            cmap='viridis_r',
+            set_yticks=False,
+            figsize=(
+                10,
+                8),
+            **kwargs):
         """plot data availability and frequency of observation collection
 
         Parameters
@@ -707,9 +751,15 @@ class ObsCollection(pd.DataFrame):
             series.name = o.name
             series_list.append(series)
 
-        ax = art.data_availablity(series_list, intervals=intervals, ignore=ignore,
-                                  normtype=normtype, cmap=cmap, set_yticks=set_yticks,
-                                  figsize=figsize, **kwargs)
+        ax = art.data_availablity(
+            series_list,
+            intervals=intervals,
+            ignore=ignore,
+            normtype=normtype,
+            cmap=cmap,
+            set_yticks=set_yticks,
+            figsize=figsize,
+            **kwargs)
 
         return ax
 
@@ -739,25 +789,58 @@ class ObsCollection(pd.DataFrame):
 
         return (xmin, ymin, xmax, ymax)
 
-    def get_filternr(self, radius=1, xcol='x', ycol='y', overwrite=False):
-        # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
-        if ('filternr' in self.columns) and (not overwrite):
-            raise RuntimeError(
-                "the column 'filternr' already exist, set overwrite=True to replace the current column")
+    def get_filternr(self, radius=1, xcol='x', ycol='y', if_exists='error'):
+        """This method will add a column to the ObsCollection with the
+        filternr. This is useful for groundwater observations. If two 
+        observation points are close to each other they will be seen as one
+        location with multiple filters. The filternr will be added based on the
+        'onderkant_filter' attribute of the observations.
 
-        self['filternr'] = 0
+        Parameters
+        ----------
+        radius : int, optional
+            max distance between two observations to be seen as one location, by default 1
+        xcol : str, optional
+            column name with x coordinates, by default 'x'
+        ycol : str, optional
+            column name with y coordinates, by default 'y'
+        if_exists : str, optional
+            what to do if an observation point already has a filternr, options: 
+            'error', 'replace' or 'keep', by default 'error'
+        
+        Raises
+        ------
+        RuntimeError
+            if the column filternr exists and if_exists='error' an error is raised
+        """
+        # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
+        if 'filternr' in self.columns:
+            if if_exists == 'error':
+                raise RuntimeError(
+                    "the column 'filternr' already exist, set if_exists='replace' to replace the current values")
+            elif if_exists == 'replace':
+                self['filternr'] = np.nan     
+        else:
+            self['filternr'] = np.nan
+
         for name in self.index:
-            x = self.loc[name, xcol]
-            y = self.loc[name, ycol]
-            distance_to_other_filters = np.sqrt(
-                (self[xcol]-x)**2 + (self[ycol]-y)**2)
-            dup_x = self.loc[distance_to_other_filters < radius]
-            if dup_x.shape[0] == 1:
-                self.loc[name, 'filternr'] = 1
-            else:
-                dup_x2 = dup_x.sort_values('onderkant_filter', ascending=False)
-                for i, pb_dub in enumerate(dup_x2.index):
-                    self.loc[pb_dub, 'filternr'] = i+1
+            if np.isnan(self.loc[name, 'filternr']):
+                x = self.loc[name, xcol]
+                y = self.loc[name, ycol]
+                distance_to_other_filters = np.sqrt(
+                    (self[xcol] - x)**2 + (self[ycol] - y)**2)
+                dup_x = self.loc[distance_to_other_filters < radius]
+                if dup_x.shape[0] == 1:
+                    self.loc[name, 'filternr'] = 1
+                else:
+                    dup_x2 = dup_x.sort_values(
+                        'onderkant_filter', ascending=False)
+                    for i, pb_dub in enumerate(dup_x2.index):
+                        self.loc[pb_dub, 'filternr'] = i + 1
+                        self.loc[pb_dub, 'obs'].filternr = i+1
+                        self.loc[pb_dub, 'obs'].meta['filternr'] = i+1
+                        
+        self.filternr = self.filternr.astype(int)
 
     def get_first_last_obs_date(self):
         """adds two columns to the ObsCollection with the date of the first
@@ -839,16 +922,24 @@ class ObsCollection(pd.DataFrame):
 
         if infer_otype:
             otype = self._infer_otype(verbose)
-            if type(otype) != type:  # check of dit ook echt een type is
+            if not isinstance(
+                    otype, type):  # check of dit ook echt een type is
                 raise TypeError(
                     'could not infer observation type, use infer_otype=False')
 
-        f_df = fieldlogger.df_to_fieldlogger_csv(self, fname, otype,
-                                                 use_default_otype_settings,
-                                                 heading,
-                                                 name, subname, inputfield,
-                                                 properties, group, group_color,
-                                                 verbose)
+        f_df = fieldlogger.df_to_fieldlogger_csv(
+            self,
+            fname,
+            otype,
+            use_default_otype_settings,
+            heading,
+            name,
+            subname,
+            inputfield,
+            properties,
+            group,
+            group_color,
+            verbose)
 
         return f_df
 
@@ -893,11 +984,22 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        _color_cycle = ('blue', 'olive', 'lime', 'red', 'orange',
-                        'yellow', 'purple', 'silver', 'powderblue', 'salmon', 'tan')
+        _color_cycle = (
+            'blue',
+            'olive',
+            'lime',
+            'red',
+            'orange',
+            'yellow',
+            'purple',
+            'silver',
+            'powderblue',
+            'salmon',
+            'tan')
         _same_loc_list = []
         for o in self.obs.values:
-            # check for multiple observations at the same location (usually multiple filters)
+            # check for multiple observations at the same location (usually
+            # multiple filters)
             if (self.x == o.x).sum() == 1:
                 # one observation point (filter) at this location
                 try:
@@ -939,7 +1041,7 @@ class ObsCollection(pd.DataFrame):
                                                                  p=p,
                                                                  tmin=tmin, tmax=tmax,
                                                                  colors=[
-                                                                     _color_cycle[i+1]],
+                                                                     _color_cycle[i + 1]],
                                                                  return_filename=True,
                                                                  **kwargs)
                     except ValueError:
@@ -1073,10 +1175,13 @@ class ObsCollection(pd.DataFrame):
                                     popup=popup).add_to(group)
 
                 if map_label != '':
-                    folium.map.Marker([o.meta[col_name_lat], o.meta[col_name_lon]],
-                                      icon=DivIcon(icon_size=(150, 36),
-                                                   icon_anchor=(0, 0),
-                                                   html='<div style="font-size: %ipt">%s</div>' % (map_label_size, o.meta[map_label]))).add_to(group)
+                    folium.map.Marker(
+                        [
+                            o.meta[col_name_lat], o.meta[col_name_lon]], icon=DivIcon(
+                            icon_size=(
+                                150, 36), icon_anchor=(
+                                0, 0), html='<div style="font-size: %ipt">%s</div>' %
+                            (map_label_size, o.meta[map_label]))).add_to(group)
             elif verbose:
                 print('no iplot available for {}'.format(o.name))
 
@@ -1089,7 +1194,7 @@ class ObsCollection(pd.DataFrame):
         # save map
         #filename and path
         if fname is None:
-            fname = self.name+'.html'
+            fname = self.name + '.html'
         else:
             if not fname.endswith('.html'):
                 fname = fname + '.html'
@@ -1282,7 +1387,7 @@ class ObsCollection(pd.DataFrame):
             plot_ylim = self.get_min_max(obs_column=plot_column)
 
         mg_list = []
-        for k, xyo in self.groupby(np.arange(self.shape[0])//plots_per_map):
+        for k, xyo in self.groupby(np.arange(self.shape[0]) // plots_per_map):
 
             mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph,
                               figsize=figsize, extent=extent)
@@ -1301,8 +1406,8 @@ class ObsCollection(pd.DataFrame):
                 else:
                     pb = o.name
                     try:
-                        o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(ax=ax, lw=.5,
-                                                                       marker='.', markersize=1., label=pb)
+                        o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(
+                            ax=ax, lw=.5, marker='.', markersize=1., label=pb)
                     except TypeError:
                         o[plot_column].plot(ax=ax, lw=.5, marker='.',
                                             markersize=1., label=pb)
@@ -1310,23 +1415,23 @@ class ObsCollection(pd.DataFrame):
                     if plot_ylim == 'min_dy':
                         ax.autoscale(axis='y', tight=True)
                         ylim = ax.get_ylim()
-                        dy = ylim[1]-ylim[0]
+                        dy = ylim[1] - ylim[0]
                         if dy < min_dy:
-                            ylim = (ylim[0]-(min_dy-dy)/2,
-                                    ylim[1]+(min_dy-dy)/2)
+                            ylim = (ylim[0] - (min_dy - dy) / 2,
+                                    ylim[1] + (min_dy - dy) / 2)
                         ax.set_ylim(ylim)
                     else:
                         ax.set_ylim(plot_ylim)
 
                     for line in vlines:
                         ylim = ax.get_ylim()
-                        ax.vlines(line, ylim[0]-100, ylim[1]+100, ls='--',
+                        ax.vlines(line, ylim[0] - 100, ylim[1] + 100, ls='--',
                                   lw=2.0, color='r')
                     ax.legend(loc='best')
 
             mg.figure.tight_layout()
             if savefig is not None:
-                mg.figure.savefig(savefig+"{0}.png".format(k),
+                mg.figure.savefig(savefig + "{0}.png".format(k),
                                   dpi=300, bbox_inches="tight")
             mg_list.append(mg)
 
@@ -1685,7 +1790,7 @@ class ObsCollection(pd.DataFrame):
             and the values are the number of consecutive years.
         """
 
-        if type(min_obs) == str:
+        if isinstance(min_obs, str):
             pblist = {o.name: o.consecutive_obs_years(
                 min_obs=self.loc[o.name, min_obs], col=col) for o in self.obs}
         else:
