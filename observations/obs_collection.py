@@ -657,7 +657,7 @@ class ObsCollection(pd.DataFrame):
         from . import io_pystore
         io_pystore.set_pystore_path(pystore_path)
         if not os.path.isdir(os.path.join(pystore_path, storename)):
-            raise FileNotFoundError('{} does not exist'.format(storename))
+            raise FileNotFoundError("pystore -> '{}' does not exist".format(storename))
         # obtain item names within extent
         if extent is not None:
             meta_list = io_pystore.read_store_metadata(
