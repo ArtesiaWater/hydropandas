@@ -619,7 +619,7 @@ class ObsCollection(pd.DataFrame):
                      ObsClass=obs.GroundwaterObs,
                      extent=None, collection_names=None,
                      item_names=None, nameby="item",
-                     read_series=True, verbose=True):
+                     read_series=True, verbose=True, progressbar=False):
         """Create ObsCollection from pystore store
 
         Parameters
@@ -646,6 +646,9 @@ class ObsCollection(pd.DataFrame):
             loads the full dataset
         nameby : str
             pick whether Obs are named by 'item' or 'collection'
+        progressbar : bool, optional
+            whether to show progress bar, default is False, for
+            best result set verbose to False!
 
         Returns
         -------
@@ -657,7 +660,8 @@ class ObsCollection(pd.DataFrame):
         from . import io_pystore
         io_pystore.set_pystore_path(pystore_path)
         if not os.path.isdir(os.path.join(pystore_path, storename)):
-            raise FileNotFoundError("pystore -> '{}' does not exist".format(storename))
+            raise FileNotFoundError(
+                "pystore -> '{}' does not exist".format(storename))
         # obtain item names within extent
         if extent is not None:
             meta_list = io_pystore.read_store_metadata(
@@ -672,7 +676,8 @@ class ObsCollection(pd.DataFrame):
         if read_series:
             obs_list = io_pystore.store_to_obslist(
                 storename, ObsClass=ObsClass, collection_names=collection_names,
-                item_names=item_names, nameby=nameby, verbose=verbose)
+                item_names=item_names, nameby=nameby, verbose=verbose,
+                progressbar=progressbar)
             columns = []
             coldict = []
             for o in obs_list:
@@ -704,6 +709,69 @@ class ObsCollection(pd.DataFrame):
                                  "for 'nameby'".format(nameby))
 
         return cls(obs_df, name=storename, meta=meta)
+
+    @classmethod
+    def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
+                    verbose=False):
+        """Load ObsCollection from MongoDB using arctic
+
+        Parameters
+        ----------
+        connstr : str
+            database connection string
+        libname : str
+            library name
+        ObsClass : class, optional
+            observation class to store single timeseries, by
+            default obs.GroundwaterObs
+        verbose : bool, optional
+            show progress bar and database read summary, by default False
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame containing all the obs
+
+        """
+
+        from tqdm import tqdm
+        import arctic
+        from timeit import default_timer
+
+        arc = arctic.Arctic(connstr)
+        lib = arc.get_library(libname)
+
+        start = default_timer()
+        obs_list = []
+        rows_read = 0
+        for sym in (tqdm(lib.list_symbols()) if verbose else lib.list_symbols()):
+            item = lib.read(sym)
+            o = ObsClass(item.data, name=sym, meta=item.metadata)
+            obs_list.append(o)
+            if verbose:
+                rows_read += len(item.data.index)
+
+        end = default_timer()
+        if verbose:
+            print("Symbols: {0:.0f}  "
+                  "Rows: {1:,.0f}  "
+                  "Time: {2:.2f}s  "
+                  "Rows/s: {3:,.1f}".format(len(lib.list_symbols()),
+                                            rows_read,
+                                            (end - start),
+                                            rows_read / (end - start)))
+        # create dataframe
+        columns = []
+        coldict = []
+        for o in obs_list:
+            d = o.to_collection_dict()
+            coldict.append(d)
+            columns |= d.keys()
+        obs_df = pd.DataFrame(coldict, columns=columns)
+        obs_df.set_index('name', inplace=True)
+        meta = {'type': obs.GroundwaterObs}
+
+        return cls(obs_df, meta=meta)
 
     def data_frequency_plot(
             self,
@@ -792,7 +860,7 @@ class ObsCollection(pd.DataFrame):
 
     def get_filternr(self, radius=1, xcol='x', ycol='y', if_exists='error'):
         """This method will add a column to the ObsCollection with the
-        filternr. This is useful for groundwater observations. If two 
+        filternr. This is useful for groundwater observations. If two
         observation points are close to each other they will be seen as one
         location with multiple filters. The filternr will be added based on the
         'onderkant_filter' attribute of the observations.
@@ -806,9 +874,9 @@ class ObsCollection(pd.DataFrame):
         ycol : str, optional
             column name with y coordinates, by default 'y'
         if_exists : str, optional
-            what to do if an observation point already has a filternr, options: 
+            what to do if an observation point already has a filternr, options:
             'error', 'replace' or 'keep', by default 'error'
-        
+
         Raises
         ------
         RuntimeError
@@ -820,7 +888,7 @@ class ObsCollection(pd.DataFrame):
                 raise RuntimeError(
                     "the column 'filternr' already exist, set if_exists='replace' to replace the current values")
             elif if_exists == 'replace':
-                self['filternr'] = np.nan     
+                self['filternr'] = np.nan
         else:
             self['filternr'] = np.nan
 
@@ -838,9 +906,9 @@ class ObsCollection(pd.DataFrame):
                         'onderkant_filter', ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
                         self.loc[pb_dub, 'filternr'] = i + 1
-                        self.loc[pb_dub, 'obs'].filternr = i+1
-                        self.loc[pb_dub, 'obs'].meta['filternr'] = i+1
-                        
+                        self.loc[pb_dub, 'obs'].filternr = i + 1
+                        self.loc[pb_dub, 'obs'].meta['filternr'] = i + 1
+
         self.filternr = self.filternr.astype(int)
 
     def get_first_last_obs_date(self):
@@ -1256,6 +1324,37 @@ class ObsCollection(pd.DataFrame):
                     name = o.meta[item_name]
                 collection.write(name, o, metadata=imeta,
                                  overwrite=overwrite)
+
+    def to_arctic(self, connstr, libname, verbose=False):
+        """Write ObsCollection to MongoDB using Arctic
+
+        Parameters
+        ----------
+        connstr : str
+            database connection string
+        libname : str
+            name of the library to store data
+        verbose : bool, optional
+            show progress bar, by default False
+
+        """
+        import arctic
+        from tqdm import tqdm
+        arc = arctic.Arctic(connstr)
+
+        # get library
+        try:
+            lib = arc.get_library(libname)
+        except arctic.exceptions.LibraryNotFoundException:
+            print("Library '{}' not found, initializing library...", end="")
+            arc.initialize_library(libname)
+            lib = arc[libname]
+            print("Success!")
+
+        # write data
+        for o in (tqdm(self.obs) if verbose else self.obs):
+            metadata = o.meta
+            lib.write(o.name, o, metadata=metadata)
 
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame
