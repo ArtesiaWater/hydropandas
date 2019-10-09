@@ -29,6 +29,7 @@ A pystore with an ObsCollection has 3 layers:
 import numpy as np
 import pandas as pd
 import pystore
+from tqdm import tqdm
 from .observation import GroundwaterObs
 from .obs_collection import ObsCollection
 
@@ -133,7 +134,8 @@ def collection_to_obslist(store, collection, ObsClass=GroundwaterObs,
 
 
 def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
-                     item_names=None, nameby="item", verbose=True):
+                     item_names=None, nameby="item", verbose=True,
+                     progressbar=False):
     """convert pystore to list of ObsClass
 
     Parameters
@@ -161,7 +163,7 @@ def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
         collections = store.collections
     else:
         collections = collection_names
-    for coll in collections:
+    for coll in (tqdm(collections) if progressbar else collections):
         obs_list += collection_to_obslist(store, coll,
                                           ObsClass=ObsClass,
                                           item_names=item_names,
