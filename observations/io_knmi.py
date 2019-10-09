@@ -98,8 +98,8 @@ def _download_knmi_data(stn, var, start, end, verbose):
         end = pd.datetime.today()
 
     # download data
-    knmi = art.fill_missing_measurements(start=start, stns=stn, vars=var,
-                                         end_date=end, verbose=verbose)
+    knmi = art.knmi.fill_missing_measurements(start=start, stns=stn, vars=var,
+                                              end_date=end, verbose=verbose)
     return knmi
 
 
