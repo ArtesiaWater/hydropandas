@@ -14,7 +14,7 @@ import pandas as pd
 import scipy.interpolate as spint
 import scipy.spatial.qhull as qhull
 import tempfile
-
+from pandas import Timestamp, Timedelta
 
 def _import_art_tools():
     try:
@@ -95,6 +95,15 @@ def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
                 # (which is the time of extraction by default)
                 tz = time.mktime(info.date_time + (0, 0, -1))
                 os.utime(os.path.join(pathname, info.filename), (tz, tz))
+
+
+def matlab2datetime(tindex):
+    """ Transform a matlab time to a datetime, rounded to seconds
+
+    """
+    day = Timestamp.fromordinal(int(tindex))
+    dayfrac = Timedelta(days=float(tindex) % 1) - Timedelta(days=366)
+    return day + dayfrac
 
 
 def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,

@@ -379,6 +379,20 @@ class ObsCollection(pd.DataFrame):
             fname, ObsClass=obs.GroundwaterObs)
 
         return cls(cls.from_list(obs_list, name=name), meta=fieldlogger_meta)
+    
+    @classmethod
+    def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
+                        verbose=False):
+        
+        from . import io_menyanthes
+        
+        obs_list = io_menyanthes.read_file(fname, ObsClass, verbose)
+        
+        menyanthes_meta = {'filename': fname,
+                           'type': ObsClass,
+                           'verbose':verbose}
+        
+        return cls(cls.from_list(obs_list, name=name), meta=menyanthes_meta)
 
     @classmethod
     def from_imod(cls, obs_collection, dis, runfile, mtime, model_ws,
@@ -556,7 +570,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_pastas_project(cls, pr, ObsClass=obs.GroundwaterObs,
-                            name=None, pr_meta=None):
+                            name=None, pr_meta=None, rename_dic={}):
 
         if name is None:
             name = pr.name
@@ -567,18 +581,19 @@ class ObsCollection(pd.DataFrame):
         obs_list = []
         for index, row in pr.oseries.iterrows():
             metadata = row.to_dict()
+            for key in rename_dic.keys():
+                if key in metadata.keys():
+                    metadata[rename_dic[key]] = metadata.pop(key)
+                    
             s = pd.DataFrame(metadata.pop('series').series_original)
             s.rename(columns={index: 'Stand_m_tov_NAP'}, inplace=True)
+            
+            keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
+                      'metadata_available', 'maaiveld', 'meetpunt',
+                      'bovenkant_filter', 'onderkant_filter']
+            meta_o = {k:metadata[k] for k in keys_o if k in metadata}
 
-            o = ObsClass(s, meta=metadata, name=metadata['name'],
-                         x=metadata['x'], y=metadata['y'],
-                         locatie=metadata['locatie'],
-                         filternr=metadata['filternummer'],
-                         metadata_available=metadata['metadata_available'],
-                         maaiveld=metadata['maaiveld'],
-                         meetpunt=metadata['meetpunt'],
-                         bovenkant_filter=metadata['bovenkant_filter'],
-                         onderkant_filter=metadata['onderkant_filter'])
+            o = ObsClass(s, meta=metadata, **meta_o)
             obs_list.append(o)
 
         return cls(cls.from_list(obs_list, name=name), meta=pr_meta)
@@ -857,6 +872,32 @@ class ObsCollection(pd.DataFrame):
         ymax = self[ycol].max() + buffer
 
         return (xmin, ymin, xmax, ymax)
+    
+    def get_extent(self, xcol='x', ycol='y', buffer=0):
+        """returns the extent of all observations
+
+        Parameters
+        ----------
+        xcol : str, optional
+            column name with x values
+        ycol : str, optional
+            column name with y values
+        buffer : int or float, optional
+            add a buffer around the bouding box from the observations
+
+        Returns
+        -------
+        xmin, xmax, ymin, ymax
+            coordinates of bouding box
+
+        """
+
+        xmin = self[xcol].min() - buffer
+        xmax = self[xcol].max() + buffer
+        ymin = self[ycol].min() - buffer
+        ymax = self[ycol].max() + buffer
+
+        return (xmin, xmax, ymin, ymax)
 
     def get_filternr(self, radius=1, xcol='x', ycol='y', if_exists='error'):
         """This method will add a column to the ObsCollection with the
@@ -1613,6 +1654,8 @@ class ObsCollection(pd.DataFrame):
         """
         art = util._import_art_tools()
         gdf = art.util.df2gdf(self, xcol, ycol)
+        if 'obs' in gdf.columns:
+            gdf.drop(columns='obs', inplace=True)
         gdf.to_file(fname)
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',

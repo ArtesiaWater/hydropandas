@@ -352,8 +352,6 @@ def test_obs_from_pystore_item():
     return o
 
 # Test KNMI Obs
-
-
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(829, "RD")
 
@@ -365,3 +363,12 @@ def test_knmi_obs_from_xy():
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
     return obs.KnmiObs.from_obs(pb, "EV24")
+
+# Test Menyanthes (still need a small menyanthes file to do the test)
+
+#def test_obscollection_menyanthes():
+#            
+#    fname = r'g:\My Drive\m\01projekt\19042016 BRABANT WATER, Uitwerking pompproef Gilze\02 Data\export_from_ADI_20191007.men'
+#    obsc = oc.ObsCollection.from_menyanthes(fname, verbose=True)
+#    
+#    return obsc
