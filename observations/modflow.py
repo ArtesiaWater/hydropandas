@@ -168,9 +168,9 @@ def get_pb_modellayer(x, y, ftop, fbot, dis, zgr=None, verbose=False):
                     print("filter on layer boundary:")
                     print("-layers: {0}, {1}".format(fbi, fti))
                     print("-layer elev in between: {0:.2f}".format(zvec[fbi]))
-                    print("-ft, fb: {0:.2f}, {1:.2f}".format(fbot[i], ftop[i]))
+                    print("-fb, ft: {0:.2f}, {1:.2f}".format(fbot[i], ftop[i]))
                     print("-length in layer: {0:.2f}, {1:.2f}".format(
-                          fbot[i] - zvec[fbi], ftop[i] - zvec[fbi]))
+                          zvec[fbi] - fbot[i], ftop[i] - zvec[fbi]))
                 if fti - fbi > 2:
                     ilay[i] = np.nan  # set to unknown
                     if verbose:
