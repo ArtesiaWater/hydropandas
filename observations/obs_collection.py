@@ -1472,8 +1472,8 @@ class ObsCollection(pd.DataFrame):
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
                      plot_func=None,
-                     plot_xlim=None, plot_ylim=(None, None), min_dy=2.0,
-                     vlines=[],
+                     plot_xlim=(None, None), plot_ylim=(None, None), 
+                     min_dy=2.0, vlines=[],
                      savefig=None, map_gdf=None, map_gdf_kwargs={},
                      verbose=True):
         """make mapgraph plots of obs collection data
@@ -1492,7 +1492,7 @@ class ObsCollection(pd.DataFrame):
             column name of data to be plotted in graphs
         plot_func : function, optional,
             if not None this function is used to make the plots
-        plot_xlim : datetime, optional
+        plot_xlim : list of datetime, optional
             xlim of the graphs
         plot_ylim : tuple or str, optional
             the ylim of all the graphs or
@@ -1543,7 +1543,9 @@ class ObsCollection(pd.DataFrame):
             for i, o in enumerate(xyo.obs.values):
                 ax = mg.ax[i]
                 if plot_func:
-                    ax = plot_func(self, o, ax, plot_column)
+                    ax = plot_func(self, o, ax, 
+                                   plot_xlim=plot_xlim, 
+                                   plot_column=plot_column)
                 else:
                     pb = o.name
                     try:
