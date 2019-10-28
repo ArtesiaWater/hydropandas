@@ -516,13 +516,13 @@ class GroundwaterObs(Obs):
         item.metadata["datastore"] = item.datastore
         return cls(df, x=x, y=y, meta=item.metadata)
 
-    def get_pb_modellayer(self, dis, zgr=None, verbose=False):
+    def get_pb_modellayer(self, ml, zgr=None, verbose=False):
         """Add modellayer to meta dictionary
 
         Parameters
         ----------
-        dis : flopy.modflow.ModflowDis
-            object containing DIS of model (grid information)
+        ml : flopy.modflow.mf.Modflow
+            modflow model
         zgr : np.3darray, optional
             array containing model layer elevation
             information (the default is None, which
@@ -533,11 +533,11 @@ class GroundwaterObs(Obs):
         """
         from .modflow import get_pb_modellayer
         self.meta['modellayer'] = \
-            get_pb_modellayer(np.array([self.x]) - dis.sr.xll,
-                              np.array([self.y]) - dis.sr.yll,
+            get_pb_modellayer(np.array([self.x]) - ml.modelgrid.xoffset,
+                              np.array([self.y]) - ml.modelgrid.yoffset,
                               np.array([self.bovenkant_filter]),
                               np.array([self.onderkant_filter]),
-                              dis, zgr, verbose)[0]
+                              ml, zgr, verbose)[0]
 
 
 class GroundwaterQualityObs(Obs):

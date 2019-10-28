@@ -379,38 +379,40 @@ class ObsCollection(pd.DataFrame):
             fname, ObsClass=obs.GroundwaterObs)
 
         return cls(cls.from_list(obs_list, name=name), meta=fieldlogger_meta)
-    
+
     @classmethod
     def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
                         verbose=False):
-        
+
         from . import io_menyanthes
-        
+
         obs_list = io_menyanthes.read_file(fname, ObsClass, verbose)
-        
+
         menyanthes_meta = {'filename': fname,
                            'type': ObsClass,
-                           'verbose':verbose}
-        
+                           'verbose': verbose}
+
         return cls(cls.from_list(obs_list, name=name), meta=menyanthes_meta)
 
     @classmethod
-    def from_imod(cls, obs_collection, dis, runfile, mtime, model_ws,
-                  modelname='', exclude_layers=0, verbose=False):
+    def from_imod(cls, obs_collection, ml, runfile, mtime, model_ws,
+                  modelname='', nlay=None, exclude_layers=0, verbose=False):
         """read 'observations' from an imod model
 
         Parameters
         ----------
         obs_collection : ObsCollection
             collection of observations at which points imod results will be read
-        dis : modflow.Dis
-            discretization from modflow
+        ml : flopy.modflow.mf.model
+            modflow model
         runfile : Runfile
             imod runfile object
         mtime : list of datetimes
             datetimes corresponding to the model periods
         model_ws : str
             model workspace with imod model
+        nlay : int, optional
+            number of layers if None the number of layers from ml is used.
         modelname : str
             modelname
         exclude_layers : int
@@ -421,21 +423,23 @@ class ObsCollection(pd.DataFrame):
 
         import imod
 
-        if dis.sr.xll == 0 or dis.sr.yll == 0:
+        if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
             warnings.warn(
-                'you probably want to set the xll and/or yll attributes of dis.sr')
+                'you probably want to set the xll and/or yll attributes of ml.modelgrid')
 
-        xmid = dis.sr.xcentergrid.ravel()
-        ymid = dis.sr.ycentergrid.ravel()
+        if nlay is None:
+            nlay = ml.modelgrid.nlay
 
-        xy = np.c_[xmid, ymid]
+        xmid, ymid, _ = ml.modelgrid.xyzcellcenters
+
+        xy = np.array([xmid.ravel(), ymid.ravel()]).T
         uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
         vtx, wts = util.interp_weights(xy, uv)
 
         hm_ts = np.zeros((obs_collection.shape[0], len(mtime)))
 
         # loop over layers
-        for m in range(dis.nlay):
+        for m in range(nlay):
             if m < exclude_layers:
                 continue
             mask = obs_collection.modellayer.values == m
@@ -503,6 +507,9 @@ class ObsCollection(pd.DataFrame):
         if dis.sr.xll == 0 or dis.sr.yll == 0:
             warnings.warn(
                 'you probably want to set the xll and/or yll attributes of dis.sr')
+
+        warnings.warn(
+            'this method has not been adjusted to the new spatial reference structure of flopy and will give errors probably')
 
         xmid = dis.sr.xcentergrid.ravel()
         ymid = dis.sr.ycentergrid.ravel()
@@ -584,14 +591,14 @@ class ObsCollection(pd.DataFrame):
             for key in rename_dic.keys():
                 if key in metadata.keys():
                     metadata[rename_dic[key]] = metadata.pop(key)
-                    
+
             s = pd.DataFrame(metadata.pop('series').series_original)
             s.rename(columns={index: 'Stand_m_tov_NAP'}, inplace=True)
-            
+
             keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
                       'metadata_available', 'maaiveld', 'meetpunt',
                       'bovenkant_filter', 'onderkant_filter']
-            meta_o = {k:metadata[k] for k in keys_o if k in metadata}
+            meta_o = {k: metadata[k] for k in keys_o if k in metadata}
 
             o = ObsClass(s, meta=metadata, **meta_o)
             obs_list.append(o)
@@ -690,8 +697,12 @@ class ObsCollection(pd.DataFrame):
 
         if read_series:
             obs_list = io_pystore.store_to_obslist(
-                storename, ObsClass=ObsClass, collection_names=collection_names,
-                item_names=item_names, nameby=nameby, verbose=verbose,
+                storename,
+                ObsClass=ObsClass,
+                collection_names=collection_names,
+                item_names=item_names,
+                nameby=nameby,
+                verbose=verbose,
                 progressbar=progressbar)
             columns = []
             coldict = []
@@ -759,7 +770,8 @@ class ObsCollection(pd.DataFrame):
         start = default_timer()
         obs_list = []
         rows_read = 0
-        for sym in (tqdm(lib.list_symbols()) if verbose else lib.list_symbols()):
+        for sym in (tqdm(lib.list_symbols())
+                    if verbose else lib.list_symbols()):
             item = lib.read(sym)
             o = ObsClass(item.data, name=sym, meta=item.metadata)
             obs_list.append(o)
@@ -872,7 +884,7 @@ class ObsCollection(pd.DataFrame):
         ymax = self[ycol].max() + buffer
 
         return (xmin, ymin, xmax, ymax)
-    
+
     def get_extent(self, xcol='x', ycol='y', buffer=0):
         """returns the extent of all observations
 
@@ -1472,7 +1484,7 @@ class ObsCollection(pd.DataFrame):
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
                      plot_func=None,
-                     plot_xlim=(None, None), plot_ylim=(None, None), 
+                     plot_xlim=(None, None), plot_ylim=(None, None),
                      min_dy=2.0, vlines=[],
                      savefig=None, map_gdf=None, map_gdf_kwargs={},
                      verbose=True):
@@ -1543,8 +1555,8 @@ class ObsCollection(pd.DataFrame):
             for i, o in enumerate(xyo.obs.values):
                 ax = mg.ax[i]
                 if plot_func:
-                    ax = plot_func(self, o, ax, 
-                                   plot_xlim=plot_xlim, 
+                    ax = plot_func(self, o, ax,
+                                   plot_xlim=plot_xlim,
                                    plot_column=plot_column)
                 else:
                     pb = o.name
@@ -1797,13 +1809,13 @@ class ObsCollection(pd.DataFrame):
 
         return gdf1[['nearest point', 'distance nearest point']]
 
-    def get_pb_modellayers(self, dis, zgr=None, verbose=False):
+    def get_pb_modellayers(self, ml, zgr=None, verbose=False):
         """Get the modellayers from the dis file
 
         Parameters
         ----------
-        dis : flopy.modflow.ModflowDis
-            object containing DIS of model (grid information)
+        ml : flopy.modflow.mf.Modflow
+            modflow model
         zgr : np.3darray, optional
             array containing model layer elevation
             information (if None , this information is obtained
@@ -1814,11 +1826,16 @@ class ObsCollection(pd.DataFrame):
         """
 
         for o in self.obs.values:
-            o.get_pb_modellayer(dis, zgr, verbose)
+            o.get_pb_modellayer(ml, zgr, verbose)
             if verbose:
                 print(o.name)
 
         self.add_meta_to_df('modellayer')
+
+        # this does not work because there are nan values in the modellayer
+        # column
+#        if self['modellayer'].dtype != int:
+#            self['modellayer'] == self['modellayer'].astype(int)
 
     def within_extent(self, extent, inplace=False):
         """Slice ObsCollection by extent

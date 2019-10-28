@@ -2,7 +2,7 @@ import numpy as np
 import scipy.interpolate as intp
 
 
-def findrowcolumn(xpts, ypts, dis):
+def findrowcolumn(xpts, ypts, ml):
     """
     find row and column number for points in an irregular grid. Adapted from Flopy.
 
@@ -10,12 +10,10 @@ def findrowcolumn(xpts, ypts, dis):
     ----------
     xpts : 1d array
         x-coordinates of points
-
     ypts : 1d array
         y-coordinates of points
-
-    dis : flopy.modflow.ModflowDis
-        DIS package containing grid information. See flopy/modflow docs
+    ml : flopy.modflow.mf.Modflow
+        modflow model
 
     Returns
     -------
@@ -23,8 +21,7 @@ def findrowcolumn(xpts, ypts, dis):
         array containing row and column indices of the points
 
     """
-    xedge = dis.sr.xedge
-    yedge = dis.sr.yedge
+    xedge, yedge = ml.modelgrid.xyedges
 
     if not isinstance(xpts, np.ndarray):
         xpts = np.asarray(xpts)
@@ -44,7 +41,7 @@ def findrowcolumn(xpts, ypts, dis):
     return r, c
 
 
-def get_model_layer(x, y, z, dis, zgr=None):
+def get_model_layer(x, y, z, ml, dis, zgr=None):
     """get index of model layer based on elevation
     at a specific location.
 
@@ -56,8 +53,8 @@ def get_model_layer(x, y, z, dis, zgr=None):
         y-coordinate of locations
     z : np.array
         elevations corresponding to x, y locations
-    dis : flopy.modflow.ModflowDis
-        object containing DIS package with grid data
+    ml : flopy.modflow.mf.Modflow
+        modflow model
     zgr : np.3darray, optional
         3D array containing layer elevations for if dis
         does not contain this information. (the default is
@@ -73,7 +70,7 @@ def get_model_layer(x, y, z, dis, zgr=None):
         -
     """
 
-    r, c = findrowcolumn(x, y, dis)
+    r, c = findrowcolumn(x, y, ml)
 
     if zgr is None:
         zgr = np.concatenate(
@@ -95,7 +92,7 @@ def get_model_layer(x, y, z, dis, zgr=None):
     return ilay
 
 
-def get_pb_modellayer(x, y, ftop, fbot, dis, zgr=None, verbose=False):
+def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, verbose=False):
     """get index of model layer based on filterdepth of
     piezometer.
 
@@ -109,9 +106,8 @@ def get_pb_modellayer(x, y, ftop, fbot, dis, zgr=None, verbose=False):
         top elevation of filter
     fbot : np.array
         bottom elevation of filter
-    dis : flopy.modflow.ModflowDis
-        object containing DIS of model (grid
-        information)
+    ml : flopy.modflow.mf.Modflow
+        modflow model
     zgr : np.3darray, optional
         array containing model layer elevation
         information (the default is None, which
@@ -132,15 +128,18 @@ def get_pb_modellayer(x, y, ftop, fbot, dis, zgr=None, verbose=False):
         - speed up if model layer elevation is constant everywhere?
 
     """
-
-    ilay_ftop = get_model_layer(x, y, ftop, dis, zgr=zgr)
-    ilay_fbot = get_model_layer(x, y, fbot, dis, zgr=zgr)
+    dis = ml.get_package('DIS')
+    
+    ilay_ftop = get_model_layer(x, y, ftop, ml, dis, zgr=zgr)
+    ilay_fbot = get_model_layer(x, y, fbot, ml, dis, zgr=zgr)
+    
+    
 
     if zgr is None:
         zgr = np.concatenate(
             [dis.top.array[np.newaxis], dis.botm.array], axis=0)
 
-    r, c = findrowcolumn(x, y, dis)
+    r, c = findrowcolumn(x, y, ml)
 
     ilay = np.nan * np.ones(x.shape, dtype=np.int)
 
