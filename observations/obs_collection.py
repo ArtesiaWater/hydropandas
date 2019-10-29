@@ -519,7 +519,7 @@ class ObsCollection(pd.DataFrame):
 
         xmid, ymid, _ = ml.modelgrid.xyzcellcenters
 
-        xy = np.c_[xmid, ymid]
+        xy = np.array([xmid.ravel(), ymid.ravel()]).T
         uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
         vtx, wts = util.interp_weights(xy, uv)
 
