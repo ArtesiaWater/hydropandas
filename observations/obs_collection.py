@@ -481,22 +481,25 @@ class ObsCollection(pd.DataFrame):
         return cls(mobs_df, name=modelname)
 
     @classmethod
-    def from_modflow(cls, obs_collection, dis, hds_arr, mtime,
-                     modelname='', exclude_layers=0, verbose=False):
-        """ Read modflow data
+    def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
+                     modelname='', nlay=None, exclude_layers=0, verbose=False):
+        """ Read moflow groundwater heads at the location of the points in
+        obs_collection. 
 
         Parameters
         ----------
         obs_collection : ObsCollection
             locations of model observation
-        dis : flopy.modflow.mfdis.ModflowDis
-            discretisation package modflow
+        ml : flopy.modflow.mf.model
+            modflow model
         hds_arr : numpy array
             heads with shape (ntimesteps, nlayers, nrow, ncol)
         mtime : list of datetimes
             dates for each model timestep
         modelname : str, optional
             modelname
+        nlay : int, optional
+            number of layers if None the number of layers from ml is used.
         exclude_layers : int, optional
             exclude the observations up to these modellayers
         verbose : boolean, optional
@@ -504,15 +507,17 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        if dis.sr.xll == 0 or dis.sr.yll == 0:
+        if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
             warnings.warn(
                 'you probably want to set the xll and/or yll attributes of dis.sr')
 
-        warnings.warn(
-            'this method has not been adjusted to the new spatial reference structure of flopy and will give errors probably')
+        if nlay is None:
+            nlay = ml.modelgrid.nlay
+            
+        if modelname == '':
+            modelname = ml.name
 
-        xmid = dis.sr.xcentergrid.ravel()
-        ymid = dis.sr.ycentergrid.ravel()
+        xmid, ymid, _ = ml.modelgrid.xyzcellcenters
 
         xy = np.c_[xmid, ymid]
         uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
@@ -520,9 +525,9 @@ class ObsCollection(pd.DataFrame):
 
         # get interpolated timeseries from hds_arr
         hm_ts = np.zeros((obs_collection.shape[0], hds_arr.shape[0]))
-
+        
         # loop over layers
-        for m in range(dis.nlay):
+        for m in range(nlay):
             if m < exclude_layers:
                 continue
             mask = obs_collection.modellayer.values == m
