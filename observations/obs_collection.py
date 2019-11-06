@@ -1488,6 +1488,7 @@ class ObsCollection(pd.DataFrame):
 
     def to_mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
                      extent=None, plot_column='Stand_m_tov_NAP',
+                     per_location=True,
                      plot_func=None,
                      plot_xlim=(None, None), plot_ylim=(None, None),
                      min_dy=2.0, vlines=[],
@@ -1507,6 +1508,8 @@ class ObsCollection(pd.DataFrame):
             extent of the map [xmin, xmax, ymin, ymax]
         plot_column : str, optional
             column name of data to be plotted in graphs
+        per_location : bool, optional
+            if True plot multiple filters on the same location in one figure
         plot_func : function, optional,
             if not None this function is used to make the plots
         plot_xlim : list of datetime, optional
@@ -1540,38 +1543,49 @@ class ObsCollection(pd.DataFrame):
         if graph is None:
             graph = np.full((4, 4), True)
             graph[1:, 1:-1] = False
-
+        
         if plot_ylim == 'max_dy':
             plot_ylim = self.get_min_max(obs_column=plot_column)
-
+        
         mg_list = []
-        for k, xyo in self.groupby(np.arange(self.shape[0]) // plots_per_map):
-
+        if per_location:
+            plot_names = self.groupby(['locatie','x','y'],as_index=False).count()
+            plot_names.set_index('locatie', inplace=True)
+        else:
+            plot_names = self.copy()
+            
+        for k, xyo in plot_names.groupby(np.arange(plot_names.shape[0]) // plots_per_map):
+            
             mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph,
                               figsize=figsize, extent=extent)
-
+        
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
             art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75,
                                                             verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
-
-            for i, o in enumerate(xyo.obs.values):
+            
+            for i, name in enumerate(xyo.index):
+                if per_location:
+                    oc = self.loc[self.locatie==name, 'obs'].sort_index()
+                else:
+                    oc = self.loc[[name], 'obs']
+                
                 ax = mg.ax[i]
                 if plot_func:
-                    ax = plot_func(self, o, ax,
+                    ax = plot_func(self, oc, ax,
                                    plot_xlim=plot_xlim,
                                    plot_column=plot_column)
                 else:
-                    pb = o.name
-                    try:
-                        o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(
-                            ax=ax, lw=.5, marker='.', markersize=1., label=pb)
-                    except TypeError:
-                        o[plot_column].plot(ax=ax, lw=.5, marker='.',
-                                            markersize=1., label=pb)
-                        ax.set_xlim(plot_xlim)
+                    for o in oc.values:
+                        try:
+                            o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(
+                                ax=ax, lw=.5, marker='.', markersize=1., label=o.name)
+                        except TypeError:
+                            o[plot_column].plot(ax=ax, lw=.5, marker='.',
+                                                markersize=1., label=o.name)
+                            ax.set_xlim(plot_xlim)
                     if plot_ylim == 'min_dy':
                         ax.autoscale(axis='y', tight=True)
                         ylim = ax.get_ylim()
@@ -1582,25 +1596,24 @@ class ObsCollection(pd.DataFrame):
                         ax.set_ylim(ylim)
                     else:
                         ax.set_ylim(plot_ylim)
-
+        
                     for line in vlines:
                         ylim = ax.get_ylim()
                         ax.vlines(line, ylim[0] - 100, ylim[1] + 100, ls='--',
                                   lw=2.0, color='r')
                     ax.legend(loc='best')
-
+        
             mg.figure.tight_layout()
             if savefig is not None:
                 mg.figure.savefig(savefig + "{0}.png".format(k),
                                   dpi=300, bbox_inches="tight")
             mg_list.append(mg)
-
+            break
+        
         # for some reason you have to set the extent at the end again
         if extent is not None:
             for mg_m in mg_list:
                 mg_m.mapax.axis(extent)
-
-        return mg_list
 
     def to_report_table(self, columns=['locatie', 'filternr',
                                        'Van', 'Tot', '# metingen']):
@@ -1673,8 +1686,15 @@ class ObsCollection(pd.DataFrame):
         """
         art = util._import_art_tools()
         gdf = art.util.df2gdf(self, xcol, ycol)
+        
+        #remove obs column
         if 'obs' in gdf.columns:
             gdf.drop(columns='obs', inplace=True)
+        
+        #cast boolean columns to int
+        for colname, coltype in gdf.dtypes.items():
+            if coltype==bool:
+                gdf[colname] = gdf[colname].astype(int)
         gdf.to_file(fname)
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
