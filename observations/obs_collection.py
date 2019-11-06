@@ -1608,7 +1608,6 @@ class ObsCollection(pd.DataFrame):
                 mg.figure.savefig(savefig + "{0}.png".format(k),
                                   dpi=300, bbox_inches="tight")
             mg_list.append(mg)
-            break
         
         # for some reason you have to set the extent at the end again
         if extent is not None:
