@@ -1072,6 +1072,7 @@ class ObsCollection(pd.DataFrame):
 
     def to_interactive_plots(self, savedir,
                              tmin=None, tmax=None,
+                             per_location=True,
                              verbose=False, **kwargs):
         """Create interactive plots of the observations using bokeh
 
@@ -1083,6 +1084,9 @@ class ObsCollection(pd.DataFrame):
             start date for timeseries plot
         tmax : dt.datetime, optional
             end date for timeseries plot
+        per_location : bool, optional
+            if True plot multiple filters on the same location in one figure
+        
 
         verbose : boolean, optional
             Print additional information to the screen (default is False).
@@ -1123,66 +1127,43 @@ class ObsCollection(pd.DataFrame):
             'powderblue',
             'salmon',
             'tan')
-        _same_loc_list = []
-        for o in self.obs.values:
-            # check for multiple observations at the same location (usually
-            # multiple filters)
-            if (self.x == o.x).sum() == 1:
-                # one observation point (filter) at this location
+        
+        if per_location:
+            plot_names = self.groupby('locatie').count().index
+        else:
+            plot_names = self.index
+        
+        for name in plot_names:
+            
+            if per_location:
+                oc = self.loc[self.locatie==name, 'obs'].sort_index()
+            else:
+                oc = self.loc[[name], 'obs']
+            
+            p = None
+            for i, o in enumerate(oc.values):
+                if i == 10:
+                    raise NotImplementedError(
+                        'cannot add more than 10 lines to a single plot')
                 try:
-                    o.iplot_fname = o.to_interactive_plot(savedir=savedir,
-                                                          p=None,
-                                                          tmin=tmin, tmax=tmax,
-                                                          return_filename=True,
-                                                          **kwargs)
-                except ValueError:
-                    if verbose:
-                        print('{} has no data between {} and {}'.format(
-                            o.name, tmin, tmax))
-                    o.iplot_fname = None
-
-            # check if observation was not added to another plot yet
-            elif o.name != _same_loc_list:
-                # plot multiple filters in same graph
-                try:
-                    p = o.to_interactive_plot(savedir=None,
-                                              p=None,
+                    p = o.to_interactive_plot(savedir=savedir,
+                                              p=p,
                                               tmin=tmin, tmax=tmax,
+                                              colors=[_color_cycle[i + 1]],
                                               return_filename=False,
                                               **kwargs)
+                    if verbose:
+                        print('created iplot -> {}'.format(o.name))
+    
                 except ValueError:
                     if verbose:
                         print('{} has no data between {} and {}'.format(
                             o.name, tmin, tmax))
                     o.iplot_fname = None
-                    continue
-
-                same_pb = self[(self.x == o.x) & (self.index != o.name)]
-
-                for i, o_pb in enumerate(same_pb.obs.values):
-                    if i == 10:
-                        raise NotImplementedError(
-                            'cannot add more than 4 lines to a single plot')
-                    try:
-                        o.iplot_fname = o_pb.to_interactive_plot(savedir=savedir,
-                                                                 p=p,
-                                                                 tmin=tmin, tmax=tmax,
-                                                                 colors=[
-                                                                     _color_cycle[i + 1]],
-                                                                 return_filename=True,
-                                                                 **kwargs)
-                    except ValueError:
-                        if verbose:
-                            print('{} has no data between {} and {}'.format(
-                                o.name, tmin, tmax))
-                        o.iplot_fname = None
-                    _same_loc_list.append(o_pb.name)
-
-            else:
-                o.iplot_fname = None
 
     def to_interactive_map(self, plot_dir, m=None,
                            tiles='OpenStreetMap', fname=None,
+                           per_location=True,
                            color='blue', legend_name=None,
                            add_legend=True,
                            map_label='', map_label_size=20,
@@ -1212,6 +1193,8 @@ class ObsCollection(pd.DataFrame):
             background tiles, default is openstreetmap
         fname : str, optional
             name of the folium map
+        per_location : bool, optional
+            if True plot multiple filters on the same location in one figure
         color : str, optional
             color of the observation points on the map
         legend_name : str, optional
@@ -1272,6 +1255,7 @@ class ObsCollection(pd.DataFrame):
         if create_interactive_plots:
             self.to_interactive_plots(savedir=plot_dir,
                                       verbose=verbose,
+                                      per_location=per_location,
                                       **kwargs)
 
         # determine start location of map
@@ -1287,7 +1271,19 @@ class ObsCollection(pd.DataFrame):
         group_name = '<span style=\\"color: {};\\">{}</span>'.format(
             color, legend_name)
         group = folium.FeatureGroup(name=group_name)
-        for o in self.obs.values:
+        
+        if per_location:
+            plot_names = self.groupby('locatie').count().index
+        else:
+            plot_names = self.index
+        
+        for name in plot_names:
+            if per_location:
+                oc = self.loc[self.locatie==name, 'obs'].sort_index()
+                o = oc.iloc[-1]
+            else:
+                o = self.loc[name, 'obs']
+            
             if o.iplot_fname is not None:
                 with open(o.iplot_fname, 'r') as f:
                     bokeh_html = f.read()
@@ -1721,13 +1717,18 @@ class ObsCollection(pd.DataFrame):
             self.add_meta_to_df('lat')
             self.add_meta_to_df('lon')
 
-    def get_no_of_observations(self, column_name='Stand_m_tov_NAP'):
+    def get_no_of_observations(self, column_name='Stand_m_tov_NAP', 
+                               after_date=None, before_date=None):
         """get number of non-nan values of a column in the observation df
 
         Parameters
         ----------
         column_name : str, optional
             column name of the  observation data you want to count
+        after_date : dt.datetime, optional
+            get the number of observations after this date
+        before_date : dt.datetime, optional
+            get the number of observations before this date
 
         Returns
         -------
@@ -1737,7 +1738,7 @@ class ObsCollection(pd.DataFrame):
         no_obs = []
         for o in self.obs.values:
             try:
-                no_obs.append(o[column_name].dropna().count())
+                no_obs.append(o[after_date:before_date][column_name].dropna().count())
             except KeyError:
                 no_obs.append(0)
 

@@ -217,11 +217,11 @@ class Obs(DataFrame):
 
         # save plot
         if savedir is not None:
-            fname_plot = os.path.join(savedir, self.name + '.html')
-            save(p, fname_plot, resources=CDN, title=self.name)
+            self.iplot_fname = os.path.join(savedir, self.name + '.html')
+            save(p, self.iplot_fname, resources=CDN, title=self.name)
 
         if return_filename:
-            return fname_plot
+            return self.iplot_fname
         else:
             return p
 
