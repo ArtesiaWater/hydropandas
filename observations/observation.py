@@ -296,6 +296,38 @@ class Obs(DataFrame):
                                                     'summer_{}'.format(stat): [summer_stat]})
 
         return df
+    
+    def get_maaiveld(self, buffer=10, **kwargs):
+        """returns maaiveld at observation point
+        
+        Parameters
+        ----------
+        buffer: int or float, optional
+            buffer used to get surrounding ahn values
+        **kwargs:
+            are passed to art.get_ahn_within_extent() function
+            
+        Returns
+        -------
+        zp: float
+            ahn value at location
+        """
+        
+        import art_tools as art
+        from scipy import interpolate
+        
+        extent=[self.x-buffer, self.x+buffer, self.y-buffer, self.y+buffer]
+        ds = art.get_ahn_within_extent(extent, **kwargs)
+        z = art.rasters.get_values(ds)
+        xc, yc = art.rasters.get_xy_mid(ds)
+        xc, yc = np.meshgrid(xc, yc)
+        mask = ~np.isnan(z)
+        points = np.column_stack((xc[mask], yc[mask]))
+
+        zp = float(interpolate.griddata(points, z[mask], ((self.x, self.y))))
+        
+        return zp
+        
 
     def obs_per_year(self, col):
         if self.empty:

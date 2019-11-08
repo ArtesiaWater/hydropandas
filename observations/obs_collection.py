@@ -966,8 +966,76 @@ class ObsCollection(pd.DataFrame):
                         self.loc[pb_dub, 'filternr'] = i + 1
                         self.loc[pb_dub, 'obs'].filternr = i + 1
                         self.loc[pb_dub, 'obs'].meta['filternr'] = i + 1
+                        
+    def get_filternr_locatie(self, loc_col,  radius=1, xcol='x', ycol='y', 
+                             if_exists='error'):
+        """This method will add two columns to the ObsCollection with the
+        filternr and the location. This is useful for groundwater observations. 
+        If two observation points are close to each other they will be seen as 
+        one location with multiple filters. The filternr will be added based on 
+        the 'onderkant_filter' attribute of the observations.
 
-        self.filternr = self.filternr.astype(int)
+        Parameters
+        ----------
+        loc_col : str
+            the column name with the names to use for the location
+        radius : int, optional
+            max distance between two observations to be seen as one location, by default 1
+        xcol : str, optional
+            column name with x coordinates, by default 'x'
+        ycol : str, optional
+            column name with y coordinates, by default 'y'
+        if_exists : str, optional
+            what to do if an observation point already has a filternr, options:
+            'error', 'replace' or 'keep', by default 'error'
+
+        Raises
+        ------
+        RuntimeError
+            if the column filternr exists and if_exists='error' an error is raised
+        """
+        # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
+        if 'filternr' in self.columns or 'locatie' in self.columns:
+            if if_exists == 'error':
+                raise RuntimeError(
+                    "the column 'filternr or locatie' already exist, set if_exists='replace' to replace the current values")
+            elif if_exists == 'replace':
+                self['filternr'] = np.nan
+                self['locatie'] = np.nan
+        else:
+            self['filternr'] = np.nan
+            self['locatie'] = np.nan
+
+        for name in self.index:
+            if np.isnan(self.loc[name, 'filternr']):
+                x = self.loc[name, xcol]
+                y = self.loc[name, ycol]
+                distance_to_other_filters = np.sqrt(
+                    (self[xcol] - x)**2 + (self[ycol] - y)**2)
+                dup_x = self.loc[distance_to_other_filters < radius]
+                if dup_x.shape[0] == 1:
+                    self.loc[name, 'filternr'] = 1
+                    self.loc[name, 'obs'].filternr = 1
+                    self.loc[name, 'obs'].meta['filternr'] = 1
+                    locatie = self.loc[name, loc_col]
+                    self.loc[name, 'locatie'] = locatie
+                    self.loc[name, 'obs'].locatie = locatie
+                    self.loc[name, 'obs'].meta['locatie'] = locatie
+                else:
+                    dup_x2 = dup_x.sort_values(
+                        'onderkant_filter', ascending=False)
+                    for i, pb_dub in enumerate(dup_x2.index):
+                        if i==0:
+                            locatie = self.loc[pb_dub, loc_col]
+                        self.loc[pb_dub, 'filternr'] = i + 1
+                        self.loc[pb_dub, 'obs'].filternr = i + 1
+                        self.loc[pb_dub, 'obs'].meta['filternr'] = i + 1
+                        
+                        self.loc[pb_dub, 'locatie'] = locatie
+                        self.loc[pb_dub, 'obs'].locatie = locatie
+                        self.loc[pb_dub, 'obs'].meta['locatie'] = locatie
+    
+        
 
     def get_first_last_obs_date(self):
         """adds two columns to the ObsCollection with the date of the first
@@ -980,6 +1048,75 @@ class ObsCollection(pd.DataFrame):
                                           for o in self.obs.values]
         self['date_last_measurement'] = [o.index.max()
                                          for o in self.obs.values]
+
+    def get_maaiveld(self, xcol='x', ycol='y', buffer=10., 
+                     add_to_oc=False, if_exists='error', **kwargs):
+        """get maaiveld at the observation points in the observation collection
+        
+        Parameters
+        ----------
+        xcol : str, optional
+            column name with x coordinates, by default 'x'
+        ycol : str, optional
+            column name with y coordinates, by default 'y'
+        buffer: int or float, optional
+            buffer used to get surrounding ahn values
+        add_to_oc : bool, optional
+            if True the maaiveld is added to the observation collection, default is False
+        if_exists : str, optional
+            what to do if an observation point already has a maaiveld, options:
+            'error', 'replace' or 'keep', by default 'error'
+        **kwargs:
+            are passed to art.get_ahn_within_extent() function
+            
+        Returns
+        -------
+        np.array or None
+            list of ahn values at observation locations or None (if add_to_oc = True)
+        """
+        
+        if self.shape[0] < 2:
+            raise NotImplementedError('this method will probabaly not work on collections with 0 or 1 observation points')
+        
+        import art_tools as art
+        from scipy import interpolate
+        
+        # get x and y values from oc_col
+        xp = self[xcol].values.astype(float)
+        yp = self[ycol].values.astype(float)
+    
+        extent = self.get_extent(buffer=buffer)
+    
+        ahn = art.get_ahn_within_extent(extent, **kwargs)
+    
+        z = art.rasters.get_values(ahn)
+    
+        # use griddata (is slow, buit can handle NaNs)
+        xc, yc = art.rasters.get_xy_mid(ahn)
+        xc, yc = np.meshgrid(xc, yc)
+        mask = ~np.isnan(z)
+        points = np.column_stack((xc[mask], yc[mask]))
+        zp = interpolate.griddata(points, z[mask], np.column_stack((xp, yp)))
+        
+        if add_to_oc:
+            if if_exists=='error' and 'maaiveld' in self.columns:
+                raise KeyError("maaiveld already in columns set if_exists to 'keep' or 'replace' to overwrite")
+            elif if_exists=='replace':
+                self['maaiveld'] = np.nan
+            elif 'maaiveld' not in self.columns:
+                self['maaiveld'] = np.nan
+            obs_new_maaiveld = self['maaiveld'].isna()
+            self.loc[obs_new_maaiveld, 'maaiveld'] = zp[obs_new_maaiveld]
+            for o in self.loc[obs_new_maaiveld,'obs'].values:
+                o.maaiveld = self.loc[o.name, 'maaiveld']
+                o.meta['maaiveld'] = o.maaiveld
+
+            return None
+        
+        else:
+            return zp
+
+
 
     def get_min_max(self, obs_column='Stand_m_tov_NAP'):
         """adds two columns to the Obscollection with the minimum and the
