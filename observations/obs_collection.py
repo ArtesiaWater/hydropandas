@@ -484,7 +484,7 @@ class ObsCollection(pd.DataFrame):
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
                      modelname='', nlay=None, exclude_layers=0, verbose=False):
         """ Read moflow groundwater heads at the location of the points in
-        obs_collection. 
+        obs_collection.
 
         Parameters
         ----------
@@ -513,7 +513,7 @@ class ObsCollection(pd.DataFrame):
 
         if nlay is None:
             nlay = ml.modelgrid.nlay
-            
+
         if modelname == '':
             modelname = ml.name
 
@@ -525,7 +525,7 @@ class ObsCollection(pd.DataFrame):
 
         # get interpolated timeseries from hds_arr
         hm_ts = np.zeros((obs_collection.shape[0], hds_arr.shape[0]))
-        
+
         # loop over layers
         for m in range(nlay):
             if m < exclude_layers:
@@ -1404,10 +1404,10 @@ class ObsCollection(pd.DataFrame):
         try:
             lib = arc.get_library(libname)
         except arctic.exceptions.LibraryNotFoundException:
-            print("Library '{}' not found, initializing library...", end="")
+            print("Library '{}' not found, initializing library...".format(
+                libname))
             arc.initialize_library(libname)
             lib = arc[libname]
-            print("Success!")
 
         # write data
         for o in (tqdm(self.obs) if verbose else self.obs):
