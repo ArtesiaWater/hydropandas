@@ -1210,7 +1210,7 @@ class ObsCollection(pd.DataFrame):
     def to_interactive_plots(self, savedir,
                              tmin=None, tmax=None,
                              per_location=True,
-                             verbose=False, **kwargs):
+                             verbose=True, **kwargs):
         """Create interactive plots of the observations using bokeh
 
         Parameters
