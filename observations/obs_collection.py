@@ -1970,6 +1970,30 @@ class ObsCollection(pd.DataFrame):
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
+    
+    def get_distance_to_point(self, point, xcol='x', ycol='y'):
+        """get distance of every observation to a point.
+        
+        Parameters
+        ----------
+        point : shapely.geometry.point.Point
+            point geometry
+        xcol : str, optional
+            x column in self used to get x coordinates
+        ycol : str, optional
+            y column in self used to get y coordinates
+            
+        Returns
+        -------
+        pd.Series
+            distance to the point for every observation in self
+        
+        """
+        
+        gdf = self[[xcol, ycol]].to_gdf(xcol=xcol, ycol=ycol)
+        
+        return gdf.distance(point)
+        
 
     def get_pb_modellayers(self, ml, zgr=None, verbose=False):
         """Get the modellayers from the dis file
