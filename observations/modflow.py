@@ -128,7 +128,8 @@ def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, verbose=False):
         - speed up if model layer elevation is constant everywhere?
 
     """
-    dis = ml.get_package('DIS')
+    if zgr is None:
+        dis = ml.get_package('DIS')
     
     ilay_ftop = get_model_layer(x, y, ftop, ml, dis, zgr=zgr)
     ilay_fbot = get_model_layer(x, y, fbot, ml, dis, zgr=zgr)

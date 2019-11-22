@@ -1746,6 +1746,8 @@ class ObsCollection(pd.DataFrame):
         if extent is not None:
             for mg_m in mg_list:
                 mg_m.mapax.axis(extent)
+                
+        return mg_list
 
     def to_report_table(self, columns=['locatie', 'filternr',
                                        'Van', 'Tot', '# metingen']):
