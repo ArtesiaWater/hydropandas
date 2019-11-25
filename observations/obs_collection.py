@@ -1701,9 +1701,9 @@ class ObsCollection(pd.DataFrame):
             
             for i, name in enumerate(xyo.index):
                 if per_location:
-                    oc = self.loc[self.locatie==name, 'obs'].sort_index()
+                    oc = self.loc[self.locatie==name].sort_index()
                 else:
-                    oc = self.loc[[name], 'obs']
+                    oc = self.loc[[name]]
                 
                 ax = mg.ax[i]
                 if plot_func:
@@ -1711,7 +1711,7 @@ class ObsCollection(pd.DataFrame):
                                    plot_xlim=plot_xlim,
                                    plot_column=plot_column)
                 else:
-                    for o in oc.values:
+                    for o in oc.obs.values:
                         try:
                             o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(
                                 ax=ax, lw=.5, marker='.', markersize=1., label=o.name)
