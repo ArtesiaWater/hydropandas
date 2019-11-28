@@ -966,13 +966,13 @@ class ObsCollection(pd.DataFrame):
                         self.loc[pb_dub, 'filternr'] = i + 1
                         self.loc[pb_dub, 'obs'].filternr = i + 1
                         self.loc[pb_dub, 'obs'].meta['filternr'] = i + 1
-                        
-    def get_filternr_locatie(self, loc_col,  radius=1, xcol='x', ycol='y', 
+
+    def get_filternr_locatie(self, loc_col, radius=1, xcol='x', ycol='y',
                              if_exists='error'):
         """This method will add two columns to the ObsCollection with the
-        filternr and the location. This is useful for groundwater observations. 
-        If two observation points are close to each other they will be seen as 
-        one location with multiple filters. The filternr will be added based on 
+        filternr and the location. This is useful for groundwater observations.
+        If two observation points are close to each other they will be seen as
+        one location with multiple filters. The filternr will be added based on
         the 'onderkant_filter' attribute of the observations.
 
         Parameters
@@ -1025,17 +1025,15 @@ class ObsCollection(pd.DataFrame):
                     dup_x2 = dup_x.sort_values(
                         'onderkant_filter', ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
-                        if i==0:
+                        if i == 0:
                             locatie = self.loc[pb_dub, loc_col]
                         self.loc[pb_dub, 'filternr'] = i + 1
                         self.loc[pb_dub, 'obs'].filternr = i + 1
                         self.loc[pb_dub, 'obs'].meta['filternr'] = i + 1
-                        
+
                         self.loc[pb_dub, 'locatie'] = locatie
                         self.loc[pb_dub, 'obs'].locatie = locatie
                         self.loc[pb_dub, 'obs'].meta['locatie'] = locatie
-    
-        
 
     def get_first_last_obs_date(self):
         """adds two columns to the ObsCollection with the date of the first
@@ -1049,10 +1047,10 @@ class ObsCollection(pd.DataFrame):
         self['date_last_measurement'] = [o.index.max()
                                          for o in self.obs.values]
 
-    def get_maaiveld(self, xcol='x', ycol='y', buffer=10., 
+    def get_maaiveld(self, xcol='x', ycol='y', buffer=10.,
                      add_to_oc=False, if_exists='error', **kwargs):
         """get maaiveld at the observation points in the observation collection
-        
+
         Parameters
         ----------
         xcol : str, optional
@@ -1068,55 +1066,55 @@ class ObsCollection(pd.DataFrame):
             'error', 'replace' or 'keep', by default 'error'
         **kwargs:
             are passed to art.get_ahn_within_extent() function
-            
+
         Returns
         -------
         np.array or None
             list of ahn values at observation locations or None (if add_to_oc = True)
         """
-        
+
         if self.shape[0] < 2:
-            raise NotImplementedError('this method will probabaly not work on collections with 0 or 1 observation points')
-        
+            raise NotImplementedError(
+                'this method will probabaly not work on collections with 0 or 1 observation points')
+
         import art_tools as art
         from scipy import interpolate
-        
+
         # get x and y values from oc_col
         xp = self[xcol].values.astype(float)
         yp = self[ycol].values.astype(float)
-    
+
         extent = self.get_extent(buffer=buffer)
-    
+
         ahn = art.get_ahn_within_extent(extent, **kwargs)
-    
+
         z = art.rasters.get_values(ahn)
-    
+
         # use griddata (is slow, buit can handle NaNs)
         xc, yc = art.rasters.get_xy_mid(ahn)
         xc, yc = np.meshgrid(xc, yc)
         mask = ~np.isnan(z)
         points = np.column_stack((xc[mask], yc[mask]))
         zp = interpolate.griddata(points, z[mask], np.column_stack((xp, yp)))
-        
+
         if add_to_oc:
-            if if_exists=='error' and 'maaiveld' in self.columns:
-                raise KeyError("maaiveld already in columns set if_exists to 'keep' or 'replace' to overwrite")
-            elif if_exists=='replace':
+            if if_exists == 'error' and 'maaiveld' in self.columns:
+                raise KeyError(
+                    "maaiveld already in columns set if_exists to 'keep' or 'replace' to overwrite")
+            elif if_exists == 'replace':
                 self['maaiveld'] = np.nan
             elif 'maaiveld' not in self.columns:
                 self['maaiveld'] = np.nan
             obs_new_maaiveld = self['maaiveld'].isna()
             self.loc[obs_new_maaiveld, 'maaiveld'] = zp[obs_new_maaiveld]
-            for o in self.loc[obs_new_maaiveld,'obs'].values:
+            for o in self.loc[obs_new_maaiveld, 'obs'].values:
                 o.maaiveld = self.loc[o.name, 'maaiveld']
                 o.meta['maaiveld'] = o.maaiveld
 
             return None
-        
+
         else:
             return zp
-
-
 
     def get_min_max(self, obs_column='Stand_m_tov_NAP'):
         """adds two columns to the Obscollection with the minimum and the
@@ -1223,7 +1221,7 @@ class ObsCollection(pd.DataFrame):
             end date for timeseries plot
         per_location : bool, optional
             if True plot multiple filters on the same location in one figure
-        
+
 
         verbose : boolean, optional
             Print additional information to the screen (default is False).
@@ -1264,19 +1262,19 @@ class ObsCollection(pd.DataFrame):
             'powderblue',
             'salmon',
             'tan')
-        
+
         if per_location:
             plot_names = self.groupby('locatie').count().index
         else:
             plot_names = self.index
-        
+
         for name in plot_names:
-            
+
             if per_location:
-                oc = self.loc[self.locatie==name, 'obs'].sort_index()
+                oc = self.loc[self.locatie == name, 'obs'].sort_index()
             else:
                 oc = self.loc[[name], 'obs']
-            
+
             p = None
             for i, o in enumerate(oc.values):
                 if i == 10:
@@ -1291,7 +1289,7 @@ class ObsCollection(pd.DataFrame):
                                               **kwargs)
                     if verbose:
                         print('created iplot -> {}'.format(o.name))
-    
+
                 except ValueError:
                     if verbose:
                         print('{} has no data between {} and {}'.format(
@@ -1408,19 +1406,19 @@ class ObsCollection(pd.DataFrame):
         group_name = '<span style=\\"color: {};\\">{}</span>'.format(
             color, legend_name)
         group = folium.FeatureGroup(name=group_name)
-        
+
         if per_location:
             plot_names = self.groupby('locatie').count().index
         else:
             plot_names = self.index
-        
+
         for name in plot_names:
             if per_location:
-                oc = self.loc[self.locatie==name, 'obs'].sort_index()
+                oc = self.loc[self.locatie == name, 'obs'].sort_index()
                 o = oc.iloc[-1]
             else:
                 o = self.loc[name, 'obs']
-            
+
             if o.iplot_fname is not None:
                 with open(o.iplot_fname, 'r') as f:
                     bokeh_html = f.read()
@@ -1676,35 +1674,36 @@ class ObsCollection(pd.DataFrame):
         if graph is None:
             graph = np.full((4, 4), True)
             graph[1:, 1:-1] = False
-        
+
         if plot_ylim == 'max_dy':
             plot_ylim = self.get_min_max(obs_column=plot_column)
-        
+
         mg_list = []
         if per_location:
-            plot_names = self.groupby(['locatie','x','y'],as_index=False).count()
+            plot_names = self.groupby(
+                ['locatie', 'x', 'y'], as_index=False).count()
             plot_names.set_index('locatie', inplace=True)
         else:
             plot_names = self.copy()
-            
+
         for k, xyo in plot_names.groupby(np.arange(plot_names.shape[0]) // plots_per_map):
-            
+
             mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph,
                               figsize=figsize, extent=extent)
-        
+
             plt.sca(mg.mapax)
             plt.yticks(rotation=90, va="center")
             art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75,
                                                             verbose=verbose)
             if map_gdf is not None:
                 map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
-            
+
             for i, name in enumerate(xyo.index):
                 if per_location:
-                    oc = self.loc[self.locatie==name, 'obs'].sort_index()
+                    oc = self.loc[self.locatie == name, 'obs'].sort_index()
                 else:
                     oc = self.loc[[name], 'obs']
-                
+
                 ax = mg.ax[i]
                 if plot_func:
                     ax = plot_func(self, oc, ax,
@@ -1729,24 +1728,24 @@ class ObsCollection(pd.DataFrame):
                         ax.set_ylim(ylim)
                     else:
                         ax.set_ylim(plot_ylim)
-        
+
                     for line in vlines:
                         ylim = ax.get_ylim()
                         ax.vlines(line, ylim[0] - 100, ylim[1] + 100, ls='--',
                                   lw=2.0, color='r')
                     ax.legend(loc='best')
-        
+
             mg.figure.tight_layout()
             if savefig is not None:
                 mg.figure.savefig(savefig + "{0}.png".format(k),
                                   dpi=300, bbox_inches="tight")
             mg_list.append(mg)
-        
+
         # for some reason you have to set the extent at the end again
         if extent is not None:
             for mg_m in mg_list:
                 mg_m.mapax.axis(extent)
-                
+
         return mg_list
 
     def to_report_table(self, columns=['locatie', 'filternr',
@@ -1820,14 +1819,14 @@ class ObsCollection(pd.DataFrame):
         """
         art = util._import_art_tools()
         gdf = art.util.df2gdf(self, xcol, ycol)
-        
-        #remove obs column
+
+        # remove obs column
         if 'obs' in gdf.columns:
             gdf.drop(columns='obs', inplace=True)
-        
-        #cast boolean columns to int
+
+        # cast boolean columns to int
         for colname, coltype in gdf.dtypes.items():
-            if coltype==bool:
+            if coltype == bool:
                 gdf[colname] = gdf[colname].astype(int)
         gdf.to_file(fname)
 
@@ -1856,7 +1855,7 @@ class ObsCollection(pd.DataFrame):
             self.add_meta_to_df('lat')
             self.add_meta_to_df('lon')
 
-    def get_no_of_observations(self, column_name='Stand_m_tov_NAP', 
+    def get_no_of_observations(self, column_name='Stand_m_tov_NAP',
                                after_date=None, before_date=None):
         """get number of non-nan values of a column in the observation df
 
@@ -1877,7 +1876,8 @@ class ObsCollection(pd.DataFrame):
         no_obs = []
         for o in self.obs.values:
             try:
-                no_obs.append(o[after_date:before_date][column_name].dropna().count())
+                no_obs.append(o[after_date:before_date]
+                              [column_name].dropna().count())
             except KeyError:
                 no_obs.append(0)
 
@@ -1972,10 +1972,10 @@ class ObsCollection(pd.DataFrame):
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
-    
+
     def get_distance_to_point(self, point, xcol='x', ycol='y'):
         """get distance of every observation to a point.
-        
+
         Parameters
         ----------
         point : shapely.geometry.point.Point
@@ -1984,18 +1984,17 @@ class ObsCollection(pd.DataFrame):
             x column in self used to get x coordinates
         ycol : str, optional
             y column in self used to get y coordinates
-            
+
         Returns
         -------
         pd.Series
             distance to the point for every observation in self
-        
+
         """
-        
+
         gdf = self[[xcol, ycol]].to_gdf(xcol=xcol, ycol=ycol)
-        
+
         return gdf.distance(point)
-        
 
     def get_pb_modellayers(self, ml, zgr=None, verbose=False):
         """Get the modellayers from the dis file
