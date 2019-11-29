@@ -24,6 +24,8 @@ Currently supported datasources that can be read:
 - WISKI csv
 - Artesia Fieldlogger for [Android](https://play.google.com/store/apps/details?id=nl.artesia.fieldlogger&hl=en) and [iOS](https://apps.apple.com/nl/app/fieldlogger/id924565721)
 - [Pastas](https://github.com/pastas/pastas) projects
+- [PyStore](https://github.com/ranaroussi/pystore), a fast datastore for pandas timeseries
+- [Arctic](https://github.com/man-group/arctic), a timeseries / dataframe database that sits atop MongoDB
 - [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script) data
 - MODFLOW groundwater models
 - IMOD
@@ -32,6 +34,8 @@ ObsCollection can be exported to:
 - Artesia Fieldlogger
 - Shapefile
 - Pastas projects
+- Arctic
+- Pystore
 
 ## Example usage
 Importing a single DINO csv file:
