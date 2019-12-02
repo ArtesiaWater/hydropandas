@@ -24,6 +24,7 @@ from pandas import DataFrame, Series, datetime
 from scipy import interpolate
 
 from . import io_dino
+from . import util
 
 
 class Obs(DataFrame):
@@ -315,7 +316,7 @@ class Obs(DataFrame):
         """
 
         # attempt art_tools import
-        art = _import_art_tools()
+        art = util._import_art_tools()
 
 
         extent=[self.x-buffer, self.x+buffer, self.y-buffer, self.y+buffer]
@@ -449,7 +450,7 @@ class GroundwaterObs(Obs):
 
         if get_metadata:
             # attempt art_tools import
-            art = _import_art_tools()
+            art = util._import_art_tools()
 
             raw_meta = art.dino_wfs.get_dino_piezometer_metadata(
                 [meta['locatie']])

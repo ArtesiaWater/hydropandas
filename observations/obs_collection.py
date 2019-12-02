@@ -1079,7 +1079,7 @@ class ObsCollection(pd.DataFrame):
                 'this method will probabaly not work on collections with 0 or 1 observation points')
 
         # attempt art_tools import
-        art = _import_art_tools()
+        art = util._import_art_tools()
 
 
         # get x and y values from oc_col
@@ -1612,7 +1612,7 @@ class ObsCollection(pd.DataFrame):
 
         if add_topo:
             # attempt art_tools import
-            art = _import_art_tools()
+            art = util._import_art_tools()
             art.OpenTopo(ax=ax, verbose=verbose).plot(
                 verbose=verbose, alpha=0.5)
 
@@ -1673,7 +1673,7 @@ class ObsCollection(pd.DataFrame):
         """
 
         # attempt art_tools import
-        art = _import_art_tools()
+        art = util._import_art_tools()
 
         if graph is None:
             graph = np.full((4, 4), True)
