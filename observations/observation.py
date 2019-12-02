@@ -21,6 +21,7 @@ import os
 
 import numpy as np
 from pandas import DataFrame, Series, datetime
+from scipy import interpolate
 
 from . import io_dino
 
@@ -296,26 +297,27 @@ class Obs(DataFrame):
                                                     'summer_{}'.format(stat): [summer_stat]})
 
         return df
-    
+
     def get_maaiveld(self, buffer=10, **kwargs):
         """returns maaiveld at observation point
-        
+
         Parameters
         ----------
         buffer: int or float, optional
             buffer used to get surrounding ahn values
         **kwargs:
             are passed to art.get_ahn_within_extent() function
-            
+
         Returns
         -------
         zp: float
             ahn value at location
         """
-        
-        import art_tools as art
-        from scipy import interpolate
-        
+
+        # attempt art_tools import
+        art = _import_art_tools()
+
+
         extent=[self.x-buffer, self.x+buffer, self.y-buffer, self.y+buffer]
         ds = art.get_ahn_within_extent(extent, **kwargs)
         z = art.rasters.get_values(ds)
@@ -325,9 +327,9 @@ class Obs(DataFrame):
         points = np.column_stack((xc[mask], yc[mask]))
 
         zp = float(interpolate.griddata(points, z[mask], ((self.x, self.y))))
-        
+
         return zp
-        
+
 
     def obs_per_year(self, col):
         if self.empty:
@@ -446,7 +448,9 @@ class GroundwaterObs(Obs):
                                                                **kwargs)
 
         if get_metadata:
-            import art_tools as art
+            # attempt art_tools import
+            art = _import_art_tools()
+
             raw_meta = art.dino_wfs.get_dino_piezometer_metadata(
                 [meta['locatie']])
             if raw_meta != []:

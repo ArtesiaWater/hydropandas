@@ -6,23 +6,25 @@ Created on Wed Sep 12 12:15:42 2018
 """
 
 import os
+import tempfile
 import time
 import zipfile
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import scipy.interpolate as spint
 import scipy.spatial.qhull as qhull
-import tempfile
-from pandas import Timestamp, Timedelta
+from pandas import Timedelta, Timestamp
+
 
 def _import_art_tools():
     try:
         import art_tools as art
         return art
     except ModuleNotFoundError as e:
-        print(
-            'This function is not available please contact Artesia for more information')
+        print('This function is not available please '
+              'contact Artesia for more information')
         raise(e)
 
 

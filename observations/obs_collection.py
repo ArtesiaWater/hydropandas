@@ -15,6 +15,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import interpolate
 
 from . import observation as obs
 from . import util
@@ -1077,8 +1078,9 @@ class ObsCollection(pd.DataFrame):
             raise NotImplementedError(
                 'this method will probabaly not work on collections with 0 or 1 observation points')
 
-        import art_tools as art
-        from scipy import interpolate
+        # attempt art_tools import
+        art = _import_art_tools()
+
 
         # get x and y values from oc_col
         xp = self[xcol].values.astype(float)
@@ -1609,7 +1611,8 @@ class ObsCollection(pd.DataFrame):
         ax.set_ylim(ylim)
 
         if add_topo:
-            import art_tools as art
+            # attempt art_tools import
+            art = _import_art_tools()
             art.OpenTopo(ax=ax, verbose=verbose).plot(
                 verbose=verbose, alpha=0.5)
 
@@ -1669,7 +1672,8 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        import art_tools as art
+        # attempt art_tools import
+        art = _import_art_tools()
 
         if graph is None:
             graph = np.full((4, 4), True)
