@@ -12,7 +12,6 @@ sys.path.insert(0, PROJECT_DIR)
 os.chdir(TEST_DIR)
 
 
-
 dinozip = r'.\data\2019-Dino-test\Dino.zip'
 
 
@@ -66,6 +65,7 @@ def test_obscollection_fieldlogger():
         r'.\data\2019-Dino-test\fieldlogger\locations.csv')
     return fl
 
+
 def test_obscollection_from_list():
     dino_gw = oc.ObsCollection.from_dino_dir(
         dirname=dinozip,
@@ -76,9 +76,9 @@ def test_obscollection_from_list():
         verbose=False)
     obs_list = [o for o in dino_gw.obs.values]
     oc_list = oc.ObsCollection.from_list(obs_list)
-    
+
     return oc_list
-        
+
 
 # read dino directories
 def test_obscollection_dinozip_gw():
@@ -164,6 +164,8 @@ def test_obscollection_to_fieldlogger():
     return fdf
 
 # read FEWS data
+
+
 def test_obscollection_fews():
     fews_gw_prod = oc.ObsCollection.from_fews(
         r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
@@ -189,7 +191,6 @@ def test_obscollection_fews2_selection():
             "MPN-N-2",
         ))
     return fews_gw_prod
-
 
 
 # read WISKI data
@@ -282,6 +283,8 @@ def test_obs_from_pystore_item():
     return o
 
 # Test KNMI Obs
+
+
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(829, "RD")
 
@@ -296,14 +299,12 @@ def test_knmi_obs_from_obs():
 
 # Test Menyanthes (still need a small menyanthes file to do the test)
 
-#def test_obscollection_menyanthes():
-#            
+# def test_obscollection_menyanthes():
+#
 #    fname = r'g:\My Drive\m\01projekt\19042016 BRABANT WATER, Uitwerking pompproef Gilze\02 Data\export_from_ADI_20191007.men'
 #    obsc = oc.ObsCollection.from_menyanthes(fname, verbose=True)
-#    
+#
 #    return obsc
 
 
 # Test visualisation
-    
-

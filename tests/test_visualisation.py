@@ -9,6 +9,7 @@ import test_to_from as ttf
 
 plot_dir = r".\data\2019-Dino-test\plots"
 
+
 def test_interactive_plot():
     gw = ttf.test_observation_gw()
     gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
@@ -28,17 +29,20 @@ def test_obscollection_dino_to_map():
                                verbose=True)
     return
 
+
 def test_obscollection_dino_to_mapgraph():
     gw = ttf.test_obscollection_dinozip_gw()
     gw.to_mapgraphs(plot_ylim='min_dy')
 
     return
 
+
 def test_obscollection_to_map():
     fews_gw_prod = ttf.test_obscollection_fews()
     ax = fews_gw_prod.to_map()
-    
+
     return ax
+
 
 def test_obscollection_to_imap():
     fname = 'texel_fews.html'

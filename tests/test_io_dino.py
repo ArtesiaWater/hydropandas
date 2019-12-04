@@ -15,6 +15,7 @@ PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
 sys.path.insert(0, PROJECT_DIR)
 os.chdir(TEST_DIR)
 
+
 def test_dino_download_single():
     # download single file
     measurements, meta = io_dino.download_dino_groundwater(name="B57F0077",
@@ -23,9 +24,6 @@ def test_dino_download_single():
                                                            tmax="2010-01-01",
                                                            unit="NAP")
     return measurements, meta
-
-
-
 
 
 def test_dino_download_extent():
@@ -40,4 +38,3 @@ def test_dino_download_extent():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return gw_col
-

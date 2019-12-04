@@ -16,6 +16,7 @@ PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
 sys.path.insert(0, PROJECT_DIR)
 os.chdir(TEST_DIR)
 
+
 def test_read_wiski_csv():
     # download single file
 
@@ -25,11 +26,12 @@ def test_read_wiski_csv():
                                             parse_dates={"datetime": [0, 1]},
                                             infer_datetime_format=True,
                                             index_col=["datetime"],
-                                            translate_dic={'name':'Station Number',
-                                                           'x':'GlobalX',
-                                                           'y':'GlobalY'})
+                                            translate_dic={'name': 'Station Number',
+                                                           'x': 'GlobalX',
+                                                           'y': 'GlobalY'})
 
     return header, data
+
 
 def test_read_wiski_csv2():
     # download single file
@@ -41,25 +43,25 @@ def test_read_wiski_csv2():
                                             infer_datetime_format=False,
                                             dayfirst=True,
                                             index_col=["datetime"],
-                                            translate_dic={'name':'Station Number',
-                                                           'x':'GlobalX',
-                                                           'y':'GlobalY'})
+                                            translate_dic={'name': 'Station Number',
+                                                           'x': 'GlobalX',
+                                                           'y': 'GlobalY'})
 
     return header, data
 
 
-#%%
+# %%
 
 def test_read_wiski_zip():
     obs_df = io_wiski.read_wiski_dir(r".\data\2019-WISKI-test\1016_PBF.zip",
                                      ObsClass=obs.GroundwaterObs,
                                      sep='\s+', header_sep=':',
                                      header_identifier=':',
-                                     parse_dates={"datetime": [0,1]},
+                                     parse_dates={"datetime": [0, 1]},
                                      index_col=["datetime"],
-                                     translate_dic={'name':'Station Number',
-                                                           'x':'GlobalX',
-                                                           'y':'GlobalY'},
+                                     translate_dic={'name': 'Station Number',
+                                                    'x': 'GlobalX',
+                                                    'y': 'GlobalY'},
                                      verbose=True)
 
     return obs_df
