@@ -11,34 +11,34 @@ import test_to_from as ttf
 def test_within_extent():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     extent = [210350, 213300, 473300, 474000]
-    dino_gw.within_extent(extent, inplace=True)
+    dino_gw.geo.within_extent(extent, inplace=True)
     assert dino_gw.shape[0] == 4
     return dino_gw
 
 
 def test_obscollection_consecutive_obs_years():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
-    coy = gw.consecutive_obs_years()
+    coy = gw.stats.consecutive_obs_years()
 
     return coy
 
 
 def test_obscollection_get_seasonal_stats():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
-    st = gw.get_seasonal_stat(stat='mean')
+    st = gw.stats.get_seasonal_stat(stat='mean')
 
     return st
 
 
 def test_get_filternr():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.get_filternr(if_exists='replace')
+    dino_gw.gwobs.get_filternr(if_exists='replace')
     return dino_gw
 
 
 def test_get_filternr_location():
     fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.get_filternr_locatie('locationId')
+    fews_gw_prod.gwobs.get_filternr_locatie('locationId')
 
     return fews_gw_prod
 
@@ -47,13 +47,13 @@ def test_get_nearest_point():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     fl = ttf.test_obscollection_fieldlogger()
     dino_gw[['nearest point', 'distance nearest point']
-            ] = dino_gw.get_nearest_point(fl)
+            ] = dino_gw.geo.get_nearest_point(fl)
     return dino_gw
 
 
 def test_get_maaiveld_oc():
     gw = ttf.test_obscollection_fews()
-    zp = gw.get_maaiveld()
+    zp = gw.geo.get_maaiveld()
 
     return zp
 

@@ -20,26 +20,26 @@ def test_interactive_plot():
 
 def test_obscollection_dino_to_map():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.get_lat_lon()
-    dino_gw.to_interactive_map(plot_dir, plot_columns=['Stand_m_tov_NAP'],
-                               fname='imap.html',
-                               legend_name='grondwater DINO',
-                               add_filter_to_legend=True, hoover_names=['gws'],
-                               zoom_start=9,
-                               verbose=True)
+    dino_gw.geo.get_lat_lon()
+    dino_gw.plots.interactive_map(plot_dir, plot_columns=['Stand_m_tov_NAP'],
+                                  fname='imap.html',
+                                  legend_name='grondwater DINO',
+                                  add_filter_to_legend=True, hoover_names=['gws'],
+                                  zoom_start=9,
+                                  verbose=True)
     return
 
 
 def test_obscollection_dino_to_mapgraph():
     gw = ttf.test_obscollection_dinozip_gw()
-    gw.to_mapgraphs(plot_ylim='min_dy')
+    gw.plots.mapgraphs(plot_ylim='min_dy')
 
     return
 
 
 def test_obscollection_to_map():
     fews_gw_prod = ttf.test_obscollection_fews()
-    ax = fews_gw_prod.to_map()
+    ax = fews_gw_prod.plots.map()
 
     return ax
 
@@ -47,12 +47,12 @@ def test_obscollection_to_map():
 def test_obscollection_to_imap():
     fname = 'texel_fews.html'
     fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.get_filternr_locatie('locationId')
-    m = fews_gw_prod.to_interactive_map(plot_dir,
-                                        plot_columns=['value'],
-                                        fname=fname,
-                                        plot_freq='D',
-                                        legend_name='opp water FEWS',
-                                        map_label='locationId',
-                                        map_label_size=10)
+    fews_gw_prod.gwobs.get_filternr_locatie('locationId')
+    m = fews_gw_prod.plots.interactive_map(plot_dir,
+                                           plot_columns=['value'],
+                                           fname=fname,
+                                           plot_freq='D',
+                                           legend_name='opp water FEWS',
+                                           map_label='locationId',
+                                           map_label_size=10)
     return m
