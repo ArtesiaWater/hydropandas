@@ -81,9 +81,9 @@ class CollectionPlots:
         return ax
 
     def interactive_plots(self, savedir,
-                         tmin=None, tmax=None,
-                         per_location=True,
-                         verbose=True, **kwargs):
+                          tmin=None, tmax=None,
+                          per_location=True,
+                          verbose=True, **kwargs):
         """Create interactive plots of the observations using bokeh
 
         Parameters
@@ -157,12 +157,12 @@ class CollectionPlots:
                     raise NotImplementedError(
                         'cannot add more than 10 lines to a single plot')
                 try:
-                    p = o.to_interactive_plot(savedir=savedir,
-                                              p=p,
-                                              tmin=tmin, tmax=tmax,
-                                              colors=[_color_cycle[i + 1]],
-                                              return_filename=False,
-                                              **kwargs)
+                    p = o.plots.interactive_plot(savedir=savedir,
+                                                 p=p,
+                                                 tmin=tmin, tmax=tmax,
+                                                 colors=[_color_cycle[i + 1]],
+                                                 return_filename=False,
+                                                 **kwargs)
                     if verbose:
                         print('created iplot -> {}'.format(o.name))
 
@@ -526,3 +526,140 @@ class CollectionPlots:
                 mg_m.mapax.axis(extent)
 
         return mg_list
+
+
+@accessor.register_obs_accessor("plots")
+class ObsPlots:
+    def __init__(self, obs):
+        self._obj = obs
+
+    def interactive_plot(self, savedir=None,
+                         plot_columns=['Stand_m_tov_NAP'],
+                         markers=['line'],
+                         p=None,
+                         plot_legend_names=[''],
+                         plot_freq=[None], tmin=None, tmax=None,
+                         hoover_names=['Peil'],
+                         hoover_date_format="%Y-%m-%d",
+                         ylabel='m NAP', colors=['blue'],
+                         add_filter_to_legend=False,
+                         return_filename=False):
+        """Create an interactive plot of the observations using bokeh
+
+        To-Do
+        -----
+        add options for hoovers, markers, linestyle
+
+        Parameters
+        ----------
+        savedir : str, optional
+            directory used for the folium map and bokeh plots
+        plot_columns : list of str, optional
+            name of the column in the obs df that will be plotted with bokeh
+        markers : list of str, optional
+            type of markers that can be used for plot, 'line' and 'circle' are
+            supported
+        p : bokeh.plotting.figure, optional
+            reference to existing figure, if p is None a new figure is created
+        plot_legend_names : list of str, optional
+            legend in bokeh plot
+        plot_freq : list of str, optional
+            bokeh plot is resampled with this frequency to reduce the size
+        tmin : dt.datetime, optional
+            start date for timeseries plot
+        tmax : dt.datetime, optional
+            end date for timeseries plot
+        hoover_names : list of str, optional
+            names will be displayed together with the plot_column value
+            when hoovering over plot
+        hoover_date_format : str, optional
+            date format to use when hoovering over a plot
+        ylabel : str, optional
+            label on the y-axis
+        colors : list of str, optional
+            colors used for the plots
+        add_filter_to_legend : boolean, optional
+            if True the attributes bovenkant_filter and onderkant_filter
+            are added to the legend name
+        return_filename : boolean, optional
+            if True filename will be returned
+
+        Returns
+        -------
+        fname_plot : str or bokeh plot
+            filename of the bokeh plot or reference to bokeh plot
+        """
+
+        from bokeh.plotting import figure
+        from bokeh.models import ColumnDataSource, HoverTool
+        from bokeh.plotting import save
+        from bokeh.resources import CDN
+
+        # create plot dataframe
+        plot_df = self._obj[tmin:tmax].copy()
+        plot_df['date'] = plot_df.index.strftime(hoover_date_format)
+        if plot_df.empty or plot_df[plot_columns].isna().all().all():
+            raise ValueError(
+                '{} has no data between {} and {}'.format(self._obj.name, tmin, tmax))
+
+        # create plot
+        if p is None:
+            p = figure(plot_width=600, plot_height=400, x_axis_type='datetime',
+                       title='')
+            p.yaxis.axis_label = ylabel
+
+        # get x axis
+        xcol = self._obj.index.name
+        if xcol is None:
+            xcol = 'index'
+
+        # plot multiple columns
+        for i, column in enumerate(plot_columns):
+            # legend name
+            if add_filter_to_legend:
+                lname = '{} {} (NAP {:.2f} - {:.2f})'.format(plot_legend_names[i], self._obj.name,
+                                                             self._obj.onderkant_filter,
+                                                             self._obj.bovenkant_filter)
+            else:
+                lname = '{} {}'.format(plot_legend_names[i], self._obj.name)
+
+            # resample data
+            if plot_freq[i] is not None:
+                source = ColumnDataSource(
+                    plot_df[[column, 'date']].resample(plot_freq[i]).nearest())
+            else:
+                source = ColumnDataSource(plot_df[[column, 'date']])
+
+            # plot data
+            if markers[i] == 'line':
+                p.line(xcol, column, source=source, color=colors[i], legend=lname,
+                       alpha=0.8, muted_alpha=0.2)
+            elif markers[i] == 'circle':
+                p.circle(xcol, column, source=source, color=colors[i], legend=lname,
+                         alpha=0.8, muted_alpha=0.2)
+            else:
+                raise NotImplementedError("marker '{}' invalid. Only line and"
+                                          "circle are currently available".format(markers[i]))
+
+        # hoover options
+        tooltips = []
+        for i, column in enumerate(plot_columns):
+            tooltips.append((hoover_names[i], "@{}".format(column)))
+        tooltips.append(('date', "@date"))
+        hover = HoverTool(tooltips=tooltips)
+
+        p.add_tools(hover)
+
+        p.legend.location = "top_left"
+        p.legend.click_policy = "mute"
+
+        # save plot
+        if savedir is not None:
+            self._obj.iplot_fname = os.path.join(
+                savedir, self._obj.name + '.html')
+            save(p, self._obj.iplot_fname, resources=CDN, title=self._obj.name)
+
+        if return_filename:
+            return self._obj.iplot_fname
+        else:
+            return p

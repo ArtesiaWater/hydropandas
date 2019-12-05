@@ -19,14 +19,12 @@ def test_within_extent():
 def test_obscollection_consecutive_obs_years():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     coy = gw.stats.consecutive_obs_years()
-
     return coy
 
 
 def test_obscollection_get_seasonal_stats():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     st = gw.stats.get_seasonal_stat(stat='mean')
-
     return st
 
 
@@ -39,7 +37,6 @@ def test_get_filternr():
 def test_get_filternr_location():
     fews_gw_prod = ttf.test_obscollection_fews()
     fews_gw_prod.gwobs.get_filternr_locatie('locationId')
-
     return fews_gw_prod
 
 
@@ -54,12 +51,10 @@ def test_get_nearest_point():
 def test_get_maaiveld_oc():
     gw = ttf.test_obscollection_fews()
     zp = gw.geo.get_maaiveld()
-
     return zp
 
 
 def test_get_maaiveld_gwobs():
     gw = ttf.test_observation_gw()
-    mv = gw.get_maaiveld()
-
+    mv = gw.geo.get_maaiveld()
     return mv
