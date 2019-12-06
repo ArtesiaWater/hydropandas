@@ -28,15 +28,15 @@ def test_obscollection_get_seasonal_stats():
     return st
 
 
-def test_get_filternr():
+def test_get_filter_num():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.gwobs.get_filternr(if_exists='replace')
+    dino_gw.gwobs.get_filter_num(if_exists='replace')
     return dino_gw
 
 
-def test_get_filternr_location():
+def test_get_filter_num_location():
     fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.gwobs.get_filternr_locatie('locationId')
+    fews_gw_prod.gwobs.get_filter_num_location('locationId')
     return fews_gw_prod
 
 
@@ -48,13 +48,13 @@ def test_get_nearest_point():
     return dino_gw
 
 
-def test_get_maaiveld_oc():
+def test_get_surface_level_oc():
     gw = ttf.test_obscollection_fews()
-    zp = gw.geo.get_maaiveld()
+    zp = gw.geo.get_surface_level()
     return zp
 
 
-def test_get_maaiveld_gwobs():
+def test_get_surface_level_gwobs():
     gw = ttf.test_observation_gw()
-    mv = gw.geo.get_maaiveld()
+    mv = gw.geo.get_surface_level()
     return mv

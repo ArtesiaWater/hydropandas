@@ -225,8 +225,8 @@ class GeoAccessor:
         else:
             return new_oc
 
-    def get_maaiveld(self, xcol='x', ycol='y', buffer=10.,
-                     add_to_oc=False, if_exists='error', **kwargs):
+    def get_surface_level(self, xcol='x', ycol='y', buffer=10.,
+                          add_to_oc=False, if_exists='error', **kwargs):
         """get maaiveld at the observation points in the observation collection
 
         Parameters
@@ -335,7 +335,7 @@ class GeoAccessorObs:
 
         return lat, lon
 
-    def get_maaiveld(self, buffer=10, **kwargs):
+    def get_surface_level(self, buffer=10, **kwargs):
         """returns maaiveld at observation point
 
         Parameters

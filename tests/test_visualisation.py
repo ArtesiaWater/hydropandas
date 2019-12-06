@@ -47,7 +47,7 @@ def test_obscollection_to_map():
 def test_obscollection_to_imap():
     fname = 'texel_fews.html'
     fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.gwobs.get_filternr_locatie('locationId')
+    fews_gw_prod.gwobs.get_filter_num_location('locationId')
     m = fews_gw_prod.plots.interactive_map(plot_dir,
                                            plot_columns=['value'],
                                            fname=fname,
