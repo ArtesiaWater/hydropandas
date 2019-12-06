@@ -30,8 +30,8 @@ import numpy as np
 import pandas as pd
 import pystore
 from tqdm import tqdm
-from .observation import GroundwaterObs
-from .obs_collection import ObsCollection
+from ..observation import GroundwaterObs
+from ..obs_collection import ObsCollection
 
 
 def set_pystore_path(pystore_path):

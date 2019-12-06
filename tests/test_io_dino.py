@@ -6,7 +6,7 @@ Created on Mon Jun 24 11:43:27 2019
 """
 import sys
 sys.path.insert(1, "..")
-from observations import io_dino
+from observations.io import io_dino
 from observations import observation as obs
 import os
 

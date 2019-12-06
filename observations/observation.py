@@ -23,7 +23,7 @@ import numpy as np
 from pandas import DataFrame, Series, datetime
 from scipy import interpolate
 
-from . import io_dino
+from .io import io_dino
 from . import util
 
 
@@ -510,7 +510,7 @@ class GroundwaterObs(Obs):
     @classmethod
     def from_wiski(cls, fname, **kwargs):
 
-        from . import io_wiski
+        from .io import io_wiski
 
         header, data = io_wiski.read_wiski_file(fname, **kwargs)
         metadata = {}
@@ -700,7 +700,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
                   normalize_index=True, verbose=False):
-        from . import io_knmi
+        from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(stn, variable,
                                                    startdate, enddate,
@@ -711,7 +711,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
                         normalize_index=True, verbose=False):
-        from . import io_knmi
+        from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
                                                   startdate, enddate,
@@ -724,7 +724,7 @@ class KnmiObs(Obs):
     def from_obs(cls, obs, variable, startdate=None, enddate=None,
                  normalize_index=True, verbose=False):
 
-        from . import io_knmi
+        from .io import io_knmi
 
         x = obs.meta["x"]
         y = obs.meta["y"]

@@ -8,7 +8,7 @@ import sys
 sys.path.insert(1, "..")
 import pandas as pd
 from observations import observation as obs
-from observations import io_wiski
+from observations.io import io_wiski
 import os
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))

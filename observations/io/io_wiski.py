@@ -4,7 +4,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from .util import unzip_file, get_files
+from ..util import unzip_file, get_files
 
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',

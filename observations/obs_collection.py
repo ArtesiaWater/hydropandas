@@ -122,7 +122,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        from . import io_dino
+        from .io import io_dino
 
         if ObsClass == obs.GroundwaterObs:
             kind = 'Grondwaterstand'
@@ -197,7 +197,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        from . import io_dino
+        from .io import io_dino
 
         if name is None:
             name = subdir
@@ -260,7 +260,7 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from . import io_xml
+        from .io import io_xml
 
         # get files
         dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
@@ -326,7 +326,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
 
         """
-        from . import io_xml
+        from .io import io_xml
 
         # get files
         dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
@@ -372,9 +372,9 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from . import fieldlogger
+        from .io import io_fieldlogger
 
-        obs_list, fieldlogger_meta = fieldlogger.fieldlogger_csv_to_obs_list(
+        obs_list, fieldlogger_meta = io_fieldlogger.fieldlogger_csv_to_obs_list(
             fname, ObsClass=obs.GroundwaterObs)
 
         return cls(cls.from_list(obs_list, name=name), meta=fieldlogger_meta)
@@ -383,7 +383,7 @@ class ObsCollection(pd.DataFrame):
     def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
                         verbose=False):
 
-        from . import io_menyanthes
+        from .io import io_menyanthes
 
         obs_list = io_menyanthes.read_file(fname, ObsClass, verbose)
 
@@ -614,7 +614,7 @@ class ObsCollection(pd.DataFrame):
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
                    verbose=False, keep_all_obs=True, **kwargs):
 
-        from . import io_wiski
+        from .io import io_wiski
 
         meta = {'dirname': dirname,
                 'type': ObsClass,
@@ -683,7 +683,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from . import io_pystore
+        from .io import io_pystore
         io_pystore.set_pystore_path(pystore_path)
         if not os.path.isdir(os.path.join(pystore_path, storename)):
             raise FileNotFoundError(
@@ -845,7 +845,7 @@ class ObsCollection(pd.DataFrame):
         group_color : series or str, optional
             color of the group
         """
-        from . import fieldlogger
+        from .io import io_fieldlogger
 
         if infer_otype:
             otype = self._infer_otype(verbose)
@@ -854,7 +854,7 @@ class ObsCollection(pd.DataFrame):
                 raise TypeError(
                     'could not infer observation type, use infer_otype=False')
 
-        f_df = fieldlogger.df_to_fieldlogger_csv(
+        f_df = io_fieldlogger.df_to_fieldlogger_csv(
             self,
             fname,
             otype,
@@ -871,7 +871,7 @@ class ObsCollection(pd.DataFrame):
         return f_df
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
-        from . import io_xml
+        from .io import io_xml
         io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
 
     def to_pystore(self, store_name, pystore_path, groupby, item_name=None,

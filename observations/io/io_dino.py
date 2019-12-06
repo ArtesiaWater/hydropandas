@@ -5,7 +5,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from .util import unzip_file, _import_art_tools
+from ..util import unzip_file, _import_art_tools
 
 
 def read_dino_groundwater_quality_txt(fname, verbose=False):

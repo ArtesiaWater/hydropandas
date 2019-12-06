@@ -6,7 +6,7 @@ Created on Wed Sep 12 12:15:42 2018
 """
 import warnings
 import pandas as pd
-from . import observation as obs
+from .. import observation as obs
 
 
 def _fieldlogger_groundwater_settings(df, verbose=False):

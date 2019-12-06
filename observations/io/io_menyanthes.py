@@ -8,7 +8,7 @@ Created on Thu Oct 10 11:01:22 2019
 from scipy.io import loadmat
 import os
 import numpy as np
-from .util import matlab2datetime
+from ..util import matlab2datetime
 from pandas import Series, DataFrame
 
 

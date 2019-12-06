@@ -5,7 +5,7 @@ import pandas as pd
 
 import pastas as ps
 
-from .util import _import_art_tools
+from ..util import _import_art_tools
 
 
 def get_stations(variable='RD'):
@@ -25,9 +25,9 @@ def get_stations(variable='RD'):
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if variable == "RD":
-        fname = "../data/knmi_neerslagstation.json"
+        fname = "../../data/knmi_neerslagstation.json"
     else:
-        fname = "../data/knmi_meteostation.json"
+        fname = "../../data/knmi_meteostation.json"
 
     stations = pd.read_json(os.path.join(dir_path, fname))
 
