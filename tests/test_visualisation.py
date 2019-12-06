@@ -39,7 +39,7 @@ def test_obscollection_dino_to_mapgraph():
 
 def test_obscollection_to_map():
     fews_gw_prod = ttf.test_obscollection_fews()
-    ax = fews_gw_prod.plots.map()
+    ax = fews_gw_prod.plots.mapfig()
 
     return ax
 

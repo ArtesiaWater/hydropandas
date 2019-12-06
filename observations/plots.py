@@ -340,7 +340,7 @@ class CollectionPlots:
 
         return m
 
-    def map(self, ax=None, figsize=(15, 15), label='gws',
+    def mapfig(self, ax=None, figsize=(15, 15), label='gws',
             edgecolor='black', facecolor='green',
             marker='o', markersize=100, xlim=None, ylim=None, add_topo=True,
             verbose=False):
