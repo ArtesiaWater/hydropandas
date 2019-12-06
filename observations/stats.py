@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from . import accessor
@@ -51,10 +52,10 @@ class StatsAccessor:
         """
 
         if isinstance(min_obs, str):
-            pblist = {o.name: o.consecutive_obs_years(
+            pblist = {o.name: o.stats.consecutive_obs_years(
                 min_obs=self._obj.loc[o.name, min_obs], col=col) for o in self._obj.obs}
         else:
-            pblist = {o.name: o.consecutive_obs_years(
+            pblist = {o.name: o.stats.consecutive_obs_years(
                 min_obs=min_obs, col=col) for o in self._obj.obs}
         df = pd.DataFrame.from_dict(pblist)
         return df
@@ -122,8 +123,8 @@ class StatsAccessor:
 
         df_list = []
         for o in self._obj.obs.values:
-            df_list.append(o.get_seasonal_stat(column_name, stat,
-                                               winter_months, summer_months))
+            df_list.append(o.stats.get_seasonal_stat(column_name, stat,
+                                                     winter_months, summer_months))
 
         return pd.concat(df_list)
 
@@ -161,3 +162,76 @@ class StatsAccessor:
         self._obj['min'] = [o[obs_column].min() for o in self._obj.obs.values]
 
         return(self._obj['min'].min(), self._obj['max'].max())
+
+
+@accessor.register_obs_accessor("stats")
+class StatsAccessorObs:
+    def __init__(self, obs):
+        self._obj = obs
+
+    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
+                          winter_months=[1, 2, 3, 4, 11, 12],
+                          summer_months=[5, 6, 7, 8, 9, 10]):
+        """get statistics per season
+
+        Parameters
+        ----------
+        column_name : str, optional
+            column name of the  observation data you want stats for
+        stat : str, optional
+            type of statistics, all statisics from df.describe() are available
+        winter_months : list of int, optional
+            month number of winter months
+        summer_months : list of int, optional
+            month number of summer months
+
+
+        Returns
+        -------
+        winter_stats, summer_stats
+            two lists with the statistics for the summer and the winter.
+
+        """
+
+        if self._obj.empty:
+            df = pd.DataFrame(index=[self._obj.name], data={'winter_{}'.format(stat): [np.nan],
+                                                            'summer_{}'.format(stat): [np.nan]})
+        else:
+            winter_stat = self._obj.loc[self._obj.index.month.isin(
+                winter_months)].describe().loc[stat, column_name]
+            summer_stat = self._obj.loc[self._obj.index.month.isin(
+                summer_months)].describe().loc[stat, column_name]
+            df = pd.DataFrame(index=[self._obj.name], data={'winter_{}'.format(stat): [winter_stat],
+                                                            'summer_{}'.format(stat): [summer_stat]})
+
+        return df
+
+    def obs_per_year(self, col):
+        if self._obj.empty:
+            return pd.Series()
+        else:
+            return self._obj.groupby(self._obj.index.year).count()[col]
+
+    def consecutive_obs_years(self, col, min_obs=12):
+
+        obs_per_year = self._obj.stats.obs_per_year(col=col)
+
+        # Add missing years
+        if obs_per_year.empty:
+            # no obs, set series to current year with 0 obs
+            obs_per_year_all = pd.Series(
+                index=[pd.datetime.now().year], data=0)
+        else:
+            obs_per_year_all = pd.Series(index=range(obs_per_year.index[0],
+                                                     obs_per_year.index[-1] + 1))
+            obs_per_year_all.loc[obs_per_year.index] = obs_per_year
+
+        mask_obs_per_year = obs_per_year_all >= min_obs
+        mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
+        mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
+        cumsum = mask_obs_per_year.cumsum().fillna(method="pad")
+        reset = -cumsum.loc[mask_obs_per_year.isnull()].diff().fillna(cumsum)
+        result = mask_obs_per_year.where(
+            mask_obs_per_year.notnull(), reset).cumsum()
+
+        return result

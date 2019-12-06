@@ -127,32 +127,32 @@ def test_obscollection_dinozip_gwq():
     return dino_gwq
 
 
-# def test_obscollection_dino_download_extent():
-#     # download DINO from extent
-#     extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed
-#     dino_gw_extent = oc.ObsCollection.from_dino_server(
-#         extent=extent, ObsClass=obs.GroundwaterObs, verbose=True)
-#     return dino_gw_extent
+def test_obscollection_dino_download_extent():
+    # download DINO from extent
+    extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed
+    dino_gw_extent = oc.ObsCollection.from_dino_server(
+        extent=extent, ObsClass=obs.GroundwaterObs, verbose=True)
+    return dino_gw_extent
 
 
-# def test_obscollection_dino_download_bbox():
-#     # download DINO from bbox
-#     bbox = [120300, 439000, 120500, 441000]  # Schoonhoven zoomed
-#     bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
+def test_obscollection_dino_download_bbox():
+    # download DINO from bbox
+    bbox = [120300, 439000, 120500, 441000]  # Schoonhoven zoomed
+    bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
 
-#     dino_gw_bbox = oc.ObsCollection.from_dino_server(
-#         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
-#     return dino_gw_bbox
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(
+        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
+    return dino_gw_bbox
 
 
-# def test_obscollection_dino_download_bbox_empty():
-#     # download DINO from bbox
-#     bbox = [88596.63500000164, 407224.8449999988,
-#             89623.4149999991, 407804.27800000086]
+def test_obscollection_dino_download_bbox_empty():
+    # download DINO from bbox
+    bbox = [88596.63500000164, 407224.8449999988,
+            89623.4149999991, 407804.27800000086]
 
-#     dino_gw_bbox = oc.ObsCollection.from_dino_server(
-#         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
-#     return dino_gw_bbox
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(
+        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
+    return dino_gw_bbox
 
 
 # collection methods
@@ -201,10 +201,7 @@ def test_observation_wiskicsv_gw():
         sep=r'\s+',
         header_sep=':',
         header_identifier=':',
-        parse_dates={
-            "datetime": [
-                0,
-                1]},
+        parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
         translate_dic={
             'name': 'Station Number',
@@ -226,10 +223,7 @@ def test_obscollection_wiskizip_gw():
         header_sep=':',
         dayfirst=True,
         header_identifier=':',
-        parse_dates={
-            "datetime": [
-                0,
-                1]},
+        parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
         verbose=True)
 

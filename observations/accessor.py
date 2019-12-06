@@ -56,7 +56,7 @@ def register_obscollection_accessor(name):
 
     return _register_accessor(name, oc.ObsCollection)
 
-def register_gwobs_accessor(name):
+def register_obs_accessor(name):
     from . import observation as obs
 
-    return _register_accessor(name, obs.GroundwaterObs)
+    return _register_accessor(name, obs.Obs)

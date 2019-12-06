@@ -12,9 +12,9 @@ plot_dir = r".\data\2019-Dino-test\plots"
 
 def test_interactive_plot():
     gw = ttf.test_observation_gw()
-    gw.to_interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
-                           hoover_date_format="{%F}",
-                           add_filter_to_legend=True)
+    gw.plots.interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
+                              hoover_date_format="{%F}",
+                              add_filter_to_legend=True)
     return
 
 

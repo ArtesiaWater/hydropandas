@@ -80,7 +80,7 @@ class GeoAccessor:
         """
 
         for o in self._obj.obs.values:
-            o.get_lat_lon(in_epsg, out_epsg, add_to_meta)
+            o.geo.get_lat_lon(in_epsg, out_epsg, add_to_meta)
 
         if add_to_df:
             self._obj.add_meta_to_df('lat')
@@ -293,3 +293,77 @@ class GeoAccessor:
 
         else:
             return zp
+
+
+@accessor.register_obs_accessor("geo")
+class GeoAccessorObs:
+    def __init__(self, obs):
+        self._obj = obs
+
+    def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
+                    add_to_meta=True):
+        """get lattitude and longitude from x and y attributes
+
+        Parameters
+        ----------
+        in_epsg : str, optional
+            epsg code of current x and y attributes, default (RD new)
+        out_epsg : str, optional
+            epsg code of desired output, default lat/lon
+        add_to_meta : boolean, optional
+            if True the new coordinates are added to the meta dictionary
+
+        Returns
+        -------
+        lon, lat : longitude and lattitude of x, y coordinates
+
+        """
+
+        from pyproj import Proj, transform
+
+        inProj = Proj(init=in_epsg)
+        outProj = Proj(init=out_epsg)
+
+        if np.isnan(self._obj.x) or np.isnan(self._obj.y):
+            lon, lat = np.nan, np.nan
+        else:
+            lon, lat = transform(inProj, outProj, self._obj.x, self._obj.y)
+
+        if add_to_meta:
+            self._obj.meta['lon'] = lon
+            self._obj.meta['lat'] = lat
+
+        return lat, lon
+
+    def get_maaiveld(self, buffer=10, **kwargs):
+        """returns maaiveld at observation point
+
+        Parameters
+        ----------
+        buffer: int or float, optional
+            buffer used to get surrounding ahn values
+        **kwargs:
+            are passed to art.get_ahn_within_extent() function
+
+        Returns
+        -------
+        zp: float
+            ahn value at location
+        """
+
+        # attempt art_tools import
+        art = util._import_art_tools()
+
+        extent = [self._obj.x - buffer, self._obj.x + buffer,
+                  self._obj.y - buffer, self._obj.y + buffer]
+        ds = art.get_ahn_within_extent(extent, **kwargs)
+        z = art.rasters.get_values(ds)
+        xc, yc = art.rasters.get_xy_mid(ds)
+        xc, yc = np.meshgrid(xc, yc)
+        mask = ~np.isnan(z)
+        points = np.column_stack((xc[mask], yc[mask]))
+
+        zp = float(interpolate.griddata(
+            points, z[mask], ((self._obj.x, self._obj.y))))
+
+        return zp
