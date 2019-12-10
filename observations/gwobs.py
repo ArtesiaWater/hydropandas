@@ -9,7 +9,7 @@ class GwObsAccessor:
     def __init__(self, oc_obj):
         self._obj = oc_obj
 
-    def get_filternr(self, radius=1, xcol='x', ycol='y', if_exists='error'):
+    def get_filter_num(self, radius=1, xcol='x', ycol='y', if_exists='error'):
         """This method will add a column to the ObsCollection with the
         filternr. This is useful for groundwater observations. If two
         observation points are close to each other they will be seen as one
@@ -60,8 +60,8 @@ class GwObsAccessor:
                         self._obj.loc[pb_dub, 'obs'].filternr = i + 1
                         self._obj.loc[pb_dub, 'obs'].meta['filternr'] = i + 1
 
-    def get_filternr_locatie(self, loc_col, radius=1, xcol='x', ycol='y',
-                             if_exists='error'):
+    def get_filter_num_location(self, loc_col, radius=1, xcol='x', ycol='y',
+                                if_exists='error'):
         """This method will add two columns to the ObsCollection with the
         filternr and the location. This is useful for groundwater observations.
         If two observation points are close to each other they will be seen as
