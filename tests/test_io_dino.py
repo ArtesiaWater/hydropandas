@@ -33,8 +33,9 @@ def test_dino_download_extent():
     import time
     start_time = time.time()
     gw_col = io_dino.download_dino_within_extent(extent, ObsClass=obs.GroundwaterObs,
-                                                 kind='Grondwaterstand',
+                                                 layer='grondwatermonitoring',
                                                  verbose=True)
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return gw_col
+

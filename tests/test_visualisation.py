@@ -18,9 +18,9 @@ def test_interactive_plot():
     return
 
 
-def test_obscollection_dino_to_map():
+def test_obscollection_dino_to_imap():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.geo.get_lat_lon()
+    dino_gw.geo.set_lat_lon(verbose=True)
     dino_gw.plots.interactive_map(plot_dir, plot_columns=['Stand_m_tov_NAP'],
                                   fname='imap.html',
                                   legend_name='grondwater DINO',

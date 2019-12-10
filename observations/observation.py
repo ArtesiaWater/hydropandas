@@ -145,7 +145,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_dino_server(cls, name, filternr=1.,
-                         tmin="2000-01-01", tmax="2010-01-01",
+                         tmin="1900-01-01", tmax="2040-01-01",
                          x=np.nan, y=np.nan,
                          get_metadata=True,
                          **kwargs):

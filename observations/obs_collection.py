@@ -87,6 +87,56 @@ class ObsCollection(pd.DataFrame):
             return otypes
         else:
             raise TypeError('could not infer observation type')
+            
+    def _set_value(self, iname, att_name, value, add_to_meta=True,
+                   verbose=False):
+        """ Set a value on three different levels at once:
+            1. the value in an ObsCollection DataFrame
+            2. the attribute of the observation
+            3. the value in the meta dictionary of an observation
+
+        Parameters
+        ----------
+        iname : str, int, float, ...
+            observation name. Must be same type as self.index.
+            e.g. B52D0111_3
+        att_name : str, int, float, ...
+            name of the column in self.columns and attribute 
+            of the observation. e.g. 'x'
+        value : str, int, float, ...
+            value of the the att_name. e.g. 116234
+        add_to_meta : bool, optional
+            if True the att_name, value pair is added to the meta dictionary
+            of an observation. The default is True.
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Raises
+        ------
+        ValueError
+            if the iname is not in self.index the value cannot be set.
+
+        Returns
+        -------
+        None.
+
+        """
+        if iname not in self.index:
+            raise ValueError(f"{iname}  not in index")
+        
+        self.loc[iname, att_name] = value
+        if verbose:
+            print(f'set {iname}, {att_name} to {value}')
+        
+        o = self.loc[iname, 'obs']
+        if att_name in o._metadata:
+            setattr(o, att_name, value)
+            if verbose:
+                print(f'set attribute {att_name} of {iname} to {value}')
+        if add_to_meta:
+            if verbose:
+                print(f'set attribute {att_name} of {iname} to {value}')
+            o.meta.update({att_name: value})
 
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
@@ -125,14 +175,12 @@ class ObsCollection(pd.DataFrame):
         from .io import io_dino
 
         if ObsClass == obs.GroundwaterObs:
-            kind = 'Grondwaterstand'
-        elif ObsClass == obs.GroundwaterQualityObs:
-            kind = 'Grondwatersamenstelling'
+            layer = 'grondwatermonitoring'
         else:
-            raise ValueError('cannot download {} from Dino'.format(ObsClass))
+            raise NotImplementedError('cannot download {} from Dino'.format(ObsClass))
 
         obs_df = io_dino.download_dino_within_extent(extent, bbox,
-                                                     ObsClass, kind=kind,
+                                                     ObsClass, layer=layer,
                                                      get_metadata=get_metadata,
                                                      verbose=verbose, **kwargs)
 
@@ -140,7 +188,7 @@ class ObsCollection(pd.DataFrame):
             bbox = [extent[0], extent[2], extent[1], extent[3]]
 
         if name is None:
-            name = '{} from DINO'.format(kind)
+            name = '{} from DINO'.format(layer)
 
         meta = kwargs
         meta.update({'verbose': verbose})

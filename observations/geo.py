@@ -1,7 +1,10 @@
 import numpy as np
+import pandas as pd
 from scipy import interpolate
 
+
 from . import accessor, util
+
 
 
 @accessor.register_obscollection_accessor("geo")
@@ -60,9 +63,40 @@ class GeoAccessor:
         ymax = self._obj[ycol].max() + buffer
 
         return (xmin, xmax, ymin, ymax)
+    
+    def set_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
+                    add_to_meta=True, verbose=False):
+        """create columns with lat and lon values of the observation points
+                
 
-    def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
-                    add_to_meta=True, add_to_df=True):
+        Parameters
+        ----------
+        in_epsg : str, optional
+            epsg code of current x and y attributes, default (RD new)
+        out_epsg : str, optional
+            epsg code of desired output, default lat/lon
+        add_to_meta : bool, optional
+            if True the lat and lon values are added to the observation meta
+            dictionary. The default is True.
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        df_lat_lon = self._obj.geo.get_lat_lon(in_epsg, out_epsg)
+        for iname in df_lat_lon.index:
+            self._obj._set_value(iname, 'lat', 
+                                 df_lat_lon.loc[iname, 'lat'], add_to_meta,
+                                 verbose)
+            self._obj._set_value(iname, 'lon', 
+                                 df_lat_lon.loc[iname, 'lon'], add_to_meta,
+                                 verbose)
+
+    def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326'):
         """get lattitude and longitude from x and y attributes
 
         Parameters
@@ -71,20 +105,20 @@ class GeoAccessor:
             epsg code of current x and y attributes, default (RD new)
         out_epsg : str, optional
             epsg code of desired output, default lat/lon
-        add_to_meta : boolean, optional
-            if True the new coordinates are added to the meta dictionary
-        add_to_df : boolean, optional
-            if True lon and lat columns are added to the ObsCollection
-
-
+            
+        Returns
+        -------
+        pandas.DataFrame
+            with columns 'lat' and 'lon'
+       
         """
-
-        for o in self._obj.obs.values:
-            o.geo.get_lat_lon(in_epsg, out_epsg, add_to_meta)
-
-        if add_to_df:
-            self._obj.add_meta_to_df('lat')
-            self._obj.add_meta_to_df('lon')
+        
+        df_lat_lon = pd.DataFrame(index=self._obj.index, columns=['lat' ,'lon'])
+        for iname in self._obj.index:
+            o = self._obj.loc[iname, 'obs']
+            df_lat_lon.loc[iname, ['lat', 'lon']] = o.geo.get_lat_lon(in_epsg, out_epsg)
+         
+        return df_lat_lon
 
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
                           xcol_obs1='x', ycol_obs1='y',
@@ -300,8 +334,7 @@ class GeoAccessorObs:
     def __init__(self, obs):
         self._obj = obs
 
-    def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
-                    add_to_meta=True):
+    def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326'):
         """get lattitude and longitude from x and y attributes
 
         Parameters
@@ -310,8 +343,6 @@ class GeoAccessorObs:
             epsg code of current x and y attributes, default (RD new)
         out_epsg : str, optional
             epsg code of desired output, default lat/lon
-        add_to_meta : boolean, optional
-            if True the new coordinates are added to the meta dictionary
 
         Returns
         -------
@@ -328,10 +359,6 @@ class GeoAccessorObs:
             lon, lat = np.nan, np.nan
         else:
             lon, lat = transform(inProj, outProj, self._obj.x, self._obj.y)
-
-        if add_to_meta:
-            self._obj.meta['lon'] = lon
-            self._obj.meta['lat'] = lat
 
         return lat, lon
 

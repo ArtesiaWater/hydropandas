@@ -306,8 +306,8 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
 
 
 def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
-                                kind='Grondwaterstand',
-                                tmin=None, tmax=None,
+                                layer='grondwatermonitoring',
+                                tmin="1900-01-01", tmax="2040-01-01",
                                 zmin=None, zmax=None, unit="NAP",
                                 get_metadata=True,
                                 verbose=False):
@@ -324,8 +324,8 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         [xmin, ymin, xmax, ymax]
     ObsClass : type
         class of the observations, so far only GroundwaterObs is supported
-    kind : str
-        The type of timeseries (Grondwaterstand or Grondwatersamenstelling)
+    layer : str
+        The layer of timeseries ('grondwatermonitoring' of 'boring')
     tmin : str or pandas.Timestamp
         start date in format YYYY-MM-DD (will be converted if Timestamp)
     tmax : str or pandas.Timestamp
@@ -350,28 +350,36 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
     # read locations
     gdf_loc = art.dino_wfs.get_dino_locations(extent=extent, bbox=bbox,
-                                              kind=kind)
+                                              layer=layer)
 
     if verbose:
         print('\ndownload {} data from dino within:\n\
                - extent: {} or\n\
-               - bbox: {}'.format(kind, extent, bbox))
-
+               - bbox: {}'.format(layer, extent, bbox))
+    
+    if gdf_loc.empty:
+        return pd.DataFrame()
+    
+    gdf_loc.startDate = gdf_loc.startDate.astype('datetime64[ns]')
+    gdf_loc.endDate = gdf_loc.endDate.astype('datetime64[ns]')
+    gdf_loc.topHeightNap = gdf_loc.topHeightNap.astype(float)
+    gdf_loc.bottomHeightNap = gdf_loc.bottomHeightNap.astype(float)
+    
     # slice by properties
     if tmin is not None:
         tmin = pd.to_datetime(tmin)
-        mask = gdf_loc.end_date > tmin
+        mask = gdf_loc.endDate > tmin
         gdf_loc = gdf_loc.loc[mask]
     if tmax is not None:
         tmax = pd.to_datetime(tmax)
-        mask = gdf_loc.start_date < tmax
+        mask = gdf_loc.startDate < tmax
         gdf_loc = gdf_loc.loc[mask]
     if zmin is not None:
-        mask = gdf_loc.top_height_nap >= zmin
+        mask = gdf_loc.topHeightNap >= zmin
         gdf_loc = gdf_loc.loc[mask]
     if zmax is not None:
-        mask = gdf_loc.bottom_height_nap <= zmax
-        gdf_loc = gdf_loc.loc[mask]
+        mask = gdf_loc.bottomHeightNap <= zmax
+        gdf_loc = gdf_loc.loc[mask]    
         
     if gdf_loc.empty:
         return pd.DataFrame()
@@ -380,22 +388,23 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     obs_list = []
     for index, loc in gdf_loc.iterrows():
         if tmin is None:
-            tmin_t = loc.start_date
+            tmin_t = loc.startDate
         else:
             tmin_t = tmin
         if tmax is None:
-            tmax_t = loc.end_date
+            tmax_t = loc.endDate
         else:
             tmax_t = tmax
-
+        
         if verbose:
-            print('reading -> {}-{}'.format(loc.dino_nr, loc.piezometer_nr))
+            print('reading -> {}'.format(index))
 
-        o = ObsClass.from_dino_server(name=loc.dino_nr,
-                                      filternr=float(loc.piezometer_nr),
+        o = ObsClass.from_dino_server(name=index.split('-')[0],
+                                      filternr=float(loc.piezometerNr),
                                       tmin=tmin_t,
-                                      tmax=tmax_t, x=loc['x_rd_crd'],
-                                      y=loc['y_rd_crd'],
+                                      tmax=tmax_t, 
+                                      x=loc['xCoord'],
+                                      y=loc['yCoord'],
                                       unit=unit, get_metadata=get_metadata)
 
         obs_list.append(o)
