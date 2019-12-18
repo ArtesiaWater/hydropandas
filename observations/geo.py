@@ -89,10 +89,10 @@ class GeoAccessor:
         
         df_lat_lon = self._obj.geo.get_lat_lon(in_epsg, out_epsg)
         for iname in df_lat_lon.index:
-            self._obj._set_value(iname, 'lat', 
+            self._obj._set_metadata_value(iname, 'lat', 
                                  df_lat_lon.loc[iname, 'lat'], add_to_meta,
                                  verbose)
-            self._obj._set_value(iname, 'lon', 
+            self._obj._set_metadata_value(iname, 'lon', 
                                  df_lat_lon.loc[iname, 'lon'], add_to_meta,
                                  verbose)
 
@@ -305,7 +305,7 @@ class GeoAccessor:
         maaiveld_arr = zp[obs_new_maaiveld]
       
         for i, iname in enumerate(self._obj.loc[obs_new_maaiveld].index):
-            self._obj._set_value(iname, column_name, maaiveld_arr[i])
+            self._obj._set_metadata_value(iname, column_name, maaiveld_arr[i])
             
         
     def get_surface_level(self, xcol='x', ycol='y', buffer=10.,

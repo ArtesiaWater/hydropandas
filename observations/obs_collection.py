@@ -88,8 +88,8 @@ class ObsCollection(pd.DataFrame):
         else:
             raise TypeError('could not infer observation type')
             
-    def _set_value(self, iname, att_name, value, add_to_meta=True,
-                   verbose=False):
+    def _set_metadata_value(self, iname, att_name, value, add_to_meta=True,
+                            verbose=False):
         """ Set a value on three different levels at once:
             1. the value in an ObsCollection DataFrame
             2. the attribute of the observation
