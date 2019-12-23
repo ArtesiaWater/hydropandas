@@ -289,7 +289,7 @@ def test_knmi_obs_from_xy():
 
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
-    return obs.KnmiObs.from_obs(pb, "EV24")
+    return obs.KnmiObs.from_obs(pb, "EV24", fill_missing_obs=False)
 
 # Test Menyanthes (still need a small menyanthes file to do the test)
 

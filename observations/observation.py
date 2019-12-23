@@ -434,30 +434,32 @@ class KnmiObs(Obs):
 
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
-                  normalize_index=True, verbose=False):
+                  fill_missing_obs=True, verbose=False):
         from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(stn, variable,
                                                    startdate, enddate,
-                                                   normalize_index=normalize_index,
+                                                   fill_missing_obs,
                                                    verbose=verbose)
-        return cls(ts, meta=meta, **meta)
+        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
+                   y=meta['y'], name=meta['name'])
 
     @classmethod
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
-                        normalize_index=True, verbose=False):
+                        fill_missing_obs=True, verbose=False):
         from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
                                                   startdate, enddate,
-                                                  normalize_index=normalize_index,
+                                                  fill_missing_obs,
                                                   verbose=verbose)
-
-        return cls(ts, meta=meta, **meta)
+        
+        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
+                   y=meta['y'], name=meta['name'])
 
     @classmethod
     def from_obs(cls, obs, variable, startdate=None, enddate=None,
-                 normalize_index=True, verbose=False):
+                 fill_missing_obs=True, verbose=False):
 
         from .io import io_knmi
 
@@ -471,7 +473,8 @@ class KnmiObs(Obs):
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
                                                   startdate, enddate,
-                                                  normalize_index=normalize_index,
+                                                  fill_missing_obs,
                                                   verbose=verbose)
-
-        return cls(ts, meta=meta, **meta)
+        
+        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
+                   y=meta['y'], name=meta['name'])
