@@ -230,6 +230,15 @@ def test_obscollection_wiskizip_gw():
     return wiski_col
 
 
+# Test pastas project
+    
+def test_to_pastas_project():
+    
+    dino_gw = test_obscollection_dinozip_gw()
+    pr = dino_gw.to_pastas_project(verbose=True)
+    
+    return pr
+
 # Test Pystore
 
 def test_obscollection_to_pystore():

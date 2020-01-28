@@ -1033,7 +1033,8 @@ class ObsCollection(pd.DataFrame):
 
     def to_pastas_project(self, pr=None, project_name='',
                           obs_column='Stand_m_tov_NAP',
-                          kind='oseries', verbose=False):
+                          kind='oseries', add_metadata=True,
+                          verbose=False):
         """add observations to a new or existing pastas project
 
         Parameters
@@ -1046,6 +1047,8 @@ class ObsCollection(pd.DataFrame):
             Name of the column in the Obs dataframe to be used
         kind : str, optional
             The kind of series that is added to the pastas project
+        add_metadata : boolean, optional
+            If True metadata from the observations added to the project.
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -1063,13 +1066,15 @@ class ObsCollection(pd.DataFrame):
         for o in self.obs.values:
             if verbose:
                 print('add to pastas project -> {}'.format(o.name))
-            # clean up metadata so there is no dict in dict
+            
             meta = dict()
-            for k, v in o.meta.items():
-                if isinstance(v, dict):
-                    meta.update(v)
-                else:
-                    meta[k] = v
+            if add_metadata:
+                # clean up metadata so there is no dict in dict
+                for k, v in o.meta.items():
+                    if isinstance(v, dict):
+                        meta.update(v)
+                    else:
+                        meta[k] = v
             series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
             pr.add_series(series, kind=kind)
 
