@@ -7,7 +7,6 @@ from io import StringIO
 import re
 
 
-
 def get_stations(variable='RD'):
     """get knmi stations from json files according to variable
 
@@ -41,9 +40,9 @@ def get_stations(variable='RD'):
 
 
 def get_nearest_stations_xy(x, y, variable, n=1, stations=None, ignore=None):
-    """find the KNMI stations that measure 'variable' closest to the 
+    """find the KNMI stations that measure 'variable' closest to the
     x, y coordinates
-    
+
 
     Parameters
     ----------
@@ -56,7 +55,7 @@ def get_nearest_stations_xy(x, y, variable, n=1, stations=None, ignore=None):
     n : int, optional
         number of stations you want to return. The default is 1.
     stations : pd.DataFrame, optional
-        if None stations will be obtained using the get_stations function. 
+        if None stations will be obtained using the get_stations function.
         The default is None.
     ignore : list, optional
         list of stations to ignore. The default is None.
@@ -81,16 +80,16 @@ def get_nearest_stations_xy(x, y, variable, n=1, stations=None, ignore=None):
 
 
 def get_nearest_station_df(locations, stations=None, variable="RD", ignore=None):
-    """find the KNMI stations that measure 'variable' closest to the 
+    """find the KNMI stations that measure 'variable' closest to the
     stations in 'locations'.
-    
+
 
     Parameters
     ----------
     locations : pd.DataFrame
         station number, x and y coordinates
     stations : pd.DataFrame, optional
-        if None stations will be obtained using the get_stations function. 
+        if None stations will be obtained using the get_stations function.
         The default is None.
     variable : str
         measurement variable e.g. 'RD' or 'EV24'
@@ -128,9 +127,10 @@ def get_nearest_station_df(locations, stations=None, variable="RD", ignore=None)
 
     return stns
 
+
 def _start_end_to_datetime(start, end):
     """convert start and endtime to datetime
-    
+
 
     Parameters
     ----------
@@ -147,7 +147,7 @@ def _start_end_to_datetime(start, end):
         end time
 
     """
-    
+
     if start is None:
         start = pd.Timestamp(pd.Timestamp.today().year, 1, 1)
     else:
@@ -156,14 +156,15 @@ def _start_end_to_datetime(start, end):
         end = pd.Timestamp.today()
     else:
         end = pd.to_datetime(end)
-        
+
     return start, end
+
 
 def download_knmi_data(stn, var='RD', start=None, end=None, interval='daily',
                        inseason=False, raise_exceptions=True, verbose=False):
     """download knmi data of a measurements station for certain observation
     type
-    
+
 
     Parameters
     ----------
@@ -206,49 +207,52 @@ def download_knmi_data(stn, var='RD', start=None, end=None, interval='daily',
     if interval.startswith('hour') and var == 'RD':
         message = 'Interval can not be hourly for rainfall-stations'
         raise (ValueError(message))
-        
+
     if interval != 'daily':
         raise NotImplementedError('only daily intervals are working now')
-        
+
     if inseason:
         raise NotImplementedError('season stuff not implemented')
-        
+
     start, end = _start_end_to_datetime(start, end)
 
     # convert possible integer to string
     stn = str(stn)
-    
+
     # define variables
     knmi_df = pd.DataFrame()
     variables = {}
     stations = pd.DataFrame()
-    
+
     # download and read data
     try:
         if interval.startswith('hour'):
             # hourly data from meteorological stations
             url = 'http://projects.knmi.nl/klimatologie/uurgegevens/getdata_uur.cgi'
             knmi_df = get_knmi_hourly(url, stn, var, start, end)
-            
+
         elif var == 'RD':
             # daily data from rainfall-stations
             url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
-            knmi_df, variables = get_knmi_daily_rainfall(url, stn, var, start, end, inseason, verbose)
+            knmi_df, variables = get_knmi_daily_rainfall(
+                url, stn, var, start, end, inseason, verbose)
         else:
             # daily data from meteorological stations
             url = 'http://projects.knmi.nl/klimatologie/daggegevens/getdata_dag.cgi'
-            knmi_df, variables, stations = get_knmi_daily_meteo(url, stn, var, start, end, inseason, verbose)
+            knmi_df, variables, stations = get_knmi_daily_meteo(
+                url, stn, var, start, end, inseason, verbose)
     except ValueError as e:
         if verbose:
             print(e)
         if raise_exceptions:
             raise ValueError(e)
-        
+
     return knmi_df, variables, stations
+
 
 def get_knmi_daily_rainfall(url, stn, var, start, end, inseason, verbose=False):
     """download and read knmi daily rainfall
-    
+
 
     Parameters
     ----------
@@ -279,26 +283,28 @@ def get_knmi_daily_rainfall(url, stn, var, start, end, inseason, verbose=False):
     variables : dictionary
         additional information about the variables
     """
-    
+
     data = {
-            'start': start.strftime('%Y%m%d'),
-            'end': end.strftime('%Y%m%d'),
-            'inseason': str(int(inseason)),
-            'vars': var,
-            'stns': stn,
-        }
-    
+        'start': start.strftime('%Y%m%d'),
+        'end': end.strftime('%Y%m%d'),
+        'inseason': str(int(inseason)),
+        'vars': var,
+        'stns': stn,
+    }
+
     result = requests.get(url, params=data).text
 
     f = StringIO(result)
     knmi_df, variables = read_knmi_daily_rainfall(f, var, verbose=verbose)
     if int(stn) not in knmi_df.STN.unique():
-        raise ValueError(f'KNMI station {stn} not recognized please provide valid rainfall station number')
-    
+        raise ValueError(f'KNMI station {stn} not recognized please provide '
+                         'valid rainfall station number')
+
     return knmi_df[[var]], variables
-    
+
+
 def _read_knmi_header(f, verbose=False):
-    
+
     variables = {}
     line = f.readline()
     if 'DOCTYPE HTML PUBLIC' in line:
@@ -310,21 +316,22 @@ def _read_knmi_header(f, verbose=False):
             line = line.lstrip(' #').strip('\n')
             varDes = line.split(' = ')
             variables[varDes[0].strip()] = varDes[1].strip()
-        
+
         if 'STN,YY' in line:
             header = line.split(',')
             header = [item.lstrip().rstrip() for item in header]
             break
-        
+
         line = f.readline()
-    
-    if iline>498:
+
+    if iline > 498:
         raise ValueError('cannot read measurements from file')
-        
+
     return f, variables, header
 
+
 def _transform_variables(df, variables, verbose=False):
-    
+
     for key, value in variables.items():
         # test if key existst in data
         if key not in df.keys():
@@ -335,7 +342,7 @@ def _transform_variables(df, variables, verbose=False):
                 key = 'T10'
             else:
                 raise NameError(key + ' does not exist in data')
-        
+
         if '0.1 ' in value:
             if verbose:
                 print(f'transform {key}, {value} from 0.1 to 1')
@@ -362,55 +369,53 @@ def _transform_variables(df, variables, verbose=False):
             value = value.replace(' millimeters', ' m')
         # Store new variable
         variables[key] = value
-        
+
     return df, variables
 
 
 def read_knmi_daily_rainfall(f, var, verbose=False):
-    
-    
+
     f, variables, header = _read_knmi_header(f)
-    
+
     df = pd.read_csv(f, header=None, names=header, na_values='     ')
     f.close()
-    
-    
+
     df.set_index(pd.to_datetime(df.YYYYMMDD, format='%Y%m%d'),
                  inplace=True)
     df = df.drop('YYYYMMDD', axis=1)
-    
-    #sometimes the last row is messed up, check for that and remove it
+
+    # sometimes the last row is messed up, check for that and remove it
     if df.iloc[-1].isna().any():
         if verbose:
             print('last row contains no data, remove last row')
         df = df.drop(index=df.index[-1])
-        df.loc[:,var] = df[var].astype(float)
-    
+        df.loc[:, var] = df[var].astype(float)
+
     # daily precipitation amount in 0.1 mm over the period 08.00
     # preceding day - 08.00 UTC present day
     df.index = df.index + pd.to_timedelta(8, unit='h')
-    
+
     # from UT to UT+1 (standard-time in the Netherlands)
     df.index = df.index + pd.to_timedelta(1, unit='h')
-    
+
     df, variables = _transform_variables(df, variables, verbose)
 
     return df, variables
-    
+
+
 def _read_station_location(f, verbose=False):
-    
+
     stations = None
-    
+
     line = f.readline()
     for iline in range(30):
         if 'STN' in line:
             titels = line.strip('# ').split()
             titels = [x.replace('(', '_') for x in titels]
             titels = [x.replace(r')', '') for x in titels]
-            
+
             values = f.readline().strip('# ').strip().replace(':', '')
             values = re.split(r'\s{2,}', values)
-            
 
             # Create pd.DataFrame for station data
             stations = pd.DataFrame(columns=titels, data=[values])
@@ -419,24 +424,26 @@ def _read_station_location(f, verbose=False):
                 try:
                     stations.loc[:, col] = stations[col].astype(float)
                 except ValueError:
-                    pass 
+                    pass
 
             if ':' in f.readline():
-                raise ValueError('KNMI station number not recognized please provide valid meteo station number')
+                raise ValueError(
+                    'KNMI station number not recognized please provide '
+                    'valid meteo station number')
             break
-        
+
         line = f.readline()
-        
+
     if stations is None:
         if verbose:
             print('could not find stations')
-            
+
     return f, stations
 
 
 def get_knmi_daily_meteo(url, stn, var, start, end, inseason, verbose=False):
     """download and read knmi daily meteo data
-    
+
 
     Parameters
     ----------
@@ -465,76 +472,73 @@ def get_knmi_daily_meteo(url, stn, var, start, end, inseason, verbose=False):
         additional data about the measurement station
     """
     data = {
-            'start': start.strftime('%Y%m%d'),
-            'end': end.strftime('%Y%m%d'),
-            'inseason': str(int(inseason)),
-            'vars': var,
-            'stns': stn,
-        }
-    
+        'start': start.strftime('%Y%m%d'),
+        'end': end.strftime('%Y%m%d'),
+        'inseason': str(int(inseason)),
+        'vars': var,
+        'stns': stn,
+    }
+
     result = requests.get(url, params=data).text
 
     f = StringIO(result)
     knmi_df, variables, stations = read_knmi_daily_meteo(f)
-    
+
     return knmi_df[[var]], variables, stations
 
-  
+
 def read_knmi_daily_meteo(f, verbose=False):
-    
+
     f, stations = _read_station_location(f, verbose)
     f, variables, header = _read_knmi_header(f)
     header[0] = header[0].lstrip('# ')
     df = pd.read_csv(f, header=None, names=header, na_values='     ')
     f.close()
-    
+
     df.set_index(pd.to_datetime(df.YYYYMMDD, format='%Y%m%d'),
                  inplace=True)
     df = df.drop('YYYYMMDD', axis=1)
-    
+
     df = df.loc[df.index.notnull(), :]
 
     # add a full day for meteorological data, so that the
     # timestamp is at the end of the period in the data
     df.index = df.index + pd.to_timedelta(1, unit='d')
-    
+
     # from UT to UT+1 (standard-time in the Netherlands)
     df.index = df.index + pd.to_timedelta(1, unit='h')
-    
+
     df, variables = _transform_variables(df, variables, verbose)
-    
-    
+
     return df, variables, stations
-    
-    
-    
 
    # return knmi_series
 
+
 def get_knmi_hourly(url, stn, var, start, end):
-    
+
     data = {
-            'start': start.strftime('%Y%m%d') + '01',
-            'end': end.strftime('%Y%m%d') + '24',
-            'vars': var,
-            'stns': stn,
-        }
-    
+        'start': start.strftime('%Y%m%d') + '01',
+        'end': end.strftime('%Y%m%d') + '24',
+        'vars': var,
+        'stns': stn,
+    }
+
     result = requests.get(url, params=data).text
     f = StringIO(result)
     knmi_series = read_knmi_hourly(f)
-    
+
     return knmi_series
-    
-    
+
+
 def read_knmi_hourly(f):
     raise NotImplementedError('work in progress')
     knmi_df = pd.DataFrame()
     return knmi_df
 
 
-def get_knmi_timeseries_xy(x, y, var, start, end,fill_missing_obs=True,
-                           interval='daily', inseason=False, raise_exceptions=False, 
+def get_knmi_timeseries_xy(x, y, var, start, end, fill_missing_obs=True,
+                           interval='daily', inseason=False, raise_exceptions=False,
                            verbose=False):
 
     # get station
@@ -543,12 +547,12 @@ def get_knmi_timeseries_xy(x, y, var, start, end,fill_missing_obs=True,
 
     # download data
     if fill_missing_obs:
-        knmi_df, variables, station_meta = fill_missing_measurements(stn, var, start, end, 
-                                                                   interval,
-                                                                   raise_exceptions,
-                                                                   verbose=verbose)
+        knmi_df, variables, station_meta = fill_missing_measurements(stn, var, start, end,
+                                                                     interval,
+                                                                     raise_exceptions,
+                                                                     verbose=verbose)
     else:
-        knmi_df, variables, station_meta = download_knmi_data(stn, var, start, end, 
+        knmi_df, variables, station_meta = download_knmi_data(stn, var, start, end,
                                                               interval,
                                                               inseason,
                                                               raise_exceptions,
@@ -563,31 +567,30 @@ def get_knmi_timeseries_xy(x, y, var, start, end,fill_missing_obs=True,
     y = stations.loc[stn, 'y']
     meta.update({'x': x, 'y': y, 'station': stn, 'name': name})
 
-    
     return knmi_df, meta
 
 
-def get_knmi_timeseries_stn(stn, var, start, end, 
+def get_knmi_timeseries_stn(stn, var, start, end,
                             fill_missing_obs=True, interval='daily',
-                            inseason=False, raise_exceptions=False, 
+                            inseason=False, raise_exceptions=False,
                             verbose=False):
-    
+
     # get station
     stations = get_stations(variable=var)
 
     # download data
     if fill_missing_obs:
-        knmi_df, variables, station_meta = fill_missing_measurements(stn, var, start, end, 
-                                                                   interval, 
-                                                                   raise_exceptions,
-                                                                   verbose=verbose)
+        knmi_df, variables, station_meta = fill_missing_measurements(stn, var, start, end,
+                                                                     interval,
+                                                                     raise_exceptions,
+                                                                     verbose=verbose)
     else:
-        knmi_df, variables, station_meta = download_knmi_data(stn, var, start, end, 
+        knmi_df, variables, station_meta = download_knmi_data(stn, var, start, end,
                                                               interval,
                                                               inseason,
                                                               raise_exceptions,
                                                               verbose=verbose)
-    
+
     meta = station_meta.to_dict()
     meta.update(variables)
 
@@ -597,15 +600,15 @@ def get_knmi_timeseries_stn(stn, var, start, end,
     y = stations.loc[stn, 'y']
     meta.update({'x': x, 'y': y, 'station': stn, 'name': name})
 
-
     return knmi_df, meta
+
 
 def add_missing_indices(knmi_df, stn, start, end, verbose=False):
     """when downloading KNMI data you don't always get a DataFrame with the
     periods that you provided in your request. Thus the index does not cover
     the complete period that you are interested in. This function adds the
     missing period to the index of the DataFrame.
-    
+
 
     Parameters
     ----------
@@ -626,37 +629,40 @@ def add_missing_indices(knmi_df, stn, start, end, verbose=False):
     knmi_df : pd.DataFrame
         data from one station from one type of observation
     """
-    #check if given dates are more or less similar than measurement dates
+    # check if given dates are more or less similar than measurement dates
     if (knmi_df.index[0] - start).days < 2:
         new_start = knmi_df.index[0]
     else:
         new_start = pd.Timestamp(year=start.year, month=start.month, day=start.day,
-                                 hour=knmi_df.index[0].hour, 
+                                 hour=knmi_df.index[0].hour,
                                  minute=knmi_df.index[0].minute,
                                  second=knmi_df.index[0].second)
         if verbose:
-            print(f'station {stn} has no measurements before {knmi_df.index[0]}')
-    if (knmi_df.index[-1] - end).days < 2:   
+            print(
+                f'station {stn} has no measurements before {knmi_df.index[0]}')
+    if (knmi_df.index[-1] - end).days < 2:
         new_end = knmi_df.index[-1]
     else:
         new_end = pd.Timestamp(year=end.year, month=end.month, day=end.day,
-                               hour=knmi_df.index[-1].hour, 
+                               hour=knmi_df.index[-1].hour,
                                minute=knmi_df.index[-1].minute,
                                second=knmi_df.index[-1].second)
         if verbose:
-            print(f'station {stn} has no measurements after {knmi_df.index[-1]}')
-            
-    #add missing indices
+            print(
+                f'station {stn} has no measurements after {knmi_df.index[-1]}')
+
+    # add missing indices
     new_index = pd.date_range(new_start, new_end, freq='D')
     knmi_df = knmi_df.reindex(new_index)
-    
+
     return knmi_df
 
-def fill_missing_measurements(stn, var='RD', start=None, end=None, 
-                              interval='daily', 
+
+def fill_missing_measurements(stn, var='RD', start=None, end=None,
+                              interval='daily',
                               raise_exceptions=False, verbose=False):
     """fill missing measurements in knmi data
-    
+
 
     Parameters
     ----------
@@ -686,12 +692,12 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
         information about the measurement station.
 
     """
-    
+
     if type(var) is not str:
         raise (TypeError('Only one variable supported for now'))
     # get the location of the stations
     stations = get_stations(variable=var)
-    
+
     if start is None:
         start = pd.Timestamp(pd.Timestamp.today().year, 1, 1)
     else:
@@ -701,66 +707,70 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
     else:
         end = pd.to_datetime(end)
 
-    
     if verbose:
-        print('Download ' + var + ' from ' + str(stn) + ' ' + stations.loc[stn,'naam'])
-    knmi_df, variables, station_meta = download_knmi_data(stn, var, start=start, 
-                                                      end=end, interval=interval,
-                                                      inseason=False, 
-                                                      raise_exceptions=raise_exceptions, 
-                                                      verbose=verbose)
-    
+        print('Download ' + var + ' from ' +
+              str(stn) + ' ' + stations.loc[stn, 'naam'])
+    knmi_df, variables, station_meta = download_knmi_data(stn, var, start=start,
+                                                          end=end, interval=interval,
+                                                          inseason=False,
+                                                          raise_exceptions=raise_exceptions,
+                                                          verbose=verbose)
+
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
-        stn = get_nearest_station_df(stations.loc[[stn]], variable=var, ignore=ignore)[0]
+        stn = get_nearest_station_df(
+            stations.loc[[stn]], variable=var, ignore=ignore)[0]
         if verbose:
-            print('Download ' + var + ' from ' + str(stn) + ' ' + stations.loc[stn,'naam'])
-        knmi_df, variables, station_meta = download_knmi_data(stn, var, start=start, 
-                                                      end=end, interval=interval,
-                                                      inseason=False, 
-                                                      raise_exceptions=raise_exceptions, 
-                                                      verbose=verbose)
+            print('Download ' + var + ' from ' +
+                  str(stn) + ' ' + stations.loc[stn, 'naam'])
+        knmi_df, variables, station_meta = download_knmi_data(stn, var, start=start,
+                                                              end=end, interval=interval,
+                                                              inseason=False,
+                                                              raise_exceptions=raise_exceptions,
+                                                              verbose=verbose)
         ignore.append(stn)
-        
-        
-    # find missing values    
+
+    # find missing values
     knmi_df = add_missing_indices(knmi_df, stn, start, end, verbose)
-    
+
     missing = knmi_df[var].isna()
     if verbose:
         print(f'station {stn} has {missing.sum()} missing measurements')
-        
+
     # fill missing values
     while np.any(missing) and not np.all(missing):
-        stn_comp = get_nearest_station_df(stations.loc[[stn]], variable=var, ignore=ignore)
+        stn_comp = get_nearest_station_df(
+            stations.loc[[stn]], variable=var, ignore=ignore)
         if verbose:
-            print(f'trying to fill {missing.sum()} measurements with station {stn_comp}')
+            print(
+                f'trying to fill {missing.sum()} measurements with station {stn_comp}')
         if stn_comp is None:
             if verbose:
-                print('could not fill all missing measurements there are no stations left to check')
+                print(
+                    'could not fill all missing measurements there are no stations left to check')
             missing[:] = False
             break
         else:
             stn_comp = stn_comp[0]
-        knmi_df_comp, _, __ = download_knmi_data(stn_comp, var, 
-                                                 start=start, end=end, 
+        knmi_df_comp, _, __ = download_knmi_data(stn_comp, var,
+                                                 start=start, end=end,
                                                  interval=interval,
-                                                 inseason=False, 
+                                                 inseason=False,
                                                  raise_exceptions=raise_exceptions,
                                                  verbose=verbose)
-        
+
         if knmi_df_comp.empty:
             if verbose:
                 print(f'station {stn_comp} cannot be downloaded')
         else:
             knmi_df_comp = knmi_df_comp.loc[~knmi_df_comp[var].isna(), :]
             if missing[missing].index.isin(knmi_df_comp.index).any():
-                knmi_df.loc[missing, var] = knmi_df_comp.loc[missing[missing].index, var]
+                knmi_df.loc[missing,
+                            var] = knmi_df_comp.loc[missing[missing].index, var]
                 knmi_df.loc[missing, 'station_opvulwaarde'] = str(stn_comp)
-                
-        
+
         missing = knmi_df[var].isna()
         ignore.append(stn_comp)
-    
+
     return knmi_df, variables, station_meta

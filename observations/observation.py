@@ -97,6 +97,7 @@ class Obs(DataFrame):
 
         return d
 
+
 class GroundwaterObs(Obs):
     """class for groundwater quantity point observations
 
@@ -392,6 +393,46 @@ class WaterlvlObs(Obs):
 
         return cls(measurements, meta=meta, **meta)
 
+    @classmethod
+    def from_waterinfo(cls, fname, **kwargs):
+        """
+        Read data from waterinfo csv-file or zip.
+
+        Parameters
+        ----------
+        fname : str
+            path to file (file can zip or csv)
+
+        Returns
+        -------
+        df : WaterlvlObs
+            WaterlvlObs object
+
+        Raises
+        ------
+        ValueError
+            if file contains data for more than one location
+        """
+        from .io import io_waterinfo
+        from pyproj import Proj, transform
+
+        df = io_waterinfo.read_waterinfo_file(fname)
+
+        if len(df["MEETPUNT_IDENTIFICATIE"].unique()) > 1:
+            raise ValueError("File contains data for more than one location!"
+                             " Use ObsCollection.from_waterinfo()!")
+
+        metadata = {}
+        x, y = transform(Proj(init='epsg:25831'),
+                         Proj(init='epsg:28992'),
+                         df['X'].iloc[-1],
+                         df['Y'].iloc[-1])
+        metadata["name"] = df["MEETPUNT_IDENTIFICATIE"].iloc[-1]
+        metadata["x"] = x
+        metadata["y"] = y
+
+        return cls(df, meta=metadata, **metadata)
+
 
 class ModelObs(Obs):
     """class for model point results.
@@ -453,7 +494,7 @@ class KnmiObs(Obs):
                                                   startdate, enddate,
                                                   fill_missing_obs,
                                                   verbose=verbose)
-        
+
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
 
@@ -475,6 +516,6 @@ class KnmiObs(Obs):
                                                   startdate, enddate,
                                                   fill_missing_obs,
                                                   verbose=verbose)
-        
+
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
