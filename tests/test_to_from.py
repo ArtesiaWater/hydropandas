@@ -11,6 +11,7 @@ PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
 sys.path.insert(0, PROJECT_DIR)
 os.chdir(TEST_DIR)
 
+# %% DINO
 
 dinozip = r'.\data\2019-Dino-test\Dino.zip'
 
@@ -76,7 +77,6 @@ def test_obscollection_from_list():
         verbose=False)
     obs_list = [o for o in dino_gw.obs.values]
     oc_list = oc.ObsCollection.from_list(obs_list)
-
     return oc_list
 
 
@@ -163,8 +163,8 @@ def test_obscollection_to_fieldlogger():
 
     return fdf
 
-# read FEWS data
 
+# %% FEWS
 
 def test_obscollection_fews():
     fews_gw_prod = oc.ObsCollection.from_fews(
@@ -193,7 +193,7 @@ def test_obscollection_fews2_selection():
     return fews_gw_prod
 
 
-# read WISKI data
+# %% WISKI
 
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(
@@ -230,16 +230,17 @@ def test_obscollection_wiskizip_gw():
     return wiski_col
 
 
-# Test pastas project
-    
+# %% PASTAS PROJECT
+
 def test_to_pastas_project():
-    
+
     dino_gw = test_obscollection_dinozip_gw()
     pr = dino_gw.to_pastas_project(verbose=True)
-    
+
     return pr
 
-# Test Pystore
+
+# %% PYSTORE
 
 def test_obscollection_to_pystore():
     obsc = test_obscollection_fews()
@@ -285,9 +286,8 @@ def test_obs_from_pystore_item():
     o = obs.GroundwaterObs.from_pystore_item(item)
     return o
 
-# Test KNMI Obs
 
-
+# %% KNMI
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(829, "RD")
 
@@ -300,7 +300,16 @@ def test_knmi_obs_from_obs():
     pb = test_observation_gw()
     return obs.KnmiObs.from_obs(pb, "EV24", fill_missing_obs=False)
 
-# Test Menyanthes (still need a small menyanthes file to do the test)
+
+# %% WATERINFO
+
+def test_waterinfo_from_dir():
+    path = "./data/waterinfo-test"
+    wi = oc.ObsCollection.from_waterinfo(path)
+    return wi
+
+
+# %% MENYANTHES (still need a small menyanthes file to do the test)
 
 # def test_obscollection_menyanthes():
 #
@@ -308,6 +317,3 @@ def test_knmi_obs_from_obs():
 #    obsc = oc.ObsCollection.from_menyanthes(fname, verbose=True)
 #
 #    return obsc
-
-
-# Test visualisation

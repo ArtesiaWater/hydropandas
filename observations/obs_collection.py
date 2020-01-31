@@ -87,7 +87,7 @@ class ObsCollection(pd.DataFrame):
             return otypes
         else:
             raise TypeError('could not infer observation type')
-            
+
     def _set_metadata_value(self, iname, att_name, value, add_to_meta=True,
                             verbose=False):
         """ Set a value on three different levels at once:
@@ -101,7 +101,7 @@ class ObsCollection(pd.DataFrame):
             observation name. Must be same type as self.index.
             e.g. B52D0111_3
         att_name : str, int, float, ...
-            name of the column in self.columns and attribute 
+            name of the column in self.columns and attribute
             of the observation. e.g. 'x'
         value : str, int, float, ...
             value of the the att_name. e.g. 116234
@@ -123,11 +123,11 @@ class ObsCollection(pd.DataFrame):
         """
         if iname not in self.index:
             raise ValueError(f"{iname}  not in index")
-        
+
         self.loc[iname, att_name] = value
         if verbose:
             print(f'set {iname}, {att_name} to {value}')
-        
+
         o = self.loc[iname, 'obs']
         if att_name in o._metadata:
             setattr(o, att_name, value)
@@ -177,7 +177,8 @@ class ObsCollection(pd.DataFrame):
         if ObsClass == obs.GroundwaterObs:
             layer = 'grondwatermonitoring'
         else:
-            raise NotImplementedError('cannot download {} from Dino'.format(ObsClass))
+            raise NotImplementedError(
+                'cannot download {} from Dino'.format(ObsClass))
 
         obs_df = io_dino.download_dino_within_extent(extent, bbox,
                                                      ObsClass, layer=layer,
@@ -255,7 +256,7 @@ class ObsCollection(pd.DataFrame):
                 'suffix': suffix,
                 'unpackdir': unpackdir,
                 'force_unpack': force_unpack,
-                'preserver_datetime': preserve_datetime,
+                'preserve_datetime': preserve_datetime,
                 'verbose': verbose,
                 'keep_all_obs': keep_all_obs
                 }
@@ -618,7 +619,6 @@ class ObsCollection(pd.DataFrame):
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
-
         """
 
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
@@ -852,6 +852,44 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, meta=meta)
 
+    @classmethod
+    def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
+                       progressbar=True):
+        """read waterinfo file or directory
+
+        Parameters
+        ----------
+        file_or_dir : str
+            path to file or directory. Files can be .csv or .zip
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : Obs, optional
+            type of Obs to read data as, by default obs.WaterlvlObs
+        progressbar : bool, optional
+            show progressbar, by default True
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+
+        """
+        from .io import io_waterinfo
+
+        meta = {
+            'name': name,
+            'type': ObsClass,
+            'filename': file_or_dir
+        }
+
+        obs_list = io_waterinfo.read_waterinfo_obs(
+            file_or_dir, ObsClass, progressbar=progressbar)
+
+        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
+                              columns=obs_list[0].to_collection_dict().keys())
+
+        return cls(obs_df, name=name, meta=meta)
+
     def to_fieldlogger(self, fname, additional_collection=None, otype=None,
                        infer_otype=True,
                        use_default_otype_settings=True,
@@ -1066,7 +1104,7 @@ class ObsCollection(pd.DataFrame):
         for o in self.obs.values:
             if verbose:
                 print('add to pastas project -> {}'.format(o.name))
-            
+
             meta = dict()
             if add_metadata:
                 # clean up metadata so there is no dict in dict
