@@ -36,7 +36,9 @@ def test_get_filter_num():
 
 def test_get_filter_num_location():
     fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.gwobs.get_filter_num_location('locationId')
+    fews_gw_prod.add_meta_to_df('locationId')
+    fews_gw_prod.gwobs.get_filter_num_location('locationId',
+                                               if_exists='replace')
     return fews_gw_prod
 
 

@@ -987,7 +987,7 @@ class ObsCollection(pd.DataFrame):
         store = pystore.store(store_name)
         for name, group in self.groupby(by=groupby):
             # Access a collection (create it if not exist)
-            collection = store.collection(name)
+            collection = store.collection(name, overwrite=overwrite)
             for i, o in enumerate(group.obs):
                 imeta = o.meta.copy()
                 if 'datastore' in imeta.keys():
@@ -1144,20 +1144,22 @@ class ObsCollection(pd.DataFrame):
                 gdf[colname] = gdf[colname].astype(int)
         gdf.to_file(fname)
 
-    def add_meta_to_df(self, name):
-        """Add data from the metadata dictionary as a column
+    def add_meta_to_df(self, key):
+        """Get the values from the meta dictionary of each observation object
+        and add these to the ObsCollection as a column.
+        
 
         to the ObsCollection
 
         Parameters
         ----------
-        name : str
-            variable name in metadata dictionary
+        key : str
+            key in meta dictionary of observation object
 
 
         """
 
-        self[name] = [o.meta[name] for o in self.obs.values]
+        self[key] = [o.meta[key] for o in self.obs.values]
 
     def get_series(self, tmin=None, tmax=None, col="Stand_m_tov_NAP"):
         if tmin is None:

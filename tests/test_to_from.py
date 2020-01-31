@@ -244,6 +244,7 @@ def test_to_pastas_project():
 
 def test_obscollection_to_pystore():
     obsc = test_obscollection_fews()
+    obsc.add_meta_to_df('locationId')
     obsc.to_pystore("test_pystore", "./data/2019-Pystore-test",
                     groupby="locationId", overwrite=True)
 

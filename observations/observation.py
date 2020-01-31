@@ -77,23 +77,24 @@ class Obs(DataFrame):
     def _constructor(self):
         return Obs
 
-    def to_collection_dict(self):
-        """get dictionary of an Obs object.
 
-        Use this method to create a dataframe from a collection of Obs objects.
+    def to_collection_dict(self):
+        """get dictionary with registered attributes and their values
+        of an Obs object.
+
+        This method can be used to create a dataframe from a collection 
+        of Obs objects.
 
         Returns
         -------
         d : dictionary
             dictionary with Obs information
         """
-        # meta is mutable so only use a copy
-        d = copy.deepcopy(self.meta)
-
-        d.update({'obs': self,
-                  'name': self.name,
-                  'x': self.x,
-                  'y': self.y})
+        d = {}
+        for att in self._metadata:
+            d[att] = getattr(self, att)
+            
+        d['obs'] = self
 
         return d
 

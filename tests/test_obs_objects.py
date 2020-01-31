@@ -26,7 +26,7 @@ def test_groundwater_obs(name='grondwaterobs_001', filternr=2):
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
     gwo = obs.GroundwaterObs(df, name=name, 
-                             locatie='grondwaterobs', 
+                             locatie=name.split('_')[0], 
                              x=x, y=y,
                              maaiveld=maaiveld,
                              meetpunt=maaiveld-0.2, 
@@ -39,9 +39,12 @@ def test_groundwater_obs(name='grondwaterobs_001', filternr=2):
     return gwo
 
 def test_waterlvl_obs():
-    df = pd.DataFrame(index=pd.date_range('2020-1-1', '2020-1-10'), data={'Stand_m_tov_NAP': np.random.rand(10)})
-    wlvl = obs.WaterlvlObs(df, name='waterlvl_obs1', locatie='waterlvl', 
-                           x=3, y=4, filename='',
+    df = pd.DataFrame(index=pd.date_range('2020-1-1', '2020-1-10'), 
+                      data={'Stand_m_tov_NAP': np.random.rand(10)})
+    x = np.random.randint(0, 10000)
+    y = np.random.randint(10000, 20000)
+    wlvl = obs.WaterlvlObs(df, name='waterlvl_obs1', locatie='obs1', 
+                           x=x, y=y, filename='',
                            meta={'info': 'in deze dictionary kan je extra informatie kwijt'})
     return wlvl
 
