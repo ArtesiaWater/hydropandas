@@ -276,6 +276,85 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
+    def from_artdino_dir(
+            cls,
+            dirname=None,
+            ObsClass=obs.GroundwaterObs,
+            subdir='csv',
+            suffix='.csv',
+            unpackdir=None,
+            force_unpack=False,
+            preserve_datetime=False,
+            keep_all_obs=True,
+            name=None,
+            verbose=False,
+            **kwargs):
+        """ Read a dino directory
+
+        Parameters
+        ----------
+        extent : list, optional
+            get dinodata online within this extent [xmin, xmax, ymin, ymax]
+        dirname : str, optional
+            directory name, can be a .zip file or the parent directory of subdir
+        ObsClass : type
+            class of the observations, e.g. GroundwaterObs or WaterlvlObs
+        subdir : str
+            subdirectory of dirname with data files
+        suffix : str
+            suffix of files in subdir that will be read
+        unpackdir : str
+            destination directory of the unzipped file
+        force_unpack : boolean, optional
+            force unpack if dst already exists
+        preserve_datetime : boolean, optional
+            use date of the zipfile for the destination file
+        keep_all_obs : boolean, optional
+            add all observation points to the collection, even without data or
+            metadata
+        name : str, optional
+            the name of the observation collection
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+        kwargs:
+            kwargs are passed to the io_dino.read_dino_dir() function
+
+        Returns
+        -------
+        cls(obs_df) : ObsCollection
+            collection of multiple point observations
+        """
+
+        from .io import io_dino
+
+        if name is None:
+            name = subdir
+
+        meta = {'dirname': dirname,
+                'type': ObsClass,
+                'suffix': suffix,
+                'unpackdir': unpackdir,
+                'force_unpack': force_unpack,
+                'preserve_datetime': preserve_datetime,
+                'verbose': verbose,
+                'keep_all_obs': keep_all_obs
+                }
+
+        obs_df = io_dino.read_artdino_dir(
+            dirname,
+            ObsClass,
+            subdir,
+            suffix,
+            unpackdir,
+            force_unpack,
+            preserve_datetime,
+            verbose,
+            keep_all_obs,
+            **kwargs)
+
+        return cls(obs_df, name=name, meta=meta)
+
+    @classmethod
     def from_fews(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
                   to_mnap=True, remove_nan=True,
                   unpackdir=None, force_unpack=False,
@@ -1147,7 +1226,7 @@ class ObsCollection(pd.DataFrame):
     def add_meta_to_df(self, key):
         """Get the values from the meta dictionary of each observation object
         and add these to the ObsCollection as a column.
-        
+
 
         to the ObsCollection
 
