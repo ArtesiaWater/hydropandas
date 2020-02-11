@@ -77,12 +77,11 @@ class Obs(DataFrame):
     def _constructor(self):
         return Obs
 
-
     def to_collection_dict(self):
         """get dictionary with registered attributes and their values
         of an Obs object.
 
-        This method can be used to create a dataframe from a collection 
+        This method can be used to create a dataframe from a collection
         of Obs objects.
 
         Returns
@@ -93,7 +92,7 @@ class Obs(DataFrame):
         d = {}
         for att in self._metadata:
             d[att] = getattr(self, att)
-            
+
         d['obs'] = self
 
         return d
@@ -199,6 +198,8 @@ class GroundwaterObs(Obs):
                         meta_extra.update(piezometer)
                         break
                 maaiveld = meta_extra.pop('surfaceElevation')
+                x = meta_extra.pop("xcoord")
+                y = meta_extra.pop("ycoord")
                 # the meta_extra dictionary has a lot
                 # of information, some in nested dictionaries and not always
                 # with the same keys. This will give issues when I automatically
@@ -211,6 +212,8 @@ class GroundwaterObs(Obs):
         else:
             maaiveld = np.nan
         meta['maaiveld'] = maaiveld
+        meta["x"] = x
+        meta["y"] = y
 
         return cls(measurements, meta=meta, x=x, y=y,
                    onderkant_filter=meta['onderkant_filter'],
@@ -237,6 +240,31 @@ class GroundwaterObs(Obs):
             # read dino csv file
 
             measurements, meta = io_dino.read_dino_groundwater_csv(
+                fname, **kwargs)
+
+            return cls(measurements, meta=meta, **meta)
+        else:
+            raise ValueError(
+                'specify either the name or the filename of the measurement point')
+
+    @classmethod
+    def from_artdino_file(cls, fname=None, **kwargs):
+        """read a dino csv file.
+
+        Parameters
+        ----------
+        name : str, optional
+            name of the peilbuis, i.e. B57F0077
+        fname : str, optional
+            dino csv filename
+        kwargs : key-word arguments
+            these arguments are passed to io_dino.read_dino_groundwater_csv
+        """
+
+        if fname is not None:
+            # read dino csv file
+
+            measurements, meta = io_dino.read_artdino_groundwater_csv(
                 fname, **kwargs)
 
             return cls(measurements, meta=meta, **meta)
