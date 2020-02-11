@@ -40,11 +40,11 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
                                         "Gemiddeldeld gemeten|{:+.2f} mNAP|"
                                         "Minimaal gemeten|{:+.2f} mNAP".format(o.meta['bovenkant_filter'],
                                                                                o.meta['onderkant_filter'],
-                                                                               o['Stand_m_tov_NAP'].max(
+                                                                               o['stand_m_tov_nap'].max(
                                         ),
-                                            o['Stand_m_tov_NAP'].mean(
+                                            o['stand_m_tov_nap'].mean(
                                         ),
-                                            o['Stand_m_tov_NAP'].min()))
+                                            o['stand_m_tov_nap'].min()))
     group = df.name
 
     return heading, name, subname, inputfield, properties, group
@@ -77,7 +77,7 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
     inputfield = 'Stand|Opmerking'
     properties = df.obs.apply(lambda o: "Maximaal gemeten|{:+.2f} mNAP|"
                                         "Gemiddeldeld gemeten|{:+.2f} mNAP|"
-                                        "Minimaal gemeten|{:+.2f} mNAP".format(o['Stand_m_tov_NAP'].max(),
+                                        "Minimaal gemeten|{:+.2f} mNAP".format(o['stand_m_tov_nap'].max(),
                                                                                o['Stand_m_tov_NAP'].mean(
                                         ),
                                             o['Stand_m_tov_NAP'].min()))

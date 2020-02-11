@@ -25,12 +25,12 @@ class StatsAccessor:
     def obs_periods(self):
         return self._obj.dates_last_obs - self._obj.dates_first_obs
 
-    def obs_per_year(self, col="Stand_m_tov_NAP"):
+    def obs_per_year(self, col="stand_m_tov_nap"):
         pblist = {o.name: o.obs_per_year(col=col) for o in self._obj.obs}
         df = pd.DataFrame.from_dict(pblist)
         return df
 
-    def consecutive_obs_years(self, min_obs=12, col="Stand_m_tov_NAP"):
+    def consecutive_obs_years(self, min_obs=12, col="stand_m_tov_nap"):
         """ get the number of consecutive years with more than a minimum of
         observations.
 
@@ -60,7 +60,7 @@ class StatsAccessor:
         df = pd.DataFrame.from_dict(pblist)
         return df
 
-    def mean_in_period(self, tmin=None, tmax=None, col="Stand_m_tov_NAP"):
+    def mean_in_period(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         if tmin is None:
             tmin = self._obj.dates_first_obs.min()
         if tmax is None:
@@ -68,7 +68,7 @@ class StatsAccessor:
 
         return self._obj.obs.apply(lambda o: o.loc[tmin:tmax, col].mean())
 
-    def get_no_of_observations(self, column_name='Stand_m_tov_NAP',
+    def get_no_of_observations(self, column_name='stand_m_tov_nap',
                                after_date=None, before_date=None):
         """get number of non-nan values of a column in the observation df
 
@@ -98,7 +98,7 @@ class StatsAccessor:
 
         return self._obj['no_obs']
 
-    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
+    def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
                           summer_months=[5, 6, 7, 8, 9, 10]):
         """get statistics per season
@@ -140,7 +140,7 @@ class StatsAccessor:
         self._obj['date_last_measurement'] = [o.index.max()
                                               for o in self._obj.obs.values]
 
-    def get_min_max(self, obs_column='Stand_m_tov_NAP'):
+    def get_min_max(self, obs_column='stand_m_tov_nap'):
         """adds two columns to the Obscollection with the minimum and the
         maximum of a column (defined by obs_column)
 
@@ -169,7 +169,7 @@ class StatsAccessorObs:
     def __init__(self, obs):
         self._obj = obs
 
-    def get_seasonal_stat(self, column_name='Stand_m_tov_NAP', stat='mean',
+    def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
                           summer_months=[5, 6, 7, 8, 9, 10]):
         """get statistics per season

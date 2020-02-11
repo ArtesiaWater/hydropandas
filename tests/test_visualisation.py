@@ -12,7 +12,7 @@ plot_dir = r".\data\2019-Dino-test\plots"
 
 def test_interactive_plot():
     gw = ttf.test_observation_gw()
-    gw.plots.interactive_plot(savedir=plot_dir, plot_columns=['Stand_m_tov_NAP'],
+    gw.plots.interactive_plot(savedir=plot_dir, plot_columns=['stand_m_tov_nap'],
                               hoover_date_format="{%F}",
                               add_filter_to_legend=True)
     return
@@ -21,7 +21,7 @@ def test_interactive_plot():
 def test_obscollection_dino_to_imap():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.geo.set_lat_lon(verbose=True)
-    dino_gw.plots.interactive_map(plot_dir, plot_columns=['Stand_m_tov_NAP'],
+    dino_gw.plots.interactive_map(plot_dir, plot_columns=['stand_m_tov_nap'],
                                   fname='imap.html',
                                   legend_name='grondwater DINO',
                                   add_filter_to_legend=True, hoover_names=['gws'],
@@ -47,7 +47,14 @@ def test_obscollection_to_map():
 def test_obscollection_to_imap():
     fname = 'texel_fews.html'
     fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.gwobs.get_filter_num_location('locationId')
+    # add metadata to obscollection DF
+    fews_gw_prod.add_meta_to_df("lat")
+    fews_gw_prod.add_meta_to_df("lon")
+    fews_gw_prod.add_meta_to_df("locationId")
+
+    fews_gw_prod.gwobs.get_filter_num_location('locationId',
+                                               if_exists="replace")
+
     m = fews_gw_prod.plots.interactive_map(plot_dir,
                                            plot_columns=['value'],
                                            fname=fname,

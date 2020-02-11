@@ -396,7 +396,7 @@ class CollectionPlots:
         return ax
 
     def mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
-                  extent=None, plot_column='Stand_m_tov_NAP',
+                  extent=None, plot_column='stand_m_tov_nap',
                   per_location=True,
                   plot_func=None,
                   plot_xlim=(None, None), plot_ylim=(None, None),

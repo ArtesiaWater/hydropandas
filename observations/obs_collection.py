@@ -1149,7 +1149,7 @@ class ObsCollection(pd.DataFrame):
         return self[columns]
 
     def to_pastas_project(self, pr=None, project_name='',
-                          obs_column='Stand_m_tov_NAP',
+                          obs_column='stand_m_tov_nap',
                           kind='oseries', add_metadata=True,
                           verbose=False):
         """add observations to a new or existing pastas project
@@ -1240,7 +1240,7 @@ class ObsCollection(pd.DataFrame):
 
         self[key] = [o.meta[key] for o in self.obs.values]
 
-    def get_series(self, tmin=None, tmax=None, col="Stand_m_tov_NAP"):
+    def get_series(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         if tmin is None:
             tmin = self.dates_first_obs.min()
         if tmax is None:

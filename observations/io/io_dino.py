@@ -219,7 +219,7 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
     fname : str
         path to csv file
     to_mnap : boolean, optional
-        if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
         if False only metadata is read, default is True
     verbose : boolean, optional
@@ -259,10 +259,10 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
             line, measurements = _read_dino_groundwater_measurements(f, line)
             if verbose and (measurements is None):
                 print('could not read measurements -> {}'.format(fname))
-            elif verbose and measurements[~measurements.Stand_cm_tov_NAP.isna()].empty:
+            elif verbose and measurements[~measurements.stand_cm_tov_nap.isna()].empty:
                 print('no NAP measurements available -> {}'.format(fname))
             if to_mnap and measurements is not None:
-                measurements['Stand_m_tov_NAP'] = measurements['Stand_cm_tov_NAP'] / 100.
+                measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
         else:
             measurements = None
 
@@ -368,7 +368,7 @@ def read_artdino_groundwater_csv(fname, to_mnap=True,
     fname : str
         path to csv file
     to_mnap : boolean, optional
-        if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
         if False only metadata is read, default is True
     verbose : boolean, optional
@@ -538,7 +538,7 @@ def download_dino_groundwater(name, filternr, tmin, tmax,
     measurements = dino.findMeetreeks(name, filternr, tmin, tmax,
                                       **kwargs)
 
-    measurements.rename(columns={'_'.join([name, filternr]): 'Stand_m_tov_NAP'},
+    measurements.rename(columns={'_'.join([name, filternr]): 'stand_m_tov_nap'},
                         inplace=True)
 
     meta = dino.findTechnischeGegevens(name, filternr)
@@ -657,8 +657,8 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                       filternr=float(loc.piezometerNr),
                                       tmin=tmin_t,
                                       tmax=tmax_t,
-                                      x=loc['xCoord'],
-                                      y=loc['yCoord'],
+                                      x=loc['xcoord'],
+                                      y=loc['ycoord'],
                                       unit=unit,
                                       get_metadata=get_metadata)
 
@@ -726,12 +726,12 @@ def _read_dino_waterlvl_measurements(f, line):
         titel.remove('')
 
     validator = np.lib._iotools.NameValidator()
-    titel = validator(titel)
+    titel = [i.lower() for i in validator(titel)]
     usecols = range(0, len(titel))
 
     measurements = pd.read_csv(f, header=None, names=titel,
-                               parse_dates=['Peildatum'],
-                               index_col='Peildatum',
+                               parse_dates=['peildatum'],
+                               index_col='peildatum',
                                dayfirst=True,
                                usecols=usecols)
 
@@ -749,7 +749,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
     ----------
     fname : str
     to_mnap : boolean, optional
-        if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
         if False only metadata is read, default is True
     verbose : boolean, optional
@@ -774,7 +774,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
                 if read_series:
                     measurements = _read_dino_waterlvl_measurements(f, line)
                     if to_mnap and measurements is not None:
-                        measurements['Stand_m_tov_NAP'] = measurements['Stand_cm_tov_NAP'] / 100.
+                        measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
                 else:
                     measurements = None
 
