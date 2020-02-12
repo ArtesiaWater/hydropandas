@@ -23,7 +23,7 @@ class CollectionPlots:
 
     def data_frequency(
             self,
-            column_name='Stand_m_tov_NAP',
+            column_name='stand_m_tov_nap',
             intervals=None,
             ignore=[
                 'seconde',
@@ -534,7 +534,7 @@ class ObsPlots:
         self._obj = obs
 
     def interactive_plot(self, savedir=None,
-                         plot_columns=['Stand_m_tov_NAP'],
+                         plot_columns=['stand_m_tov_nap'],
                          markers=['line'],
                          p=None,
                          plot_legend_names=[''],

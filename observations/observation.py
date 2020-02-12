@@ -126,7 +126,7 @@ class GroundwaterObs(Obs):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
 
-        if the pandas.DataFrame has a column 'Stand_m_tov_NAP' a lot of
+        if the pandas.DataFrame has a column 'stand_m_tov_nap' a lot of
         plotting and other methods will work automatically without changing
         the default arguments.
         """

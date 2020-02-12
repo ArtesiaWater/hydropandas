@@ -152,6 +152,8 @@ def _start_end_to_datetime(start, end):
         start = pd.Timestamp(pd.Timestamp.today().year, 1, 1)
     else:
         start = pd.to_datetime(start)
+    # start date one day before because later the datetime index is modified
+    start = start - pd.Timedelta(1, 'D')
     if end is None:
         end = pd.Timestamp.today()
     else:
@@ -213,7 +215,7 @@ def download_knmi_data(stn, var='RD', start=None, end=None, interval='daily',
 
     if inseason:
         raise NotImplementedError('season stuff not implemented')
-
+    
     start, end = _start_end_to_datetime(start, end)
 
     # convert possible integer to string

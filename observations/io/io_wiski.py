@@ -84,7 +84,7 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                 data[col], errors="coerce")
 
             if to_mnap:
-                data.rename(columns={col: 'Stand_m_tov_NAP'}, inplace=True)
+                data.rename(columns={col: 'stand_m_tov_nap'}, inplace=True)
         else:
             data = None
 
