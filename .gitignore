@@ -104,4 +104,4 @@ ENV/
 .pytest_cache/
 
 *.html
-
+*cov.xml
