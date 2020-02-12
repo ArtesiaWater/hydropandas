@@ -460,7 +460,7 @@ class CollectionPlots:
         mg_list = []
         if per_location:
             plot_names = self._obj.groupby(
-                ['locatie', 'x', 'y'], as_index=False).count()
+                ['locatie'], as_index=False).mean()
             plot_names.set_index('locatie', inplace=True)
         else:
             plot_names = self._obj.copy()
