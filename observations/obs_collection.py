@@ -1183,15 +1183,25 @@ class ObsCollection(pd.DataFrame):
         for o in self.obs.values:
             if verbose:
                 print('add to pastas project -> {}'.format(o.name))
-
+                
             meta = dict()
             if add_metadata:
-                # clean up metadata so there is no dict in dict
-                for k, v in o.meta.items():
-                    if isinstance(v, dict):
-                        meta.update(v)
+                for attr_key in o._metadata:
+                    val = getattr(o, attr_key)
+                    if isinstance(val, (int, float, str, bool)):
+                        meta[attr_key] = val
+                    elif isinstance(val, dict):
+                        for k, v in val.items():
+                            if isinstance(v, (int, float, str, bool)):
+                                meta[k] = v
+                            else:
+                                if verbose:
+                                    print(f'did not add {k} to metadata because datatype is {type(v)}')
                     else:
-                        meta[k] = v
+                        if verbose:
+                            print(f'did not add {attr_key} to metadata because datatype is {type(val)}')
+ 
+    
             series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
             pr.add_series(series, kind=kind)
 
