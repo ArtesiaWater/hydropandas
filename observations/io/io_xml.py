@@ -14,7 +14,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     to_mnap : boolean, optional
-        if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
@@ -59,7 +59,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
             if remove_nan:
                 ts.dropna(subset=['value'], inplace=True)
             if to_mnap:
-                ts['Stand_m_tov_NAP'] = ts['value']
+                ts['stand_m_tov_nap'] = ts['value']
 
             if "x" in series.keys():
                 x = series["x"]

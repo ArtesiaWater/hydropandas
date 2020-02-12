@@ -370,7 +370,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the observation collection, 'fews' by default
         to_mnap : boolean, optional
-            if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+            if True a column with 'stand_m_tov_nap' is added to the dataframe
         remove_nan : boolean, optional
             remove nan values from measurements, flag information about the
             nan values is also lost
@@ -437,7 +437,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the observation collection, 'fews' by default
         to_mnap : boolean, optional
-            if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+            if True a column with 'stand_m_tov_nap' is added to the dataframe
         remove_nan : boolean, optional
             remove nan values from measurements, flag information about the
             nan values is also lost
@@ -724,7 +724,7 @@ class ObsCollection(pd.DataFrame):
                     metadata[rename_dic[key]] = metadata.pop(key)
 
             s = pd.DataFrame(metadata.pop('series').series_original)
-            s.rename(columns={index: 'Stand_m_tov_NAP'}, inplace=True)
+            s.rename(columns={index: 'stand_m_tov_nap'}, inplace=True)
 
             keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
                       'metadata_available', 'maaiveld', 'meetpunt',

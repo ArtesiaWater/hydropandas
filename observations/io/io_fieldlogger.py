@@ -78,9 +78,9 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
     properties = df.obs.apply(lambda o: "Maximaal gemeten|{:+.2f} mNAP|"
                                         "Gemiddeldeld gemeten|{:+.2f} mNAP|"
                                         "Minimaal gemeten|{:+.2f} mNAP".format(o['stand_m_tov_nap'].max(),
-                                                                               o['Stand_m_tov_NAP'].mean(
+                                                                               o['stand_m_tov_nap'].mean(
                                         ),
-                                            o['Stand_m_tov_NAP'].min()))
+                                            o['stand_m_tov_nap'].min()))
     group = df.name
 
     return heading, name, subname, inputfield, properties, group
