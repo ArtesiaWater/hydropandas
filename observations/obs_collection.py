@@ -1177,12 +1177,7 @@ class ObsCollection(pd.DataFrame):
 
         import pastas as ps
         
-        if len(pr.oseries.x.unique()) == 1:
-            warnings.warn('all measurements have the same x coördinate')
-        if len(pr.oseries.y.unique()) == 1:
-            warnings.warn('all measurements have the same y coördinate')
-
-
+       
         if pr is None:
             pr = ps.Project(project_name)
 

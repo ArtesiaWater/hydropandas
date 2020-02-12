@@ -52,7 +52,7 @@ def read_file(fname, ObsClass, verbose=False):
         metadata['metadata_available'] = True
 
         s = metadata.pop('values')
-        df = DataFrame(s, columns=['Stand_m_tov_NAP'])
+        df = DataFrame(s, columns=['stand_m_tov_nap'])
         for key in _rename_dic.keys():
             if key in metadata.keys():
                 metadata[_rename_dic[key]] = metadata.pop(key)
