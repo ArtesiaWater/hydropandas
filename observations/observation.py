@@ -339,7 +339,7 @@ class GroundwaterObs(Obs):
                               np.array([self.y]) - ml.modelgrid.yoffset,
                               np.array([self.bovenkant_filter]),
                               np.array([self.onderkant_filter]),
-                              ml, zgr, verbose)[0]
+                              ml, zgr, verbose=verbose)[0]
 
 
 class GroundwaterQualityObs(Obs):

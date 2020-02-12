@@ -41,7 +41,7 @@ def findrowcolumn(xpts, ypts, ml):
     return r, c
 
 
-def get_model_layer(x, y, z, ml, dis, zgr=None):
+def get_model_layer(x, y, z, ml, dis, zgr=None, left=-999, right=999):
     """get index of model layer based on elevation
     at a specific location.
 
@@ -87,12 +87,13 @@ def get_model_layer(x, y, z, ml, dis, zgr=None):
         elif (ir >= 0) & (ic >= 0):
             zvec = zgr[:, ir, ic]
             ilay[i] = int(np.interp(z[i], zvec[::-1], np.arange(len(zvec))[::-1],
-                                    left=-999, right=999))
+                                    left=left, right=right))
 
     return ilay
 
 
-def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, verbose=False):
+def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, left=-999, right=999, 
+                      verbose=False):
     """get index of model layer based on filterdepth of
     piezometer.
 
@@ -131,8 +132,10 @@ def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, verbose=False):
     if zgr is None:
         dis = ml.get_package('DIS')
     
-    ilay_ftop = get_model_layer(x, y, ftop, ml, dis, zgr=zgr)
-    ilay_fbot = get_model_layer(x, y, fbot, ml, dis, zgr=zgr)
+    ilay_ftop = get_model_layer(x, y, ftop, ml, dis, zgr=zgr, 
+                                left=left, right=right)
+    ilay_fbot = get_model_layer(x, y, fbot, ml, dis, zgr=zgr, 
+                                left=left, right=right)
     
     
 
@@ -171,11 +174,25 @@ def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, verbose=False):
                     print("-fb, ft: {0:.2f}, {1:.2f}".format(fbot[i], ftop[i]))
                     print("-length in layer: {0:.2f}, {1:.2f}".format(
                           zvec[fbi] - fbot[i], ftop[i] - zvec[fbi]))
-                if fti - fbi > 2:
+                if fti==right and fbi==left:
+                    if verbose:
+                        print('filter spans all layers. '
+                              'not sure which layer to select')
+                elif fti==right:
+                    if verbose:
+                        print('filter top higher than top layer. '
+                              'selected layer {}'.format(fbi))
+                    ilay[i] = fbi
+                elif fbi==left:
+                    if verbose:
+                        print('filter bot lower than bottom layer. '
+                              'selected layer {}'.format(fti))
+                    ilay[i] = fti
+                elif fti - fbi > 2:
                     ilay[i] = np.nan  # set to unknown
                     if verbose:
                         print("Piezometer filter spans {} layers. "
-                              "Not sure which layer to select".format(fti - fbi))
+                              "Not sure which layer to select".format(fti - fbi+1))
                 elif fti - fbi == 2:  # if filter spans 3 layers
                     ilay[i] = fbi + 1  # use middle layer
                 elif np.abs(fbot[i] - zvec[fbi]) > np.abs(ftop[i] - zvec[fbi]):
