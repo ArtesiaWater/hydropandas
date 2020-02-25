@@ -88,7 +88,7 @@ class ObsCollection(pd.DataFrame):
         else:
             raise TypeError('could not infer observation type')
 
-    def _set_metadata_value(self, iname, att_name, value, add_to_meta=True,
+    def _set_metadata_value(self, iname, att_name, value, add_to_meta=False,
                             verbose=False):
         """ Set a value on three different levels at once:
             1. the value in an ObsCollection DataFrame
@@ -107,7 +107,7 @@ class ObsCollection(pd.DataFrame):
             value of the the att_name. e.g. 116234
         add_to_meta : bool, optional
             if True the att_name, value pair is added to the meta dictionary
-            of an observation. The default is True.
+            of an observation. The default is False.
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
