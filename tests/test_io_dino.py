@@ -18,13 +18,46 @@ os.chdir(TEST_DIR)
 
 def test_dino_download_single():
     # download single file
-    measurements, meta = io_dino.download_dino_groundwater(name="B57F0077",
+    measurements, meta = io_dino.download_dino_groundwater(location="B57F0077",
                                                            filternr=4.,
                                                            tmin="2000-01-01",
                                                            tmax="2010-01-01",
                                                            unit="NAP")
     return measurements, meta
 
+def test_dino_metadata():
+    # download metadata
+    meta = io_dino.get_dino_piezometer_metadata(location='B52C0057',
+                                                filternr='001')
+    return meta
+
+
+def test_dino_metadata2():
+    # download metadata without sample data
+    meta = io_dino.get_dino_piezometer_metadata(location='B57B0069',
+                                                filternr='001', 
+                                                verbose=True)
+    return meta
+
+def test_dino_metadata3():
+    # download metadata of a well without metadata
+    meta = io_dino.get_dino_piezometer_metadata(location='B45G1147',
+                                                filternr='001', 
+                                                verbose=True)
+    return meta
+
+
+def test_dino_meetreeks():
+    
+    dino = io_dino.DinoWSDL()
+
+    # measurements
+    measurements = dino.findMeetreeks(location='B58A0092', 
+                                      filternr='004', 
+                                      tmin="1900-01-01", 
+                                      tmax="2040-01-01")
+    
+    return measurements
 
 def test_dino_download_extent():
     # download extent

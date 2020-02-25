@@ -147,7 +147,6 @@ class GroundwaterObs(Obs):
     @classmethod
     def from_dino_server(cls, name, filternr=1.,
                          tmin="1900-01-01", tmax="2040-01-01",
-                         x=np.nan, y=np.nan,
                          get_metadata=True,
                          **kwargs):
         """download dino data from the server.
@@ -162,10 +161,6 @@ class GroundwaterObs(Obs):
             start date in format YYYY-MM-DD
         tmax : str
             end date in format YYYY-MM-DD
-        x : int, float, optional
-            the x coördinate of the measurement point (not read from server)
-        y : int, float, optional
-            the y coördinate of the measurement point (not read from server)
         get_metadata : boolean, optional
             download extra metadata from the server (see Notes)
         kwargs : key-word arguments
@@ -181,46 +176,17 @@ class GroundwaterObs(Obs):
         measurements, meta = io_dino.download_dino_groundwater(name,
                                                                filternr,
                                                                tmin, tmax,
-                                                               x, y,
                                                                **kwargs)
-
-        if get_metadata:
-            # attempt art_tools import
-            art = util._import_art_tools()
-
-            raw_meta = art.dino_wfs.get_dino_piezometer_metadata(
-                [meta['locatie']])
-            if raw_meta != []:
-                meta_extra = raw_meta[0]
-
-                for piezometer in meta_extra.pop('levels'):
-                    if piezometer['piezometerNr'] == format(filternr, '03'):
-                        meta_extra.update(piezometer)
-                        break
-                maaiveld = meta_extra.pop('surfaceElevation')
-                x = meta_extra.pop("xcoord")
-                y = meta_extra.pop("ycoord")
-                # the meta_extra dictionary has a lot
-                # of information, some in nested dictionaries and not always
-                # with the same keys. This will give issues when I automatically
-                # update the meta dictionary. Therefore this is not implemented.
-                # For now only maaiveld is used. If you want to use more info
-                # you have to modify the code here.
-                # meta.update(meta_extra)
-            else:
-                maaiveld = np.nan
+        
+        if meta['metadata_available']:
+            return cls(measurements, meta=meta, x=meta.pop('x'), y=meta.pop('y'),
+                       onderkant_filter=meta.pop('onderkant_filter'),
+                       bovenkant_filter=meta.pop('bovenkant_filter'),
+                       name=meta.pop('name'), locatie=meta.pop('locatie'),
+                       maaiveld=meta.pop('maaiveld'),
+                       filternr=meta.pop('filternr'))
         else:
-            maaiveld = np.nan
-        meta['maaiveld'] = maaiveld
-        meta["x"] = x
-        meta["y"] = y
-
-        return cls(measurements, meta=meta, x=x, y=y,
-                   onderkant_filter=meta['onderkant_filter'],
-                   bovenkant_filter=meta['bovenkant_filter'],
-                   name=meta['name'], locatie=meta['locatie'],
-                   maaiveld=maaiveld,
-                   meetpunt=meta['meetpunt'], filternr=meta['filternr'])
+            return cls(measurements, meta=meta)
 
     @classmethod
     def from_dino_file(cls, fname=None, **kwargs):

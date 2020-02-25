@@ -53,7 +53,7 @@ def test_observation_dino_download2():
 
 def test_observation_dino_download3():
     # download dino data from pb without extra metadata. For this pb
-    # art.dino_wfs.get_dino_piezometer_metadata() returns an empty list
+    # io_dino.get_dino_piezometer_metadata() returns an empty list
     gw3 = obs.GroundwaterObs.from_dino_server(name="B45G1147", filternr=1.,
                                               tmin="1900-01-01",
                                               tmax="2020-01-01", unit="NAP")

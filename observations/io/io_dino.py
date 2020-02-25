@@ -5,6 +5,14 @@ import tempfile
 import numpy as np
 import pandas as pd
 
+import requests
+import json
+
+import zeep
+from zeep import Plugin
+from zeep.wsa import WsAddressingPlugin
+from zeep.plugins import HistoryPlugin
+
 from ..util import unzip_file, _import_art_tools
 
 
@@ -498,24 +506,346 @@ def read_artdino_dir(dirname, ObsClass=None,
 
 
 # %% DINO download methods
-def download_dino_groundwater(name, filternr, tmin, tmax,
-                              x=np.nan, y=np.nan, **kwargs):
-    """
+    
+def get_dino_piezometer_metadata(location, filternr, raw_response=False,
+                                 verbose=False):
+    """ get metadata of a dino piezometer
+    
 
     Parameters
     ----------
-    name : str
+    location : str
+        location of piezometer, e.g. B57F0077
+    filternr : str
+        filter number should be a string of 3 characters, e.g. 002
+    raw_response : bool, optional
+        if True, return the requests response
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
+    url = "https://www.dinoloket.nl/javascriptmapviewer-web/rest/gws/gwo/details"
+    response = requests.post(url, data=json.dumps([location]),
+                             headers={'content-type': 'application/json'})
+    if raw_response:
+        return response
+    else:
+        data = json.loads(response.content)
+        if data == []:
+            meta = {'metadata_available':False}
+        else:
+            meta = _parse_metadata(data[0], location, filternr, verbose=verbose)
+        return meta
+    
+def _parse_metadata(data, location, filternr, verbose=False):
+    """ parse metadata obtained with get_dino_piezometer_metadata
+    
+    Parameters
+    ----------
+    data : dictionary
+        response from dinoloket
+    location : str
+        location of piezometer, e.g. B57F0077
+    filternr : str
+        filter number should be a string of 3 characters, e.g. 002
+
+    Returns
+    -------
+    meta : dictionary
+        parsed dictionary
+
+    """
+    
+
+    meta = {
+        "locatie": location,
+        "name": '-'.join([location, filternr]),
+        "filternr": int(filternr),
+        "metadata_available": True
+    }
+    
+    piezometers = data.pop('piezoMeters')
+    levels = data.pop('levels')
+    samples = data.pop('samples')
+    
+    
+    if piezometers:
+        try:
+            meta.update(next(item for item in piezometers if item["piezometerNr"] == filternr))
+        except StopIteration:
+            if verbose:
+                print(f'cannot find piezometer metadata for location {location} and filternr {filternr}')
+    if levels:
+        try:
+            meta.update(next(item for item in levels if item["piezometerNr"] == filternr))
+        except StopIteration:
+            if verbose:
+                print(f'cannot find level metadata for location {location} and filternr {filternr}')
+    if samples:
+        try:
+            meta.update(next(item for item in samples if item["piezometerNr"] == filternr))
+        except StopIteration:
+            if verbose:
+                print(f'cannot find sample metadata for location {location} and filternr {filternr}')
+        
+    meta.update(data)
+    meta.pop('piezometerNr')
+    meta.pop('dinoId')
+    
+    translate_dic = {'bottomHeightNap':'onderkant_filter',
+                     'topHeightNap':'bovenkant_filter',
+                     'xcoord':'x',
+                     'ycoord':'y',
+                     'surfaceElevation':'maaiveld'}
+    
+    for key, item in translate_dic.items():
+        meta[item] = meta.pop(key)
+        
+    return meta
+
+
+
+class RemoveWSA(Plugin):
+    """Helper class to remove wsa tags
+    from header in zeep XML post
+
+    as described by: https://github.com/mvantellingen/python-zeep/issues/330#issuecomment-321781637
+
+    """
+
+    def egress(self, envelope, http_headers, operation, binding_options):
+        envelope.find(
+            '{http://schemas.xmlsoap.org/soap/envelope/}Header').clear()
+        return envelope, http_headers
+
+
+class DinoWSDL:
+    """Class for querying DINOLoket. Currently available methods are:
+        - findMeetreeks: get timeseries for piezometer
+        - findWaarnemingGegevens: get some simple all time statistics
+          for a piezometer
+        - findTechnischeGegevens: get metadata for a piezometer
+        - findGrondwaterStatistiek: get stats for 14th and 28th day of
+          each month for a given period
+
+    Returns
+    -------
+    DinoWSDL :
+        returns an object that can be used to query the DINO Webservice.
+
+    """
+
+    def __init__(self, wsdl="http://www.dinoservices.nl/gwservices/gws-v11?wsdl"):
+        """Initialize DinoWSDL object that can be used to query DINO Webservice
+
+        Parameters
+        ----------
+        wsdl : str, optional
+            wsdl url, by default "http://www.dinoservices.nl/gwservices/gws-v11?wsdl"
+        """
+
+        # Create some plugins, some currently unused but left here as a reminder.
+        history = HistoryPlugin()
+        wsa = WsAddressingPlugin()
+        rwsa = RemoveWSA()
+
+        # Configure the client
+        self.client = zeep.Client(
+            wsdl=wsdl,
+            plugins=[history, wsa, rwsa])
+
+        # Set prefix
+        self.client.set_ns_prefix("v11", "http://v11.ws.gws.dino.tno.nl/")    
+        
+    def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
+                      raw_response=False):
+        """Get a timeseries for a piezometer.
+
+        Parameters
+        ----------
+        location : str
+            location str of the piezometer, i.e. B57F0077
+        filternr : str, int, float
+            filter number, is converted to str, i.e. 004
+        tmin : str or pandas.Timestamp
+            start date in format YYYY-MM-DD (will be converted if Timestamp)
+        tmax : str or pandas.Timestamp
+            end date in format YYYY-MM-DD (will be converted if Timestamp)
+        unit : str, optional
+            unit in which timeseries is returned, by default "NAP"
+        raw_response : bool, optional
+            if True, return the zeep parsed XML response, by default
+            False which will return a DataFrame
+
+        Returns
+        -------
+        df or response
+            returns DataFrame or zeep parsed XML response
+
+        Note
+        ----
+        - method sometimes returns data
+
+        """
+        if isinstance(tmin,pd.Timestamp):
+            tmin = tmin.strftime('%Y-%m-%d')
+
+        if isinstance(tmax,pd.Timestamp):
+            tmax = tmax.strftime('%Y-%m-%d')
+
+        assert unit in ["NAP", "SFL",
+                        "MP"], "'unit' must be one of 'NAP', 'SFL', 'MP'!"
+
+        data = {"WELL_NITG_NR": location,
+                "WELL_TUBE_NR": filternr,
+                "START_DATE": tmin,
+                "END_DATE": tmax,
+                "UNIT": unit}
+
+        try:
+            r = self.client.service.findMeetreeks(**data)
+        except Exception as e:
+            raise e
+
+        if raw_response:
+            return r
+        else:
+            
+            df = self._parse_grondwaterstand(r, f'stand_m_tov_{unit.lower()}')
+            
+            return df
+    
+    def findTechnischeGegevens(self, location, filter_nr, raw_response=False):
+        """Get metadata for a piezometer.
+
+        Parameters
+        ----------
+        location : str
+            location str of the piezometer, i.e. B57F0077
+        filter_nr : str, int, float
+            filter number, is converted to str, i.e. 004
+        raw_response : bool, optional
+            if True, return the zeep parsed XML response, by default
+            False which will return a DataFrame
+
+        Returns
+        -------
+        df or response
+            returns DataFrame or zeep parsed XML response
+
+        """
+
+        if isinstance(filter_nr, float) or isinstance(filter_nr, int):
+            filter_nr = "{0:03g}".format(filter_nr)
+
+        data = {"WELL_NITG_NR": location,
+                "WELL_TUBE_NR": filter_nr}
+
+        try:
+            r = self.client.service.findTechnischeGegevens(**data)
+        except Exception as e:
+            raise e
+
+        if raw_response:
+            return r
+        else:
+            meta = self._parse_technische_gegevens(r)
+            return meta
+    
+    @staticmethod
+    def _parse_grondwaterstand(r, column_name='stand_m_tov_nap'):
+        """Parse the response from findMeetreeks
+
+        Parameters
+        ----------
+        r : zeep.objects.GrondwaterStanden
+            the response of findMeetreeks()
+
+        Returns
+        -------
+        pandas.DataFrame
+            pandas.DataFrame containing the data
+
+        """
+        if isinstance(r, list):
+            gws = r[0]
+
+        index = [i["DATE"] for i in gws.LEVELS]
+        values = [i["LEVEL"] for i in gws.LEVELS]
+        remarks = [i["REMARK"] for i in gws.LEVELS]
+        df = pd.DataFrame(index=index, data={column_name:values,
+                                             'remarks':remarks})
+        # convert from cm to m
+        df.loc[:,column_name] = df.loc[:,column_name]/100
+                
+        return df
+    
+    @staticmethod
+    def _parse_technische_gegevens(response):
+        """Parse the response from findTechnischeGegevens
+
+        Parameters
+        ----------
+        response : zeep.objects.TechnischeGegevens
+            the response of findTechnischeGegevens()
+
+        Returns
+        -------
+        pandas.DataFrame
+            pandas.DataFrame containing the data
+
+        """
+        if isinstance(response, list):
+            response = response[0]
+          
+        locatie = response.WELL_NITG_NR
+        filternr = response.WELL_TUBE_NR
+        meta = {
+            "locatie": locatie,
+            "name": '-'.join([locatie, filternr]),
+            "filternr": int(filternr)
+        }
+
+        if response.SFL_HEIGHT is not None:
+            meta["maaiveld"] = response.SFL_HEIGHT / 100.
+        else:
+            meta["maaiveld"] = np.nan
+
+        if response.BOTTOM_FILTER is not None:
+            meta["onderkant_filter"] = response.BOTTOM_FILTER / 100.
+        else:
+            meta["onderkant_filter"] = np.nan
+
+        if response.FILTER_LENGTH is not None:
+            meta["filterlengte"] = response.FILTER_LENGTH / 100.
+        else:
+            meta["filterlengte"] = np.nan
+
+        meta["bovenkant_filter"] = meta["onderkant_filter"] + meta["filterlengte"]
+
+        return meta
+
+
+  
+
+def download_dino_groundwater(location, filternr, tmin, tmax,
+                             **kwargs):
+    """ download measurements and metadata from a dino groundwater 
+    observation well
+
+    Parameters
+    ----------
+    location : str
         location str of the piezometer, i.e. B57F0077
-    filter_nr : str, int, float
+    filternr : str, int, float
         filter number, is converted to str, i.e. 004
     tmin : str or pandas.Timestamp
         start date in format YYYY-MM-DD (will be converted if Timestamp)
     tmax : str or pandas.Timestamp
         end date in format YYYY-MM-DD (will be converted if Timestamp)
-    x : int, float, optional
-        the x coördinate of the measurement point (not read from server)
-    y : int, float, optional
-        the y coördinate of the measurement point (not read from server)
     kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
 
@@ -525,36 +855,23 @@ def download_dino_groundwater(name, filternr, tmin, tmax,
     meta : dict
         dictionary with metadata
     """
-    # attempt art_tools import
-    art = _import_art_tools()
-
-    # download data from dino
-    dino = art.dino_wsdl.DinoWSDL()
-
+    
     if isinstance(filternr, float) or isinstance(filternr, int):
         filternr = "{0:03g}".format(filternr)
+    
+
+    # download data from dino
+    dino = DinoWSDL()
 
     # measurements
-    measurements = dino.findMeetreeks(name, filternr, tmin, tmax,
+    measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
                                       **kwargs)
 
-    measurements.rename(columns={'_'.join([name, filternr]): 'stand_m_tov_nap'},
-                        inplace=True)
-
-    meta = dino.findTechnischeGegevens(name, filternr)
-
-    meta['onderkant_filter'] = meta.pop('BOTTOM_FILTER')
-    meta['bovenkant_filter'] = meta.pop('TOP_FILTER')
-    meta['meetpunt'] = meta.pop('SFL_HEIGHT')
-
-    filternr = meta.pop('WELL_TUBE_NR')
-    name = meta.pop('WELL_NITG_NR')
-    name = '-'.join([name, filternr])
-    meta['filternr'] = int(filternr)
-    meta['name'] = name
-    meta['x'] = x
-    meta['y'] = y
-    meta['locatie'] = name.split('-')[0]
+    # old metadata method
+    #meta = dino.findTechnischeGegevens(location, filternr)
+    
+    # new metadata method
+    meta = get_dino_piezometer_metadata(location, filternr)
 
     return measurements, meta
 
@@ -657,8 +974,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                       filternr=float(loc.piezometerNr),
                                       tmin=tmin_t,
                                       tmax=tmax_t,
-                                      x=loc['xcoord'],
-                                      y=loc['ycoord'],
                                       unit=unit,
                                       get_metadata=get_metadata)
 
