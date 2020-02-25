@@ -1108,7 +1108,8 @@ class DinoWSDL:
 
   
 
-def download_dino_groundwater(location, filternr, tmin, tmax, verbose=False,
+def download_dino_groundwater(location, filternr, tmin, tmax, 
+                              verbose=False,
                              **kwargs):
     """ download measurements and metadata from a dino groundwater 
     observation well
@@ -1145,13 +1146,14 @@ def download_dino_groundwater(location, filternr, tmin, tmax, verbose=False,
     measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
                                       **kwargs)
 
+    
     # old metadata method
     #meta = dino.findTechnischeGegevens(location, filternr)
     
     # new metadata method
     dinorest = DinoREST()
     meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
-
+    
     return measurements, meta
 
 
@@ -1237,7 +1239,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 layer='grondwatermonitoring',
                                 tmin="1900-01-01", tmax="2040-01-01",
                                 zmin=None, zmax=None, unit="NAP",
-                                get_metadata=True,
                                 verbose=False):
     """Download DINO data within a certain extent (or a bounding box)
 
@@ -1328,8 +1329,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                       filternr=float(loc.piezometerNr),
                                       tmin=tmin_t,
                                       tmax=tmax_t,
-                                      unit=unit,
-                                      get_metadata=get_metadata)
+                                      unit=unit)
 
         obs_list.append(o)
 

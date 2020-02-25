@@ -147,7 +147,6 @@ class GroundwaterObs(Obs):
     @classmethod
     def from_dino_server(cls, name, filternr=1.,
                          tmin="1900-01-01", tmax="2040-01-01",
-                         get_metadata=True,
                          **kwargs):
         """download dino data from the server.
 
@@ -161,16 +160,10 @@ class GroundwaterObs(Obs):
             start date in format YYYY-MM-DD
         tmax : str
             end date in format YYYY-MM-DD
-        get_metadata : boolean, optional
-            download extra metadata from the server (see Notes)
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
 
-        Notes
-        -----
-        For now only the maaiveld is used from the extra metadata, this method
-        should be improved to add more metadata from the server if get_metadata
-        is True
+        
         """
 
         measurements, meta = io_dino.download_dino_groundwater(name,
@@ -179,10 +172,12 @@ class GroundwaterObs(Obs):
                                                                **kwargs)
         
         if meta['metadata_available']:
-            return cls(measurements, meta=meta, x=meta.pop('x'), y=meta.pop('y'),
+            return cls(measurements, meta=meta, 
+                       x=meta.pop('x'), y=meta.pop('y'),
                        onderkant_filter=meta.pop('onderkant_filter'),
                        bovenkant_filter=meta.pop('bovenkant_filter'),
-                       name=meta.pop('name'), locatie=meta.pop('locatie'),
+                       name=meta.pop('name'), 
+                       locatie=meta.pop('locatie'),
                        maaiveld=meta.pop('maaiveld'),
                        filternr=meta.pop('filternr'))
         else:
