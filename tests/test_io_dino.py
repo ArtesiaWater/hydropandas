@@ -27,23 +27,26 @@ def test_dino_download_single():
 
 def test_dino_metadata():
     # download metadata
-    meta = io_dino.get_dino_piezometer_metadata(location='B52C0057',
-                                                filternr='001')
+    dinorest = io_dino.DinoREST()
+    meta = dinorest.get_gwo_metadata(location='B52C0057',filternr='001')
+    
     return meta
 
 
 def test_dino_metadata2():
     # download metadata without sample data
-    meta = io_dino.get_dino_piezometer_metadata(location='B57B0069',
-                                                filternr='001', 
-                                                verbose=True)
+    dinorest =io_dino. DinoREST()
+    meta = dinorest.get_gwo_metadata(location='B57B0069',
+                                     filternr='001', 
+                                     verbose=True)
     return meta
 
 def test_dino_metadata3():
     # download metadata of a well without metadata
-    meta = io_dino.get_dino_piezometer_metadata(location='B45G1147',
-                                                filternr='001', 
-                                                verbose=True)
+    dinorest = io_dino.DinoREST()
+    meta = dinorest.get_gwo_metadata(location='B45G1147',
+                                     filternr='001', 
+                                     verbose=True)
     return meta
 
 
