@@ -61,6 +61,26 @@ class StatsAccessor:
         return df
 
     def mean_in_period(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
+        """get the mean value of one column (col) in all observations
+        within a period defined by tmin and tmax. If both tmin and tmax are 
+        None the whole period in which there are observations is used.
+        
+
+        Parameters
+        ----------
+        tmin : datetime, optional
+            start of averaging period. The default is None.
+        tmax : datetime, optional
+            end of averaging period. The default is None.
+        col : str, optional
+            name of the column in the obs object. The default is "stand_m_tov_nap".
+
+        Returns
+        -------
+        pd.Series
+            mean values for each observation.
+
+        """
         if tmin is None:
             tmin = self._obj.dates_first_obs.min()
         if tmax is None:
@@ -83,7 +103,7 @@ class StatsAccessor:
 
         Returns
         -------
-        pandas series with the number of observaitons for each row in the obs
+        pandas series with the number of observations for each row in the obs
         collection.
         """
         no_obs = []
@@ -93,10 +113,10 @@ class StatsAccessor:
                               [column_name].dropna().count())
             except KeyError:
                 no_obs.append(0)
-
-        self._obj['no_obs'] = no_obs
-
-        return self._obj['no_obs']
+                
+        no_obs = pd.Series(index=self._obj.index, data=no_obs, name='no_obs')
+        
+        return no_obs
 
     def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
@@ -135,33 +155,77 @@ class StatsAccessor:
 
         """
 
-        self._obj['date_first_measurement'] = [o.index.min()
-                                               for o in self._obj.obs.values]
-        self._obj['date_last_measurement'] = [o.index.max()
-                                              for o in self._obj.obs.values]
+        date_first_measurement = [o.index.min() for o in self._obj.obs.values]
+        date_last_measurement = [o.index.max() for o in self._obj.obs.values]
+        
+        return pd.concat([date_first_measurement, date_last_measurement])
 
-    def get_min_max(self, obs_column='stand_m_tov_nap'):
-        """adds two columns to the Obscollection with the minimum and the
-        maximum of a column (defined by obs_column)
 
-        returns the absolute minimum and maximum of all observations
+    def get_min(self, column_name='stand_m_tov_nap',
+                after_date=None, before_date=None):
+        """get the minimum value of every obs object
 
         Parameters
         ----------
-        obs_column: str, optional
-            column name for which min and max is calculated
-
+        column_name: str, optional
+            column name for which min is calculated
+        after_date : dt.datetime, optional
+            get the min value after this date
+        before_date : dt.datetime, optional
+            get the min value before this date
+            
         Returns
         -------
-        min, max: float
-            the minimum and maximum of the obs_column in all observations
+        pandas series with the minimum of each observation in the obs
+        collection.
 
         """
 
-        self._obj['max'] = [o[obs_column].max() for o in self._obj.obs.values]
-        self._obj['min'] = [o[obs_column].min() for o in self._obj.obs.values]
+        min_list = []
+        for o in self._obj.obs.values:
+            try:
+                min_list.append(o[after_date:before_date]
+                               [column_name].dropna().min())
+            except KeyError:
+                min_list.append(np.nan)
+    
+        
+        omin = pd.Series(index=self._obj.index, data=min_list, name='min')
 
-        return(self._obj['min'].min(), self._obj['max'].max())
+        return omin
+    
+    def get_max(self, column_name='stand_m_tov_nap',
+                after_date=None, before_date=None):
+        """get the maximum value of every obs object
+
+        Parameters
+        ----------
+        column_name: str, optional
+            column name for which max is calculated
+        after_date : dt.datetime, optional
+            get the max value after this date
+        before_date : dt.datetime, optional
+            get the max value before this date
+
+        Returns
+        -------
+        pandas series with the maximum of each observation in the obs
+        collection.
+
+        """
+
+        max_list = []
+        for o in self._obj.obs.values:
+            try:
+                max_list.append(o[after_date:before_date]
+                               [column_name].dropna().max())
+            except KeyError:
+                max_list.append(np.nan)
+    
+        
+        omax = pd.Series(index=self._obj.index, data=max_list, name='max')
+
+        return omax
 
 
 @accessor.register_obs_accessor("stats")
