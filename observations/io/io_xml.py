@@ -4,7 +4,8 @@ import xml.etree.ElementTree as etree
 from lxml.etree import iterparse, parse
 
 
-def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
+def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'}, 
+             to_mnap=False, remove_nan=False, verbose=False):
     """read a FEWS XML-file with measurements, return list of ObsClass objects
 
     Parameters
@@ -69,13 +70,18 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
                 y = series["y"]
             else:
                 y = np.nan
+                
+            for key, item in translate_dic.items():
+                series[item] = series.pop(key)
 
-            obs_list.append(ObsClass(ts, name=series['locationId'],
+            obs_list.append(ObsClass(ts, name=series['locatie'],
+                                     locatie=series['locatie'],
                                      x=x, y=y, meta=series))
     return obs_list
 
 
-def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
+def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'}, 
+                     locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
                      skip_errors=True, verbose=False):
@@ -178,7 +184,12 @@ def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
                         mask = df['flag'].isin(keep_flags)
                         s = pd.to_numeric(df.loc[mask, 'value'], errors="coerce")
 
-                o = ObsClass(s, name=header['locationId'], meta=header)
+                for key, item in translate_dic.items():
+                    header[item] = header.pop(key)
+
+                o = ObsClass(s, name=header['locatie'], 
+                             locatie=header['locatie'],
+                             meta=header)
                 header_list.append(header)
                 series_list.append(o)
 
