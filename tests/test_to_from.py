@@ -169,6 +169,7 @@ def test_obscollection_to_fieldlogger():
 def test_obscollection_fews():
     fews_gw_prod = oc.ObsCollection.from_fews(
         r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        translate_dic={'locationId': 'locatie'},
         verbose=True,
         to_mnap=False,
         remove_nan=False)
@@ -244,9 +245,8 @@ def test_to_pastas_project():
 
 def test_obscollection_to_pystore():
     obsc = test_obscollection_fews()
-    obsc.add_meta_to_df('locationId')
     obsc.to_pystore("test_pystore", "./data/2019-Pystore-test",
-                    groupby="locationId", overwrite=True)
+                    groupby="locatie", overwrite=True)
 
 
 def test_obscollection_from_pystore():
