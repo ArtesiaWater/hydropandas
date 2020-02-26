@@ -45,6 +45,10 @@ class GwObsAccessor:
         RuntimeError
             if the column filternr exists and if_exists='error' an error is raised
         """
+        
+        if self._obj['filternr'].dtype != np.number:
+            self._obj['filternr'] = pd.to_numeric(self._obj['filternr'], errors='coerce')
+            
         # check if column exists in obscollection
         if 'filternr' in self._obj.columns:
             if if_exists == 'error':
