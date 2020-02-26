@@ -149,16 +149,23 @@ class StatsAccessor:
         return pd.concat(df_list)
 
     def get_first_last_obs_date(self):
-        """adds two columns to the ObsCollection with the date of the first
-        and the last measurement
-
+        """get the date of the first and the last measurement
+        
+        Returns
+        -------
+        DataFrame with 2 columns with the dates of the first and the last
+        measurement
 
         """
 
         date_first_measurement = [o.index.min() for o in self._obj.obs.values]
         date_last_measurement = [o.index.max() for o in self._obj.obs.values]
         
-        return pd.concat([date_first_measurement, date_last_measurement])
+        first_last_obs = pd.DataFrame(index=self._obj.index, 
+                                      data={'date_first_measurement':date_first_measurement,
+                                            'date_last_measurement':date_last_measurement})
+        
+        return first_last_obs
 
 
     def get_min(self, column_name='stand_m_tov_nap',

@@ -29,6 +29,11 @@ def test_obscollection_get_number_of_obs():
     coy = gw.stats.get_no_of_observations()
     return coy
 
+def test_obscollection_get_first_last_obs_date():
+    gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
+    fl_obs_date = gw.stats.get_first_last_obs_date()
+    return fl_obs_date
+
 def test_obscollection_get_seasonal_stats():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     st = gw.stats.get_seasonal_stat(stat='mean')
