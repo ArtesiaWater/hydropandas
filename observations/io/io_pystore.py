@@ -64,12 +64,6 @@ def item_to_obs(item, ObsClass, nameby="item"):
         df = pd.DataFrame(columns=item.data.columns)
     else:
         df = item.to_pandas()
-    try:
-        x = item.metadata["x"]
-        y = item.metadata["y"]
-    except KeyError:
-        x = np.nan
-        y = np.nan
     item.metadata["datastore"] = str(item.datastore)
     if nameby == "item":
         name = item.item
@@ -83,8 +77,13 @@ def item_to_obs(item, ObsClass, nameby="item"):
     metadata = item.metadata
     if not "name" in metadata.keys():
         metadata["name"] = name
+        
+    obs_attr_dic = {}
+    for attr in ObsClass._metadata:
+        if attr in metadata.keys():
+            obs_attr_dic[attr] = metadata[attr]
 
-    o = ObsClass(df, name=name, x=x, y=y, meta=metadata)
+    o = ObsClass(df, **obs_attr_dic, meta=metadata)
     return o
 
 

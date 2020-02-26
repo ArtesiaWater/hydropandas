@@ -352,9 +352,11 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_fews(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
+                  translate_dic={'locationId': 'locatie'},
                   to_mnap=True, remove_nan=True,
                   unpackdir=None, force_unpack=False,
-                  preserve_datetime=False, verbose=False):
+                  preserve_datetime=False, 
+                  verbose=False):
         """ read one or several XML-files with measurements from FEWS
 
         Parameters
@@ -401,12 +403,12 @@ class ObsCollection(pd.DataFrame):
             if verbose:
                 print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
             fullpath = os.path.join(dirname, ixml)
-            olist = io_xml.read_xml(
-                fullpath,
-                ObsClass=ObsClass,
-                to_mnap=to_mnap,
-                remove_nan=remove_nan,
-                verbose=False)
+            olist = io_xml.read_xml(fullpath,
+                                    ObsClass=ObsClass,
+                                    translate_dic=translate_dic,
+                                    to_mnap=to_mnap,
+                                    remove_nan=remove_nan,
+                                    verbose=False)
             obs_list += olist
 
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
@@ -418,6 +420,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_fews2(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
+                   translate_dic={'locationId': 'locatie'}, 
                    locations=None, to_mnap=True, remove_nan=True,
                    unpackdir=None, force_unpack=False,
                    preserve_datetime=False,
@@ -469,6 +472,7 @@ class ObsCollection(pd.DataFrame):
                 print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
             fullpath = os.path.join(dirname, ixml)
             _, olist = io_xml.iterparse_pi_xml(fullpath, ObsClass,
+                                               translate_dic=translate_dic, 
                                                locationIds=locations,
                                                verbose=verbose)
             obs_list += olist
@@ -838,6 +842,8 @@ class ObsCollection(pd.DataFrame):
                 coldict.append(d)
                 columns |= d.keys()
             obs_df = pd.DataFrame(coldict, columns=columns)
+            if obs_df.empty:
+                return cls(obs_df, name=storename, meta={})
             obs_df.set_index('name', inplace=True)
             meta = {'fname': obs_list[0].meta["datastore"],
                     'type': obs.GroundwaterObs,
@@ -1069,7 +1075,7 @@ class ObsCollection(pd.DataFrame):
                     imeta['datastore'] = str(imeta['datastore'])
                 # add extra columns to item metadata
                 for icol in group.columns:
-                    if icol not in imeta.keys() and icol != "obs":
+                    if icol != "obs" and icol != 'meta':
                         # check if type is numpy integer
                         # numpy integers are not json serializable
                         if isinstance(group.iloc[i].loc[icol], np.integer):
