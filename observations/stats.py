@@ -106,17 +106,15 @@ class StatsAccessor:
         pandas series with the number of observations for each row in the obs
         collection.
         """
-        no_obs = []
-        for o in self._obj.obs.values:
+                        
+        def get_num_obs(o, column_name=column_name, after_date=after_date, 
+                        before_date=before_date):
             try:
-                no_obs.append(o[after_date:before_date]
-                              [column_name].dropna().count())
+                return o[after_date:before_date][column_name].dropna().count()
             except KeyError:
-                no_obs.append(0)
-                
-        no_obs = pd.Series(index=self._obj.index, data=no_obs, name='no_obs')
+                return 0
         
-        return no_obs
+        return self._obj.obs.apply(get_num_obs)
 
     def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
@@ -145,6 +143,8 @@ class StatsAccessor:
         for o in self._obj.obs.values:
             df_list.append(o.stats.get_seasonal_stat(column_name, stat,
                                                      winter_months, summer_months))
+            
+        
 
         return pd.concat(df_list)
 
@@ -188,18 +188,16 @@ class StatsAccessor:
 
         """
 
-        min_list = []
-        for o in self._obj.obs.values:
+        def get_min_obs(o, column_name=column_name, after_date=after_date, 
+                        before_date=before_date):
             try:
-                min_list.append(o[after_date:before_date]
-                               [column_name].dropna().min())
+                return o[after_date:before_date][column_name].dropna().min()
             except KeyError:
-                min_list.append(np.nan)
-    
+                return np.nan
         
-        omin = pd.Series(index=self._obj.index, data=min_list, name='min')
+        return self._obj.obs.apply(get_min_obs)
+        
 
-        return omin
     
     def get_max(self, column_name='stand_m_tov_nap',
                 after_date=None, before_date=None):
@@ -221,18 +219,14 @@ class StatsAccessor:
 
         """
 
-        max_list = []
-        for o in self._obj.obs.values:
+        def get_max_obs(o, column_name=column_name, after_date=after_date, 
+                        before_date=before_date):
             try:
-                max_list.append(o[after_date:before_date]
-                               [column_name].dropna().max())
+                return o[after_date:before_date][column_name].dropna().max()
             except KeyError:
-                max_list.append(np.nan)
-    
+                return np.nan
         
-        omax = pd.Series(index=self._obj.index, data=max_list, name='max')
-
-        return omax
+        return self._obj.obs.apply(get_max_obs)
 
 
 @accessor.register_obs_accessor("stats")
