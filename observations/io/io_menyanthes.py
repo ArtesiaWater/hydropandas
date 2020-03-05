@@ -10,6 +10,7 @@ import os
 import numpy as np
 from ..util import matlab2datetime
 from pandas import Series, DataFrame
+from observations import observation
 
 
 def read_file(fname, ObsClass, verbose=False):
@@ -19,19 +20,30 @@ def read_file(fname, ObsClass, verbose=False):
 
     if verbose:
         print('reading menyanthes file {}'.format(fname))
+    
+    
+    if ObsClass == observation.GroundwaterObs:
+        _rename_dic = {'xcoord': 'x',
+                       'ycoord': 'y',
+                       'upfiltlev': 'bovenkant_filter',
+                       'lowfiltlev': 'onderkant_filter',
+                       'surflev': 'maaiveld',
+                       'filtnr': 'filternr',
+                       'meetpunt': 'measpointlev'
+                       }
+    
+        _keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
+                   'metadata_available', 'maaiveld', 'meetpunt',
+                   'bovenkant_filter', 'onderkant_filter']
+        
+    elif ObsClass == observation.WaterlvlObs:
+        _rename_dic = {'xcoord': 'x',
+                       'ycoord': 'y',
+                       'meetpunt': 'measpointlev'
+                       }
+    
+        _keys_o = ['name', 'x', 'y', 'locatie']
 
-    _rename_dic = {'xcoord': 'x',
-                   'ycoord': 'y',
-                   'upfiltlev': 'bovenkant_filter',
-                   'lowfiltlev': 'onderkant_filter',
-                   'surflev': 'maaiveld',
-                   'filtnr': 'filternr',
-                   'meetpunt': 'measpointlev'
-                   }
-
-    _keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
-               'metadata_available', 'maaiveld', 'meetpunt',
-               'bovenkant_filter', 'onderkant_filter']
 
     # Check if file is present
     if not (os.path.isfile(fname)):
