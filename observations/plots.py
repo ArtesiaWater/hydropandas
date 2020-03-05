@@ -305,15 +305,14 @@ class CollectionPlots:
                     html=bokeh_html, width=620, height=420)
                 popup = folium.Popup(iframe, max_width=620)
 
-                folium.CircleMarker([o.meta[col_name_lat], o.meta[col_name_lon]],
+                folium.CircleMarker([self._obj.loc[name,col_name_lat], self._obj.loc[name,col_name_lon]],
                                     icon=folium.Icon(icon='signal'), fill=True,
                                     color=color,
                                     popup=popup).add_to(group)
 
                 if map_label != '':
                     folium.map.Marker(
-                        [
-                            o.meta[col_name_lat], o.meta[col_name_lon]], icon=DivIcon(
+                        [self._obj.loc[name,col_name_lat], self._obj.loc[name,col_name_lon]], icon=DivIcon(
                             icon_size=(
                                 150, 36), icon_anchor=(
                                 0, 0), html='<div style="font-size: %ipt">%s</div>' %
@@ -329,9 +328,7 @@ class CollectionPlots:
 
         # save map
         #filename and path
-        if fname is None:
-            fname = self._obj.name + '.html'
-        else:
+        if fname is not None:
             if not fname.endswith('.html'):
                 fname = fname + '.html'
             if not os.path.exists(plot_dir):
