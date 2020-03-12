@@ -62,6 +62,12 @@ def test_dino_meetreeks():
     
     return measurements
 
+def test_dino_csv():
+    fname = r'.\data\2019-Dino-test\Grondwaterstanden_Put\B33F0080001_1.csv'
+    measurements, obs_att, meta_ts = io_dino.read_dino_groundwater_csv(fname)
+    
+    return measurements, obs_att, meta_ts
+
 def test_dino_download_extent():
     # download extent
     extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed

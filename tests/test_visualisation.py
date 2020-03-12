@@ -50,9 +50,9 @@ def test_obscollection_to_imap():
     # add metadata to obscollection DF
     fews_gw_prod.add_meta_to_df("lat")
     fews_gw_prod.add_meta_to_df("lon")
-    fews_gw_prod.add_meta_to_df("locationId")
+    fews_gw_prod.add_meta_to_df("locatie")
 
-    fews_gw_prod.gwobs.get_filter_num_location('locationId',
+    fews_gw_prod.gwobs.set_filter_num_location('locatie',
                                                if_exists="replace")
 
     m = fews_gw_prod.plots.interactive_map(plot_dir,
@@ -60,6 +60,6 @@ def test_obscollection_to_imap():
                                            fname=fname,
                                            plot_freq='D',
                                            legend_name='opp water FEWS',
-                                           map_label='locationId',
+                                           map_label='locatie',
                                            map_label_size=10)
     return m

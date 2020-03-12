@@ -38,8 +38,8 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
                                         "onderkant peilbuis|{:+.2f} mNAP|"
                                         "Maximaal gemeten|{:+.2f} mNAP|"
                                         "Gemiddeldeld gemeten|{:+.2f} mNAP|"
-                                        "Minimaal gemeten|{:+.2f} mNAP".format(o.meta['bovenkant_filter'],
-                                                                               o.meta['onderkant_filter'],
+                                        "Minimaal gemeten|{:+.2f} mNAP".format(o.bovenkant_filter,
+                                                                               o.onderkant_filter,
                                                                                o['stand_m_tov_nap'].max(
                                         ),
                                             o['stand_m_tov_nap'].mean(
