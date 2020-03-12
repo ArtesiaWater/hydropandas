@@ -68,6 +68,17 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 
 def _read_dino_groundwater_metadata(f, line):
+    
+    _translate_dic = {'locatie': 'locatie',
+                      'startdatum': 'startdatum',
+                      'einddatum':'einddatum'}
+    _translate_dic_float = {'x-coordinaat': 'x',
+                      'y-coordinaat': 'y',
+                      'filternummer':'filternr'}
+    _translate_dic_div_100 = {'meetpunt (cm t.o.v. nap)': 'meetpunt',
+                              'bovenkant filter (cm t.o.v. nap)': 'bovenkant_filter',
+                              'onderkant filter (cm t.o.v. nap)': 'onderkant_filter',
+                              'maaiveld (cm t.o.v. nap)': 'maaiveld'}
     metalist = list()
     line = line.strip()
     properties = line.split(',')
@@ -82,53 +93,43 @@ def _read_dino_groundwater_metadata(f, line):
         line = f.readline()
     
     meta_ts = {}
-    obs_att = {}
     if metalist:
         #add time dependent metadata to meta_ts
         for i, meta in enumerate(metalist):
-            start_date = pd.to_datetime(meta.pop('startdatum'), dayfirst=True)
-            end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
-            if i == 0:
-                for key in meta.keys():
-                    meta_ts[key] = pd.Series(name=key)
-            for key in meta.keys():
-                if start_date in meta_ts[key].index:
-                    meta_ts[key].loc[start_date+dt.timedelta(0.01)] = meta[key]
-                else:
-                    meta_ts[key].loc[start_date] = meta[key]
-                meta_ts[key].loc[end_date] = meta[key]
+            meta_tsi = {}
+            for key in _translate_dic.keys():
+                meta_tsi[_translate_dic[key]] = meta[key]
                 
-        #pak attributes voor observation object uit
-        obs_att["locatie"] = metalist[-1]['locatie']
-        obs_att["filternr"] = int(float(metalist[-1]['filternummer']))
-        obs_att["name"] = '-'.join([obs_att["locatie"],
-                                 metalist[-1]['filternummer']])
-        obs_att["x"] = float(metalist[-1]['x-coordinaat'])
-        obs_att["y"] = float(metalist[-1]['y-coordinaat'])
-        meetpunt = metalist[-1]['meetpunt (cm t.o.v. nap)']
-        if meetpunt == '':
-            obs_att["meetpunt"] = np.nan
-        else:
-            obs_att["meetpunt"] = float(meetpunt) / 100.
-        maaiveld = metalist[-1]['maaiveld (cm t.o.v. nap)']
-        if maaiveld == '':
-            obs_att["maaiveld"] = np.nan
-        else:
-            obs_att["maaiveld"] = float(maaiveld) / 100
-        bovenkant_filter = metalist[-1]['bovenkant filter (cm t.o.v. nap)']
-        if bovenkant_filter == '':
-            obs_att["bovenkant_filter"] = np.nan
-        else:
-            obs_att["bovenkant_filter"] = float(bovenkant_filter) / 100
-        onderkant_filter = metalist[-1][
-            'onderkant filter (cm t.o.v. nap)']
-        if onderkant_filter == '':
-            obs_att["onderkant_filter"] = np.nan
-        else:
-            obs_att["onderkant_filter"] = float(onderkant_filter) / 100
+            for key in _translate_dic_float.keys():
+                if meta[key] == '':
+                    meta_tsi[_translate_dic_float[key]] = np.nan
+                else:
+                    meta_tsi[_translate_dic_float[key]] = float(meta[key])
+                    
+            for key in _translate_dic_div_100.keys():
+                if meta[key] == '':
+                    meta_tsi[_translate_dic_div_100[key]] = np.nan
+                else:
+                    meta_tsi[_translate_dic_div_100[key]] = float(meta[key])/100.
+            if i ==0:  
+                for key in meta_tsi.keys():
+                    meta_ts[key] = pd.Series(name=key)    
+                    
+            start_date = pd.to_datetime(meta_tsi.pop('startdatum'), dayfirst=True)
+            end_date = pd.to_datetime(meta_tsi.pop('einddatum'), dayfirst=True)
+            for key in meta_tsi.keys():
+                if start_date in meta_ts[key].index:
+                    meta_ts[key].loc[start_date+dt.timedelta(0.01)] = meta_tsi[key]
+                else:
+                    meta_ts[key].loc[start_date] = meta_tsi[key]
+                meta_ts[key].loc[end_date] = meta_tsi[key]
+                
+        obs_att = meta_tsi.copy()
+        obs_att["name"] = f'{obs_att["locatie"]}-{obs_att["filternr"]}'
         obs_att["metadata_available"] = True
     else:
         # de metadata is leeg
+        obs_att = {}
         obs_att["locatie"] = ''
         obs_att["filternr"] = np.nan
         obs_att["name"] = 'unknown'
