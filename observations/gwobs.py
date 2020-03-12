@@ -81,9 +81,12 @@ class GwObsAccessor:
 
     def set_filter_num_location(self, loc_col, radius=1, xcol='x', ycol='y',
                                 if_exists='error', add_to_meta=False):
-        """his method computes the filternumbers and location name based on 
-        the location of the observations. Then it sets the value of the 
-        filternumber and the location:
+        """This method sets the filternr and locatie name of an observation
+        point based on the locatie of the observations. When two or more
+        filters are located close, defined by a radius, to eachother they get
+        the same `locatie` and a different `filternr`. 
+        
+        The value of the filternumber and the location are set:
             - in the ObsCollection dataframe
             - as the attribute of an Obs object
             - in the meta dictionary of the Obs object (only if add_to_meta is
@@ -93,13 +96,14 @@ class GwObsAccessor:
         observation points are close to each other they will be seen as one
         location with multiple filters. The filternr is based on the
         'onderkant_filter' attribute of the observations in such a way that 
-        the deepest filter has the highest filter number. The location is
-        based on the 
+        the deepest filter has the highest filter number. The locatie is
+        based on the named of the loc_col of the filter with the lowest
+        filternr.
 
         Parameters
         ----------
         loc_col : str
-            the column name with the names to use for the location
+            the column name with the names to use for the locatie
         radius : int, optional
             max distance between two observations to be seen as one location, by default 1
         xcol : str, optional
