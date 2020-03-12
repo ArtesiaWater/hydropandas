@@ -31,10 +31,10 @@ class GeoAccessor:
 
         """
 
-        xmin = self._obj._obj[xcol].min() - buffer
-        xmax = self._obj._obj[xcol].max() + buffer
-        ymin = self._obj._obj[ycol].min() - buffer
-        ymax = self._obj._obj[ycol].max() + buffer
+        xmin = self._obj[xcol].min() - buffer
+        xmax = self._obj[xcol].max() + buffer
+        ymin = self._obj[ycol].min() - buffer
+        ymax = self._obj[ycol].max() + buffer
 
         return (xmin, ymin, xmax, ymax)
 
