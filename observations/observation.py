@@ -16,13 +16,15 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 '''
 
-import warnings
+import copy
+import os
 
 import numpy as np
-from pandas import DataFrame, Series
-
+from pandas import DataFrame, Series, datetime
+from scipy import interpolate
 
 from .io import io_dino
+from . import util
 
 
 class Obs(DataFrame):
@@ -141,60 +143,6 @@ class GroundwaterObs(Obs):
     @property
     def _constructor(self):
         return GroundwaterObs
-    
-    @classmethod
-    def from_dino(cls, fname=None, name=None, filternr=1.,
-                  tmin="1900-01-01", tmax="2040-01-01", 
-                  **kwargs):
-        """read dino data from a file or from the server
-
-        Parameters
-        ----------
-        fname : str, optional
-            dino csv filename
-        name : str, optional
-            name of the peilbuis, i.e. B57F0077
-        filternr : float, optional
-            filter_nr of the peilbuis, i.e. 1.
-        tmin : str
-            start date in format YYYY-MM-DD
-        tmax : str
-            end date in format YYYY-MM-DD
-        kwargs : key-word arguments
-            if fname is not None these arguments are passed to 
-                io_dino.read_dino_groundwater_csv  
-            if fname is None these arguements are passed to  
-                to dino.findMeetreeks
-        """
-        
-        if fname is None and name is None:
-            raise ValueError('specify name or fname to read dino file')
-            
-        #read dino csv file
-        elif fname is not None: 
-            measurements, obs_att, meta_ts = io_dino.read_dino_groundwater_csv(
-                                             fname, **kwargs)
-        
-            return cls(measurements, meta=meta_ts, **obs_att)
-        #download dino data from server
-        elif name is not None:
-            measurements, meta = io_dino.download_dino_groundwater(name,
-                                                               filternr,
-                                                               tmin, tmax,
-                                                               **kwargs)
-            
-            obs_att = {}
-            for key in cls._metadata:
-                if key in meta.keys():
-                    obs_att[key] = meta.pop(key)
-                    
-            for key in obs_att:
-                meta[key] = Series(name=key)
-                meta[key].loc[measurements.index[0]] = obs_att[key]
-                meta[key].loc[measurements.index[-1]] = obs_att[key]
-            
-            return cls(measurements, **obs_att, meta=meta)
-            
 
     @classmethod
     def from_dino_server(cls, name, filternr=1.,
@@ -217,30 +165,28 @@ class GroundwaterObs(Obs):
 
         
         """
-        
-        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         measurements, meta = io_dino.download_dino_groundwater(name,
                                                                filternr,
                                                                tmin, tmax,
                                                                **kwargs)
-        obs_att = {}
-        for key in cls._metadata:
-            if key in meta.keys():
-                obs_att[key] = meta.pop(key)
-                
-        for key in obs_att:
-            meta[key] = Series(name=key)
-            meta[key].loc[measurements.index[0]] = obs_att[key]
-            meta[key].loc[measurements.index[-1]] = obs_att[key]
         
-        return cls(measurements, **obs_att, meta=meta)
-            
-        
+        if meta['metadata_available']:
+            return cls(measurements, meta=meta, 
+                       x=meta.pop('x'), y=meta.pop('y'),
+                       onderkant_filter=meta.pop('onderkant_filter'),
+                       bovenkant_filter=meta.pop('bovenkant_filter'),
+                       name=meta.pop('name'), 
+                       locatie=meta.pop('locatie'),
+                       maaiveld=meta.pop('maaiveld'),
+                       filternr=meta.pop('filternr'))
+        else:
+            return cls(measurements, meta=meta)
 
     @classmethod
     def from_dino_file(cls, fname=None, **kwargs):
         """read a dino csv file.
+
         Parameters
         ----------
         name : str, optional
@@ -250,20 +196,17 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
-        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         if fname is not None:
             # read dino csv file
 
-            measurements, obs_att, meta_ts = io_dino.read_dino_groundwater_csv(
-                                             fname, **kwargs)
-        
-            
-            return cls(measurements, meta=meta_ts, **obs_att)
+            measurements, meta = io_dino.read_dino_groundwater_csv(
+                fname, **kwargs)
+
+            return cls(measurements, meta=meta, **meta)
         else:
             raise ValueError(
                 'specify either the name or the filename of the measurement point')
-
 
     @classmethod
     def from_artdino_file(cls, fname=None, **kwargs):
@@ -551,8 +494,8 @@ class KnmiObs(Obs):
 
         from .io import io_knmi
 
-        x = obs.x
-        y = obs.y
+        x = obs.meta["x"]
+        y = obs.meta["y"]
 
         if startdate is None:
             startdate = obs.index[0]

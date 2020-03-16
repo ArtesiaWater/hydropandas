@@ -294,7 +294,6 @@ class CollectionPlots:
                 oc = self._obj.loc[self._obj.locatie ==
                                    name, 'obs'].sort_index()
                 o = oc.iloc[-1]
-                name = o.name
             else:
                 o = self._obj.loc[name, 'obs']
 

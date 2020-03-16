@@ -3,7 +3,6 @@ import warnings
 import re
 import tempfile
 
-import datetime as dt
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -80,67 +79,51 @@ def _read_dino_groundwater_metadata(f, line):
             meta[properties[i].lower()] = values[i]
         metalist.append(meta)
         line = f.readline()
-    
-    meta_ts = {}
-    obs_att = {}
+
+    meta = {}
     if metalist:
-        #add time dependent metadata to meta_ts
-        for i, meta in enumerate(metalist):
-            start_date = pd.to_datetime(meta.pop('startdatum'), dayfirst=True)
-            end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
-            if i == 0:
-                for key in meta.keys():
-                    meta_ts[key] = pd.Series(name=key)
-            for key in meta.keys():
-                if start_date in meta_ts[key].index:
-                    meta_ts[key].loc[start_date+dt.timedelta(0.01)] = meta[key]
-                else:
-                    meta_ts[key].loc[start_date] = meta[key]
-                meta_ts[key].loc[end_date] = meta[key]
-                
-        #pak attributes voor observation object uit
-        obs_att["locatie"] = metalist[-1]['locatie']
-        obs_att["filternr"] = int(float(metalist[-1]['filternummer']))
-        obs_att["name"] = '-'.join([obs_att["locatie"],
+        meta["locatie"] = metalist[-1]['locatie']
+        meta["filternr"] = int(float(metalist[-1]['filternummer']))
+        meta["name"] = '-'.join([meta["locatie"],
                                  metalist[-1]['filternummer']])
-        obs_att["x"] = float(metalist[-1]['x-coordinaat'])
-        obs_att["y"] = float(metalist[-1]['y-coordinaat'])
+        meta["x"] = float(metalist[-1]['x-coordinaat'])
+        meta["y"] = float(metalist[-1]['y-coordinaat'])
         meetpunt = metalist[-1]['meetpunt (cm t.o.v. nap)']
         if meetpunt == '':
-            obs_att["meetpunt"] = np.nan
+            meta["meetpunt"] = np.nan
         else:
-            obs_att["meetpunt"] = float(meetpunt) / 100.
+            meta["meetpunt"] = float(meetpunt) / 100.
         maaiveld = metalist[-1]['maaiveld (cm t.o.v. nap)']
         if maaiveld == '':
-            obs_att["maaiveld"] = np.nan
+            meta["maaiveld"] = np.nan
         else:
-            obs_att["maaiveld"] = float(maaiveld) / 100
+            meta["maaiveld"] = float(maaiveld) / 100
         bovenkant_filter = metalist[-1]['bovenkant filter (cm t.o.v. nap)']
         if bovenkant_filter == '':
-            obs_att["bovenkant_filter"] = np.nan
+            meta["bovenkant_filter"] = np.nan
         else:
-            obs_att["bovenkant_filter"] = float(bovenkant_filter) / 100
+            meta["bovenkant_filter"] = float(bovenkant_filter) / 100
         onderkant_filter = metalist[-1][
             'onderkant filter (cm t.o.v. nap)']
         if onderkant_filter == '':
-            obs_att["onderkant_filter"] = np.nan
+            meta["onderkant_filter"] = np.nan
         else:
-            obs_att["onderkant_filter"] = float(onderkant_filter) / 100
-        obs_att["metadata_available"] = True
+            meta["onderkant_filter"] = float(onderkant_filter) / 100
+        meta["metadata_available"] = True
     else:
         # de metadata is leeg
-        obs_att["locatie"] = ''
-        obs_att["filternr"] = np.nan
-        obs_att["name"] = 'unknown'
-        obs_att["x"] = np.nan
-        obs_att["y"] = np.nan
-        obs_att["meetpunt"] = np.nan
-        obs_att["maaiveld"] = np.nan
-        obs_att["bovenkant_filter"] = np.nan
-        obs_att["onderkant_filter"] = np.nan
-        obs_att["metadata_available"] = False
+        meta["locatie"] = ''
+        meta["filternr"] = np.nan
+        meta["name"] = 'unknown'
+        meta["x"] = np.nan
+        meta["y"] = np.nan
+        meta["meetpunt"] = np.nan
+        meta["maaiveld"] = np.nan
+        meta["bovenkant_filter"] = np.nan
+        meta["onderkant_filter"] = np.nan
+        meta["metadata_available"] = False
 
-    return line, obs_att, meta_ts
+    return line, meta
 
 
 def _read_dino_groundwater_measurements(f, line):
@@ -278,11 +261,11 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
             print('could not read reference level -> {}'.format(fname))
 
         # read metadata
-        line, obs_att, meta_ts = _read_dino_groundwater_metadata(f, line)
+        line, meta = _read_dino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
-        if verbose and (obs_att['metadata_available'] == False):
+        if verbose and (meta['metadata_available'] == False):
             print('could not read metadata -> {}'.format(fname))
-        obs_att['filename'] = fname
+        meta['filename'] = fname
 
         # read measurements
         if read_series:
@@ -296,7 +279,7 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
         else:
             measurements = None
 
-    return measurements, obs_att, meta_ts
+    return measurements, meta
 
 
 # %% DINO CSV as exported by ArtDiver methods
@@ -680,8 +663,7 @@ class DinoREST:
         response = self.post(self.gwo_url, locations)
         return response
 
-    def get_gwo_metadata(self, location, filternr,
-                         raw_response=False,
+    def get_gwo_metadata(self, location, filternr, raw_response=False,
                          verbose=False):
         """Get metadata details for locations
 
@@ -706,9 +688,8 @@ class DinoREST:
                 meta = {'metadata_available':False}
             else:
                 meta = self._parse_json_single_gwo_filter(data[0], location, 
-                                                          filternr,
+                                                          filternr, 
                                                           verbose=verbose)
-                
             return meta
     
 
@@ -807,9 +788,8 @@ class DinoREST:
         gdf.set_index("DINO_NR", inplace=True)
         return gdf
 
-    def _parse_json_single_gwo_filter(self, data, location, filternr,
-                                      verbose=False):
-        """ parse metadata from json
+    def _parse_json_single_gwo_filter(self, data, location, filternr, verbose=False):
+        """ parse metadata obtained with get_dino_piezometer_metadata
         
         Parameters
         ----------
@@ -822,17 +802,11 @@ class DinoREST:
     
         Returns
         -------
-        obs_att, meta : dictionary, dictionary
-            dictionary with attributes of the observation object
-            dictionary with other attributes.
+        meta : dictionary
+            parsed dictionary
     
         """
         
-        translate_dic = {'bottomHeightNap':'onderkant_filter',
-                         'topHeightNap':'bovenkant_filter',
-                         'xcoord':'x',
-                         'ycoord':'y',
-                         'surfaceElevation':'maaiveld'}
     
         meta = {
             "locatie": location,
@@ -869,11 +843,15 @@ class DinoREST:
         meta.pop('piezometerNr')
         meta.pop('dinoId')
         
+        translate_dic = {'bottomHeightNap':'onderkant_filter',
+                         'topHeightNap':'bovenkant_filter',
+                         'xcoord':'x',
+                         'ycoord':'y',
+                         'surfaceElevation':'maaiveld'}
+        
         for key, item in translate_dic.items():
             meta[item] = meta.pop(key)
-        
-        
-
+            
         return meta
     
     def _parse_json_gwo_details(self, data, field="levels"):
@@ -1130,7 +1108,7 @@ class DinoWSDL:
 
   
 
-def download_dino_groundwater(location, filternr, tmin, tmax,
+def download_dino_groundwater(location, filternr, tmin, tmax, 
                               verbose=False,
                              **kwargs):
     """ download measurements and metadata from a dino groundwater 
@@ -1176,8 +1154,6 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     dinorest = DinoREST()
     meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
     
-    
-            
     return measurements, meta
 
 
@@ -1349,11 +1325,11 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         if verbose:
             print('reading -> {}'.format(index))
 
-        o = ObsClass.from_dino(name=index.split('-')[0],
-                               filternr=float(loc.piezometerNr),
-                               tmin=tmin_t,
-                               tmax=tmax_t,
-                               unit=unit)
+        o = ObsClass.from_dino_server(name=index.split('-')[0],
+                                      filternr=float(loc.piezometerNr),
+                                      tmin=tmin_t,
+                                      tmax=tmax_t,
+                                      unit=unit)
 
         obs_list.append(o)
 
@@ -1557,3 +1533,19 @@ def read_dino_dir(dirname, ObsClass=None,
 
     return obs_df
 
+
+# %% Testing
+if __name__ == '__main__':
+
+    fname = r'..\data\2019-Dino-test\Grondwatersamenstellingen_Put\B52C0057.txt'
+
+    me1, meta = read_dino_groundwater_quality_txt(fname, verbose=True)
+
+    fname = r'..\data\2019-Dino-test\Peilschaal\P58A0001.csv'
+    measurements, meta = read_dino_waterlvl_csv(fname, verbose=True)
+
+    fname = r'art_tools\data\2019-Dino-test\Grondwaterstanden_Put\B33F0080001_1.csv'
+    obs_df = read_dino_groundwater_csv(fname, verbose=True)
+
+    fname = r'..\data\2019-Dino-test\Peilschaal\P58A0005.csv'
+    obs_df = read_dino_waterlvl_csv(fname, read_series=False, verbose=True)
