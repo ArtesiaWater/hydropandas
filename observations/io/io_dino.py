@@ -902,7 +902,9 @@ class DinoREST:
         for i in range(len(json_details)):
             data = json_details[i]
             location = data['dinoId']
-            print(location)
+            if location=='B50F0158':
+                break
+            
             if location in location_list:
                 raise ValueError
             else:
@@ -920,24 +922,19 @@ class DinoREST:
                 levels = []
             if samples is None:
                 samples = []
-            
-            no_filters = max(len(piezometers), len(levels), len(samples))
-            
-            #combine piezometers, levels and samples to one list with filters
-            filter_list = []
-            for j in range(no_filters):
-                filter_list.append({})
-                
+           
+            #merge piezometers, levesl and samples
+            filter_dic = {}
             for l in [piezometers, levels, samples]:
-                if len(l) != 0:
-                    for j, d in enumerate(l):
-                        filter_list[j].update(d.copy())
+                for j, d in enumerate(l):
+                    if 'piezometerNr' in d.keys():
+                        if d['piezometerNr'] not in filter_dic.keys():
+                            filter_dic[d['piezometerNr']] = d
+                        else:
+                            filter_dic[d['piezometerNr']].update(d)
 
-                        
             #get metadata for every filter
-            for filter_dic in filter_list:
-                
-                filternr = filter_dic['piezometerNr']
+            for filternr in filter_dic.keys():
                 meta = self._parse_json_single_gwo_filter(data.copy(), location, 
                                                           str(filternr).zfill(3), 
                                                           verbose=verbose)

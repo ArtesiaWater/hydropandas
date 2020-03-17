@@ -37,7 +37,12 @@ def test_observation_gw():
 
 def test_observation_dino_download():
     # download dino
-    gw2 = obs.GroundwaterObs.from_dino_server(location="B57F0077", filternr=4.,
+    location="B57F0077"
+    filternr=4.
+    
+    
+    gw2 = obs.GroundwaterObs.from_dino_server(location=location, 
+                                              filternr=filternr,
                                               tmin="2000-01-01",
                                               tmax="2010-01-01", unit="NAP")
     return gw2
@@ -54,7 +59,11 @@ def test_observation_dino_download2():
 def test_observation_dino_download3():
     # download dino data from pb without extra metadata. For this pb
     # io_dino.get_dino_piezometer_metadata() returns an empty list
-    gw3 = obs.GroundwaterObs.from_dino_server(location="B45G1147", filternr=1.,
+    location="B45G1147"
+    filternr=1.
+
+    gw3 = obs.GroundwaterObs.from_dino_server(location=location, 
+                                              filternr=filternr,
                                               tmin="1900-01-01",
                                               tmax="2020-01-01", unit="NAP")
     return gw3
@@ -139,7 +148,6 @@ def test_obscollection_dino_download_bbox():
     # download DINO from bbox
     bbox = [120300, 439000, 120500, 441000]  # Schoonhoven zoomed
     bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
-
     dino_gw_bbox = oc.ObsCollection.from_dino_server(
         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_bbox

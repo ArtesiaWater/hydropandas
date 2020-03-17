@@ -87,8 +87,9 @@ def test_dino_download_extent():
     return gw_col
 
 def test_get_dino_locations():
+    bbox =  [130988.58668351, 386465.80657847, 135922.01739107, 391922.4284911 ]
     
-    gdf = io_dino.get_dino_locations(bbox=[126809.9950662 , 394020.07735461, 130563.22773266, 397952.455359  ], 
+    gdf = io_dino.get_dino_locations(bbox=bbox, 
                                      layer='grondwatermonitoring')
     
     return gdf
