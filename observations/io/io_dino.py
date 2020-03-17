@@ -684,7 +684,7 @@ class DinoREST:
         if raw_response:
             return response
         else:
-            data = json.loads(response.content)
+            data = response.json()
             if data == []:
                 meta = {'metadata_available':False}
             else:
@@ -840,22 +840,32 @@ class DinoREST:
                     print(f'cannot find sample metadata for location {location} and filternr {filternr}')
         
         meta.update(data)
-        meta.pop('piezometerNr')
         meta.pop('dinoId')
         
-        translate_dic = {'bottomHeightNap':'onderkant_filter',
-                         'topHeightNap':'bovenkant_filter',
-                         'xcoord':'x',
-                         'ycoord':'y',
-                         'surfaceElevation':'maaiveld'}
+        translate_dic_location = {'xcoord':'x',
+                                  'ycoord':'y',
+                                  'surfaceElevation':'maaiveld'}
         
-        for key, item in translate_dic.items():
+        for key, item in translate_dic_location.items():
             meta[item] = meta.pop(key)
+            
             
         if 'clusterList' in meta.keys():
             if isinstance(meta['clusterList'], list):
-                meta['clusterList'] = ";".join(meta['clusterList'])
+                meta['clusterList'] = ";".join(meta['clusterList'])   
+                
+        if 'piezometerNr' not in meta.keys():
+            return meta
+        
+        
+        meta.pop('piezometerNr')
+        translate_dic_filter = {'bottomHeightNap':'onderkant_filter',
+                                'topHeightNap':'bovenkant_filter'}
+        
+        for key, item in translate_dic_filter.items():
+            meta[item] = meta.pop(key)
             
+
         return meta
     
     def _parse_json_gwo_details(self, json_details, field="levels",
@@ -888,26 +898,46 @@ class DinoREST:
 
         """
         dflist = []
+        location_list = []
         for i in range(len(json_details)):
             data = json_details[i]
             location = data['dinoId']
+            print(location)
+            if location in location_list:
+                raise ValueError
+            else:
+                location_list.append(location)
             
             piezometers = data['piezoMeters']
             levels = data['levels']
             samples = data['samples']
             
+            
             #check number of filters
             if piezometers is None:
-                piezometers = {}
+                piezometers = []
             if levels is None:
-                levels = {}
+                levels = []
             if samples is None:
-                samples = {}
+                samples = []
             
             no_filters = max(len(piezometers), len(levels), len(samples))
             
-            
-            for filternr in range(1,no_filters+1):
+            #combine piezometers, levels and samples to one list with filters
+            filter_list = []
+            for j in range(no_filters):
+                filter_list.append({})
+                
+            for l in [piezometers, levels, samples]:
+                if len(l) != 0:
+                    for j, d in enumerate(l):
+                        filter_list[j].update(d.copy())
+
+                        
+            #get metadata for every filter
+            for filter_dic in filter_list:
+                
+                filternr = filter_dic['piezometerNr']
                 meta = self._parse_json_single_gwo_filter(data.copy(), location, 
                                                           str(filternr).zfill(3), 
                                                           verbose=verbose)

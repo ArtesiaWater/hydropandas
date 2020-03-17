@@ -88,9 +88,16 @@ def test_dino_download_extent():
 
 def test_get_dino_locations():
     
-    gdf = io_dino.get_dino_locations(bbox=[120110.8948323 , 389471.92587313, 121213.23597266, 390551.29918915], 
+    gdf = io_dino.get_dino_locations(bbox=[126809.9950662 , 394020.07735461, 130563.22773266, 397952.455359  ], 
                                      layer='grondwatermonitoring')
     
     return gdf
 
-
+def test_dino_download_single_empty():
+    
+    measurements, meta = io_dino.download_dino_groundwater(location="B50E0130",
+                                                           filternr=1.,
+                                                           tmin="1900-01-01",
+                                                           tmax="2040-01-01",
+                                                           unit="NAP", 
+                                                           verbose=True)
