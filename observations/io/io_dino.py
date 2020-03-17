@@ -678,7 +678,8 @@ class DinoREST:
             
 
         """
-        response = self.post(self.gwo_url, [location])
+        response = self.get_gwo_details([location])
+        #response = self.post(self.gwo_url, [location])
         
         if raw_response:
             return response
@@ -806,8 +807,7 @@ class DinoREST:
             parsed dictionary
     
         """
-        
-    
+
         meta = {
             "locatie": location,
             "name": '-'.join([location, filternr]),
@@ -838,7 +838,7 @@ class DinoREST:
             except StopIteration:
                 if verbose:
                     print(f'cannot find sample metadata for location {location} and filternr {filternr}')
-            
+        
         meta.update(data)
         meta.pop('piezometerNr')
         meta.pop('dinoId')
@@ -852,9 +852,14 @@ class DinoREST:
         for key, item in translate_dic.items():
             meta[item] = meta.pop(key)
             
+        if 'clusterList' in meta.keys():
+            if isinstance(meta['clusterList'], list):
+                meta['clusterList'] = ";".join(meta['clusterList'])
+            
         return meta
     
-    def _parse_json_gwo_details(self, data, field="levels"):
+    def _parse_json_gwo_details(self, json_details, field="levels",
+                                verbose=False):
         """convert json response to dataframe
 
         TODO:
@@ -883,20 +888,34 @@ class DinoREST:
 
         """
         dflist = []
-        for i in range(len(data)):
-            filters = data[i].pop(field)
-            if filters is not None:
-                idf = pd.DataFrame(filters)
-                for k, v in data[i].items():
-                    if isinstance(v, list) and k.startswith("clusterList"):
-                        v = ";".join(v)
-                    elif isinstance(v, list):
-                        continue
-                    idf.loc[:, k] = v
+        for i in range(len(json_details)):
+            data = json_details[i]
+            location = data['dinoId']
+            
+            piezometers = data['piezoMeters']
+            levels = data['levels']
+            samples = data['samples']
+            
+            #check number of filters
+            if piezometers is None:
+                piezometers = {}
+            if levels is None:
+                levels = {}
+            if samples is None:
+                samples = {}
+            
+            no_filters = max(len(piezometers), len(levels), len(samples))
+            
+            
+            for filternr in range(1,no_filters+1):
+                meta = self._parse_json_single_gwo_filter(data.copy(), location, 
+                                                          str(filternr).zfill(3), 
+                                                          verbose=verbose)
+                idf = pd.DataFrame(meta, index=[meta.pop('name')])
                 dflist.append(idf)
-
+                
         df = pd.concat(dflist, axis=0, sort=True)
-        df.index = df["dinoId"] + "-" + df["piezometerNr"]
+       
         return df
 
 class DinoWSDL:
@@ -1239,6 +1258,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 layer='grondwatermonitoring',
                                 tmin="1900-01-01", tmax="2040-01-01",
                                 zmin=None, zmax=None, unit="NAP",
+                                keep_all_obs=True,
                                 verbose=False):
     """Download DINO data within a certain extent (or a bounding box)
 
@@ -1265,6 +1285,9 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         maximum filter height in m NAP for which piezometers are returned
     unit : str, optional
         unit in which the timeseries are returned, by default "NAP"
+    keep_all_obs : boolean, optional
+            add all observation points to the collection, even without data or
+            metadata
     verbose : boolean, optional
         print additional information to the screen (default is False).
 
@@ -1288,9 +1311,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
     gdf_loc["startDate"] = gdf_loc.startDate.astype('datetime64[ns]')
     gdf_loc["endDate"] = gdf_loc.endDate.astype('datetime64[ns]')
-    gdf_loc["topHeightNap"] = gdf_loc.topHeightNap.astype(float)
-    gdf_loc["bottomHeightNap"] = gdf_loc.bottomHeightNap.astype(float)
-
+    
     # slice by properties
     if tmin is not None:
         tmin = pd.to_datetime(tmin)
@@ -1325,21 +1346,30 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         if verbose:
             print('reading -> {}'.format(index))
 
-        o = ObsClass.from_dino_server(name=index.split('-')[0],
-                                      filternr=float(loc.piezometerNr),
+        o = ObsClass.from_dino_server(location=loc.locatie,
+                                      filternr=float(loc.filternr),
                                       tmin=tmin_t,
                                       tmax=tmax_t,
                                       unit=unit)
-
-        obs_list.append(o)
+        
+        if o.metadata_available and (not o.empty):
+            obs_list.append(o)
+        elif keep_all_obs:
+            obs_list.append(o)
+        else:
+            if verbose:
+                print('not added to collection -> {}'.format(o.name))
 
     # create dataframe
-    obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                          columns=obs_list[0].to_collection_dict().keys())
-    obs_df.set_index('name', inplace=True)
-
-    return obs_df
-
+    if len(obs_list)>0:
+        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
+                              columns=obs_list[0].to_collection_dict().keys())
+        obs_df.set_index('name', inplace=True)
+        
+        return obs_df
+    
+    else:
+        return pd.DataFrame()
 
 # %% DINO waterlevel observations
 def _read_dino_waterlvl_metadata(f, line):
