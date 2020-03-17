@@ -305,7 +305,8 @@ class CollectionPlots:
                     html=bokeh_html, width=620, height=420)
                 popup = folium.Popup(iframe, max_width=620)
 
-                folium.CircleMarker([self._obj.loc[name,col_name_lat], self._obj.loc[name,col_name_lon]],
+                folium.CircleMarker([self._obj.loc[o.name,col_name_lat], 
+                                     self._obj.loc[o.name,col_name_lon]],
                                     icon=folium.Icon(icon='signal'), fill=True,
                                     color=color,
                                     popup=popup).add_to(group)

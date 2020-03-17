@@ -145,15 +145,15 @@ class GroundwaterObs(Obs):
         return GroundwaterObs
 
     @classmethod
-    def from_dino_server(cls, name, filternr=1.,
+    def from_dino_server(cls, location, filternr=1.,
                          tmin="1900-01-01", tmax="2040-01-01",
                          **kwargs):
         """download dino data from the server.
 
         Parameters
         ----------
-        name : str, optional
-            name of the peilbuis, i.e. B57F0077
+        location : str, optional
+            location of the peilbuis, i.e. B57F0077
         filternr : float, optional
             filter_nr of the peilbuis, i.e. 1.
         tmin : str
@@ -166,7 +166,7 @@ class GroundwaterObs(Obs):
         
         """
 
-        measurements, meta = io_dino.download_dino_groundwater(name,
+        measurements, meta = io_dino.download_dino_groundwater(location,
                                                                filternr,
                                                                tmin, tmax,
                                                                **kwargs)

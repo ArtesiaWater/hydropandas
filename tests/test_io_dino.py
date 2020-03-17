@@ -25,6 +25,16 @@ def test_dino_download_single():
                                                            unit="NAP")
     return measurements, meta
 
+def test_dino_download_single_empty():
+    
+    measurements, meta = io_dino.download_dino_groundwater(location="B50E0092",
+                                                           filternr=1.,
+                                                           tmin="1900-01-01",
+                                                           tmax="2040-01-01",
+                                                           unit="NAP", 
+                                                           verbose=True)
+    return measurements, meta
+
 def test_dino_metadata():
     # download metadata
     dinorest = io_dino.DinoREST()
@@ -37,7 +47,7 @@ def test_dino_metadata2():
     # download metadata without sample data
     dinorest =io_dino. DinoREST()
     meta = dinorest.get_gwo_metadata(location='B57B0069',
-                                     filternr='001', 
+                                     filternr='002', 
                                      verbose=True)
     return meta
 
@@ -75,3 +85,12 @@ def test_dino_download_extent():
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return gw_col
+
+def test_get_dino_locations():
+    
+    gdf = io_dino.get_dino_locations(bbox=[120110.8948323 , 389471.92587313, 121213.23597266, 390551.29918915], 
+                                     layer='grondwatermonitoring')
+    
+    return gdf
+
+

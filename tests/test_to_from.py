@@ -37,7 +37,7 @@ def test_observation_gw():
 
 def test_observation_dino_download():
     # download dino
-    gw2 = obs.GroundwaterObs.from_dino_server(name="B57F0077", filternr=4.,
+    gw2 = obs.GroundwaterObs.from_dino_server(location="B57F0077", filternr=4.,
                                               tmin="2000-01-01",
                                               tmax="2010-01-01", unit="NAP")
     return gw2
@@ -45,7 +45,7 @@ def test_observation_dino_download():
 
 def test_observation_dino_download2():
     # download dino
-    gw2 = obs.GroundwaterObs.from_dino_server(name="B57B0069", filternr=1.,
+    gw2 = obs.GroundwaterObs.from_dino_server(location="B57B0069", filternr=1.,
                                               tmin="2000-01-01",
                                               tmax="2010-01-01", unit="NAP")
     return gw2
@@ -54,7 +54,7 @@ def test_observation_dino_download2():
 def test_observation_dino_download3():
     # download dino data from pb without extra metadata. For this pb
     # io_dino.get_dino_piezometer_metadata() returns an empty list
-    gw3 = obs.GroundwaterObs.from_dino_server(name="B45G1147", filternr=1.,
+    gw3 = obs.GroundwaterObs.from_dino_server(location="B45G1147", filternr=1.,
                                               tmin="1900-01-01",
                                               tmax="2020-01-01", unit="NAP")
     return gw3
@@ -144,6 +144,17 @@ def test_obscollection_dino_download_bbox():
         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_bbox
 
+def test_obscollection_dino_download_bbox_only_metadata():
+    # check if the keep_all_obs argument works
+    bbox = [120110.8948323 , 389471.92587313, 121213.23597266, 390551.29918915]
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox, verbose=True)
+    
+    dino_gw_bbox_empty = oc.ObsCollection.from_dino_server(bbox=bbox, 
+                                                           keep_all_obs=False,
+                                                           verbose=True)
+    assert dino_gw_bbox_empty.empty
+    
+    return dino_gw_bbox
 
 def test_obscollection_dino_download_bbox_empty():
     # download DINO from bbox
@@ -152,6 +163,11 @@ def test_obscollection_dino_download_bbox_empty():
 
     dino_gw_bbox = oc.ObsCollection.from_dino_server(
         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
+    return dino_gw_bbox
+
+def test_obscollection_dino_download_bbox_do_not_keep_all_obs():
+    bbox = [120110.8948323 , 389471.92587313, 121213.23597266, 390551.29918915]
+    dino_gw_bbox = oc.ObsCollection.from_dino_server(bbox=bbox, verbose=True)
     return dino_gw_bbox
 
 

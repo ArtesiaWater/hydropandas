@@ -141,7 +141,8 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
                          ObsClass=obs.GroundwaterObs,
-                         name=None, verbose=False, **kwargs
+                         name=None, keep_all_obs=True, 
+                         verbose=False, **kwargs
                          ):
         """ Read dino data from a server
 
@@ -157,6 +158,9 @@ class ObsCollection(pd.DataFrame):
             class of the observations, so far only GroundwaterObs is supported
         name : str, optional
             the name of the observation collection
+        keep_all_obs : boolean, optional
+            add all observation points to the collection, even without data or
+            metadata
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         kwargs:
@@ -179,7 +183,9 @@ class ObsCollection(pd.DataFrame):
 
         obs_df = io_dino.download_dino_within_extent(extent, bbox,
                                                      ObsClass, layer=layer,
-                                                     verbose=verbose, **kwargs)
+                                                     verbose=verbose, 
+                                                     keep_all_obs=keep_all_obs,
+                                                     **kwargs)
 
         if bbox is None:
             bbox = [extent[0], extent[2], extent[1], extent[3]]
