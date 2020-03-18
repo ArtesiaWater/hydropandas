@@ -39,8 +39,6 @@ def test_observation_dino_download():
     # download dino
     location="B57F0077"
     filternr=4.
-    
-    
     gw2 = obs.GroundwaterObs.from_dino_server(location=location, 
                                               filternr=filternr,
                                               tmin="2000-01-01",
