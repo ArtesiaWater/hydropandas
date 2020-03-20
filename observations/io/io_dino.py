@@ -502,21 +502,15 @@ def read_artdino_dir(dirname, ObsClass=None,
             if verbose:
                 print('not added to collection -> {}'.format(fname))
 
-    # create dataframe
-    obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                          columns=obs_list[0].to_collection_dict().keys())
-    obs_df.set_index('name', inplace=True)
-
-    return obs_df
+    return obs_list
 
 
-# %% DINO download methods  
+# %% DINO download methods
 
 class RemoveWSA(Plugin):
-    """Helper class to remove wsa tags
-    from header in zeep XML post
-
-    as described by: https://github.com/mvantellingen/python-zeep/issues/330#issuecomment-321781637
+    """Helper class to remove wsa tags from header in zeep XML post.
+    As described by:
+    https://github.com/mvantellingen/python-zeep/issues/330#issuecomment-321781637
 
     """
 
@@ -550,14 +544,16 @@ class DinoREST:
             url for getting details for dino piezometers, by default None
         """
         if query_url is None:
-            self.query_url = ("https://www.dinoloket.nl/arcgis/rest/services/dinoloket/"
-                              "{layer}/MapServer/0/query")
+            self.query_url = (
+                "https://www.dinoloket.nl/arcgis/rest/services/dinoloket/"
+                "{layer}/MapServer/0/query")
         else:
             self.query_url = query_url
 
         if gwo_url is None:
-            self.gwo_url = ("https://www.dinoloket.nl/javascriptmapviewer-web/"
-                            "rest/gws/gwo/details")
+            self.gwo_url = (
+                "https://www.dinoloket.nl/javascriptmapviewer-web/"
+                "rest/gws/gwo/details")
         else:
             self.gwo_url = gwo_url
 
@@ -645,7 +641,7 @@ class DinoREST:
         url = self.query_url.format(layer=self.aliases[layer])
         response = self.get(url, query)
         return response
-    
+
     def get_gwo_details(self, locations):
         """Get metadata details for locations
 
@@ -675,24 +671,22 @@ class DinoREST:
         Returns
         -------
         meta dictionary or requests.models.Response
-            
 
         """
         response = self.get_gwo_details([location])
         #response = self.post(self.gwo_url, [location])
-        
+
         if raw_response:
             return response
         else:
             data = response.json()
             if data == []:
-                meta = {'metadata_available':False}
+                meta = {'metadata_available': False}
             else:
-                meta = self._parse_json_single_gwo_filter(data[0], location, 
-                                                          filternr, 
+                meta = self._parse_json_single_gwo_filter(data[0], location,
+                                                          filternr,
                                                           verbose=verbose)
             return meta
-    
 
     def get_locations_by_extent(self, extent, layer="grondwatermonitoring",
                                 raw=False):
@@ -721,7 +715,7 @@ class DinoREST:
             return r.json()
         else:
             return self._parse_json_features(r.json())
-        
+
     def get_metadata_by_extent(self, extent, layer="grondwatermonitoring",
                                raw=False):
         """Get metadata details for all objects in extent.
@@ -770,7 +764,6 @@ class DinoREST:
                 raise NotImplementedError(
                     "Not yet implemented for '{}'!".format(layer))
 
-
     def _parse_json_features(self, js, field="features"):
         data = js[field]
         if len(data) == 0:
@@ -789,9 +782,10 @@ class DinoREST:
         gdf.set_index("DINO_NR", inplace=True)
         return gdf
 
-    def _parse_json_single_gwo_filter(self, data, location, filternr, verbose=False):
+    def _parse_json_single_gwo_filter(self, data, location, filternr,
+                                      verbose=False):
         """ parse metadata obtained with get_dino_piezometer_metadata
-        
+
         Parameters
         ----------
         data : dictionary
@@ -800,12 +794,12 @@ class DinoREST:
             location of piezometer, e.g. B57F0077
         filternr : str
             filter number should be a string of 3 characters, e.g. 002
-    
+
         Returns
         -------
         meta : dictionary
             parsed dictionary
-    
+
         """
 
         meta = {
@@ -814,60 +808,62 @@ class DinoREST:
             "filternr": int(filternr),
             "metadata_available": True
         }
-        
+
         piezometers = data.pop('piezoMeters')
         levels = data.pop('levels')
         samples = data.pop('samples')
-        
-        
+
         if piezometers:
             try:
-                meta.update(next(item for item in piezometers if item["piezometerNr"] == filternr))
+                meta.update(next(item for item in piezometers if
+                                 item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print(f'cannot find piezometer metadata for location {location} and filternr {filternr}')
+                    print(f'cannot find piezometer metadata for location '
+                          '{location} and filternr {filternr}')
         if levels:
             try:
-                meta.update(next(item for item in levels if item["piezometerNr"] == filternr))
+                meta.update(next(item for item in levels if
+                                 item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print(f'cannot find level metadata for location {location} and filternr {filternr}')
+                    print(f'cannot find level metadata for location '
+                          '{location} and filternr {filternr}')
         if samples:
             try:
-                meta.update(next(item for item in samples if item["piezometerNr"] == filternr))
+                meta.update(next(item for item in samples if
+                                 item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print(f'cannot find sample metadata for location {location} and filternr {filternr}')
-        
+                    print(f'cannot find sample metadata for location '
+                          '{location} and filternr {filternr}')
+
         meta.update(data)
         meta.pop('dinoId')
-        
-        translate_dic_location = {'xcoord':'x',
-                                  'ycoord':'y',
-                                  'surfaceElevation':'maaiveld'}
-        
+
+        translate_dic_location = {'xcoord': 'x',
+                                  'ycoord': 'y',
+                                  'surfaceElevation': 'maaiveld'}
+
         for key, item in translate_dic_location.items():
             meta[item] = meta.pop(key)
-            
-            
+
         if 'clusterList' in meta.keys():
             if isinstance(meta['clusterList'], list):
-                meta['clusterList'] = ";".join(meta['clusterList'])   
-                
+                meta['clusterList'] = ";".join(meta['clusterList'])
+
         if 'piezometerNr' not in meta.keys():
             return meta
-        
-        
+
         meta.pop('piezometerNr')
-        translate_dic_filter = {'bottomHeightNap':'onderkant_filter',
-                                'topHeightNap':'bovenkant_filter'}
-        
+        translate_dic_filter = {'bottomHeightNap': 'onderkant_filter',
+                                'topHeightNap': 'bovenkant_filter'}
+
         for key, item in translate_dic_filter.items():
             meta[item] = meta.pop(key)
-            
 
         return meta
-    
+
     def _parse_json_gwo_details(self, json_details, field="levels",
                                 verbose=False):
         """convert json response to dataframe
@@ -902,48 +898,49 @@ class DinoREST:
         for i in range(len(json_details)):
             data = json_details[i]
             location = data['dinoId']
-            if location=='B50F0158':
+            if location == 'B50F0158':
                 break
-            
+
             if location in location_list:
                 raise ValueError
             else:
                 location_list.append(location)
-            
+
             piezometers = data['piezoMeters']
             levels = data['levels']
             samples = data['samples']
-            
-            
-            #check number of filters
+
+            # check number of filters
             if piezometers is None:
                 piezometers = []
             if levels is None:
                 levels = []
             if samples is None:
                 samples = []
-           
-            #merge piezometers, levesl and samples
+
+            # merge piezometers, levels and samples
             filter_dic = {}
             for l in [piezometers, levels, samples]:
-                for j, d in enumerate(l):
+                for d in l:
                     if 'piezometerNr' in d.keys():
                         if d['piezometerNr'] not in filter_dic.keys():
                             filter_dic[d['piezometerNr']] = d
                         else:
                             filter_dic[d['piezometerNr']].update(d)
 
-            #get metadata for every filter
+            # get metadata for every filter
             for filternr in filter_dic.keys():
-                meta = self._parse_json_single_gwo_filter(data.copy(), location, 
-                                                          str(filternr).zfill(3), 
+                meta = self._parse_json_single_gwo_filter(data.copy(), location,
+                                                          str(filternr).zfill(
+                                                              3),
                                                           verbose=verbose)
                 idf = pd.DataFrame(meta, index=[meta.pop('name')])
                 dflist.append(idf)
-                
+
         df = pd.concat(dflist, axis=0, sort=True)
-       
+
         return df
+
 
 class DinoWSDL:
     """Class for querying DINOLoket. Currently available methods are:
@@ -981,8 +978,8 @@ class DinoWSDL:
             plugins=[history, wsa, rwsa])
 
         # Set prefix
-        self.client.set_ns_prefix("v11", "http://v11.ws.gws.dino.tno.nl/")    
-        
+        self.client.set_ns_prefix("v11", "http://v11.ws.gws.dino.tno.nl/")
+
     def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
                       raw_response=False):
         """Get a timeseries for a piezometer.
@@ -1013,10 +1010,10 @@ class DinoWSDL:
         - method sometimes returns data
 
         """
-        if isinstance(tmin,pd.Timestamp):
+        if isinstance(tmin, pd.Timestamp):
             tmin = tmin.strftime('%Y-%m-%d')
 
-        if isinstance(tmax,pd.Timestamp):
+        if isinstance(tmax, pd.Timestamp):
             tmax = tmax.strftime('%Y-%m-%d')
 
         assert unit in ["NAP", "SFL",
@@ -1036,11 +1033,9 @@ class DinoWSDL:
         if raw_response:
             return r
         else:
-            
             df = self._parse_grondwaterstand(r, f'stand_m_tov_{unit.lower()}')
-            
             return df
-    
+
     def findTechnischeGegevens(self, location, filter_nr, raw_response=False):
         """Get metadata for a piezometer.
 
@@ -1077,7 +1072,7 @@ class DinoWSDL:
         else:
             meta = self._parse_technische_gegevens(r)
             return meta
-    
+
     @staticmethod
     def _parse_grondwaterstand(r, column_name='stand_m_tov_nap'):
         """Parse the response from findMeetreeks
@@ -1099,13 +1094,13 @@ class DinoWSDL:
         index = [i["DATE"] for i in gws.LEVELS]
         values = [i["LEVEL"] for i in gws.LEVELS]
         remarks = [i["REMARK"] for i in gws.LEVELS]
-        df = pd.DataFrame(index=index, data={column_name:values,
-                                             'remarks':remarks})
+        df = pd.DataFrame(index=index, data={column_name: values,
+                                             'remarks': remarks})
         # convert from cm to m
-        df.loc[:,column_name] = df.loc[:,column_name]/100
-                
+        df.loc[:, column_name] = df.loc[:, column_name] / 100
+
         return df
-    
+
     @staticmethod
     def _parse_technische_gegevens(response):
         """Parse the response from findTechnischeGegevens
@@ -1123,7 +1118,7 @@ class DinoWSDL:
         """
         if isinstance(response, list):
             response = response[0]
-          
+
         locatie = response.WELL_NITG_NR
         filternr = response.WELL_TUBE_NR
         meta = {
@@ -1152,12 +1147,9 @@ class DinoWSDL:
         return meta
 
 
-  
-
-def download_dino_groundwater(location, filternr, tmin, tmax, 
-                              verbose=False,
-                             **kwargs):
-    """ download measurements and metadata from a dino groundwater 
+def download_dino_groundwater(location, filternr, tmin, tmax,
+                              verbose=False, **kwargs):
+    """Download measurements and metadata from a dino groundwater
     observation well
 
     Parameters
@@ -1170,7 +1162,7 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
         start date in format YYYY-MM-DD (will be converted if Timestamp)
     tmax : str or pandas.Timestamp
         end date in format YYYY-MM-DD (will be converted if Timestamp)
-    verbose : 
+    verbose :
     kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
 
@@ -1179,11 +1171,11 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     measurements : pd.DataFrame
     meta : dict
         dictionary with metadata
+
     """
-    
+
     if isinstance(filternr, float) or isinstance(filternr, int):
         filternr = "{0:03g}".format(filternr)
-    
 
     # download data from dino
     dino = DinoWSDL()
@@ -1192,14 +1184,13 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
                                       **kwargs)
 
-    
     # old metadata method
     #meta = dino.findTechnischeGegevens(location, filternr)
-    
+
     # new metadata method
     dinorest = DinoREST()
     meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
-    
+
     return measurements, meta
 
 
@@ -1242,9 +1233,7 @@ def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
         extent = extent.tolist()
 
     # use dino REST api
-    if layer == 'grondwatermonitoring' or layer == 'boring':
-        pass
-    else:
+    if not layer in ['grondwatermonitoring', 'boring']:
         raise(Exception('Unknown layer: {}'.format(layer)))
     dinorest = DinoREST()
     if layer == 'boring':
@@ -1261,6 +1250,7 @@ def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
         return df
 
     return df
+
 
 def split_extent(method, extent0, dx=1000, dy=None, **kwargs):
     if dy is None:
@@ -1288,7 +1278,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 keep_all_obs=True,
                                 verbose=False):
     """Download DINO data within a certain extent (or a bounding box)
-
 
     Parameters
     ----------
@@ -1338,7 +1327,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
     gdf_loc["startDate"] = gdf_loc.startDate.astype('datetime64[ns]')
     gdf_loc["endDate"] = gdf_loc.endDate.astype('datetime64[ns]')
-    
+
     # slice by properties
     if tmin is not None:
         tmin = pd.to_datetime(tmin)
@@ -1378,7 +1367,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                       tmin=tmin_t,
                                       tmax=tmax_t,
                                       unit=unit)
-        
+
         if o.metadata_available and (not o.empty):
             obs_list.append(o)
         elif keep_all_obs:
@@ -1387,18 +1376,13 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
             if verbose:
                 print('not added to collection -> {}'.format(o.name))
 
-    # create dataframe
-    if len(obs_list)>0:
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
-        obs_df.set_index('name', inplace=True)
-        
-        return obs_df
-    
-    else:
-        return pd.DataFrame()
+    # return list of obs
+    return obs_list
+
 
 # %% DINO waterlevel observations
+
+
 def _read_dino_waterlvl_metadata(f, line):
     '''
 
@@ -1583,12 +1567,7 @@ def read_dino_dir(dirname, ObsClass=None,
             if verbose:
                 print('not added to collection -> {}'.format(fname))
 
-    # create dataframe
-    obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                          columns=obs_list[0].to_collection_dict().keys())
-    obs_df.set_index('name', inplace=True)
-
-    return obs_df
+    return obs_list
 
 
 # %% Testing

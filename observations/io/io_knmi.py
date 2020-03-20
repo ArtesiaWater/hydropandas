@@ -215,7 +215,7 @@ def download_knmi_data(stn, var='RD', start=None, end=None, interval='daily',
 
     if inseason:
         raise NotImplementedError('season stuff not implemented')
-    
+
     start, end = _start_end_to_datetime(start, end)
 
     # convert possible integer to string
@@ -540,7 +540,8 @@ def read_knmi_hourly(f):
 
 
 def get_knmi_timeseries_xy(x, y, var, start, end, fill_missing_obs=True,
-                           interval='daily', inseason=False, raise_exceptions=False,
+                           interval='daily', inseason=False,
+                           raise_exceptions=False,
                            verbose=False):
 
     # get station
@@ -549,16 +550,15 @@ def get_knmi_timeseries_xy(x, y, var, start, end, fill_missing_obs=True,
 
     # download data
     if fill_missing_obs:
-        knmi_df, variables, station_meta = fill_missing_measurements(stn, var, start, end,
-                                                                     interval,
-                                                                     raise_exceptions,
-                                                                     verbose=verbose)
+        knmi_df, variables, station_meta = \
+            fill_missing_measurements(stn, var, start, end,
+                                      interval, raise_exceptions,
+                                      verbose=verbose)
     else:
-        knmi_df, variables, station_meta = download_knmi_data(stn, var, start, end,
-                                                              interval,
-                                                              inseason,
-                                                              raise_exceptions,
-                                                              verbose=verbose)
+        knmi_df, variables, station_meta = \
+            download_knmi_data(stn, var, start, end,
+                               interval, inseason, raise_exceptions,
+                               verbose=verbose)
 
     meta = station_meta.to_dict()
     meta.update(variables)
@@ -582,16 +582,15 @@ def get_knmi_timeseries_stn(stn, var, start, end,
 
     # download data
     if fill_missing_obs:
-        knmi_df, variables, station_meta = fill_missing_measurements(stn, var, start, end,
-                                                                     interval,
-                                                                     raise_exceptions,
-                                                                     verbose=verbose)
+        knmi_df, variables, station_meta = \
+            fill_missing_measurements(stn, var, start, end,
+                                      interval, raise_exceptions,
+                                      verbose=verbose)
     else:
-        knmi_df, variables, station_meta = download_knmi_data(stn, var, start, end,
-                                                              interval,
-                                                              inseason,
-                                                              raise_exceptions,
-                                                              verbose=verbose)
+        knmi_df, variables, station_meta = \
+            download_knmi_data(stn, var, start, end,
+                               interval, inseason, raise_exceptions,
+                               verbose=verbose)
 
     meta = station_meta.to_dict()
     meta.update(variables)
@@ -635,8 +634,8 @@ def add_missing_indices(knmi_df, stn, start, end, verbose=False):
     if (knmi_df.index[0] - start).days < 2:
         new_start = knmi_df.index[0]
     else:
-        new_start = pd.Timestamp(year=start.year, month=start.month, day=start.day,
-                                 hour=knmi_df.index[0].hour,
+        new_start = pd.Timestamp(year=start.year, month=start.month,
+                                 day=start.day, hour=knmi_df.index[0].hour,
                                  minute=knmi_df.index[0].minute,
                                  second=knmi_df.index[0].second)
         if verbose:
@@ -712,11 +711,12 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
     if verbose:
         print('Download ' + var + ' from ' +
               str(stn) + ' ' + stations.loc[stn, 'naam'])
-    knmi_df, variables, station_meta = download_knmi_data(stn, var, start=start,
-                                                          end=end, interval=interval,
-                                                          inseason=False,
-                                                          raise_exceptions=raise_exceptions,
-                                                          verbose=verbose)
+    knmi_df, variables, station_meta = \
+        download_knmi_data(stn, var, start=start,
+                           end=end, interval=interval,
+                           inseason=False,
+                           raise_exceptions=raise_exceptions,
+                           verbose=verbose)
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
@@ -726,11 +726,12 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
         if verbose:
             print('Download ' + var + ' from ' +
                   str(stn) + ' ' + stations.loc[stn, 'naam'])
-        knmi_df, variables, station_meta = download_knmi_data(stn, var, start=start,
-                                                              end=end, interval=interval,
-                                                              inseason=False,
-                                                              raise_exceptions=raise_exceptions,
-                                                              verbose=verbose)
+        knmi_df, variables, station_meta = \
+            download_knmi_data(stn, var, start=start,
+                               end=end, interval=interval,
+                               inseason=False,
+                               raise_exceptions=raise_exceptions,
+                               verbose=verbose)
         ignore.append(stn)
 
     # find missing values
@@ -745,22 +746,23 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
         stn_comp = get_nearest_station_df(
             stations.loc[[stn]], variable=var, ignore=ignore)
         if verbose:
-            print(
-                f'trying to fill {missing.sum()} measurements with station {stn_comp}')
+            print(f'trying to fill {missing.sum()} '
+                  'measurements with station {stn_comp}')
         if stn_comp is None:
             if verbose:
-                print(
-                    'could not fill all missing measurements there are no stations left to check')
+                print('could not fill all missing measurements there are '
+                      'no stations left to check')
             missing[:] = False
             break
         else:
             stn_comp = stn_comp[0]
-        knmi_df_comp, _, __ = download_knmi_data(stn_comp, var,
-                                                 start=start, end=end,
-                                                 interval=interval,
-                                                 inseason=False,
-                                                 raise_exceptions=raise_exceptions,
-                                                 verbose=verbose)
+        knmi_df_comp, _, __ = \
+            download_knmi_data(stn_comp, var,
+                               start=start, end=end,
+                               interval=interval,
+                               inseason=False,
+                               raise_exceptions=raise_exceptions,
+                               verbose=verbose)
 
         if knmi_df_comp.empty:
             if verbose:
@@ -768,8 +770,8 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
         else:
             knmi_df_comp = knmi_df_comp.loc[~knmi_df_comp[var].isna(), :]
             if missing[missing].index.isin(knmi_df_comp.index).any():
-                knmi_df.loc[missing,
-                            var] = knmi_df_comp.loc[missing[missing].index, var]
+                knmi_df.loc[missing, var] = \
+                    knmi_df_comp.loc[missing[missing].index, var]
                 knmi_df.loc[missing, 'station_opvulwaarde'] = str(stn_comp)
 
         missing = knmi_df[var].isna()

@@ -8,7 +8,7 @@ from tqdm import tqdm
 from pyproj import Proj, transform
 
 
-def read_waterinfo_file(path_to_file):
+def read_waterinfo_file(path_to_file, return_metadata=False):
     """
     Read waterinfo file (CSV or zip)
 
@@ -21,6 +21,9 @@ def read_waterinfo_file(path_to_file):
     -------
     df : pandas.DataFrame
         DataFrame containing file content
+    metadata : dict, optional
+        dict containing metadata, returned if return_metadata is
+        True, default is False
 
     """
 
@@ -44,12 +47,30 @@ def read_waterinfo_file(path_to_file):
                      dayfirst=True,
                      infer_datetime_format=True,
                      index_col='WAARNEMINGDATUM_WAARNEMINGTIJD')
+
     # do some conversions
     df.loc[df['NUMERIEKEWAARDE'] ==
            999999999, 'NUMERIEKEWAARDE'] = np.NaN
     df['NUMERIEKEWAARDE'] = df['NUMERIEKEWAARDE'] / 100.
 
-    return df
+    # parse metadata into dict
+    if return_metadata:
+        if len(df["MEETPUNT_IDENTIFICATIE"].unique()) > 1:
+            raise ValueError("File contains data for more than one location!"
+                             " Use ObsCollection.from_waterinfo()!")
+
+        metadata = {}
+        x, y = transform(Proj(init='epsg:25831'),
+                         Proj(init='epsg:28992'),
+                         df['X'].iloc[-1],
+                         df['Y'].iloc[-1])
+        metadata["name"] = df["MEETPUNT_IDENTIFICATIE"].iloc[-1]
+        metadata["x"] = x
+        metadata["y"] = y
+
+        return df, metadata
+    else:
+        return df
 
 
 def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False):
@@ -68,10 +89,8 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False):
 
     Returns
     -------
-    metadata : dictionary
-        dictionary containing name and location for each station
-    df_collection : list
-        list of DataFrames containing measurements for each station
+    obs_collection : list
+        list of Obs objects
 
     """
 

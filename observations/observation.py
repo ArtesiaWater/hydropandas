@@ -1,5 +1,5 @@
-'''
-module with a number of observation classes.
+"""
+Module with a number of observation classes.
 
 The Obs class is a subclass of a pandas DataFrame with
 additional attributes and methods. The specific classes (GroundwaterObs,
@@ -14,17 +14,12 @@ you need the '_constructor' method.
 More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 
-'''
-
-import copy
-import os
+"""
 
 import numpy as np
-from pandas import DataFrame, Series, datetime
-from scipy import interpolate
+from pandas import DataFrame
 
 from .io import io_dino
-from . import util
 
 
 class Obs(DataFrame):
@@ -54,9 +49,7 @@ class Obs(DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ['x', 'y', 'name',
-                 'meta',
-                 'filename']
+    _metadata = ['x', 'y', 'name', 'meta', 'filename']
 
     def __init__(self, *args, **kwargs):
         """ constructor of Obs class
@@ -163,20 +156,20 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
 
-        
+
         """
 
         measurements, meta = io_dino.download_dino_groundwater(location,
                                                                filternr,
                                                                tmin, tmax,
                                                                **kwargs)
-        
+
         if meta['metadata_available']:
-            return cls(measurements, meta=meta, 
+            return cls(measurements, meta=meta,
                        x=meta.pop('x'), y=meta.pop('y'),
                        onderkant_filter=meta.pop('onderkant_filter'),
                        bovenkant_filter=meta.pop('bovenkant_filter'),
-                       name=meta.pop('name'), 
+                       name=meta.pop('name'),
                        locatie=meta.pop('locatie'),
                        maaiveld=meta.pop('maaiveld'),
                        filternr=meta.pop('filternr'))
@@ -199,7 +192,6 @@ class GroundwaterObs(Obs):
 
         if fname is not None:
             # read dino csv file
-
             measurements, meta = io_dino.read_dino_groundwater_csv(
                 fname, **kwargs)
 
@@ -210,7 +202,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_artdino_file(cls, fname=None, **kwargs):
-        """read a dino csv file.
+        """read a dino csv file (artdiver style).
 
         Parameters
         ----------
@@ -220,38 +212,37 @@ class GroundwaterObs(Obs):
             dino csv filename
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
+
         """
 
         if fname is not None:
             # read dino csv file
-
             measurements, meta = io_dino.read_artdino_groundwater_csv(
                 fname, **kwargs)
 
             return cls(measurements, meta=meta, **meta)
         else:
-            raise ValueError(
-                'specify either the name or the filename of the measurement point')
+            raise ValueError('specify either the name or the filename of the '
+                             'measurement point!')
 
     @classmethod
     def from_wiski(cls, fname, **kwargs):
+        """[summary]
 
+        Parameters
+        ----------
+        fname : [type]
+            [description]
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
         from .io import io_wiski
+        data, metadata = io_wiski.read_wiski_file(fname, **kwargs)
 
-        header, data = io_wiski.read_wiski_file(fname, **kwargs)
-        metadata = {}
-        if 'Station Site' in header.keys():
-            metadata['locatie'] = header['Station Site']
-            header['locatie'] = header['Station Site']
-
-        if 'x' in header.keys():
-            metadata['x'] = header['x']
-        if "y" in header.keys():
-            metadata['y'] = header['y']
-        if 'name' in header.keys():
-            metadata['name'] = header['name']
-
-        return cls(data, meta=header, **metadata)
+        return cls(data, meta=metadata, **metadata)
 
     @classmethod
     def from_pystore_item(cls, item):
@@ -296,12 +287,14 @@ class GroundwaterObs(Obs):
         """
         from .modflow import get_pb_modellayer
         modellayer = get_pb_modellayer(np.array([self.x]) - ml.modelgrid.xoffset,
-                              np.array([self.y]) - ml.modelgrid.yoffset,
-                              np.array([self.bovenkant_filter]),
-                              np.array([self.onderkant_filter]),
-                              ml, zgr, verbose=verbose)[0]
+                                       np.array([self.y]) -
+                                       ml.modelgrid.yoffset,
+                                       np.array([self.bovenkant_filter]),
+                                       np.array([self.onderkant_filter]),
+                                       ml, zgr, verbose=verbose)[0]
 
         return modellayer
+
 
 class GroundwaterQualityObs(Obs):
     """class for groundwater quality (grondwatersamenstelling)
@@ -352,9 +345,7 @@ class WaterlvlObs(Obs):
 
     """
 
-    _metadata = Obs._metadata + \
-        ['locatie', 'metadata_available'
-         ]
+    _metadata = Obs._metadata + ['locatie', 'metadata_available']
 
     def __init__(self, *args, **kwargs):
 
@@ -369,7 +360,7 @@ class WaterlvlObs(Obs):
 
     @classmethod
     def from_dino_file(cls, fname, **kwargs):
-        '''read a dino file with waterlvl data
+        """read a dino file with waterlvl data
 
         Parameters
         ----------
@@ -377,7 +368,7 @@ class WaterlvlObs(Obs):
             dino csv filename
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_waterlvl_csv
-        '''
+        """
 
         measurements, meta = io_dino.read_dino_waterlvl_csv(fname, **kwargs)
 
@@ -402,25 +393,11 @@ class WaterlvlObs(Obs):
         ------
         ValueError
             if file contains data for more than one location
+
         """
         from .io import io_waterinfo
-        from pyproj import Proj, transform
-
-        df = io_waterinfo.read_waterinfo_file(fname)
-
-        if len(df["MEETPUNT_IDENTIFICATIE"].unique()) > 1:
-            raise ValueError("File contains data for more than one location!"
-                             " Use ObsCollection.from_waterinfo()!")
-
-        metadata = {}
-        x, y = transform(Proj(init='epsg:25831'),
-                         Proj(init='epsg:28992'),
-                         df['X'].iloc[-1],
-                         df['Y'].iloc[-1])
-        metadata["name"] = df["MEETPUNT_IDENTIFICATIE"].iloc[-1]
-        metadata["x"] = x
-        metadata["y"] = y
-
+        df, metadata = io_waterinfo.read_waterinfo_file(fname,
+                                                        return_metadata=True)
         return cls(df, meta=metadata, **metadata)
 
 
@@ -430,8 +407,7 @@ class ModelObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + \
-        ['model']
+    _metadata = Obs._metadata + ['model']
 
     def __init__(self, *args, **kwargs):
 
@@ -450,8 +426,7 @@ class KnmiObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + \
-        ['station']
+    _metadata = Obs._metadata + ['station']
 
     def __init__(self, *args, **kwargs):
 
