@@ -31,22 +31,30 @@ def test_obscollection_dino_to_imap():
 
 
 def test_obscollection_dino_to_mapgraph():
-    gw = ttf.test_obscollection_dinozip_gw()
-    gw.plots.mapgraphs(plot_ylim='min_dy')
-
-    return
+    try:
+        from art_tools import obs_extension
+        gw = ttf.test_obscollection_dinozip_gw()
+        gw.art.plot_mapgraphs(plot_ylim='min_dy')
+        return
+    except ModuleNotFoundError as e:
+        print(e)
+        return
 
 
 def test_obscollection_to_map():
-    fews_gw_prod = ttf.test_obscollection_fews()
-    ax = fews_gw_prod.plots.mapfig()
-
-    return ax
+    try:
+        from art_tools import obs_extension
+        fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
+        ax = fews_gw_prod.art.plot_mapfig()
+        return ax
+    except ModuleNotFoundError as e:
+        print(e)
+        return
 
 
 def test_obscollection_to_imap():
     fname = 'texel_fews.html'
-    fews_gw_prod = ttf.test_obscollection_fews()
+    fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
     # add metadata to obscollection DF
     fews_gw_prod.add_meta_to_df("lat")
     fews_gw_prod.add_meta_to_df("lon")
