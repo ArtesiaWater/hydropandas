@@ -62,9 +62,9 @@ class StatsAccessor:
 
     def mean_in_period(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         """get the mean value of one column (col) in all observations
-        within a period defined by tmin and tmax. If both tmin and tmax are 
+        within a period defined by tmin and tmax. If both tmin and tmax are
         None the whole period in which there are observations is used.
-        
+
 
         Parameters
         ----------
@@ -106,14 +106,14 @@ class StatsAccessor:
         pandas series with the number of observations for each row in the obs
         collection.
         """
-                        
-        def get_num_obs(o, column_name=column_name, after_date=after_date, 
+
+        def get_num_obs(o, column_name=column_name, after_date=after_date,
                         before_date=before_date):
             try:
                 return o[after_date:before_date][column_name].dropna().count()
             except KeyError:
                 return 0
-        
+
         return self._obj.obs.apply(get_num_obs)
 
     def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
@@ -143,14 +143,12 @@ class StatsAccessor:
         for o in self._obj.obs.values:
             df_list.append(o.stats.get_seasonal_stat(column_name, stat,
                                                      winter_months, summer_months))
-            
-        
 
         return pd.concat(df_list)
 
     def get_first_last_obs_date(self):
         """get the date of the first and the last measurement
-        
+
         Returns
         -------
         DataFrame with 2 columns with the dates of the first and the last
@@ -160,13 +158,12 @@ class StatsAccessor:
 
         date_first_measurement = [o.index.min() for o in self._obj.obs.values]
         date_last_measurement = [o.index.max() for o in self._obj.obs.values]
-        
-        first_last_obs = pd.DataFrame(index=self._obj.index, 
-                                      data={'date_first_measurement':date_first_measurement,
-                                            'date_last_measurement':date_last_measurement})
-        
-        return first_last_obs
 
+        first_last_obs = pd.DataFrame(index=self._obj.index,
+                                      data={'date_first_measurement': date_first_measurement,
+                                            'date_last_measurement': date_last_measurement})
+
+        return first_last_obs
 
     def get_min(self, column_name='stand_m_tov_nap',
                 after_date=None, before_date=None):
@@ -180,7 +177,7 @@ class StatsAccessor:
             get the min value after this date
         before_date : dt.datetime, optional
             get the min value before this date
-            
+
         Returns
         -------
         pandas series with the minimum of each observation in the obs
@@ -188,17 +185,15 @@ class StatsAccessor:
 
         """
 
-        def get_min_obs(o, column_name=column_name, after_date=after_date, 
+        def get_min_obs(o, column_name=column_name, after_date=after_date,
                         before_date=before_date):
             try:
                 return o[after_date:before_date][column_name].dropna().min()
             except KeyError:
                 return np.nan
-        
-        return self._obj.obs.apply(get_min_obs)
-        
 
-    
+        return self._obj.obs.apply(get_min_obs)
+
     def get_max(self, column_name='stand_m_tov_nap',
                 after_date=None, before_date=None):
         """get the maximum value of every obs object
@@ -219,13 +214,13 @@ class StatsAccessor:
 
         """
 
-        def get_max_obs(o, column_name=column_name, after_date=after_date, 
+        def get_max_obs(o, column_name=column_name, after_date=after_date,
                         before_date=before_date):
             try:
                 return o[after_date:before_date][column_name].dropna().max()
             except KeyError:
                 return np.nan
-        
+
         return self._obj.obs.apply(get_max_obs)
 
 
