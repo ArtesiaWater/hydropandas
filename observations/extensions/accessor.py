@@ -4,6 +4,7 @@ Copied from ./pandas/core/accessor.py
 """
 import warnings
 
+
 class CachedAccessor:
     """
     Custom property-like object (descriptor) for caching accessors.
@@ -52,11 +53,12 @@ def _register_accessor(name, cls):
 
 
 def register_obscollection_accessor(name):
-    from . import obs_collection as oc
+    from .. import obs_collection as oc
 
     return _register_accessor(name, oc.ObsCollection)
 
+
 def register_obs_accessor(name):
-    from . import observation as obs
+    from .. import observation as obs
 
     return _register_accessor(name, obs.Obs)

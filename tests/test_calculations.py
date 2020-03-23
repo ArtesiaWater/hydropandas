@@ -61,7 +61,7 @@ def test_set_filter_num_pystore():
     return obsc
 
 def test_set_filter_num_location():
-    fews_gw_prod = ttf.test_obscollection_fews()
+    fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
     fews_gw_prod.gwobs.set_filter_num_location('locatie',
                                                if_exists='replace')
     return fews_gw_prod
@@ -84,10 +84,10 @@ def test_get_modellayers():
     # Create the discretization object
     dis = flopy.modflow.ModflowDis(ml, nlay, nrow, ncol, delr=delr, delc=delc,
                                    top=ztop, botm=botm[1:])
-    
+
     dino_gw = ttf.test_obscollection_dinozip_gw()
     modellayers = dino_gw.gwobs.get_modellayers(ml)
-    
+
     return modellayers
 
 
@@ -100,12 +100,23 @@ def test_get_nearest_point():
 
 
 def test_get_surface_level_oc():
-    gw = ttf.test_obscollection_fews()
-    zp = gw.geo.get_surface_level()
-    return zp
+    try:
+        from art_tools import obs_extension
+        gw = ttf.test_obscollection_fews_lowmemory()
+        zp = gw.art.geo_get_surface_level()
+        return zp
+    except ModuleNotFoundError as e:
+        print(e)
+        return
+
 
 
 def test_get_surface_level_gwobs():
-    gw = ttf.test_observation_gw()
-    mv = gw.geo.get_surface_level()
-    return mv
+    try:
+        from art_tools import obs_extension
+        gw = ttf.test_observation_gw()
+        mv = gw.art.geo_get_surface_level()
+        return mv
+    except ModuleNotFoundError as e:
+        print(e)
+        return

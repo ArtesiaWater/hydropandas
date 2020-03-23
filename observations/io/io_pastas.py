@@ -114,6 +114,44 @@ def get_calibration_period(pr):
 
     calibration_period = []
     for m in pr.models.values():
-        calibration_period.append((m.get_tmax()-m.get_tmin()).days)
+        calibration_period.append((m.get_tmax() - m.get_tmin()).days)
 
     return calibration_period
+
+
+def read_project(pr, ObsClass, rename_dic={}):
+    """Read pastas.Project into ObsCollection.
+
+    Parameters
+    ----------
+    pr : pastas.Project
+        Project to read
+    ObsClass : Obs
+        ObsClass to read data as, usually GroundwaterObs
+    rename_dic : dict, optional
+        rename columns in Project oseries dictionary, by default empty dict
+
+    Returns
+    -------
+    list : list of Obs
+        list of Obs containing oseries data
+
+    """
+    obs_list = []
+    for index, row in pr.oseries.iterrows():
+        metadata = row.to_dict()
+        for key in rename_dic.keys():
+            if key in metadata.keys():
+                metadata[rename_dic[key]] = metadata.pop(key)
+
+        s = pd.DataFrame(metadata.pop('series').series_original)
+        s.rename(columns={index: 'stand_m_tov_nap'}, inplace=True)
+
+        keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
+                  'metadata_available', 'maaiveld', 'meetpunt',
+                  'bovenkant_filter', 'onderkant_filter']
+        meta_o = {k: metadata[k] for k in keys_o if k in metadata}
+
+        o = ObsClass(s, meta=metadata, **meta_o)
+        obs_list.append(o)
+    return obs_list

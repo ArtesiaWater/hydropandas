@@ -3,8 +3,8 @@ import pandas as pd
 from scipy import interpolate
 
 
-from . import accessor, util
-
+from . import accessor
+from .. import util
 
 
 @accessor.register_obscollection_accessor("geo")
@@ -63,11 +63,11 @@ class GeoAccessor:
         ymax = self._obj[ycol].max() + buffer
 
         return (xmin, xmax, ymin, ymax)
-    
+
     def set_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
                     add_to_meta=True, verbose=False):
         """create columns with lat and lon values of the observation points
-                
+
 
         Parameters
         ----------
@@ -86,15 +86,17 @@ class GeoAccessor:
         None.
 
         """
-        
+
         df_lat_lon = self._obj.geo.get_lat_lon(in_epsg, out_epsg)
         for iname in df_lat_lon.index:
-            self._obj._set_metadata_value(iname, 'lat', 
-                                 df_lat_lon.loc[iname, 'lat'], add_to_meta,
-                                 verbose)
-            self._obj._set_metadata_value(iname, 'lon', 
-                                 df_lat_lon.loc[iname, 'lon'], add_to_meta,
-                                 verbose)
+            self._obj._set_metadata_value(iname, 'lat',
+                                          df_lat_lon.loc[iname,
+                                                         'lat'], add_to_meta,
+                                          verbose)
+            self._obj._set_metadata_value(iname, 'lon',
+                                          df_lat_lon.loc[iname,
+                                                         'lon'], add_to_meta,
+                                          verbose)
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326'):
         """get lattitude and longitude from x and y attributes
@@ -105,19 +107,21 @@ class GeoAccessor:
             epsg code of current x and y attributes, default (RD new)
         out_epsg : str, optional
             epsg code of desired output, default lat/lon
-            
+
         Returns
         -------
         pandas.DataFrame
             with columns 'lat' and 'lon'
-       
+
         """
-        
-        df_lat_lon = pd.DataFrame(index=self._obj.index, columns=['lat' ,'lon'])
+
+        df_lat_lon = pd.DataFrame(
+            index=self._obj.index, columns=['lat', 'lon'])
         for iname in self._obj.index:
             o = self._obj.loc[iname, 'obs']
-            df_lat_lon.loc[iname, ['lat', 'lon']] = o.geo.get_lat_lon(in_epsg, out_epsg)
-         
+            df_lat_lon.loc[iname, ['lat', 'lon']
+                           ] = o.geo.get_lat_lon(in_epsg, out_epsg)
+
         return df_lat_lon
 
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
@@ -258,12 +262,12 @@ class GeoAccessor:
             self._obj._update_inplace(new_oc)
         else:
             return new_oc
-        
-    def set_surface_level(self, xcol='x', ycol='y', buffer=10., 
+
+    def set_surface_level(self, xcol='x', ycol='y', buffer=10.,
                           column_name='maaiveld', if_exists='error', **kwargs):
-        """create column (default maaiveld) with surface level of the 
+        """create column (default maaiveld) with surface level of the
         observation points from ahn
-        
+
 
         Parameters
         ----------
@@ -292,7 +296,7 @@ class GeoAccessor:
 
         """
         zp = self._obj.geo.get_surface_level(xcol, ycol, buffer, **kwargs)
-        
+
         if if_exists == 'error' and column_name in self._obj.columns:
             raise KeyError(
                 f"{column_name} already in columns set if_exists to 'keep' or 'replace' to overwrite")
@@ -300,60 +304,12 @@ class GeoAccessor:
             self._obj[column_name] = np.nan
         elif column_name not in self._obj.columns:
             self._obj[column_name] = np.nan
-            
+
         obs_new_maaiveld = self._obj[column_name].isna()
         maaiveld_arr = zp[obs_new_maaiveld]
-      
+
         for i, iname in enumerate(self._obj.loc[obs_new_maaiveld].index):
             self._obj._set_metadata_value(iname, column_name, maaiveld_arr[i])
-            
-        
-    def get_surface_level(self, xcol='x', ycol='y', buffer=10.,
-                           **kwargs):
-        """get maaiveld at the observation points in the observation collection
-
-        Parameters
-        ----------
-        xcol : str, optional
-            column name with x coordinates, by default 'x'
-        ycol : str, optional
-            column name with y coordinates, by default 'y'
-        buffer: int or float, optional
-            buffer used to get surrounding ahn values
-        **kwargs:
-            are passed to art.get_ahn_within_extent() function
-
-        Returns
-        -------
-        np.array
-            list of ahn values at observation locations or None (if add_to_oc = True)
-        """
-
-        if self._obj.shape[0] < 2:
-            raise NotImplementedError(
-                'this method will probabaly not work on collections with 0 or 1 observation points')
-
-        # attempt art_tools import
-        art = util._import_art_tools()
-
-        # get x and y values from oc_col
-        xp = self._obj[xcol].values.astype(float)
-        yp = self._obj[ycol].values.astype(float)
-
-        extent = self._obj.geo.get_extent(buffer=buffer)
-
-        ahn = art.get_ahn_within_extent(extent, **kwargs)
-
-        z = art.rasters.get_values(ahn)
-
-        # use griddata (is slow, buit can handle NaNs)
-        xc, yc = art.rasters.get_xy_mid(ahn)
-        xc, yc = np.meshgrid(xc, yc)
-        mask = ~np.isnan(z)
-        points = np.column_stack((xc[mask], yc[mask]))
-        zp = interpolate.griddata(points, z[mask], np.column_stack((xp, yp)))
-
-        return zp
 
 
 @accessor.register_obs_accessor("geo")
@@ -389,35 +345,4 @@ class GeoAccessorObs:
 
         return lat, lon
 
-    def get_surface_level(self, buffer=10, **kwargs):
-        """returns maaiveld at observation point
 
-        Parameters
-        ----------
-        buffer: int or float, optional
-            buffer used to get surrounding ahn values
-        **kwargs:
-            are passed to art.get_ahn_within_extent() function
-
-        Returns
-        -------
-        zp: float
-            ahn value at location
-        """
-
-        # attempt art_tools import
-        art = util._import_art_tools()
-
-        extent = [self._obj.x - buffer, self._obj.x + buffer,
-                  self._obj.y - buffer, self._obj.y + buffer]
-        ds = art.get_ahn_within_extent(extent, **kwargs)
-        z = art.rasters.get_values(ds)
-        xc, yc = art.rasters.get_xy_mid(ds)
-        xc, yc = np.meshgrid(xc, yc)
-        mask = ~np.isnan(z)
-        points = np.column_stack((xc[mask], yc[mask]))
-
-        zp = float(interpolate.griddata(
-            points, z[mask], ((self._obj.x, self._obj.y))))
-
-        return zp

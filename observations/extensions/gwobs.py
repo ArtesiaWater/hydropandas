@@ -18,11 +18,11 @@ class GwObsAccessor:
             - as the attribute of an Obs object
             - in the meta dictionary of the Obs object (only if add_to_meta is
             True)
-        
+
         This method is useful for groundwater observations. If two or more
         observation points are close to each other they will be seen as one
         location with multiple filters. The filternr is based on the
-        'onderkant_filter' attribute of the observations in such a way that 
+        'onderkant_filter' attribute of the observations in such a way that
         the deepest filter has the highest filter number.
 
         Parameters
@@ -39,16 +39,17 @@ class GwObsAccessor:
         add_to_meta : bool, optional
             if True the filternr is added to the meta dictionary
             of an observation. The default is False.
-            
+
         Raises
         ------
         RuntimeError
             if the column filternr exists and if_exists='error' an error is raised
         """
-        
+
         if self._obj['filternr'].dtype != np.number:
-            self._obj['filternr'] = pd.to_numeric(self._obj['filternr'], errors='coerce')
-            
+            self._obj['filternr'] = pd.to_numeric(
+                self._obj['filternr'], errors='coerce')
+
         # check if column exists in obscollection
         if 'filternr' in self._obj.columns:
             if if_exists == 'error':
@@ -67,7 +68,7 @@ class GwObsAccessor:
                 distance_to_other_filters = np.sqrt(
                     (self._obj[xcol] - x)**2 + (self._obj[ycol] - y)**2)
                 dup_x = self._obj.loc[distance_to_other_filters < radius]
-                if dup_x.shape[0] == 1:                    
+                if dup_x.shape[0] == 1:
                     self._obj._set_metadata_value(name, 'filternr', 1,
                                                   add_to_meta=add_to_meta)
                 else:
@@ -76,26 +77,24 @@ class GwObsAccessor:
                     for i, pb_dub in enumerate(dup_x2.index):
                         self._obj._set_metadata_value(pb_dub, 'filternr', i + 1,
                                                       add_to_meta=add_to_meta)
-                        
-                        
 
     def set_filter_num_location(self, loc_col, radius=1, xcol='x', ycol='y',
                                 if_exists='error', add_to_meta=False):
         """This method sets the filternr and locatie name of an observation
         point based on the locatie of the observations. When two or more
         filters are located close, defined by a radius, to eachother they get
-        the same `locatie` and a different `filternr`. 
-        
+        the same `locatie` and a different `filternr`.
+
         The value of the filternumber and the location are set:
             - in the ObsCollection dataframe
             - as the attribute of an Obs object
             - in the meta dictionary of the Obs object (only if add_to_meta is
             True)
-        
+
         This method is useful for groundwater observations. If two or more
         observation points are close to each other they will be seen as one
         location with multiple filters. The filternr is based on the
-        'onderkant_filter' attribute of the observations in such a way that 
+        'onderkant_filter' attribute of the observations in such a way that
         the deepest filter has the highest filter number. The locatie is
         based on the named of the loc_col of the filter with the lowest
         filternr.
@@ -122,8 +121,7 @@ class GwObsAccessor:
         RuntimeError
             if the column filternr exists and if_exists='error' an error is raised
         """
-        
-        
+
         # check if columns exists in obscollection
         if 'filternr' in self._obj.columns or 'locatie' in self._obj.columns:
             if if_exists == 'error':
@@ -135,7 +133,7 @@ class GwObsAccessor:
         else:
             self._obj['filternr'] = np.nan
             self._obj['locatie'] = np.nan
-            
+
         # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
         for name in self._obj.index:
             if np.isnan(self._obj.loc[name, 'filternr']):
@@ -178,13 +176,13 @@ class GwObsAccessor:
         -------
         pd.Series with the modellayers of each observation
         """
-        modellayers=[]
+        modellayers = []
         for o in self._obj.obs.values:
             modellayers.append(o.get_modellayer(ml, zgr, verbose))
             if verbose:
                 print(o.name)
-        
-        modellayers = pd.Series(index=self._obj.index, data=modellayers, 
+
+        modellayers = pd.Series(index=self._obj.index, data=modellayers,
                                 name='modellayer')
-        
+
         return modellayers

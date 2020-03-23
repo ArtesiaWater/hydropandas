@@ -1,4 +1,4 @@
-'''
+"""
 module with ObsCollection class for a collection of observations.
 
 The ObsCollection class is a subclass of a pandas DataFrame with
@@ -7,7 +7,7 @@ additional attributes and methods.
 More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 
-'''
+"""
 import os
 import warnings
 
@@ -141,7 +141,7 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
                          ObsClass=obs.GroundwaterObs,
-                         name=None, keep_all_obs=True, 
+                         name=None, keep_all_obs=True,
                          verbose=False, **kwargs
                          ):
         """ Read dino data from a server
@@ -166,14 +166,14 @@ class ObsCollection(pd.DataFrame):
         kwargs:
             kwargs are passed to the io_dino.download_dino_within_extent() function
 
-
         Returns
         -------
         cls(obs_df) : ObsCollection
             collection of multiple point observations
+
         """
 
-        from .io import io_dino
+        from .io.io_dino import download_dino_within_extent
 
         if ObsClass == obs.GroundwaterObs:
             layer = 'grondwatermonitoring'
@@ -181,20 +181,20 @@ class ObsCollection(pd.DataFrame):
             raise NotImplementedError(
                 'cannot download {} from Dino'.format(ObsClass))
 
-        obs_df = io_dino.download_dino_within_extent(extent, bbox,
-                                                     ObsClass, layer=layer,
-                                                     verbose=verbose, 
-                                                     keep_all_obs=keep_all_obs,
-                                                     **kwargs)
-
-        if bbox is None:
-            bbox = [extent[0], extent[2], extent[1], extent[3]]
-
         if name is None:
             name = '{} from DINO'.format(layer)
 
-        meta = kwargs
+        meta = kwargs.copy()
         meta.update({'verbose': verbose})
+
+        obs_list = download_dino_within_extent(
+            extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
+            keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+
+        obs_df = util._obslist_to_frame(obs_list)
+
+        if bbox is None:
+            bbox = [extent[0], extent[2], extent[1], extent[3]]
 
         return cls(obs_df, name=name, bbox=bbox, meta=meta)
 
@@ -248,7 +248,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        from .io import io_dino
+        from .io.io_dino import read_dino_dir
 
         if name is None:
             name = subdir
@@ -263,7 +263,7 @@ class ObsCollection(pd.DataFrame):
                 'keep_all_obs': keep_all_obs
                 }
 
-        obs_df = io_dino.read_dino_dir(
+        obs_list = read_dino_dir(
             dirname,
             ObsClass,
             subdir,
@@ -274,6 +274,8 @@ class ObsCollection(pd.DataFrame):
             verbose,
             keep_all_obs,
             **kwargs)
+
+        obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
@@ -327,7 +329,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        from .io import io_dino
+        from .io.io_dino import read_artdino_dir
 
         if name is None:
             name = subdir
@@ -342,7 +344,7 @@ class ObsCollection(pd.DataFrame):
                 'keep_all_obs': keep_all_obs
                 }
 
-        obs_df = io_dino.read_artdino_dir(
+        obs_list = read_artdino_dir(
             dirname,
             ObsClass,
             subdir,
@@ -354,16 +356,17 @@ class ObsCollection(pd.DataFrame):
             keep_all_obs,
             **kwargs)
 
+        obs_df = util._obslist_to_frame(obs_list)
+
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
     def from_fews(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
-                  translate_dic={'locationId': 'locatie'},
-                  to_mnap=True, remove_nan=True,
+                  translate_dic={'locationId': 'locatie'}, locations=None,
+                  to_mnap=True, remove_nan=True, low_memory=True,
                   unpackdir=None, force_unpack=False,
-                  preserve_datetime=False, 
-                  verbose=False):
-        """ read one or several XML-files with measurements from FEWS
+                  preserve_datetime=False, verbose=False):
+        """Read one or several XML-files with measurements from FEWS.
 
         Parameters
         ----------
@@ -373,17 +376,27 @@ class ObsCollection(pd.DataFrame):
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
             name of the observation collection, 'fews' by default
+        translate_dic : dict
+            translate name of attribute by passing key: value pairs in
+            dictionary
+        locations : list of str, optional
+            list of locationId's to read from XML file, others are skipped.
+            If None (default) all locations are read. Only supported by
+            low_memory=True method!
         to_mnap : boolean, optional
             if True a column with 'stand_m_tov_nap' is added to the dataframe
         remove_nan : boolean, optional
             remove nan values from measurements, flag information about the
             nan values is also lost
+        low_memory : bool, optional
+            whether to use xml-parsing method with lower memory footprint,
+            default is True
         unpackdir : str
             destination directory to unzip file if fname is a .zip
         force_unpack : boolean, optional
             force unpack if dst already exists
         preserve_datetime : boolean, optional
-
+            whether to preserve datetime from zip archive
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -391,8 +404,9 @@ class ObsCollection(pd.DataFrame):
         -------
         cls(obs_df) : ObsCollection
             collection of multiple point observations
+
         """
-        from .io import io_xml
+        from .io.io_xml import parse_xml_filelist
 
         # get files
         dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
@@ -403,91 +417,16 @@ class ObsCollection(pd.DataFrame):
                 'verbose': verbose
                 }
 
-        obs_list = []
-        nfiles = len(unzip_fnames)
-        for j, ixml in enumerate(unzip_fnames):
-            if verbose:
-                print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
-            fullpath = os.path.join(dirname, ixml)
-            olist = io_xml.read_xml(fullpath,
-                                    ObsClass=ObsClass,
-                                    translate_dic=translate_dic,
-                                    to_mnap=to_mnap,
-                                    remove_nan=remove_nan,
-                                    verbose=False)
-            obs_list += olist
-
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
-
-        obs_df.set_index('name', inplace=True)
-
-        return cls(obs_df, name=name, meta=meta)
-
-    @classmethod
-    def from_fews2(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
-                   translate_dic={'locationId': 'locatie'}, 
-                   locations=None, to_mnap=True, remove_nan=True,
-                   unpackdir=None, force_unpack=False,
-                   preserve_datetime=False,
-                   verbose=False):
-        """ read a XML-file with measurements from FEWS
-
-        Parameters
-        ----------
-        file_or_dir : str
-            zip, xml file or directory to read
-        ObsClass : type
-            class of the observations, e.g. GroundwaterObs or WaterlvlObs
-        name : str, optional
-            name of the observation collection, 'fews' by default
-        to_mnap : boolean, optional
-            if True a column with 'stand_m_tov_nap' is added to the dataframe
-        remove_nan : boolean, optional
-            remove nan values from measurements, flag information about the
-            nan values is also lost
-        unpackdir : str
-            destination directory to unzip file if fname is a .zip
-        force_unpack : boolean, optional
-            force unpack if dst already exists
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
-
-        Returns
-        -------
-        cls(obs_df) : ObsCollection
-            collection of multiple point observations
-
-        """
-        from .io import io_xml
-
-        # get files
-        dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
-                                               unpackdir=unpackdir,
-                                               force_unpack=force_unpack,
-                                               preserve_datetime=preserve_datetime)
-        meta = {'filename': dirname,
-                'type': ObsClass,
-                'verbose': verbose
-                }
-
-        obs_list = []
-        nfiles = len(unzip_fnames)
-        for j, ixml in enumerate(unzip_fnames):
-            if verbose:
-                print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
-            fullpath = os.path.join(dirname, ixml)
-            _, olist = io_xml.iterparse_pi_xml(fullpath, ObsClass,
-                                               translate_dic=translate_dic, 
-                                               locationIds=locations,
-                                               verbose=verbose)
-            obs_list += olist
-
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
-
-        obs_df.set_index('name', inplace=True)
-
+        obs_list = parse_xml_filelist(unzip_fnames,
+                                      ObsClass,
+                                      directory=dirname,
+                                      translate_dic=translate_dic,
+                                      locations=locations,
+                                      to_mnap=to_mnap,
+                                      remove_nan=remove_nan,
+                                      low_memory=low_memory,
+                                      verbose=verbose)
+        obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
@@ -506,31 +445,33 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from .io import io_fieldlogger
+        from .io.io_fieldlogger import fieldlogger_csv_to_obs_list
 
-        obs_list, fieldlogger_meta = io_fieldlogger.fieldlogger_csv_to_obs_list(
+        obs_list, fieldlogger_meta = fieldlogger_csv_to_obs_list(
             fname, ObsClass=obs.GroundwaterObs)
+        obs_df = util._obslist_to_frame(obs_list)
 
-        return cls(cls.from_list(obs_list, name=name), meta=fieldlogger_meta)
+        return cls(obs_df, meta=fieldlogger_meta)
 
     @classmethod
     def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
                         verbose=False):
 
-        from .io import io_menyanthes
-
-        obs_list = io_menyanthes.read_file(fname, ObsClass, verbose)
+        from .io.io_menyanthes import read_file
 
         menyanthes_meta = {'filename': fname,
                            'type': ObsClass,
                            'verbose': verbose}
 
-        return cls(cls.from_list(obs_list, name=name), meta=menyanthes_meta)
+        obs_list = read_file(fname, ObsClass, verbose)
+        obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df, meta=menyanthes_meta)
 
     @classmethod
     def from_imod(cls, obs_collection, ml, runfile, mtime, model_ws,
                   modelname='', nlay=None, exclude_layers=0, verbose=False):
-        """read 'observations' from an imod model
+        """Read imod model results at point locations.
 
         Parameters
         ----------
@@ -552,72 +493,21 @@ class ObsCollection(pd.DataFrame):
             exclude modellayers from being read from imod
         verbose : boolean, optional
             Print additional information to the screen (default is False).
+
         """
-
-        import imod
-
-        if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
-            warnings.warn(
-                'you probably want to set the xll and/or yll attributes of ml.modelgrid')
-
-        if nlay is None:
-            nlay = ml.modelgrid.nlay
-
-        xmid, ymid, _ = ml.modelgrid.xyzcellcenters
-
-        xy = np.array([xmid.ravel(), ymid.ravel()]).T
-        uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
-        vtx, wts = util.interp_weights(xy, uv)
-
-        hm_ts = np.zeros((obs_collection.shape[0], len(mtime)))
-
-        # loop over layers
-        for m in range(nlay):
-            if m < exclude_layers:
-                continue
-            mask = obs_collection.modellayer.values == m
-            # loop over timesteps
-            for t, date in enumerate(mtime):
-                head_idf = 'head_{}_l{}.idf'.format(
-                    date.strftime('%Y%m%d'), m + 1)
-                fname = os.path.join(
-                    model_ws,
-                    runfile.data['OUTPUTDIRECTORY'],
-                    'head',
-                    head_idf)
-                if verbose:
-                    print('read {}'.format(fname))
-                ihds, _attrs = imod.idf.read(fname)
-                hm = util.interpolate(ihds, vtx, wts)
-                hm_ts[mask, t] = hm[mask]
-
-        mo_list = []
-        for i, name in enumerate(obs_collection.index):
-            mo = obs.ModelObs(index=mtime,
-                              data=hm_ts[i],
-                              name=name,
-                              model=modelname,
-                              x=obs_collection.loc[name,
-                                                   'x'],
-                              y=obs_collection.loc[name,
-                                                   'y'],
-                              meta=obs_collection.loc[name,
-                                                      'obs'].meta)
-            mo_list.append(mo)
-
-        mobs_df = pd.DataFrame([mo.to_collection_dict() for mo in mo_list],
-                               columns=mo_list[0].to_collection_dict().keys())
-        mobs_df.set_index('name', inplace=True)
-        if verbose:
-            print(mobs_df)
-
-        return cls(mobs_df, name=modelname)
+        from .io.io_modflow import read_imod_results
+        mo_list = read_imod_results(obs_collection, ml, runfile,
+                                    mtime, model_ws,
+                                    modelname=modelname, nlay=nlay,
+                                    exclude_layers=exclude_layers,
+                                    verbose=verbose)
+        obs_df = util._obslist_to_frame(mo_list)
+        return cls(obs_df, name=modelname)
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
                      modelname='', nlay=None, exclude_layers=0, verbose=False):
-        """ Read moflow groundwater heads at the location of the points in
-        obs_collection.
+        """Read modflow groundwater heads at points in obs_collection.
 
         Parameters
         ----------
@@ -639,57 +529,15 @@ class ObsCollection(pd.DataFrame):
             Print additional information to the screen (default is False).
 
         """
+        from .io.io_modflow import read_modflow_results
+        mo_list = read_modflow_results(obs_collection, ml, hds_arr,
+                                       mtime, modelname=modelname,
+                                       nlay=nlay,
+                                       exclude_layers=exclude_layers,
+                                       verbose=verbose)
+        obs_df = util._obslist_to_frame(mo_list)
 
-        if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
-            warnings.warn(
-                'you probably want to set the xll and/or yll attributes of dis.sr')
-
-        if nlay is None:
-            nlay = ml.modelgrid.nlay
-
-        if modelname == '':
-            modelname = ml.name
-
-        xmid, ymid, _ = ml.modelgrid.xyzcellcenters
-
-        xy = np.array([xmid.ravel(), ymid.ravel()]).T
-        uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
-        vtx, wts = util.interp_weights(xy, uv)
-
-        # get interpolated timeseries from hds_arr
-        hm_ts = np.zeros((obs_collection.shape[0], hds_arr.shape[0]))
-
-        # loop over layers
-        for m in range(nlay):
-            if m < exclude_layers:
-                continue
-            mask = obs_collection.modellayer.values == m
-            # loop over timesteps
-            for t in range(hds_arr.shape[0]):
-                ihds = hds_arr[t, m]
-                ihds[ihds < -999.] = np.nan
-                hm = util.interpolate(ihds, vtx, wts)
-                hm_ts[mask, t] = hm[mask]
-
-        mo_list = []
-        for i, name in enumerate(obs_collection.index):
-            mo = obs.ModelObs(index=mtime,
-                              data=hm_ts[i],
-                              name=name,
-                              model=modelname,
-                              x=obs_collection.loc[name,
-                                                   'x'],
-                              y=obs_collection.loc[name,
-                                                   'y'],
-                              meta=obs_collection.loc[name,
-                                                      'obs'].meta)
-            mo_list.append(mo)
-
-        mobs_df = pd.DataFrame([mo.to_collection_dict() for mo in mo_list],
-                               columns=mo_list[0].to_collection_dict().keys())
-        mobs_df.set_index('name', inplace=True)
-
-        return cls(mobs_df)
+        return cls(obs_df)
 
     @classmethod
     def from_list(cls, obs_list, name='', verbose=False):
@@ -705,49 +553,32 @@ class ObsCollection(pd.DataFrame):
             Print additional information to the screen (default is False).
 
         """
-
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
-        obs_df.set_index('name', inplace=True)
-
+        obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, name=name)
 
     @classmethod
     def from_pastas_project(cls, pr, ObsClass=obs.GroundwaterObs,
                             name=None, pr_meta=None, rename_dic={}):
 
-        if name is None:
-            name = pr.name
+        from .io.io_pastas import read_project
 
         if pr_meta is None:
             pr_meta = pr.file_info
 
-        obs_list = []
-        for index, row in pr.oseries.iterrows():
-            metadata = row.to_dict()
-            for key in rename_dic.keys():
-                if key in metadata.keys():
-                    metadata[rename_dic[key]] = metadata.pop(key)
+        if name is None:
+            name = pr.name
 
-            s = pd.DataFrame(metadata.pop('series').series_original)
-            s.rename(columns={index: 'stand_m_tov_nap'}, inplace=True)
-
-            keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
-                      'metadata_available', 'maaiveld', 'meetpunt',
-                      'bovenkant_filter', 'onderkant_filter']
-            meta_o = {k: metadata[k] for k in keys_o if k in metadata}
-
-            o = ObsClass(s, meta=metadata, **meta_o)
-            obs_list.append(o)
-
-        return cls(cls.from_list(obs_list, name=name), meta=pr_meta)
+        obs_list = read_project(pr, obs.GroundwaterObs,
+                                rename_dic=rename_dic)
+        obs_df = util._obslist_to_frame(obs_list)
+        return cls(obs_df, meta=pr_meta, name=name)
 
     @classmethod
     def from_wiski(cls, dirname, ObsClass=obs.GroundwaterObs, suffix='.csv',
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
                    verbose=False, keep_all_obs=True, **kwargs):
 
-        from .io import io_wiski
+        from .io.io_wiski import read_wiski_dir
 
         meta = {'dirname': dirname,
                 'type': ObsClass,
@@ -760,16 +591,16 @@ class ObsCollection(pd.DataFrame):
                 }
 
         name = "wiski_import"
-
-        obs_df = io_wiski.read_wiski_dir(dirname,
-                                         ObsClass=ObsClass,
-                                         suffix=suffix,
-                                         unpackdir=unpackdir,
-                                         force_unpack=force_unpack,
-                                         preserve_datetime=preserve_datetime,
-                                         verbose=verbose,
-                                         keep_all_obs=keep_all_obs,
-                                         **kwargs)
+        obs_list = read_wiski_dir(dirname,
+                                  ObsClass=ObsClass,
+                                  suffix=suffix,
+                                  unpackdir=unpackdir,
+                                  force_unpack=force_unpack,
+                                  preserve_datetime=preserve_datetime,
+                                  verbose=verbose,
+                                  keep_all_obs=keep_all_obs,
+                                  **kwargs)
+        obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
@@ -816,62 +647,25 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from .io import io_pystore
-        io_pystore.set_pystore_path(pystore_path)
-        if not os.path.isdir(os.path.join(pystore_path, storename)):
-            raise FileNotFoundError(
-                "pystore -> '{}' does not exist".format(storename))
-        # obtain item names within extent
-        if extent is not None:
-            meta_list = io_pystore.read_store_metadata(
-                storename, items="first")
-            obs_df = pd.DataFrame(meta_list)
-            obs_df.set_index('item_name', inplace=True)
-            obs_df['x'] = pd.to_numeric(obs_df.x, errors='coerce')
-            obs_df['y'] = pd.to_numeric(obs_df.y, errors='coerce')
-            item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1]) & (
-                obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
+        from .io.io_pystore import read_pystore
 
-        if read_series:
-            obs_list = io_pystore.store_to_obslist(
-                storename,
-                ObsClass=ObsClass,
-                collection_names=collection_names,
-                item_names=item_names,
-                nameby=nameby,
-                verbose=verbose,
-                progressbar=progressbar)
-            columns = []
-            coldict = []
-            for o in obs_list:
-                d = o.to_collection_dict()
-                coldict.append(d)
-                columns |= d.keys()
-            obs_df = pd.DataFrame(coldict, columns=columns)
-            if obs_df.empty:
-                return cls(obs_df, name=storename, meta={})
-            obs_df.set_index('name', inplace=True)
-            meta = {'fname': obs_list[0].meta["datastore"],
-                    'type': obs.GroundwaterObs,
-                    'verbose': True}
+        meta = {'fname': os.path.join(pystore_path, storename),
+                'verbose': verbose}
+
+        obs_list = read_pystore(storename, pystore_path,
+                                obs.GroundwaterObs,
+                                extent=extent,
+                                collection_names=collection_names,
+                                item_names=item_names, nameby="item",
+                                read_series=read_series, verbose=verbose,
+                                progressbar=progressbar)
+        # if read series is False, returns dataframe with only metadata
+        if isinstance(obs_list, list):
+            obs_df = util._obslist_to_frame(obs_list)
+            meta['type'] = obs.GroundwaterObs
         else:
-            if item_names is None:
-                item_names = "all"
-            meta_list = io_pystore.read_store_metadata(storename,
-                                                       items=item_names,
-                                                       verbose=verbose)
-            meta = {}
-            obs_df = pd.DataFrame(meta_list)
-            if nameby == "collection":
-                obs_df.set_index('collection_name', inplace=True)
-            elif nameby == "item":
-                obs_df.set_index('item_name', inplace=True)
-            elif nameby == "both":
-                obs_df["name"] = obs_df["collection_name"] + "__" + \
-                    obs_df["item_name"]
-            else:
-                raise ValueError("'{}' is not a valid option "
-                                 "for 'nameby'".format(nameby))
+            # only metadata in df
+            obs_df = obs_list
 
         return cls(obs_df, name=storename, meta=meta)
 
@@ -898,51 +692,18 @@ class ObsCollection(pd.DataFrame):
             ObsCollection DataFrame containing all the obs
 
         """
+        from .io.io_arctic import read_arctic
 
-        from tqdm import tqdm
-        import arctic
-        from timeit import default_timer
-
-        arc = arctic.Arctic(connstr)
-        lib = arc.get_library(libname)
-
-        start = default_timer()
-        obs_list = []
-        rows_read = 0
-        for sym in (tqdm(lib.list_symbols())
-                    if verbose else lib.list_symbols()):
-            item = lib.read(sym)
-            o = ObsClass(item.data, name=sym, meta=item.metadata)
-            obs_list.append(o)
-            if verbose:
-                rows_read += len(item.data.index)
-
-        end = default_timer()
-        if verbose:
-            print("Symbols: {0:.0f}  "
-                  "Rows: {1:,.0f}  "
-                  "Time: {2:.2f}s  "
-                  "Rows/s: {3:,.1f}".format(len(lib.list_symbols()),
-                                            rows_read,
-                                            (end - start),
-                                            rows_read / (end - start)))
-        # create dataframe
-        columns = []
-        coldict = []
-        for o in obs_list:
-            d = o.to_collection_dict()
-            coldict.append(d)
-            columns |= d.keys()
-        obs_df = pd.DataFrame(coldict, columns=columns)
-        obs_df.set_index('name', inplace=True)
         meta = {'type': obs.GroundwaterObs}
+        obs_list = read_arctic(connstr, libname, ObsClass, verbose=verbose)
+        obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=meta)
 
     @classmethod
     def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
                        progressbar=True):
-        """read waterinfo file or directory
+        """Read waterinfo file or directory.
 
         Parameters
         ----------
@@ -971,9 +732,7 @@ class ObsCollection(pd.DataFrame):
 
         obs_list = io_waterinfo.read_waterinfo_obs(
             file_or_dir, ObsClass, progressbar=progressbar)
-
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
+        obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
@@ -1141,8 +900,7 @@ class ObsCollection(pd.DataFrame):
         gdf : geopandas.GeoDataFrame
 
         """
-        art = util._import_art_tools()
-        return art.util.df2gdf(self, xcol, ycol)
+        return util.df2gdf(self, xcol, ycol)
 
     def to_report_table(self, columns=['locatie', 'filternr',
                                        'Van', 'Tot', '# metingen']):
@@ -1184,15 +942,14 @@ class ObsCollection(pd.DataFrame):
         """
 
         import pastas as ps
-        
-       
+
         if pr is None:
             pr = ps.Project(project_name)
 
         for o in self.obs.values:
             if verbose:
                 print('add to pastas project -> {}'.format(o.name))
-                
+
             meta = dict()
             if add_metadata:
                 for attr_key in o._metadata:
@@ -1205,12 +962,13 @@ class ObsCollection(pd.DataFrame):
                                 meta[k] = v
                             else:
                                 if verbose:
-                                    print(f'did not add {k} to metadata because datatype is {type(v)}')
+                                    print(
+                                        f'did not add {k} to metadata because datatype is {type(v)}')
                     else:
                         if verbose:
-                            print(f'did not add {attr_key} to metadata because datatype is {type(val)}')
- 
-    
+                            print(
+                                f'did not add {attr_key} to metadata because datatype is {type(val)}')
+
             series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
             pr.add_series(series, kind=kind)
 
@@ -1229,8 +987,7 @@ class ObsCollection(pd.DataFrame):
             column name with y values
 
         """
-        art = util._import_art_tools()
-        gdf = art.util.df2gdf(self, xcol, ycol)
+        gdf = util.df2gdf(self, xcol, ycol)
 
         # remove obs column
         if 'obs' in gdf.columns:

@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from . import accessor, util
+from . import accessor
+from .. import util
 
 
 @accessor.register_obscollection_accessor("plots")
@@ -20,65 +21,6 @@ class CollectionPlots:
 
         """
         self._obj = oc_obj
-
-    def data_frequency(
-            self,
-            column_name='stand_m_tov_nap',
-            intervals=None,
-            ignore=[
-                'seconde',
-                'minuut',
-                '14-daags'],
-            normtype='log',
-            cmap='viridis_r',
-            set_yticks=False,
-            figsize=(
-                10,
-                8),
-            **kwargs):
-        """plot data availability and frequency of observation collection
-
-        Parameters
-        ----------
-        column_name : str, optional
-            column name of the timeseries data
-        intervals: dict, optional
-            A dict with frequencies as keys and number of seconds as values
-        ignore: list, optional
-            A list with frequencies in intervals to ignore
-        normtype: str, optional
-            Determines the type of color normalisations, default is 'log'
-        cmap: str, optional
-            A reference to a matplotlib colormap
-        set_yticks: bool, optional
-            Setthe names of the series as ytciks
-        figsize: tuple, optional
-            The size of the new figure in inches (h,v)
-        **kwargs: dict, optional
-            Extra arguments are passed to matplotlib.pyplot.subplots()
-
-
-
-        """
-
-        art = util._import_art_tools()
-        series_list = []
-        for o in self._obj.obs.values:
-            series = o[column_name]
-            series.name = o.name
-            series_list.append(series)
-
-        ax = art.data_availablity(
-            series_list,
-            intervals=intervals,
-            ignore=ignore,
-            normtype=normtype,
-            cmap=cmap,
-            set_yticks=set_yticks,
-            figsize=figsize,
-            **kwargs)
-
-        return ax
 
     def interactive_plots(self, savedir,
                           tmin=None, tmax=None,
@@ -305,15 +247,15 @@ class CollectionPlots:
                     html=bokeh_html, width=620, height=420)
                 popup = folium.Popup(iframe, max_width=620)
 
-                folium.CircleMarker([self._obj.loc[o.name,col_name_lat], 
-                                     self._obj.loc[o.name,col_name_lon]],
+                folium.CircleMarker([self._obj.loc[o.name, col_name_lat],
+                                     self._obj.loc[o.name, col_name_lon]],
                                     icon=folium.Icon(icon='signal'), fill=True,
                                     color=color,
                                     popup=popup).add_to(group)
 
                 if map_label != '':
                     folium.map.Marker(
-                        [self._obj.loc[name,col_name_lat], self._obj.loc[name,col_name_lon]], icon=DivIcon(
+                        [self._obj.loc[name, col_name_lat], self._obj.loc[name, col_name_lon]], icon=DivIcon(
                             icon_size=(
                                 150, 36), icon_anchor=(
                                 0, 0), html='<div style="font-size: %ipt">%s</div>' %
@@ -337,193 +279,6 @@ class CollectionPlots:
             m.save(os.path.join(plot_dir, fname))
 
         return m
-
-    def mapfig(self, ax=None, figsize=(15, 15), label='gws',
-            edgecolor='black', facecolor='green',
-            marker='o', markersize=100, xlim=None, ylim=None, add_topo=True,
-            verbose=False):
-        """plot observation points on a map
-
-        Parameters
-        ----------
-        ax : matplotlib.axes
-            reference to axes object
-        figsize : tuple
-            figure size
-        label : str
-            label used in legend
-        edgecolor : str
-
-        facecolor : str
-
-        marker : str
-
-        markersize : int
-
-        xlim : tuple
-
-        ylim : tuple
-
-        add_topo : boolean, optional
-            topo is added using art tools
-
-        Returns
-        -------
-        ax : matplotlib.axes
-            reference to axes object
-
-        """
-
-        if ax is None:
-            _, ax = plt.subplots(1, 1, figsize=figsize)
-
-        ax.scatter(self._obj.x, self._obj.y, label=label, edgecolor=edgecolor,
-                   marker=marker, facecolor=facecolor,
-                   s=markersize)
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
-
-        if add_topo:
-            # attempt art_tools import
-            art = util._import_art_tools()
-            art.OpenTopo(ax=ax, verbose=verbose).plot(
-                verbose=verbose, alpha=0.5)
-
-        ax.legend()
-
-        return ax
-
-    def mapgraphs(self, graph=None, plots_per_map=10, figsize=(16, 10),
-                  extent=None, plot_column='stand_m_tov_nap',
-                  per_location=True,
-                  plot_func=None,
-                  plot_xlim=(None, None), plot_ylim=(None, None),
-                  min_dy=2.0, vlines=[],
-                  savefig=None, map_gdf=None, map_gdf_kwargs={},
-                  verbose=True):
-        """make mapgraph plots of obs collection data
-
-        Parameters
-        ----------
-        graph : np.ndarray, optional
-            passed to the art.MapGraph funcion
-        plots_per_map : int, optional
-            number of plots per mapgraph, should be consistent with graph argument
-        figsize : tuple, optional
-            figure size
-        extent : list or tuple, optional
-            extent of the map [xmin, xmax, ymin, ymax]
-        plot_column : str, optional
-            column name of data to be plotted in graphs
-        per_location : bool, optional
-            if True plot multiple filters on the same location in one figure
-        plot_func : function, optional,
-            if not None this function is used to make the plots
-        plot_xlim : list of datetime, optional
-            xlim of the graphs
-        plot_ylim : tuple or str, optional
-            the ylim of all the graphs or
-            'max_dy' -> all graphs get the maximum ylim
-            'min_dy' -> all graphs get the same dy unless the series has a dy
-                        bigger than min_dy
-        min_dy : float, optional
-            only used if plot_ylim is 'min_dy'
-        vlines : list, optional
-            list with x values on which a vertical line is plotted
-        savefig : str, optional
-            path to save the figure. {plot_number}.png will be append to this path
-        map_gdf : GeoDataFrame, optional
-            if not None the GeoDataFrame is also plotted on the map
-        map_gdf_kwargs : dic, optional
-            kwargs that will be passed to the map_gdf.plot() method
-
-
-        Returns
-        -------
-        mg_list : list of art_tools.plots.MapGraph
-            list of mapgraph objects
-
-        """
-
-        # attempt art_tools import
-        art = util._import_art_tools()
-
-        if graph is None:
-            graph = np.full((4, 4), True)
-            graph[1:, 1:-1] = False
-
-        if plot_ylim == 'max_dy':
-            plot_ylim = self._obj.get_min_max(obs_column=plot_column)
-
-        mg_list = []
-        if per_location:
-            plot_names = self._obj.groupby(
-                ['locatie'], as_index=False).mean()
-            plot_names.set_index('locatie', inplace=True)
-        else:
-            plot_names = self._obj.copy()
-
-        for k, xyo in plot_names.groupby(np.arange(plot_names.shape[0]) // plots_per_map):
-
-            mg = art.MapGraph(xy=xyo[['x', 'y']].values, graph=graph,
-                              figsize=figsize, extent=extent)
-
-            plt.sca(mg.mapax)
-            plt.yticks(rotation=90, va="center")
-            art.OpenTopo(ax=mg.mapax, verbose=verbose).plot(alpha=0.75,
-                                                            verbose=verbose)
-            if map_gdf is not None:
-                map_gdf.plot(ax=mg.mapax, **map_gdf_kwargs)
-
-            for i, name in enumerate(xyo.index):
-                if per_location:
-                    oc = self._obj.loc[self._obj.locatie == name].sort_index()
-                else:
-                    oc = self._obj.loc[[name]]
-
-                ax = mg.ax[i]
-                if plot_func:
-                    ax = plot_func(self._obj, oc, ax,
-                                   plot_xlim=plot_xlim,
-                                   plot_column=plot_column)
-                else:
-                    for o in oc.obs.values:
-                        try:
-                            o[plot_column][plot_xlim[0]:plot_xlim[1]].plot(
-                                ax=ax, lw=.5, marker='.', markersize=1., label=o.name)
-                        except TypeError:
-                            o[plot_column].plot(ax=ax, lw=.5, marker='.',
-                                                markersize=1., label=o.name)
-                            ax.set_xlim(plot_xlim)
-                    if plot_ylim == 'min_dy':
-                        ax.autoscale(axis='y', tight=True)
-                        ylim = ax.get_ylim()
-                        dy = ylim[1] - ylim[0]
-                        if dy < min_dy:
-                            ylim = (ylim[0] - (min_dy - dy) / 2,
-                                    ylim[1] + (min_dy - dy) / 2)
-                        ax.set_ylim(ylim)
-                    else:
-                        ax.set_ylim(plot_ylim)
-
-                    for line in vlines:
-                        ylim = ax.get_ylim()
-                        ax.vlines(line, ylim[0] - 100, ylim[1] + 100, ls='--',
-                                  lw=2.0, color='r')
-                    ax.legend(loc='best')
-
-            mg.figure.tight_layout()
-            if savefig is not None:
-                mg.figure.savefig(savefig + "{0}.png".format(k),
-                                  dpi=300, bbox_inches="tight")
-            mg_list.append(mg)
-
-        # for some reason you have to set the extent at the end again
-        if extent is not None:
-            for mg_m in mg_list:
-                mg_m.mapax.axis(extent)
-
-        return mg_list
 
 
 @accessor.register_obs_accessor("plots")

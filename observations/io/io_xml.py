@@ -1,10 +1,11 @@
+import os
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as etree
 from lxml.etree import iterparse, parse
 
 
-def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'}, 
+def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
              to_mnap=False, remove_nan=False, verbose=False):
     """read a FEWS XML-file with measurements, return list of ObsClass objects
 
@@ -70,7 +71,7 @@ def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
                 y = series["y"]
             else:
                 y = np.nan
-                
+
             for key, item in translate_dic.items():
                 series[item] = series.pop(key)
 
@@ -80,7 +81,7 @@ def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
     return obs_list
 
 
-def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'}, 
+def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
                      locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
@@ -177,17 +178,19 @@ def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
                         errors="coerce")
                     df.drop(columns=["date", "time"], inplace=True)
                     if return_events:
-                        df['value'] = pd.to_numeric(df['value'], errors="coerce")
+                        df['value'] = pd.to_numeric(
+                            df['value'], errors="coerce")
                         df['flag'] = pd.to_numeric(df['flag'])
                         s = df
                     else:
                         mask = df['flag'].isin(keep_flags)
-                        s = pd.to_numeric(df.loc[mask, 'value'], errors="coerce")
+                        s = pd.to_numeric(
+                            df.loc[mask, 'value'], errors="coerce")
 
                 for key, item in translate_dic.items():
                     header[item] = header.pop(key)
 
-                o = ObsClass(s, name=header['locatie'], 
+                o = ObsClass(s, name=header['locatie'],
                              locatie=header['locatie'],
                              meta=header)
                 header_list.append(header)
@@ -320,3 +323,38 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
             f.write("\t" + "</series>\n")
         # end Timeseries
         f.write("</TimeSeries>\n")
+
+
+def parse_xml_filelist(fnames, ObsClass, directory=None, locations=None,
+                       translate_dic={'locationId': 'locatie'},
+                       to_mnap=False, remove_nan=False, verbose=False,
+                       low_memory=True):
+    obs_list = []
+    nfiles = len(fnames)
+    for j, ixml in enumerate(fnames):
+
+        # print message
+        if verbose:
+            print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
+
+        # join directory to filename if provided
+        if directory is None:
+            fullpath = ixml
+        else:
+            fullpath = os.path.join(directory, ixml)
+
+        # selection of xml parse method
+        if low_memory:
+            olist = read_xml(fullpath,
+                             ObsClass=ObsClass,
+                             translate_dic=translate_dic,
+                             to_mnap=to_mnap,
+                             remove_nan=remove_nan,
+                             verbose=False)
+        else:
+            _, olist = iterparse_pi_xml(fullpath, ObsClass,
+                                        translate_dic=translate_dic,
+                                        locationIds=locations,
+                                        verbose=verbose)
+        obs_list += olist
+    return obs_list
