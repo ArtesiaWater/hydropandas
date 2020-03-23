@@ -1276,6 +1276,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 tmin="1900-01-01", tmax="2040-01-01",
                                 zmin=None, zmax=None, unit="NAP",
                                 keep_all_obs=True,
+                                cache=False,
                                 verbose=False):
     """Download DINO data within a certain extent (or a bounding box)
 
@@ -1304,6 +1305,10 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     keep_all_obs : boolean, optional
             add all observation points to the collection, even without data or
             metadata
+    cache : boolean, optional
+        if True each observation that has been downloaded is cached. Can be
+        helpfull because the dino server give errors frequently. default is 
+        False
     verbose : boolean, optional
         print additional information to the screen (default is False).
 
@@ -1361,12 +1366,27 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
         if verbose:
             print('reading -> {}'.format(index))
-
-        o = ObsClass.from_dino_server(location=loc.locatie,
-                                      filternr=float(loc.filternr),
-                                      tmin=tmin_t,
-                                      tmax=tmax_t,
-                                      unit=unit)
+            
+        if cache:
+            cache_dir = os.path.join(tempfile.gettempdir(), 'pbdata')
+            if not os.path.isdir(cache_dir):
+                os.mkdir(cache_dir)
+            fname = os.path.join(cache_dir, f'{loc.locatie}-{loc.filternr:03d}' + '.pklz')
+            if os.path.isfile(fname):
+                o = pd.read_pickle(fname)
+            else:
+                o = ObsClass.from_dino_server(location=loc.locatie,
+                                              filternr=float(loc.filternr),
+                                              tmin=tmin_t,
+                                              tmax=tmax_t,
+                                              unit=unit)
+                o.to_pickle(fname)
+        else:
+            o = ObsClass.from_dino_server(location=loc.locatie,
+                                          filternr=float(loc.filternr),
+                                          tmin=tmin_t,
+                                          tmax=tmax_t,
+                                          unit=unit)
 
         if o.metadata_available and (not o.empty):
             obs_list.append(o)
