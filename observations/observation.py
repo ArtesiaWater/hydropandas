@@ -137,7 +137,7 @@ class GroundwaterObs(Obs):
     @property
     def _constructor(self):
         return GroundwaterObs
-    
+
     @classmethod
     def from_dino(cls, fname=None, location=None, filternr=1.,
                   tmin="1900-01-01", tmax="2040-01-01",
@@ -158,7 +158,7 @@ class GroundwaterObs(Obs):
             end date in format YYYY-MM-DD
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv if
-            fname is not None and otherwise to io_dino.findMeetreeks 
+            fname is not None and otherwise to io_dino.findMeetreeks
 
 
         """
@@ -168,13 +168,15 @@ class GroundwaterObs(Obs):
                 fname, **kwargs)
 
             return cls(measurements, meta=meta, **meta)
-        
+
         elif location is not None:
             measurements, meta = io_dino.download_dino_groundwater(location,
                                                                    filternr,
                                                                    tmin, tmax,
                                                                    **kwargs)
-    
+            if "name" not in meta.keys():
+                meta["name"] = "{0}-{1:03d}".format(location, filternr)
+
             if meta['metadata_available']:
                 return cls(measurements, meta=meta,
                            x=meta.pop('x'), y=meta.pop('y'),
@@ -187,12 +189,13 @@ class GroundwaterObs(Obs):
             else:
                 return cls(measurements, meta=meta)
         else:
-            raise ValueError('specify fname or location to obtain groundwater heads')
+            raise ValueError(
+                'specify fname or location to obtain groundwater heads')
 
     @classmethod
     def from_dino_server(cls, location, filternr=1.,
-                          tmin="1900-01-01", tmax="2040-01-01",
-                          **kwargs):
+                         tmin="1900-01-01", tmax="2040-01-01",
+                         **kwargs):
         """download dino data from the server.
 
         Parameters
@@ -208,25 +211,26 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
         """
-    
-        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+
+        warnings.warn(
+            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         measurements, meta = io_dino.download_dino_groundwater(location,
-                                                                filternr,
-                                                                tmin, tmax,
-                                                                **kwargs)
+                                                               filternr,
+                                                               tmin, tmax,
+                                                               **kwargs)
+        if "name" not in meta:
+            meta["name"] = "{0}-{1:03d}".format(location, filternr)
 
         if meta['metadata_available']:
-            if "name" not in meta:
-                meta["name"] = "{0}-{1:03d}".format(location, filternr)
             return cls(measurements, meta=meta,
-                        x=meta.pop('x'), y=meta.pop('y'),
-                        onderkant_filter=meta.pop('onderkant_filter'),
-                        bovenkant_filter=meta.pop('bovenkant_filter'),
-                        name=meta.pop('name'),
-                        locatie=meta.pop('locatie'),
-                        maaiveld=meta.pop('maaiveld'),
-                        filternr=meta.pop('filternr'))
+                       x=meta.pop('x'), y=meta.pop('y'),
+                       onderkant_filter=meta.pop('onderkant_filter'),
+                       bovenkant_filter=meta.pop('bovenkant_filter'),
+                       name=meta.pop('name'),
+                       locatie=meta.pop('locatie'),
+                       maaiveld=meta.pop('maaiveld'),
+                       filternr=meta.pop('filternr'))
         else:
             return cls(measurements, meta=meta)
 
@@ -243,8 +247,9 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
-    
-        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+
+        warnings.warn(
+            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         if fname is not None:
             # read dino csv file
