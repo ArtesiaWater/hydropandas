@@ -1,10 +1,10 @@
 import os
+import re
+from io import StringIO
 
 import numpy as np
 import pandas as pd
 import requests
-from io import StringIO
-import re
 
 
 def get_stations(variable='RD'):

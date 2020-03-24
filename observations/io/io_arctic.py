@@ -1,6 +1,7 @@
-from tqdm import tqdm
-import arctic
 from timeit import default_timer
+
+import arctic
+from tqdm import tqdm
 
 
 def read_arctic(connstr, libname, ObsClass, verbose=False):

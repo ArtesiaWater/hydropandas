@@ -1,23 +1,20 @@
 import os
-import warnings
 import re
 import tempfile
+import warnings
+
 
 import datetime as dt
+import geopandas as gpd
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
-
 import requests
-from requests.exceptions import HTTPError
-
-import json
-
 import zeep
+from requests.exceptions import HTTPError
+from shapely.geometry import Point
 from zeep import Plugin
-from zeep.wsa import WsAddressingPlugin
 from zeep.plugins import HistoryPlugin
+from zeep.wsa import WsAddressingPlugin
 
 from ..util import unzip_file
 

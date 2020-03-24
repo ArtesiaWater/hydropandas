@@ -26,11 +26,13 @@ A pystore with an ObsCollection has 3 layers:
 """
 
 import os
+
 import pandas as pd
 import pystore
 from tqdm import tqdm
-from ..observation import GroundwaterObs
+
 from ..obs_collection import ObsCollection
+from ..observation import GroundwaterObs
 
 
 def set_pystore_path(pystore_path):
