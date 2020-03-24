@@ -137,13 +137,108 @@ class ObsCollection(pd.DataFrame):
             if verbose:
                 print(f'set attribute {att_name} of {iname} to {value}')
             o.meta.update({att_name: value})
+    
+    @classmethod
+    def from_dino(cls, dirname=None,
+                  extent=None, bbox=None,
+                  ObsClass=obs.GroundwaterObs,
+                  subdir='Grondwaterstanden_Put',
+                  suffix='1.csv',
+                  unpackdir=None,
+                  force_unpack=False,
+                  preserve_datetime=False,
+                  keep_all_obs=True,
+                  name=None,
+                  verbose=False,
+                  **kwargs):
+        """ Read dino data from a server
 
+        Parameters
+        ----------
+        extent : list, tuple or numpy-array (user must specify extent or bbox)
+            The extent, in RD-coordinates, for which you want to retreive locations
+            [xmin, xmax, ymin, ymax]
+        bbox : list, tuple or numpy-array (user must specify extent or bbox)
+            The bounding box, in RD-coordinates, for which you want to retreive locations
+            [xmin, ymin, xmax, ymax]
+        ObsClass : type
+            class of the observations, so far only GroundwaterObs is supported
+        name : str, optional
+            the name of the observation collection
+        keep_all_obs : boolean, optional
+            add all observation points to the collection, even without data or
+            metadata
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+        kwargs:
+            kwargs are passed to the io_dino.download_dino_within_extent() function
+
+        Returns
+        -------
+        cls(obs_df) : ObsCollection
+            collection of multiple point observations
+        """
+        from .io.io_dino import read_dino_dir, download_dino_within_extent
+        
+        if dirname is not None:
+            # read dino directory            
+            if name is None:
+                name = subdir
+    
+            meta = {'dirname': dirname,
+                    'type': ObsClass,
+                    'suffix': suffix,
+                    'unpackdir': unpackdir,
+                    'force_unpack': force_unpack,
+                    'preserve_datetime': preserve_datetime,
+                    'verbose': verbose,
+                    'keep_all_obs': keep_all_obs
+                    }
+    
+            obs_list = read_dino_dir(dirname,
+                                    ObsClass,
+                                    subdir,
+                                    suffix,
+                                    unpackdir,
+                                    force_unpack,
+                                    preserve_datetime,
+                                    verbose,
+                                    keep_all_obs,
+                                    **kwargs)
+
+        elif extent is not None or bbox is not None:
+            # read dino data within extent
+            if ObsClass == obs.GroundwaterObs:
+                layer = 'grondwatermonitoring'
+            else:
+                raise NotImplementedError(
+                    'cannot download {} from Dino'.format(ObsClass))
+    
+            if name is None:
+                name = '{} from DINO'.format(layer)
+    
+            meta = kwargs.copy()
+            meta.update({'verbose': verbose,
+                         'extent': extent,
+                         'bbox': bbox,
+                         'layer': layer,
+                         'keep_all_obs': keep_all_obs,
+                         'verbose': verbose})
+    
+            obs_list = download_dino_within_extent(
+                extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
+                keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+    
+        obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df, name=name, bbox=bbox, meta=meta)
+        
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
-                         ObsClass=obs.GroundwaterObs,
-                         name=None, keep_all_obs=True,
-                         verbose=False, **kwargs
-                         ):
+                          ObsClass=obs.GroundwaterObs,
+                          name=None, keep_all_obs=True,
+                          verbose=False, **kwargs
+                          ):
         """ Read dino data from a server
 
         Parameters
@@ -172,6 +267,8 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
 
         """
+
+        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         from .io.io_dino import download_dino_within_extent
 
@@ -247,6 +344,8 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
+
+        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         from .io.io_dino import read_dino_dir
 
