@@ -145,18 +145,16 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        location : str, optional
+        location : str
             location of the peilbuis, i.e. B57F0077
-        filternr : float, optional
-            filter_nr of the peilbuis, i.e. 1.
+        filternr : float
+            filter_nr of the peilbuis, i.e. 1.0
         tmin : str
             start date in format YYYY-MM-DD
         tmax : str
             end date in format YYYY-MM-DD
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
-
-
         """
 
         measurements, meta = io_dino.download_dino_groundwater(location,
@@ -165,6 +163,8 @@ class GroundwaterObs(Obs):
                                                                **kwargs)
 
         if meta['metadata_available']:
+            if "name" not in meta:
+                meta["name"] = "{0}-{1:03d}".format(location, filternr)
             return cls(measurements, meta=meta,
                        x=meta.pop('x'), y=meta.pop('y'),
                        onderkant_filter=meta.pop('onderkant_filter'),
