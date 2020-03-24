@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
-from scipy import interpolate
 
 
 from . import accessor
-from .. import util
 
 
 @accessor.register_obscollection_accessor("geo")
@@ -167,7 +165,7 @@ class GeoAccessor:
             # find the nearest point and return the corresponding Place value
             nearest_point_gdf2 = nearest_points(point_gdf1, pts_gdf2)[1]
             nearest = gdf2[gdf2.geometry == nearest_point_gdf2]
-            return nearest.index.values[0]
+            return nearest.index[0]
 
         def distance_nearest_point(point_gdf1, pts=pts_gdf2):
             # find the nearest point and return the corresponding Place value
@@ -179,6 +177,8 @@ class GeoAccessor:
             lambda row: nearest_point(row.geometry), axis=1)
         gdf1['distance nearest point'] = gdf1.apply(
             lambda row: distance_nearest_point(row.geometry), axis=1)
+        
+        
 
         return gdf1[['nearest point', 'distance nearest point']]
 

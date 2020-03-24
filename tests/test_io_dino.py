@@ -26,13 +26,19 @@ def test_dino_download_single():
     return measurements, meta
 
 def test_dino_download_single_empty():
-    
+    # download empty
     measurements, meta = io_dino.download_dino_groundwater(location="B50E0092",
                                                            filternr=1.,
                                                            tmin="1900-01-01",
                                                            tmax="2040-01-01",
                                                            unit="NAP", 
                                                            verbose=True)
+    return measurements, meta
+
+def test_dino_csv():
+    fname = r'.\data\2019-Dino-test\Grondwaterstanden_Put\B33F0080001_1.csv'
+    measurements, meta = io_dino.read_dino_groundwater_csv(fname)
+
     return measurements, meta
 
 def test_dino_metadata():
@@ -52,7 +58,7 @@ def test_dino_metadata2():
     return meta
 
 def test_dino_metadata3():
-    # download metadata of a well without metadata
+    # download metadata of a well that does not have metadata
     dinorest = io_dino.DinoREST()
     meta = dinorest.get_gwo_metadata(location='B45G1147',
                                      filternr='001', 

@@ -3,6 +3,8 @@ import re
 import tempfile
 import warnings
 
+
+import datetime as dt
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -63,10 +65,19 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 
 def _read_dino_groundwater_metadata(f, line):
+    
+    _translate_dic_float = {'x-coordinaat': 'x',
+                            'y-coordinaat': 'y',
+                            'filternummer':'filternr'}
+    _translate_dic_div_100 = {'meetpunt (cm t.o.v. nap)': 'meetpunt',
+                              'bovenkant filter (cm t.o.v. nap)': 'bovenkant_filter',
+                              'onderkant filter (cm t.o.v. nap)': 'onderkant_filter',
+                              'maaiveld (cm t.o.v. nap)': 'maaiveld'}
     metalist = list()
     line = line.strip()
     properties = line.split(',')
     line = f.readline()
+    
     while line not in ['\n', '', '\r\n']:
         meta = dict()
         line = line.strip()
@@ -76,50 +87,57 @@ def _read_dino_groundwater_metadata(f, line):
         metalist.append(meta)
         line = f.readline()
 
-    meta = {}
+    meta_ts = {}
     if metalist:
-        meta["locatie"] = metalist[-1]['locatie']
-        meta["filternr"] = int(float(metalist[-1]['filternummer']))
-        meta["name"] = '-'.join([meta["locatie"],
-                                 metalist[-1]['filternummer']])
-        meta["x"] = float(metalist[-1]['x-coordinaat'])
-        meta["y"] = float(metalist[-1]['y-coordinaat'])
-        meetpunt = metalist[-1]['meetpunt (cm t.o.v. nap)']
-        if meetpunt == '':
-            meta["meetpunt"] = np.nan
-        else:
-            meta["meetpunt"] = float(meetpunt) / 100.
-        maaiveld = metalist[-1]['maaiveld (cm t.o.v. nap)']
-        if maaiveld == '':
-            meta["maaiveld"] = np.nan
-        else:
-            meta["maaiveld"] = float(maaiveld) / 100
-        bovenkant_filter = metalist[-1]['bovenkant filter (cm t.o.v. nap)']
-        if bovenkant_filter == '':
-            meta["bovenkant_filter"] = np.nan
-        else:
-            meta["bovenkant_filter"] = float(bovenkant_filter) / 100
-        onderkant_filter = metalist[-1][
-            'onderkant filter (cm t.o.v. nap)']
-        if onderkant_filter == '':
-            meta["onderkant_filter"] = np.nan
-        else:
-            meta["onderkant_filter"] = float(onderkant_filter) / 100
-        meta["metadata_available"] = True
+        #add time dependent metadata to meta_ts
+        for i, meta in enumerate(metalist):
+            meta_tsi = {}
+            start_date = pd.to_datetime(meta.pop('startdatum'), dayfirst=True)
+            end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
+            meta_tsi['locatie'] = meta['locatie']
+            for key in _translate_dic_float.keys():
+                if meta[key] == '':
+                    meta_tsi[_translate_dic_float[key]] = np.nan
+                else:
+                    meta_tsi[_translate_dic_float[key]] = float(meta[key])
+
+            for key in _translate_dic_div_100.keys():
+                if meta[key] == '':
+                    meta_tsi[_translate_dic_div_100[key]] = np.nan
+                else:
+                    meta_tsi[_translate_dic_div_100[key]] = float(meta[key])/100.
+            if i ==0:  
+                for key in meta_tsi.keys():
+                    meta_ts[key] = pd.Series(name=key)    
+            
+            for key in meta_tsi.keys():
+                meta_ts[key].loc[start_date] = meta_tsi[key]
+
+        # remove series with non time variant metadata from meta_ts
+        ts_keys = ['locatie'] + list(_translate_dic_float.values()) + list(_translate_dic_div_100.values())
+        for key in ts_keys:
+            unique_values = meta_ts[key].unique()
+            if len(unique_values)==1:
+                meta_ts.pop(key)
+ 
+        obs_att = meta_tsi.copy()
+        obs_att["name"] = f'{obs_att["locatie"]}-{int(obs_att["filternr"]):03d}'
+        obs_att["metadata_available"] = True
     else:
         # de metadata is leeg
-        meta["locatie"] = ''
-        meta["filternr"] = np.nan
-        meta["name"] = 'unknown'
-        meta["x"] = np.nan
-        meta["y"] = np.nan
-        meta["meetpunt"] = np.nan
-        meta["maaiveld"] = np.nan
-        meta["bovenkant_filter"] = np.nan
-        meta["onderkant_filter"] = np.nan
-        meta["metadata_available"] = False
-
-    return line, meta
+        obs_att = {}
+        obs_att["locatie"] = ''
+        obs_att["filternr"] = np.nan
+        obs_att["name"] = 'unknown'     
+        obs_att["x"] = np.nan
+        obs_att["y"] = np.nan
+        obs_att["meetpunt"] = np.nan
+        obs_att["maaiveld"] = np.nan
+        obs_att["bovenkant_filter"] = np.nan
+        obs_att["onderkant_filter"] = np.nan
+        obs_att["metadata_available"] = False
+        
+    return line, obs_att, meta_ts
 
 
 def _read_dino_groundwater_measurements(f, line):
@@ -257,7 +275,7 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
             print('could not read reference level -> {}'.format(fname))
 
         # read metadata
-        line, meta = _read_dino_groundwater_metadata(f, line)
+        line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
         if verbose and (meta['metadata_available'] == False):
             print('could not read metadata -> {}'.format(fname))
@@ -272,6 +290,12 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
                 print('no NAP measurements available -> {}'.format(fname))
             if to_mnap and measurements is not None:
                 measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
+            
+            #add time variant metadata to measurements
+            for s in meta_ts.values():
+                measurements = pd.concat([measurements, s], axis=1)
+                measurements.loc[:, s.name] = measurements.loc[:, s.name].ffill()
+                
         else:
             measurements = None
 
@@ -797,6 +821,12 @@ class DinoREST:
             parsed dictionary
 
         """
+        _translate_dic_location = {'xcoord': 'x',
+                                  'ycoord': 'y',
+                                  'surfaceElevation': 'maaiveld'}
+        
+        _translate_dic_filter = {'bottomHeightNap': 'onderkant_filter',
+                                 'topHeightNap': 'bovenkant_filter'}
 
         meta = {
             "locatie": location,
@@ -836,12 +866,7 @@ class DinoREST:
 
         meta.update(data)
         meta.pop('dinoId')
-
-        translate_dic_location = {'xcoord': 'x',
-                                  'ycoord': 'y',
-                                  'surfaceElevation': 'maaiveld'}
-
-        for key, item in translate_dic_location.items():
+        for key, item in _translate_dic_location.items():
             meta[item] = meta.pop(key)
 
         if 'clusterList' in meta.keys():
@@ -852,10 +877,9 @@ class DinoREST:
             return meta
 
         meta.pop('piezometerNr')
-        translate_dic_filter = {'bottomHeightNap': 'onderkant_filter',
-                                'topHeightNap': 'bovenkant_filter'}
+        
 
-        for key, item in translate_dic_filter.items():
+        for key, item in _translate_dic_filter.items():
             meta[item] = meta.pop(key)
 
         return meta
@@ -1371,14 +1395,14 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
             if os.path.isfile(fname):
                 o = pd.read_pickle(fname)
             else:
-                o = ObsClass.from_dino_server(location=loc.locatie,
+                o = ObsClass.from_dino(location=loc.locatie,
                                               filternr=float(loc.filternr),
                                               tmin=tmin_t,
                                               tmax=tmax_t,
                                               unit=unit)
                 o.to_pickle(fname)
         else:
-            o = ObsClass.from_dino_server(location=loc.locatie,
+            o = ObsClass.from_dino(location=loc.locatie,
                                           filternr=float(loc.filternr),
                                           tmin=tmin_t,
                                           tmax=tmax_t,
@@ -1574,7 +1598,7 @@ def read_dino_dir(dirname, ObsClass=None,
     obs_list = []
     for _, file in enumerate(files):
         fname = os.path.join(dirname, subdir, file)
-        obs = ObsClass.from_dino_file(fname=fname, verbose=verbose, **kwargs)
+        obs = ObsClass.from_dino(fname=fname, verbose=verbose, **kwargs)
         if obs.metadata_available and (not obs.empty):
             obs_list.append(obs)
         elif keep_all_obs:
@@ -1585,19 +1609,3 @@ def read_dino_dir(dirname, ObsClass=None,
 
     return obs_list
 
-
-# %% Testing
-if __name__ == '__main__':
-
-    fname = r'..\data\2019-Dino-test\Grondwatersamenstellingen_Put\B52C0057.txt'
-
-    me1, meta = read_dino_groundwater_quality_txt(fname, verbose=True)
-
-    fname = r'..\data\2019-Dino-test\Peilschaal\P58A0001.csv'
-    measurements, meta = read_dino_waterlvl_csv(fname, verbose=True)
-
-    fname = r'art_tools\data\2019-Dino-test\Grondwaterstanden_Put\B33F0080001_1.csv'
-    obs_df = read_dino_groundwater_csv(fname, verbose=True)
-
-    fname = r'..\data\2019-Dino-test\Peilschaal\P58A0005.csv'
-    obs_df = read_dino_waterlvl_csv(fname, read_series=False, verbose=True)

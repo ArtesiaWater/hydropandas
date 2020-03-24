@@ -263,8 +263,3 @@ def df_to_fieldlogger_csv(df, fname, otype=None,
 
     return fieldlogger_df
 
-
-if __name__ == '__main__':
-
-    fname = r'..\data\2019-Dino-test\fieldlogger\locations.csv'
-    obslist, fieldlogger_meta = fieldlogger_csv_to_obs_list(fname)
