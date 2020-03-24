@@ -5,11 +5,15 @@ Created on Thu Oct 10 11:01:22 2019
 @author: oebbe
 """
 
-from scipy.io import loadmat
 import os
+
 import numpy as np
-from .util import matlab2datetime
-from pandas import Series, DataFrame
+from pandas import DataFrame, Series
+from scipy.io import loadmat
+
+from observations import observation
+
+from ..util import matlab2datetime
 
 
 def read_file(fname, ObsClass, verbose=False):
@@ -20,18 +24,27 @@ def read_file(fname, ObsClass, verbose=False):
     if verbose:
         print('reading menyanthes file {}'.format(fname))
 
-    _rename_dic = {'xcoord': 'x',
-                   'ycoord': 'y',
-                   'upfiltlev': 'bovenkant_filter',
-                   'lowfiltlev': 'onderkant_filter',
-                   'surflev': 'maaiveld',
-                   'filtnr': 'filternr',
-                   'meetpunt': 'measpointlev'
-                   }
+    if ObsClass == observation.GroundwaterObs:
+        _rename_dic = {'xcoord': 'x',
+                       'ycoord': 'y',
+                       'upfiltlev': 'bovenkant_filter',
+                       'lowfiltlev': 'onderkant_filter',
+                       'surflev': 'maaiveld',
+                       'filtnr': 'filternr',
+                       'meetpunt': 'measpointlev'
+                       }
 
-    _keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
-               'metadata_available', 'maaiveld', 'meetpunt',
-               'bovenkant_filter', 'onderkant_filter']
+        _keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
+                   'metadata_available', 'maaiveld', 'meetpunt',
+                   'bovenkant_filter', 'onderkant_filter']
+
+    elif ObsClass == observation.WaterlvlObs:
+        _rename_dic = {'xcoord': 'x',
+                       'ycoord': 'y',
+                       'meetpunt': 'measpointlev'
+                       }
+
+        _keys_o = ['name', 'x', 'y', 'locatie']
 
     # Check if file is present
     if not (os.path.isfile(fname)):
@@ -52,7 +65,7 @@ def read_file(fname, ObsClass, verbose=False):
         metadata['metadata_available'] = True
 
         s = metadata.pop('values')
-        df = DataFrame(s, columns=['Stand_m_tov_NAP'])
+        df = DataFrame(s, columns=['stand_m_tov_nap'])
         for key in _rename_dic.keys():
             if key in metadata.keys():
                 metadata[_rename_dic[key]] = metadata.pop(key)

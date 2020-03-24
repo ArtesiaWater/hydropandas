@@ -5,8 +5,10 @@ Created on Wed Sep 12 12:15:42 2018
 @author: Artesia
 """
 import warnings
+
 import pandas as pd
-from . import observation as obs
+
+from .. import observation as obs
 
 
 def _fieldlogger_groundwater_settings(df, verbose=False):
@@ -40,11 +42,11 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
                                         "Gemiddeldeld gemeten|{:+.2f} mNAP|"
                                         "Minimaal gemeten|{:+.2f} mNAP".format(o.meta['bovenkant_filter'],
                                                                                o.meta['onderkant_filter'],
-                                                                               o['Stand_m_tov_NAP'].max(
+                                                                               o['stand_m_tov_nap'].max(
                                         ),
-                                            o['Stand_m_tov_NAP'].mean(
+                                            o['stand_m_tov_nap'].mean(
                                         ),
-                                            o['Stand_m_tov_NAP'].min()))
+                                            o['stand_m_tov_nap'].min()))
     group = df.name
 
     return heading, name, subname, inputfield, properties, group
@@ -77,10 +79,10 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
     inputfield = 'Stand|Opmerking'
     properties = df.obs.apply(lambda o: "Maximaal gemeten|{:+.2f} mNAP|"
                                         "Gemiddeldeld gemeten|{:+.2f} mNAP|"
-                                        "Minimaal gemeten|{:+.2f} mNAP".format(o['Stand_m_tov_NAP'].max(),
-                                                                               o['Stand_m_tov_NAP'].mean(
+                                        "Minimaal gemeten|{:+.2f} mNAP".format(o['stand_m_tov_nap'].max(),
+                                                                               o['stand_m_tov_nap'].mean(
                                         ),
-                                            o['Stand_m_tov_NAP'].min()))
+                                            o['stand_m_tov_nap'].min()))
     group = df.name
 
     return heading, name, subname, inputfield, properties, group
@@ -261,8 +263,3 @@ def df_to_fieldlogger_csv(df, fname, otype=None,
 
     return fieldlogger_df
 
-
-if __name__ == '__main__':
-
-    fname = r'..\data\2019-Dino-test\fieldlogger\locations.csv'
-    obslist, fieldlogger_meta = fieldlogger_csv_to_obs_list(fname)

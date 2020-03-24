@@ -87,6 +87,7 @@ ENV/
 # Spyder project settings
 .spyderproject
 .spyproject
+.pylint.d/
 
 # Rope project settings
 .ropeproject
@@ -103,4 +104,6 @@ ENV/
 .pytest_cache/
 
 *.html
+*cov.xml
 
+.ignore*

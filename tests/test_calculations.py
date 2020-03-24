@@ -6,56 +6,80 @@ Created on Fri Nov  8 11:48:29 2019
 """
 
 import test_to_from as ttf
+import flopy
+import numpy as np
 
 
 def test_within_extent():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     extent = [210350, 213300, 473300, 474000]
-    dino_gw.within_extent(extent, inplace=True)
+    dino_gw.geo.within_extent(extent, inplace=True)
     assert dino_gw.shape[0] == 4
     return dino_gw
 
+#%% stats
 
 def test_obscollection_consecutive_obs_years():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
-    coy = gw.consecutive_obs_years()
-
+    coy = gw.stats.consecutive_obs_years()
     return coy
 
+def test_obscollection_get_number_of_obs():
+    gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
+    coy = gw.stats.get_no_of_observations()
+    return coy
+
+def test_obscollection_get_first_last_obs_date():
+    gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
+    fl_obs_date = gw.stats.get_first_last_obs_date()
+    return fl_obs_date
 
 def test_obscollection_get_seasonal_stats():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
-    st = gw.get_seasonal_stat(stat='mean')
-
+    st = gw.stats.get_seasonal_stat(stat='mean')
     return st
 
-def test_get_filternr():
-    dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.get_filternr(if_exists='replace')
-    return dino_gw
+def test_obscollection_get_min():
+    gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
+    omin = gw.stats.get_min()
+    return omin
 
-def test_get_filternr_location():
-    fews_gw_prod = ttf.test_obscollection_fews()
-    fews_gw_prod.get_filternr_locatie('locationId')
-    
-    return fews_gw_prod
+def test_obscollection_get_max():
+    gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
+    omax = gw.stats.get_max()
+    return omax
+
+#%%
+
 
 def test_get_nearest_point():
+    # check two of the same observation collections
+    # every point must find itself as the nearest point
     dino_gw = ttf.test_obscollection_dinozip_gw()
     fl = ttf.test_obscollection_fieldlogger()
     dino_gw[['nearest point', 'distance nearest point']
-            ] = dino_gw.get_nearest_point(fl)
+            ] = dino_gw.geo.get_nearest_point(fl)
     return dino_gw
 
-def test_get_maaiveld_oc():
-    gw = ttf.test_obscollection_fews()
-    zp = gw.get_maaiveld()
 
-    return zp
+def test_get_surface_level_oc():
+    try:
+        from art_tools import obs_extension
+        gw = ttf.test_obscollection_fews_lowmemory()
+        zp = gw.art.geo_get_surface_level()
+        return zp
+    except ModuleNotFoundError as e:
+        print(e)
+        return
 
-def test_get_maaiveld_gwobs():
-    gw = ttf.test_observation_gw()
-    mv = gw.get_maaiveld()
-    
-    return mv
 
+
+def test_get_surface_level_gwobs():
+    try:
+        from art_tools import obs_extension
+        gw = ttf.test_observation_gw()
+        mv = gw.art.geo_get_surface_level()
+        return mv
+    except ModuleNotFoundError as e:
+        print(e)
+        return

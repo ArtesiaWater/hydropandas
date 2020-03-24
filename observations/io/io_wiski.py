@@ -1,10 +1,9 @@
 import os
-import tempfile
 
 import numpy as np
 import pandas as pd
 
-from .util import unzip_file, get_files
+from ..util import get_files
 
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',
@@ -84,11 +83,28 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                 data[col], errors="coerce")
 
             if to_mnap:
-                data.rename(columns={col: 'Stand_m_tov_NAP'}, inplace=True)
+                data.rename(columns={col: 'stand_m_tov_nap'}, inplace=True)
         else:
             data = None
 
-    return header, data
+        # translate some header keys
+        metadata = {}
+        for key, val in header.items():
+            if key == 'Station Site':
+                metadata['locatie'] = val
+            elif key == 'x':
+                metadata['x'] = val
+            elif key == "y":
+                metadata['y'] = val
+            elif key == 'name':
+                metadata['name'] = val
+            # this adds the other header keys to metadata
+            # but this will not work if keys contain spaces etc.
+            # because it tries adding them as attributes.
+            # else:
+            #     metadata[key] = val
+
+    return data, metadata
 
 
 def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
@@ -120,9 +136,4 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
             if verbose:
                 print('not added to collection -> {}'.format(csv))
 
-    # create dataframe
-    obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                          columns=obs_list[0].to_collection_dict().keys())
-    obs_df.set_index('name', inplace=True)
-
-    return obs_df
+    return obs_list

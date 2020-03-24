@@ -25,13 +25,14 @@ A pystore with an ObsCollection has 3 layers:
 
 """
 
+import os
 
-import numpy as np
 import pandas as pd
 import pystore
 from tqdm import tqdm
-from .observation import GroundwaterObs
-from .obs_collection import ObsCollection
+
+from ..obs_collection import ObsCollection
+from ..observation import GroundwaterObs
 
 
 def set_pystore_path(pystore_path):
@@ -64,12 +65,6 @@ def item_to_obs(item, ObsClass, nameby="item"):
         df = pd.DataFrame(columns=item.data.columns)
     else:
         df = item.to_pandas()
-    try:
-        x = item.metadata["x"]
-        y = item.metadata["y"]
-    except KeyError:
-        x = np.nan
-        y = np.nan
     item.metadata["datastore"] = str(item.datastore)
     if nameby == "item":
         name = item.item
@@ -78,13 +73,19 @@ def item_to_obs(item, ObsClass, nameby="item"):
     elif nameby == "both":
         name = item.collection + "__" + item.item
     else:
-        raise ValueError("'{}' is not a valid option for 'nameby'".format(nameby))
+        raise ValueError(
+            "'{}' is not a valid option for 'nameby'".format(nameby))
 
     metadata = item.metadata
     if not "name" in metadata.keys():
         metadata["name"] = name
 
-    o = ObsClass(df, name=name, x=x, y=y, meta=metadata)
+    obs_attr_dic = {}
+    for attr in ObsClass._metadata:
+        if attr in metadata.keys():
+            obs_attr_dic[attr] = metadata[attr]
+
+    o = ObsClass(df, **obs_attr_dic, meta=metadata)
     return o
 
 
@@ -238,3 +239,56 @@ def pystore_obslist_to_obscollection(obs_list, name="obs_coll"):
             'verbose': True}
     oc = ObsCollection(obs_df, name=name, meta=meta)
     return oc
+
+
+def read_pystore(storename, pystore_path,
+                 ObsClass, extent=None, collection_names=None,
+                 item_names=None, nameby="item",
+                 read_series=True, verbose=True, progressbar=False):
+    # set path
+    set_pystore_path(pystore_path)
+
+    if not os.path.isdir(os.path.join(pystore_path, storename)):
+        raise FileNotFoundError("pystore -> '{}' "
+                                "does not exist".format(storename))
+
+    # obtain item names within extent
+    if extent is not None:
+        meta_list = read_store_metadata(storename, items="first")
+        obs_df = pd.DataFrame(meta_list)
+        obs_df.set_index('item_name', inplace=True)
+        obs_df['x'] = pd.to_numeric(obs_df.x, errors='coerce')
+        obs_df['y'] = pd.to_numeric(obs_df.y, errors='coerce')
+        item_names = obs_df[(obs_df.x > extent[0]) & (obs_df.x < extent[1]) & (
+            obs_df.y > extent[2]) & (obs_df.y < extent[3])].index
+
+    if read_series:
+        obs_list = store_to_obslist(
+            storename,
+            ObsClass=ObsClass,
+            collection_names=collection_names,
+            item_names=item_names,
+            nameby=nameby,
+            verbose=verbose,
+            progressbar=progressbar)
+
+        return obs_list
+    else:
+        if item_names is None:
+            item_names = "all"
+        meta_list = read_store_metadata(storename,
+                                        items=item_names,
+                                        verbose=verbose)
+        meta = {}
+        obs_df = pd.DataFrame(meta_list)
+        if nameby == "collection":
+            obs_df.set_index('collection_name', inplace=True)
+        elif nameby == "item":
+            obs_df.set_index('item_name', inplace=True)
+        elif nameby == "both":
+            obs_df["name"] = obs_df["collection_name"] + "__" + \
+                obs_df["item_name"]
+        else:
+            raise ValueError("'{}' is not a valid option "
+                             "for 'nameby'".format(nameby))
+        return obs_df

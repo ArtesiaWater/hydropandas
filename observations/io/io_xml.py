@@ -1,10 +1,12 @@
+import os
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as etree
-from lxml.etree import iterparse, parse
+from lxml.etree import iterparse
 
 
-def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
+def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
+             to_mnap=False, remove_nan=False, verbose=False):
     """read a FEWS XML-file with measurements, return list of ObsClass objects
 
     Parameters
@@ -14,7 +16,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     to_mnap : boolean, optional
-        if True a column with 'Stand_m_tov_NAP' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
@@ -59,7 +61,7 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
             if remove_nan:
                 ts.dropna(subset=['value'], inplace=True)
             if to_mnap:
-                ts['Stand_m_tov_NAP'] = ts['value']
+                ts['stand_m_tov_nap'] = ts['value']
 
             if "x" in series.keys():
                 x = series["x"]
@@ -70,12 +72,17 @@ def read_xml(fname, ObsClass, to_mnap=False, remove_nan=False, verbose=False):
             else:
                 y = np.nan
 
-            obs_list.append(ObsClass(ts, name=series['locationId'],
+            for key, item in translate_dic.items():
+                series[item] = series.pop(key)
+
+            obs_list.append(ObsClass(ts, name=series['locatie'],
+                                     locatie=series['locatie'],
                                      x=x, y=y, meta=series))
     return obs_list
 
 
-def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
+def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
+                     locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
                      skip_errors=True, verbose=False):
@@ -171,14 +178,21 @@ def iterparse_pi_xml(fname, ObsClass, locationIds=None, return_events=True,
                         errors="coerce")
                     df.drop(columns=["date", "time"], inplace=True)
                     if return_events:
-                        df['value'] = pd.to_numeric(df['value'], errors="coerce")
+                        df['value'] = pd.to_numeric(
+                            df['value'], errors="coerce")
                         df['flag'] = pd.to_numeric(df['flag'])
                         s = df
                     else:
                         mask = df['flag'].isin(keep_flags)
-                        s = pd.to_numeric(df.loc[mask, 'value'], errors="coerce")
+                        s = pd.to_numeric(
+                            df.loc[mask, 'value'], errors="coerce")
 
-                o = ObsClass(s, name=header['locationId'], meta=header)
+                for key, item in translate_dic.items():
+                    header[item] = header.pop(key)
+
+                o = ObsClass(s, name=header['locatie'],
+                             locatie=header['locatie'],
+                             meta=header)
                 header_list.append(header)
                 series_list.append(o)
 
@@ -309,3 +323,38 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
             f.write("\t" + "</series>\n")
         # end Timeseries
         f.write("</TimeSeries>\n")
+
+
+def parse_xml_filelist(fnames, ObsClass, directory=None, locations=None,
+                       translate_dic={'locationId': 'locatie'},
+                       to_mnap=False, remove_nan=False, verbose=False,
+                       low_memory=True):
+    obs_list = []
+    nfiles = len(fnames)
+    for j, ixml in enumerate(fnames):
+
+        # print message
+        if verbose:
+            print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
+
+        # join directory to filename if provided
+        if directory is None:
+            fullpath = ixml
+        else:
+            fullpath = os.path.join(directory, ixml)
+
+        # selection of xml parse method
+        if low_memory:
+            olist = read_xml(fullpath,
+                             ObsClass=ObsClass,
+                             translate_dic=translate_dic,
+                             to_mnap=to_mnap,
+                             remove_nan=remove_nan,
+                             verbose=False)
+        else:
+            _, olist = iterparse_pi_xml(fullpath, ObsClass,
+                                        translate_dic=translate_dic,
+                                        locationIds=locations,
+                                        verbose=verbose)
+        obs_list += olist
+    return obs_list

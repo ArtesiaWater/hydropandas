@@ -10,22 +10,20 @@ import tempfile
 import time
 import zipfile
 
-import geopandas as gpd
 import numpy as np
 import pandas as pd
-import scipy.interpolate as spint
 import scipy.spatial.qhull as qhull
 from pandas import Timedelta, Timestamp
 
 
-def _import_art_tools():
-    try:
-        import art_tools as art
-        return art
-    except ModuleNotFoundError as e:
-        print('This function is not available please '
-              'contact Artesia for more information')
-        raise(e)
+def _obslist_to_frame(obs_list):
+    if len(obs_list) > 0:
+        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
+                              columns=obs_list[0].to_collection_dict().keys())
+        obs_df.set_index('name', inplace=True)
+    else:
+        obs_df = pd.DataFrame()
+    return obs_df
 
 
 def unzip_file(src, dst, force=False, preserve_datetime=False):
@@ -245,3 +243,14 @@ def interpolate(values, vtx, wts):
     """
 
     return np.einsum('nj,nj->n', np.take(values, vtx), wts)
+
+
+def df2gdf(df, xcol='x', ycol='y'):
+    """Make a GeoDataFrame from a DataFrame, assuming the geometry
+    are points.
+    """
+    from shapely.geometry import Point
+    from geopandas import GeoDataFrame
+    gdf = GeoDataFrame(df.copy(), geometry=[Point(
+        (s[xcol], s[ycol])) for i, s in df.iterrows()])
+    return gdf
