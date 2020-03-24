@@ -2,7 +2,6 @@ import os
 import warnings
 
 import numpy as np
-import pandas as pd
 
 from .. import util
 from ..observation import ModelObs

@@ -5,12 +5,15 @@ Created on Thu Oct 10 11:01:22 2019
 @author: oebbe
 """
 
-from scipy.io import loadmat
 import os
+
 import numpy as np
-from ..util import matlab2datetime
-from pandas import Series, DataFrame
+from pandas import DataFrame, Series
+from scipy.io import loadmat
+
 from observations import observation
+
+from ..util import matlab2datetime
 
 
 def read_file(fname, ObsClass, verbose=False):
@@ -20,8 +23,7 @@ def read_file(fname, ObsClass, verbose=False):
 
     if verbose:
         print('reading menyanthes file {}'.format(fname))
-    
-    
+
     if ObsClass == observation.GroundwaterObs:
         _rename_dic = {'xcoord': 'x',
                        'ycoord': 'y',
@@ -31,19 +33,18 @@ def read_file(fname, ObsClass, verbose=False):
                        'filtnr': 'filternr',
                        'meetpunt': 'measpointlev'
                        }
-    
+
         _keys_o = ['name', 'x', 'y', 'locatie', 'filternr',
                    'metadata_available', 'maaiveld', 'meetpunt',
                    'bovenkant_filter', 'onderkant_filter']
-        
+
     elif ObsClass == observation.WaterlvlObs:
         _rename_dic = {'xcoord': 'x',
                        'ycoord': 'y',
                        'meetpunt': 'measpointlev'
                        }
-    
-        _keys_o = ['name', 'x', 'y', 'locatie']
 
+        _keys_o = ['name', 'x', 'y', 'locatie']
 
     # Check if file is present
     if not (os.path.isfile(fname)):
