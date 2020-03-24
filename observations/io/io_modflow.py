@@ -2,7 +2,6 @@ import os
 import warnings
 
 import numpy as np
-import pandas as pd
 
 from .. import util
 from ..observation import ModelObs
@@ -154,3 +153,5 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         mo_list.append(mo)
 
     return mo_list
+
+

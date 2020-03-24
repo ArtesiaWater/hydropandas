@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as etree
-from lxml.etree import iterparse, parse
+from lxml.etree import iterparse
 
 
 def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
