@@ -1303,7 +1303,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
             metadata
     cache : boolean, optional
         if True each observation that has been downloaded is cached. Can be
-        helpfull because the dino server give errors frequently. default is 
+        helpful because the dino server give errors frequently. default is
         False
     verbose : boolean, optional
         print additional information to the screen (default is False).
@@ -1362,7 +1362,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
         if verbose:
             print('reading -> {}'.format(index))
-            
+
         if cache:
             cache_dir = os.path.join(tempfile.gettempdir(), 'pbdata')
             if not os.path.isdir(cache_dir):
