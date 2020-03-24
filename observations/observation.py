@@ -175,7 +175,7 @@ class GroundwaterObs(Obs):
                                                                    tmin, tmax,
                                                                    **kwargs)
             if "name" not in meta.keys():
-                meta["name"] = "{0}-{1:03d}".format(location, filternr)
+                meta["name"] = "{0}-{1:03g}".format(location, filternr)
 
             if meta['metadata_available']:
                 return cls(measurements, meta=meta,
@@ -220,7 +220,7 @@ class GroundwaterObs(Obs):
                                                                tmin, tmax,
                                                                **kwargs)
         if "name" not in meta:
-            meta["name"] = "{0}-{1:03d}".format(location, filternr)
+            meta["name"] = "{0}-{1:03g}".format(location, filternr)
 
         if meta['metadata_available']:
             return cls(measurements, meta=meta,
