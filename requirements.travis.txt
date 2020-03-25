@@ -9,3 +9,4 @@ shapely
 pyproj
 geopandas
 tqdm
+flopy
