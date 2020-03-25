@@ -2,7 +2,7 @@
 
 # observations
 
-The observations module is a Python package develop by Artesia for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The observations module extends pandas.DataFrame with extra functions and metadata related to the type of measurements that are loaded.
+The observations module is a Python package developed by Artesia for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The observations module extends pandas.DataFrame with extra functions and metadata related to the type of measurements that are loaded.
 
 
    
