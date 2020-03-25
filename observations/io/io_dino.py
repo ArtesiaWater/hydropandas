@@ -1402,7 +1402,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                        tmax=tmax_t,
                                        unit=unit)
                 o.to_pickle(fname)
-        else:
+        else:  
             o = ObsClass.from_dino(location=loc.locatie,
                                    filternr=float(loc.filternr),
                                    tmin=tmin_t,

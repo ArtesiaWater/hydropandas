@@ -2,6 +2,7 @@
 from observations import observation as obs
 from observations import obs_collection as oc
 import numpy as np
+import pytest
 
 # import sys
 # sys.path.insert(1, "..")
@@ -136,7 +137,7 @@ def test_obscollection_dinozip_gwq():
 
 def test_obscollection_dino_download_extent():
     # download DINO from extent
-    extent = [120300, 120500, 439000, 441000]  # Schoonhoven zoomed
+    extent = [117850, 117980, 439550, 439700]  # Schoonhoven zoomed
     dino_gw_extent = oc.ObsCollection.from_dino(
         extent=extent, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_extent
@@ -144,7 +145,7 @@ def test_obscollection_dino_download_extent():
 
 def test_obscollection_dino_download_bbox():
     # download DINO from bbox
-    bbox = [120300, 439000, 120500, 441000]  # Schoonhoven zoomed
+    bbox = [117850, 439550, 117980, 439700]  # Schoonhoven zoomed
     bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
     dino_gw_bbox = oc.ObsCollection.from_dino(
         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
@@ -254,14 +255,30 @@ def test_obscollection_wiskizip_gw():
     return wiski_col
 
 
-# %% PASTAS PROJECT
-
+# %% PASTAS PROJECTS AND PASTASTORE
+@pytest.mark.skip(reason="needs installation pastastore")
 def test_to_pastas_project():
 
     dino_gw = test_obscollection_dinozip_gw()
     pr = dino_gw.to_pastas_project(verbose=True)
 
     return pr
+
+@pytest.mark.skip(reason="needs installation pastastore")
+def test_to_pastastore():
+
+    dino_gw = test_obscollection_dinozip_gw()
+    pstore = dino_gw.to_pastastore(verbose=True)
+
+    return pstore
+
+@pytest.mark.skip(reason="needs installation pastastore")
+def test_from_pastas_project():
+
+    pr = test_to_pastas_project()
+    pr_oc = oc.ObsCollection.from_pastas_project(pr)
+
+    return pr_oc
 
 
 # %% PYSTORE

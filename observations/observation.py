@@ -69,20 +69,31 @@ class Obs(DataFrame):
     def _constructor(self):
         return Obs
 
-    def to_collection_dict(self):
+    def to_collection_dict(self, include_meta=False):
         """get dictionary with registered attributes and their values
         of an Obs object.
 
         This method can be used to create a dataframe from a collection
         of Obs objects.
+        
+        Parameters
+        ----------
+        include_meta : boolean, optional
+            include the meta dictionary in the collection dictionary,
+            default is false
 
         Returns
         -------
         d : dictionary
             dictionary with Obs information
         """
+        
+        attrs = self._metadata.copy()
+        if not include_meta:
+            attrs.remove('meta')
+        
         d = {}
-        for att in self._metadata:
+        for att in attrs:
             d[att] = getattr(self, att)
 
         d['obs'] = self
@@ -180,6 +191,7 @@ class GroundwaterObs(Obs):
                            onderkant_filter=meta.pop('onderkant_filter'),
                            bovenkant_filter=meta.pop('bovenkant_filter'),
                            name=meta.pop('name'),
+                           metadata_available=meta.pop('metadata_available'),
                            locatie=meta.pop('locatie'),
                            maaiveld=meta.pop('maaiveld'),
                            filternr=meta.pop('filternr'))
