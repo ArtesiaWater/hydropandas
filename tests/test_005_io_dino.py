@@ -4,16 +4,16 @@ Created on Mon Jun 24 11:43:27 2019
 
 @author: oebbe
 """
-import sys
-sys.path.insert(1, "..")
+# import sys
+# sys.path.insert(1, "..")
 from observations.io import io_dino
 from observations import observation as obs
-import os
+# import os
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
-sys.path.insert(0, PROJECT_DIR)
-os.chdir(TEST_DIR)
+# TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+# PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
+# sys.path.insert(0, PROJECT_DIR)
+# os.chdir(TEST_DIR)
 
 
 def test_dino_download_single():
@@ -31,12 +31,12 @@ def test_dino_download_single_empty():
                                                            filternr=1.,
                                                            tmin="1900-01-01",
                                                            tmax="2040-01-01",
-                                                           unit="NAP", 
+                                                           unit="NAP",
                                                            verbose=True)
     return measurements, meta
 
 def test_dino_csv():
-    fname = r'.\data\2019-Dino-test\Grondwaterstanden_Put\B33F0080001_1.csv'
+    fname = r'./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
     measurements, meta = io_dino.read_dino_groundwater_csv(fname)
 
     return measurements, meta
@@ -45,7 +45,7 @@ def test_dino_metadata():
     # download metadata
     dinorest = io_dino.DinoREST()
     meta = dinorest.get_gwo_metadata(location='B52C0057',filternr='001')
-    
+
     return meta
 
 
@@ -53,7 +53,7 @@ def test_dino_metadata2():
     # download metadata without sample data
     dinorest =io_dino. DinoREST()
     meta = dinorest.get_gwo_metadata(location='B57B0069',
-                                     filternr='002', 
+                                     filternr='002',
                                      verbose=True)
     return meta
 
@@ -61,21 +61,21 @@ def test_dino_metadata3():
     # download metadata of a well that does not have metadata
     dinorest = io_dino.DinoREST()
     meta = dinorest.get_gwo_metadata(location='B45G1147',
-                                     filternr='001', 
+                                     filternr='001',
                                      verbose=True)
     return meta
 
 
 def test_dino_meetreeks():
-    
+
     dino = io_dino.DinoWSDL()
 
     # measurements
-    measurements = dino.findMeetreeks(location='B58A0092', 
-                                      filternr='004', 
-                                      tmin="1900-01-01", 
+    measurements = dino.findMeetreeks(location='B58A0092',
+                                      filternr='004',
+                                      tmin="1900-01-01",
                                       tmax="2040-01-01")
-    
+
     return measurements
 
 def test_dino_download_extent():
@@ -94,17 +94,17 @@ def test_dino_download_extent():
 
 def test_get_dino_locations():
     bbox =  [130988.58668351, 386465.80657847, 135922.01739107, 391922.4284911 ]
-    
-    gdf = io_dino.get_dino_locations(bbox=bbox, 
+
+    gdf = io_dino.get_dino_locations(bbox=bbox,
                                      layer='grondwatermonitoring')
-    
+
     return gdf
 
 def test_dino_download_single_empty():
-    
+
     measurements, meta = io_dino.download_dino_groundwater(location="B50E0130",
                                                            filternr=1.,
                                                            tmin="1900-01-01",
                                                            tmax="2040-01-01",
-                                                           unit="NAP", 
+                                                           unit="NAP",
                                                            verbose=True)

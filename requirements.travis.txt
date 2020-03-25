@@ -1,0 +1,16 @@
+numpy>=1.15
+scipy>=1.2
+matplotlib>=3.0
+pandas>=0.24
+lxml
+requests
+zeep
+shapely
+pyproj
+geopandas
+tqdm
+flopy
+branca
+folium
+bokeh
+pastas

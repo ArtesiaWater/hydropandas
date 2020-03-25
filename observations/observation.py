@@ -20,8 +20,6 @@ import warnings
 import numpy as np
 from pandas import DataFrame
 
-from .io import io_dino
-
 
 class Obs(DataFrame):
     """class for point observations.
@@ -173,6 +171,7 @@ class GroundwaterObs(Obs):
 
 
         """
+        from .io import io_dino
         if fname is not None:
             # read dino csv file
             measurements, meta = io_dino.read_dino_groundwater_csv(
@@ -221,10 +220,10 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
         """
-
         warnings.warn(
             "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
+        from .io import io_dino
         measurements, meta = io_dino.download_dino_groundwater(location,
                                                                filternr,
                                                                tmin, tmax,
@@ -255,10 +254,10 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
-
         warnings.warn(
             "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
+        from .io import io_dino
         if fname is not None:
             # read dino csv file
             measurements, meta = io_dino.read_dino_groundwater_csv(
@@ -283,7 +282,7 @@ class GroundwaterObs(Obs):
             these arguments are passed to io_dino.read_dino_groundwater_csv
 
         """
-
+        from .io import io_dino
         if fname is not None:
             # read dino csv file
             measurements, meta = io_dino.read_artdino_groundwater_csv(
@@ -375,7 +374,7 @@ class GroundwaterQualityObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_quality_txt
         """
-
+        from .io import io_dino
         measurements, meta = io_dino.read_dino_groundwater_quality_txt(
             fname, **kwargs)
 
@@ -413,7 +412,7 @@ class WaterlvlObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_waterlvl_csv
         """
-
+        from .io import io_dino
         measurements, meta = io_dino.read_dino_waterlvl_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)

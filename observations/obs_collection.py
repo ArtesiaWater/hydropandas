@@ -9,7 +9,6 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 """
 import os
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -137,7 +136,7 @@ class ObsCollection(pd.DataFrame):
             if verbose:
                 print(f'set attribute {att_name} of {iname} to {value}')
             o.meta.update({att_name: value})
-    
+
     @classmethod
     def from_dino(cls, dirname=None,
                   extent=None, bbox=None,
@@ -179,12 +178,12 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
         from .io.io_dino import read_dino_dir, download_dino_within_extent
-        
+
         if dirname is not None:
-            # read dino directory            
+            # read dino directory
             if name is None:
                 name = subdir
-    
+
             meta = {'dirname': dirname,
                     'type': ObsClass,
                     'suffix': suffix,
@@ -194,7 +193,7 @@ class ObsCollection(pd.DataFrame):
                     'verbose': verbose,
                     'keep_all_obs': keep_all_obs
                     }
-    
+
             obs_list = read_dino_dir(dirname,
                                     ObsClass,
                                     subdir,
@@ -213,10 +212,10 @@ class ObsCollection(pd.DataFrame):
             else:
                 raise NotImplementedError(
                     'cannot download {} from Dino'.format(ObsClass))
-    
+
             if name is None:
                 name = '{} from DINO'.format(layer)
-    
+
             meta = kwargs.copy()
             meta.update({'verbose': verbose,
                          'extent': extent,
@@ -224,15 +223,15 @@ class ObsCollection(pd.DataFrame):
                          'layer': layer,
                          'keep_all_obs': keep_all_obs,
                          'verbose': verbose})
-    
+
             obs_list = download_dino_within_extent(
                 extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
                 keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
-    
+
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, bbox=bbox, meta=meta)
-        
+
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
                           ObsClass=obs.GroundwaterObs,
