@@ -2,6 +2,7 @@
 from observations import observation as obs
 from observations import obs_collection as oc
 import numpy as np
+import pytest
 
 # import sys
 # sys.path.insert(1, "..")
@@ -255,7 +256,7 @@ def test_obscollection_wiskizip_gw():
 
 
 # %% PASTAS PROJECTS AND PASTASTORE
-
+@pytest.mark.skip(reason="needs installation pastastore")
 def test_to_pastas_project():
 
     dino_gw = test_obscollection_dinozip_gw()
@@ -263,6 +264,7 @@ def test_to_pastas_project():
 
     return pr
 
+@pytest.mark.skip(reason="needs installation pastastore")
 def test_to_pastastore():
 
     dino_gw = test_obscollection_dinozip_gw()
@@ -270,6 +272,7 @@ def test_to_pastastore():
 
     return pstore
 
+@pytest.mark.skip(reason="needs installation pastastore")
 def test_from_pastas_project():
 
     pr = test_to_pastas_project()

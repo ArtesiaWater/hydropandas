@@ -9,11 +9,12 @@ import pandas as pd
 import pastastore as pst
 import pastas as ps
 
+
 def _get_metadata_from_obs(o, verbose=False):
     """internal method to get metadata in the right format for a pastas series.
     A pastas timeseries cannot handle the same metadata format as an observation
     object.
-    
+
     Parameters
     ----------
     o : observations.Obs
@@ -46,10 +47,11 @@ def _get_metadata_from_obs(o, verbose=False):
                     f'did not add {attr_key} to metadata because datatype is {type(val)}')
     return meta
 
-def create_pastastore(oc, pstore, pstore_name='', 
+
+def create_pastastore(oc, pstore, pstore_name='',
                       conn=pst.DictConnector("my_conn"),
                       add_metadata=True,
-                      obs_column='stand_m_tov_nap', 
+                      obs_column='stand_m_tov_nap',
                       kind='oseries',
                       verbose=False
                       ):
@@ -92,12 +94,12 @@ def create_pastastore(oc, pstore, pstore_name='',
             meta = dict()
 
         if kind == 'oseries':
-            pstore.conn.add_oseries(o[obs_column], o.name, 
+            pstore.conn.add_oseries(o[obs_column], o.name,
                                     metadata=meta)
         else:
-            pstore.conn.add_stress(o[obs_column], o.name, 
+            pstore.conn.add_stress(o[obs_column], o.name,
                                    kind, metadata=meta)
-            
+
     return pstore
 
 
@@ -146,7 +148,6 @@ def create_pastas_project(oc, pr=None, project_name='',
         pr.add_series(series, kind=kind)
 
     return pr
-
 
 
 def read_project(pr, ObsClass, rename_dic={}):
