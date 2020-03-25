@@ -4,13 +4,6 @@ language: python
 os:
   - linux
 
-env:
-  global:
-    - NO_NET=1
-
-git:
-  depth: 10
-
 branches:
   only:
     - master
@@ -35,6 +28,9 @@ install:
   - pip install codecov
   - pip install pytest-cov
   - pip install codacy-coverage
+
+before_script:
+  - ls ./tests/data/
 
 # command to run tests
 script:
