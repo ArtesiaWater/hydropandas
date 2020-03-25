@@ -1396,17 +1396,17 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                 o = pd.read_pickle(fname)
             else:
                 o = ObsClass.from_dino(location=loc.locatie,
-                                              filternr=float(loc.filternr),
-                                              tmin=tmin_t,
-                                              tmax=tmax_t,
-                                              unit=unit)
+                                       filternr=float(loc.filternr),
+                                       tmin=tmin_t,
+                                       tmax=tmax_t,
+                                       unit=unit)
                 o.to_pickle(fname)
-        else:
+        else:  
             o = ObsClass.from_dino(location=loc.locatie,
-                                          filternr=float(loc.filternr),
-                                          tmin=tmin_t,
-                                          tmax=tmax_t,
-                                          unit=unit)
+                                   filternr=float(loc.filternr),
+                                   tmin=tmin_t,
+                                   tmax=tmax_t,
+                                   unit=unit)
 
         if o.metadata_available and (not o.empty):
             obs_list.append(o)

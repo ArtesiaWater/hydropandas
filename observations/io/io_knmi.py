@@ -747,7 +747,7 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
             stations.loc[[stn]], variable=var, ignore=ignore)
         if verbose:
             print(f'trying to fill {missing.sum()} '
-                  'measurements with station {stn_comp}')
+                  f'measurements with station {stn_comp}')
         if stn_comp is None:
             if verbose:
                 print('could not fill all missing measurements there are '
