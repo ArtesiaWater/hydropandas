@@ -2,9 +2,9 @@ import os
 from observations import observation as obs
 from observations import obs_collection as oc
 import numpy as np
+
 import sys
 sys.path.insert(1, "..")
-
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
@@ -13,24 +13,24 @@ os.chdir(TEST_DIR)
 
 # %% DINO
 
-dinozip = r'.\data\2019-Dino-test\Dino.zip'
+dinozip = r'./data/2019-Dino-test/Dino.zip'
 
 
 def test_observation_gwq():
     # single observation
-    fname = r'.\data\2019-Dino-test\Grondwatersamenstellingen_Put\B52C0057.txt'
+    fname = r'./data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt'
     ogq = obs.GroundwaterQualityObs.from_dino(fname, verbose=True)
     return ogq
 
 
 def test_observation_wl():
-    fname = r'.\data\2019-Dino-test\Peilschaal\P58A0001.csv'
+    fname = r'./data/2019-Dino-test/Peilschaal/P58A0001.csv'
     wl = obs.WaterlvlObs.from_dino(fname, verbose=True)
     return wl
 
 
 def test_observation_gw():
-    fname = r'.\data\2019-Dino-test\Grondwaterstanden_Put\B33F0080001_1.csv'
+    fname = r'./data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
     gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
     return gw
 
@@ -70,7 +70,7 @@ def test_observation_dino_download3():
 def test_obscollection_fieldlogger():
     # collection of observations
     fl = oc.ObsCollection.from_fieldlogger(
-        r'.\data\2019-Dino-test\fieldlogger\locations.csv')
+        r'./data/2019-Dino-test/fieldlogger/locations.csv')
     return fl
 
 
@@ -183,16 +183,14 @@ def test_obscollection_dino_download_bbox_do_not_keep_all_obs():
 def test_obscollection_to_fieldlogger():
     dino_gw = test_obscollection_dinozip_gw()
     fdf = dino_gw.to_fieldlogger(
-        r'.\data\2019-Dino-test\fieldlogger\locations.csv', verbose=True)
-
+        r'./data/2019-Dino-test/fieldlogger/locations.csv', verbose=True)
     return fdf
 
 
 # %% FEWS
-
 def test_obscollection_fews_highmemory():
     fews_gw_prod = oc.ObsCollection.from_fews(
-        r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        r'./data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
         translate_dic={'locationId': 'locatie'},
         verbose=True,
         to_mnap=False,
@@ -203,7 +201,7 @@ def test_obscollection_fews_highmemory():
 
 def test_obscollection_fews_lowmemory():
     fews_gw_prod = oc.ObsCollection.from_fews(
-        r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        r'./data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
         verbose=True,
         locations=None,
         low_memory=True)
@@ -212,7 +210,7 @@ def test_obscollection_fews_lowmemory():
 
 def test_obscollection_fews_selection():
     fews_gw_prod = oc.ObsCollection.from_fews(
-        r'.\data\2019-FEWS-test\WaalenBurg_201810-20190215_prod.zip',
+        r'./data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
         verbose=True,
         locations=("MPN-N-2",)
     )
@@ -223,7 +221,7 @@ def test_obscollection_fews_selection():
 
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(
-        r".\data\2019-WISKI-test\1016_PBF.csv",
+        r"./data/2019-WISKI-test/1016_PBF.csv",
         sep=r'\s+',
         header_sep=':',
         header_identifier=':',
@@ -240,7 +238,7 @@ def test_observation_wiskicsv_gw():
 
 def test_obscollection_wiskizip_gw():
     wiski_col = oc.ObsCollection.from_wiski(
-        r".\data\2019-WISKI-test\1016_PBF.zip",
+        r"./data/2019-WISKI-test/1016_PBF.zip",
         translate_dic={
             'name': 'Station Number',
             'x': 'GlobalX',

@@ -7,7 +7,7 @@ Created on Fri Nov  8 11:46:51 2019
 
 import test_to_from as ttf
 
-plot_dir = r".\data\2019-Dino-test\plots"
+plot_dir = r"./data/2019-Dino-test/plots"
 
 
 def test_interactive_plot():
