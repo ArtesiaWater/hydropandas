@@ -1,6 +1,8 @@
-# observations
+<img src="/doc/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
-The observations module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The observations module extends pandas.DataFrame with extra functions and metadata related to the type of measurements that are loaded.
+# observations
+The observations module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The observations module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
+
 
 ## The Obs class
 The Obs class holds the measurements and metadata for one timeseries. There are currently 5 specific Obs classes for different types of measurements:
@@ -42,19 +44,19 @@ Importing a single DINO csv file:
 ```python
 import observation as obs
 fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-gw = obs.GroundwaterObs.from_dino_file(fname=fname, verbose=True)
+gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
 ```
 
 Or for a zipfile:
 ```python
 import observation as obs
 dinozip = './tests/data/2019-Dino-test/Dino.zip'
-dino_gw = obs.ObsCollection.from_dino_dir(dirname=dinozip,
-                                          subdir='Grondwaterstanden_Put',
-                                          suffix='1.csv',
-                                          ObsClass=obs.GroundwaterObs,
-                                          keep_all_obs=False,
-                                          verbose=False)
+dino_gw = obs.ObsCollection.from_dino(dirname=dinozip,
+                                      subdir='Grondwaterstanden_Put',
+                                      suffix='1.csv',
+                                      ObsClass=obs.GroundwaterObs,
+                                      keep_all_obs=False,
+                                      verbose=False)
 ```
 
 ## Authors
