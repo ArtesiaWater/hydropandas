@@ -1,11 +1,6 @@
 import os
-
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-
 from . import accessor
-from .. import util
 
 
 @accessor.register_obscollection_accessor("plots")
