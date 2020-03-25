@@ -46,19 +46,19 @@ Importing a single DINO csv file:
 ```python
 import observation as obs
 fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-gw = obs.GroundwaterObs.from_dino_file(fname=fname, verbose=True)
+gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
 ```
 
 Or for a zipfile:
 ```python
 import observation as obs
 dinozip = './tests/data/2019-Dino-test/Dino.zip'
-dino_gw = obs.ObsCollection.from_dino_dir(dirname=dinozip,
-                                          subdir='Grondwaterstanden_Put',
-                                          suffix='1.csv',
-                                          ObsClass=obs.GroundwaterObs,
-                                          keep_all_obs=False,
-                                          verbose=False)
+dino_gw = obs.ObsCollection.from_dino(dirname=dinozip,
+                                      subdir='Grondwaterstanden_Put',
+                                      suffix='1.csv',
+                                      ObsClass=obs.GroundwaterObs,
+                                      keep_all_obs=False,
+                                      verbose=False)
 ```
 
 ## Authors
