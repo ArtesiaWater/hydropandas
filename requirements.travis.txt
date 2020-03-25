@@ -9,3 +9,8 @@ shapely
 pyproj
 geopandas
 tqdm
+flopy
+branca
+folium
+bokeh
+pastas

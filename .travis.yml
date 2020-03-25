@@ -4,13 +4,6 @@ language: python
 os:
   - linux
 
-env:
-  global:
-    - NO_NET=1
-
-git:
-  depth: 10
-
 branches:
   only:
     - master
@@ -34,7 +27,11 @@ install:
   - pip install --upgrade pip
   - pip install codecov
   - pip install pytest-cov
+  - pip install pytest-ordering
   - pip install codacy-coverage
+
+before_script:
+  - ls ./tests/data/2019-Dino-test/
 
 # command to run tests
 script:

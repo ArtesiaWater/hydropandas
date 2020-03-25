@@ -1,5 +1,7 @@
 <img src="/doc/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
+[![Build Status](https://travis-ci.com/ArtesiaWater/observations.svg?branch=master)](https://travis-ci.com/ArtesiaWater/observations)
+
 # observations
 The observations module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The observations module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
 
@@ -50,7 +52,7 @@ gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
 Or for a zipfile:
 ```python
 import observation as obs
-dinozip = './tests/data/2019-Dino-test/Dino.zip'
+dinozip = './tests/data/2019-Dino-test/dino.zip'
 dino_gw = obs.ObsCollection.from_dino(dirname=dinozip,
                                       subdir='Grondwaterstanden_Put',
                                       suffix='1.csv',

@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  8 11:48:29 2019
-
-@author: oebbe
-"""
-
-import test_to_from as ttf
-import flopy
-import numpy as np
+import test_001_to_from as ttf
 
 
 def test_within_extent():
