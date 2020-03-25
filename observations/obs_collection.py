@@ -1012,11 +1012,52 @@ class ObsCollection(pd.DataFrame):
             self['# metingen'] = self.obs.apply(lambda x: x.shape[0])
 
         return self[columns]
+    
+    
+    def to_pastastore(self, pstore=None, pstore_name='',
+                      obs_column='stand_m_tov_nap',
+                      kind='oseries', add_metadata=True,
+                      verbose=False):
+        """add observations to a new or existing pastastore
+
+        Parameters
+        ----------
+        oc : observation.ObsCollection
+            collection of observations
+        pstore : pastastore.PastasProject, optional
+            Existing pastastore, if None a new project is created
+        pstore_name : str, optional
+            Name of the pastastore only used if pstore is None
+        obs_column : str, optional
+            Name of the column in the Obs dataframe to be used
+        kind : str, optional
+            The kind of series that is added to the pastas project
+        add_metadata : boolean, optional
+            If True metadata from the observations added to the project.
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        project : pastastore.PastasProject
+            the pastas project with the series from the ObsCollection
+        """
+        from .io.io_pastas import create_pastastore
+        
+        pstore = create_pastastore(self, pstore, pstore_name, 
+                                   add_metadata=add_metadata,
+                                   kind=kind,
+                                   obs_column=obs_column)
+    
+        
+        
+
+        return pstore
 
     def to_pastas_project(self, pr=None, project_name='',
                           obs_column='stand_m_tov_nap',
                           kind='oseries', add_metadata=True,
-                          verbose=False):
+                          verbose=False, **kwargs):
         """add observations to a new or existing pastas project
 
         Parameters
@@ -1033,45 +1074,28 @@ class ObsCollection(pd.DataFrame):
             If True metadata from the observations added to the project.
         verbose : boolean, optional
             Print additional information to the screen (default is False).
+        kwargs
+            arguments are passed to the create_pastas_project funtion
 
         Returns
         -------
         pr : pastas.project
             the pastas project with the series from the ObsCollection
         """
+        warnings.warn("this method will be removed in future versions, use to_pastastore instead", DeprecationWarning)
 
-        import pastas as ps
+        from .io.io_pastas import create_pastas_project
+        
+        project = create_pastas_project(self, pr=None, project_name='',
+                                        obs_column='stand_m_tov_nap',
+                                        kind='oseries', add_metadata=True,
+                                        verbose=False, **kwargs)
+    
+        
+        
 
-        if pr is None:
-            pr = ps.Project(project_name)
-
-        for o in self.obs.values:
-            if verbose:
-                print('add to pastas project -> {}'.format(o.name))
-
-            meta = dict()
-            if add_metadata:
-                for attr_key in o._metadata:
-                    val = getattr(o, attr_key)
-                    if isinstance(val, (int, float, str, bool)):
-                        meta[attr_key] = val
-                    elif isinstance(val, dict):
-                        for k, v in val.items():
-                            if isinstance(v, (int, float, str, bool)):
-                                meta[k] = v
-                            else:
-                                if verbose:
-                                    print(
-                                        f'did not add {k} to metadata because datatype is {type(v)}')
-                    else:
-                        if verbose:
-                            print(
-                                f'did not add {attr_key} to metadata because datatype is {type(val)}')
-
-            series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
-            pr.add_series(series, kind=kind)
-
-        return pr
+        return project
+        
 
     def to_shapefile(self, fname, xcol='x', ycol='y'):
         """save ObsCollection as shapefile

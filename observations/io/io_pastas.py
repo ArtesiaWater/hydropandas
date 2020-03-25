@@ -6,117 +6,147 @@ Created on Wed Sep 12 12:15:42 2018
 """
 
 import pandas as pd
+import pastastore as pst
+import pastas as ps
 
+def _get_metadata_from_obs(o, verbose=False):
+    """internal method to get metadata in the right format for a pastas series.
+    A pastas timeseries cannot handle the same metadata format as an observation
+    object.
+    
+    Parameters
+    ----------
+    o : observations.Obs
+        observation time series with metadata
+    verbose : boolean, optional
+        Print additional information to the screen (default is False).
 
-def get_model_checks(results_df, evp_threshold=70,
-                     verdampingsfactor_min=0.5, verdampingsfactor_max=2.0,
-                     timeseries_memory_factor=5):
-
-    check_df = pd.DataFrame(index=results_df.index)
-    check_df['EVP>{}%'.format(evp_threshold)
-             ] = results_df['EVP [%]'] > evp_threshold
-    check_df['{} < Evaporation-factor < {}'.format(verdampingsfactor_min, verdampingsfactor_max)] = (
-        results_df['Evaporation-factor [-]'] > verdampingsfactor_min) & (results_df['Evaporation-factor [-]'] < verdampingsfactor_max)
-    check_df['Timeseries length > {} x Memory'.format(
-        timeseries_memory_factor)] = results_df['Length calibration period [days]'] > results_df['Memory [days]'] * timeseries_memory_factor
-    check_df['Passed all checks'] = check_df[['EVP>{}%'.format(evp_threshold), '{} < Evaporation-factor < {}'.format(
-        verdampingsfactor_min, verdampingsfactor_max), 'Timeseries length > {} x Memory'.format(timeseries_memory_factor)]].all(axis=1)
-
-    return check_df
-
-
-def get_pr_results(pr):
-    """
-
-    Notes
-    -----
-    This function assumes that the project contains 1 model for every oseries
-
-
-
+    Returns
+    -------
+    meta : dictionary
+        meta dictionary.
 
     """
-    results_df = pd.DataFrame(index=pr.oseries.index)
-    results_df['number of observations used in calibration'] = get_number_of_observations_in_calibration(
-        pr)
-    results_df = get_meteostation_evap(pr, results_df)
-    results_df = get_meteostation_precip(pr, results_df)
-    results_df['EVP [%]'] = get_evp(pr)
-    results_df['Evaporation-factor [-]'], results_df['std Evaporation-factor [-]'] = get_rch_fct(
-        pr)
-    results_df['Constant [m NAP]'], results_df['Constant [m]'] = get_drainage_basis(
-        pr)
-    results_df['Memory [days]'] = get_memory(pr)
-    results_df['Length calibration period [days]'] = get_calibration_period(pr)
+    meta = dict()
+    for attr_key in o._metadata:
+        val = getattr(o, attr_key)
+        if isinstance(val, (int, float, str, bool)):
+            meta[attr_key] = val
+        elif isinstance(val, dict):
+            for k, v in val.items():
+                if isinstance(v, (int, float, str, bool)):
+                    meta[k] = v
+                else:
+                    if verbose:
+                        print(
+                            f'did not add {k} to metadata because datatype is {type(v)}')
+        else:
+            if verbose:
+                print(
+                    f'did not add {attr_key} to metadata because datatype is {type(val)}')
+    return meta
 
-    return results_df.round(2)
+def create_pastastore(oc, pstore, pstore_name='', 
+                      conn=pst.DictConnector("my_conn"),
+                      add_metadata=True,
+                      obs_column='stand_m_tov_nap', 
+                      kind='oseries',
+                      verbose=False
+                      ):
+    """add observations to a new or existing pastastore
+
+    Parameters
+    ----------
+    oc : observation.ObsCollection
+        collection of observations
+    pstore : pastastore.PastasProject, optional
+        Existing pastastore, if None a new project is created
+    pstore_name : str, optional
+        Name of the pastastore only used if pstore is None
+    conn : pastastore.connectors
+        connector for database
+    obs_column : str, optional
+        Name of the column in the Obs dataframe to be used
+    kind : str, optional
+        The kind of series that is added to the pastas project
+    add_metadata : boolean, optional
+        If True metadata from the observations added to the project.
+    verbose : boolean, optional
+        Print additional information to the screen (default is False).
+
+    Returns
+    -------
+    pstore : pastastore.PastasProject
+        the pastas project with the series from the ObsCollection
+    """
+    if pstore is None:
+        pstore = pst.PastaStore(pstore_name, connector=conn)
+
+    for o in oc.obs.values:
+        if verbose:
+            print('add to pastastore -> {}'.format(o.name))
+
+        if add_metadata:
+            meta = _get_metadata_from_obs(o, verbose=verbose)
+        else:
+            meta = dict()
+
+        series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
+        
+        if kind == 'oseries':
+            pstore.conn.add_oseries(series, series.name)
+        else:
+            pstore.conn.add_stress(series, series.name, kind, metadata=meta)
+            
+    return pstore
 
 
-def get_number_of_observations_in_calibration(pr):
+def create_pastas_project(oc, pr=None, project_name='',
+                          obs_column='stand_m_tov_nap',
+                          kind='oseries', add_metadata=True,
+                          verbose=False):
+    """add observations to a new or existing pastas project
 
-    return [ml.oseries_calib.index.size for ml in pr.models.values()]
+    Parameters
+    ----------
+    oc : observation.ObsCollection
+        collection of observations
+    pr : pastas.project, optional
+        Existing pastas project, if None a new project is created
+    project_name : str, optional
+        Name of the pastas project only used if pr is None
+    obs_column : str, optional
+        Name of the column in the Obs dataframe to be used
+    kind : str, optional
+        The kind of series that is added to the pastas project
+    add_metadata : boolean, optional
+        If True metadata from the observations added to the project.
+    verbose : boolean, optional
+        Print additional information to the screen (default is False).
 
+    Returns
+    -------
+    pr : pastas.project
+        the pastas project with the series from the ObsCollection
+    """
 
-def get_meteostation_evap(pr, results_df):
+    if pr is None:
+        pr = ps.Project(project_name)
 
-    evap_s = pr.get_nearest_stresses(kind="evap")
-    results_df.loc[evap_s.index, 'meteostation verdamping'] = evap_s.values
+    for o in oc.obs.values:
+        if verbose:
+            print('add to pastas project -> {}'.format(o.name))
 
-    return results_df
+        if add_metadata:
+            meta = _get_metadata_from_obs(o, verbose=verbose)
+        else:
+            meta = dict()
 
+        series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
+        pr.add_series(series, kind=kind)
 
-def get_meteostation_precip(pr, results_df):
+    return pr
 
-    evap_s = pr.get_nearest_stresses(kind="prec")
-    results_df.loc[evap_s.index, 'meteostation neerslag'] = evap_s.values
-
-    return results_df
-
-
-def get_evp(pr, colname='EVP [%]'):
-
-    return pr.get_statistics(['evp'])
-
-
-def get_rch_fct(pr, add_stderr=True):
-
-    parameters_df = pr.get_parameters(['recharge_f'])
-    if add_stderr:
-        rch_f_std_s = pr.get_parameters(['recharge_f'], param_value='stderr')
-        return [-parameters_df, rch_f_std_s]
-    else:
-        return -parameters_df
-
-
-def get_drainage_basis(pr, add_stderr=True):
-
-    parameters_df = pr.get_parameters(['constant_d'])
-    if add_stderr:
-        db_std_s = pr.get_parameters(['constant_d'], param_value='stderr')
-        return [parameters_df, db_std_s]
-    else:
-        return parameters_df
-
-
-def get_memory(pr, stresstype='recharge',
-               cutoff=0.9):
-
-    memory = []
-    for m in pr.models.values():
-        rfunc = m.stressmodels[stresstype].rfunc
-        memory.append(rfunc.get_tmax(
-            m.get_parameters(stresstype), cutoff=cutoff))
-
-    return memory
-
-
-def get_calibration_period(pr):
-
-    calibration_period = []
-    for m in pr.models.values():
-        calibration_period.append((m.get_tmax() - m.get_tmin()).days)
-
-    return calibration_period
 
 
 def read_project(pr, ObsClass, rename_dic={}):
