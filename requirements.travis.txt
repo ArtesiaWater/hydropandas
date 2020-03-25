@@ -12,3 +12,5 @@ tqdm
 flopy
 branca
 folium
+bokeh
+pastas

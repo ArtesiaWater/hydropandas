@@ -5,10 +5,9 @@ Created on Tue Mar 24 09:17:55 2020
 @author: oebbe
 """
 
-import test_to_from as ttf
+import test_001_to_from as ttf
 import flopy
 import numpy as np
-
 
 def test_set_filter_num():
     dino_gw = ttf.test_obscollection_dinozip_gw()
