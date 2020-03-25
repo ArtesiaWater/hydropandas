@@ -747,7 +747,7 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
             stations.loc[[stn]], variable=var, ignore=ignore)
         if verbose:
             print(f'trying to fill {missing.sum()} '
-                  'measurements with station {stn_comp}')
+                  f'measurements with station {stn_comp}')
         if stn_comp is None:
             if verbose:
                 print('could not fill all missing measurements there are '
@@ -768,11 +768,18 @@ def fill_missing_measurements(stn, var='RD', start=None, end=None,
             if verbose:
                 print(f'station {stn_comp} cannot be downloaded')
         else:
+            # dropnans from new data
             knmi_df_comp = knmi_df_comp.loc[~knmi_df_comp[var].isna(), :]
-            if missing[missing].index.isin(knmi_df_comp.index).any():
-                knmi_df.loc[missing, var] = \
-                    knmi_df_comp.loc[missing[missing].index, var]
-                knmi_df.loc[missing, 'station_opvulwaarde'] = str(stn_comp)
+            # get index of missing data in original timeseries
+            missing_idx = missing.loc[missing].index
+            # if any missing are in the new data, update
+            if missing_idx.isin(knmi_df_comp.index).any():
+                # index for missing but in newly downloaded data
+                ix_idx = missing_idx.intersection(knmi_df_comp.index)
+                # update missing data
+                knmi_df.loc[ix_idx, var] = knmi_df_comp.loc[ix_idx, var]
+                # add source station number
+                knmi_df.loc[ix_idx, 'station_opvulwaarde'] = str(stn_comp)
 
         missing = knmi_df[var].isna()
         ignore.append(stn_comp)
