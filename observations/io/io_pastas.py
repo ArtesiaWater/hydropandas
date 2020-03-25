@@ -91,13 +91,12 @@ def create_pastastore(oc, pstore, pstore_name='',
         else:
             meta = dict()
 
-        series = ps.TimeSeries(o[obs_column], name=o.name, metadata=meta)
-        
         if kind == 'oseries':
-            pstore.conn.add_oseries(series, series.name, 
-                                    metadata=series.metadata)
+            pstore.conn.add_oseries(o[obs_column], o.name, 
+                                    metadata=meta)
         else:
-            pstore.conn.add_stress(series, series.name, kind, metadata=meta)
+            pstore.conn.add_stress(o[obs_column], o.name, 
+                                   kind, metadata=meta)
             
     return pstore
 
