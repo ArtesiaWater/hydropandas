@@ -27,15 +27,11 @@ install:
   - pip install --upgrade pip
   - pip install codecov
   - pip install pytest-cov
-  - pip install pytest-ordering
   - pip install codacy-coverage
-
-before_script:
-  - ls ./tests/data/2019-Dino-test/
 
 # command to run tests
 script:
-  - py.test ./tests --cov=observations --cov-report=xml
+  - py.test ./tests
 
 # after_success:
 #   - python-codacy-coverage -r coverage.xml
