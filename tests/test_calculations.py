@@ -1,6 +1,4 @@
 import test_to_from as ttf
-import flopy
-import numpy as np
 
 
 def test_within_extent():

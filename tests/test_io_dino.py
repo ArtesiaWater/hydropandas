@@ -4,16 +4,16 @@ Created on Mon Jun 24 11:43:27 2019
 
 @author: oebbe
 """
-import sys
-sys.path.insert(1, "..")
+# import sys
+# sys.path.insert(1, "..")
 from observations.io import io_dino
 from observations import observation as obs
-import os
+# import os
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
-sys.path.insert(0, PROJECT_DIR)
-os.chdir(TEST_DIR)
+# TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+# PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
+# sys.path.insert(0, PROJECT_DIR)
+# os.chdir(TEST_DIR)
 
 
 def test_dino_download_single():
@@ -36,7 +36,7 @@ def test_dino_download_single_empty():
     return measurements, meta
 
 def test_dino_csv():
-    fname = r'./data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
+    fname = r'./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
     measurements, meta = io_dino.read_dino_groundwater_csv(fname)
 
     return measurements, meta

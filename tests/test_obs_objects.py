@@ -5,19 +5,19 @@ Created on Fri Jan 31 13:26:04 2020
 @author: oebbe
 """
 
-import os
+# import os
 from observations import observation as obs
 from observations import obs_collection as oc
 import numpy as np
 import pandas as pd
-import sys
-sys.path.insert(1, "..")
+# import sys
+# sys.path.insert(1, "..")
 
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
-sys.path.insert(0, PROJECT_DIR)
-os.chdir(TEST_DIR)
+# TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+# PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
+# sys.path.insert(0, PROJECT_DIR)
+# os.chdir(TEST_DIR)
 
 
 def test_groundwater_obs(name='grondwaterobs_001', filternr=2):
