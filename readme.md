@@ -50,7 +50,7 @@ gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
 Or for a zipfile:
 ```python
 import observation as obs
-dinozip = './tests/data/2019-Dino-test/Dino.zip'
+dinozip = './tests/data/2019-Dino-test/dino.zip'
 dino_gw = obs.ObsCollection.from_dino(dirname=dinozip,
                                       subdir='Grondwaterstanden_Put',
                                       suffix='1.csv',

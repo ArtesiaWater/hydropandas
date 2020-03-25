@@ -13,7 +13,7 @@ import numpy as np
 
 # %% DINO
 
-dinozip = r'./tests/data/2019-Dino-test/Dino.zip'
+dinozip = r'./tests/data/2019-Dino-test/dino.zip'
 
 
 def test_observation_gwq():
