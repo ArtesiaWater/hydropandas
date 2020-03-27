@@ -1388,7 +1388,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
             print('reading -> {}'.format(index))
 
         if cache:
-            cache_dir = os.path.join(tempfile.gettempdir(), 'pbdata')
+            cache_dir = os.path.join(tempfile.gettempdir(), 'dino')
             if not os.path.isdir(cache_dir):
                 os.mkdir(cache_dir)
             fname = os.path.join(
