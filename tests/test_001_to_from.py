@@ -142,6 +142,13 @@ def test_obscollection_dino_download_extent():
         extent=extent, ObsClass=obs.GroundwaterObs, verbose=True)
     return dino_gw_extent
 
+def test_obscollection_dino_download_extent_cache():
+    # download DINO from extent
+    extent = [117850, 117980, 439550, 439700]  # Schoonhoven zoomed
+    dino_gw_extent = oc.ObsCollection.from_dino(
+        extent=extent, ObsClass=obs.GroundwaterObs, cache=True, verbose=True)
+    return dino_gw_extent
+
 
 def test_obscollection_dino_download_bbox():
     # download DINO from bbox
@@ -340,6 +347,14 @@ def test_knmi_obs_from_xy():
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
     return obs.KnmiObs.from_obs(pb, "EV24", fill_missing_obs=False)
+
+def test_knmi_collection_from_oc():
+    obsc = test_obscollection_dino_download_extent_cache()
+    oc_knmi = oc.ObsCollection.from_knmi(obsc, ["EV24", "RD"], 
+                                         start=['2010', '2010'],
+                                         end=['2015', '2015'],
+                                         verbose=True)
+    return oc_knmi
 
 
 # %% WATERINFO

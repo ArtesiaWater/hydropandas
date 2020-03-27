@@ -137,6 +137,37 @@ class ObsCollection(pd.DataFrame):
             if verbose:
                 print(f'set attribute {att_name} of {iname} to {value}')
             o.meta.update({att_name: value})
+            
+    @classmethod
+    def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
+                    verbose=False):
+        """Load ObsCollection from MongoDB using arctic
+
+        Parameters
+        ----------
+        connstr : str
+            database connection string
+        libname : str
+            library name
+        ObsClass : class, optional
+            observation class to store single timeseries, by
+            default obs.GroundwaterObs
+        verbose : bool, optional
+            show progress bar and database read summary, by default False
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame containing all the obs
+
+        """
+        from .io.io_arctic import read_arctic
+
+        meta = {'type': obs.GroundwaterObs}
+        obs_list = read_arctic(connstr, libname, ObsClass, verbose=verbose)
+        obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df, meta=meta)
 
     @classmethod
     def from_dino(cls, dirname=None,
@@ -151,27 +182,40 @@ class ObsCollection(pd.DataFrame):
                   name=None,
                   verbose=False,
                   **kwargs):
-        """ Read dino data from a server
-
+        """ Read dino data within an extent from the server or from a 
+        directory with downloaded files.
+        
         Parameters
         ----------
+        dirname : str, optional
+            directory name, can be a .zip file or the parent directory of subdir
         extent : list, tuple or numpy-array (user must specify extent or bbox)
-            The extent, in RD-coordinates, for which you want to retreive locations
-            [xmin, xmax, ymin, ymax]
+            get dinodata online within this extent [xmin, xmax, ymin, ymax]
         bbox : list, tuple or numpy-array (user must specify extent or bbox)
             The bounding box, in RD-coordinates, for which you want to retreive locations
             [xmin, ymin, xmax, ymax]
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
-        name : str, optional
-            the name of the observation collection
+        subdir : str
+            subdirectory of dirname with data files
+        suffix : str
+            suffix of files in subdir that will be read
+        unpackdir : str
+            destination directory of the unzipped file
+        force_unpack : boolean, optional
+            force unpack if dst already exists
+        preserve_datetime : boolean, optional
+            use date of the zipfile for the destination file
         keep_all_obs : boolean, optional
             add all observation points to the collection, even without data or
             metadata
+        name : str, optional
+            the name of the observation collection
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         kwargs:
-            kwargs are passed to the io_dino.download_dino_within_extent() function
+            kwargs are passed to the io_dino.download_dino_within_extent() or
+            the io_dino.read_dino_dir() function
 
         Returns
         -------
@@ -313,8 +357,6 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        extent : list, optional
-            get dinodata online within this extent [xmin, xmax, ymin, ymax]
         dirname : str, optional
             directory name, can be a .zip file or the parent directory of subdir
         ObsClass : type
@@ -551,22 +593,7 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=fieldlogger_meta)
-
-    @classmethod
-    def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
-                        verbose=False):
-
-        from .io.io_menyanthes import read_file
-
-        menyanthes_meta = {'filename': fname,
-                           'type': ObsClass,
-                           'verbose': verbose}
-
-        obs_list = read_file(fname, ObsClass, verbose)
-        obs_df = util._obslist_to_frame(obs_list)
-
-        return cls(obs_df, meta=menyanthes_meta)
-
+    
     @classmethod
     def from_imod(cls, obs_collection, ml, runfile, mtime, model_ws,
                   modelname='', nlay=None, exclude_layers=0, verbose=False):
@@ -602,6 +629,67 @@ class ObsCollection(pd.DataFrame):
                                     verbose=verbose)
         obs_df = util._obslist_to_frame(mo_list)
         return cls(obs_df, name=modelname)
+    
+    @classmethod
+    def from_knmi(cls, locations, meteo_types, 
+                  name='', 
+                  start=[None, None], end=[None, None],
+                  ObsClass=obs.KnmiObs,
+                  **kwargs
+                  ):
+        
+        from .io.io_knmi import get_knmi_obslist
+        
+        meta = {}
+        meta['start'] = start
+        meta['end'] = end
+        meta['name'] = name
+        meta['ObsClass'] = ObsClass
+        meta['meteo_types'] = meteo_types
+        
+        obs_list = get_knmi_obslist(locations, meteo_types,
+                                    ObsClass=ObsClass,
+                                    start=start,
+                                    end=end, **kwargs)
+        
+        obs_df = util._obslist_to_frame(obs_list)
+        
+        return cls(obs_df, name=name, meta=meta)
+    
+    
+    @classmethod
+    def from_list(cls, obs_list, name='', verbose=False):
+        """read observations from a list of obs objects
+
+        Parameters
+        ----------
+        obs_list : list of observation.Obs
+            list of observations
+        name : str, optional
+            name of the observation collection
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        """
+        obs_df = util._obslist_to_frame(obs_list)
+        return cls(obs_df, name=name)
+
+    @classmethod
+    def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
+                        verbose=False):
+
+        from .io.io_menyanthes import read_file
+
+        menyanthes_meta = {'filename': fname,
+                           'type': ObsClass,
+                           'verbose': verbose}
+
+        obs_list = read_file(fname, ObsClass, verbose)
+        obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df, meta=menyanthes_meta)
+
+    
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
@@ -639,23 +727,6 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df)
 
     @classmethod
-    def from_list(cls, obs_list, name='', verbose=False):
-        """read observations from a list of obs objects
-
-        Parameters
-        ----------
-        obs_list : list of observation.Obs
-            list of observations
-        name : str, optional
-            name of the observation collection
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
-
-        """
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name)
-
-    @classmethod
     def from_pastas_project(cls, pr, ObsClass=obs.GroundwaterObs,
                             name=None, pr_meta=None, rename_dic={}):
 
@@ -672,36 +743,6 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, meta=pr_meta, name=name)
 
-    @classmethod
-    def from_wiski(cls, dirname, ObsClass=obs.GroundwaterObs, suffix='.csv',
-                   unpackdir=None, force_unpack=False, preserve_datetime=False,
-                   verbose=False, keep_all_obs=True, **kwargs):
-
-        from .io.io_wiski import read_wiski_dir
-
-        meta = {'dirname': dirname,
-                'type': ObsClass,
-                'suffix': suffix,
-                'unpackdir': unpackdir,
-                'force_unpack': force_unpack,
-                'preserver_datetime': preserve_datetime,
-                'verbose': verbose,
-                'keep_all_obs': keep_all_obs
-                }
-
-        name = "wiski_import"
-        obs_list = read_wiski_dir(dirname,
-                                  ObsClass=ObsClass,
-                                  suffix=suffix,
-                                  unpackdir=unpackdir,
-                                  force_unpack=force_unpack,
-                                  preserve_datetime=preserve_datetime,
-                                  verbose=verbose,
-                                  keep_all_obs=keep_all_obs,
-                                  **kwargs)
-        obs_df = util._obslist_to_frame(obs_list)
-
-        return cls(obs_df, name=name, meta=meta)
 
     @classmethod
     def from_pystore(cls, storename, pystore_path,
@@ -768,36 +809,6 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=storename, meta=meta)
 
-    @classmethod
-    def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
-                    verbose=False):
-        """Load ObsCollection from MongoDB using arctic
-
-        Parameters
-        ----------
-        connstr : str
-            database connection string
-        libname : str
-            library name
-        ObsClass : class, optional
-            observation class to store single timeseries, by
-            default obs.GroundwaterObs
-        verbose : bool, optional
-            show progress bar and database read summary, by default False
-
-        Returns
-        -------
-        ObsCollection
-            ObsCollection DataFrame containing all the obs
-
-        """
-        from .io.io_arctic import read_arctic
-
-        meta = {'type': obs.GroundwaterObs}
-        obs_list = read_arctic(connstr, libname, ObsClass, verbose=verbose)
-        obs_df = util._obslist_to_frame(obs_list)
-
-        return cls(obs_df, meta=meta)
 
     @classmethod
     def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
@@ -831,6 +842,38 @@ class ObsCollection(pd.DataFrame):
 
         obs_list = io_waterinfo.read_waterinfo_obs(
             file_or_dir, ObsClass, progressbar=progressbar)
+        obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df, name=name, meta=meta)
+    
+    
+    @classmethod
+    def from_wiski(cls, dirname, ObsClass=obs.GroundwaterObs, suffix='.csv',
+                   unpackdir=None, force_unpack=False, preserve_datetime=False,
+                   verbose=False, keep_all_obs=True, **kwargs):
+
+        from .io.io_wiski import read_wiski_dir
+
+        meta = {'dirname': dirname,
+                'type': ObsClass,
+                'suffix': suffix,
+                'unpackdir': unpackdir,
+                'force_unpack': force_unpack,
+                'preserver_datetime': preserve_datetime,
+                'verbose': verbose,
+                'keep_all_obs': keep_all_obs
+                }
+
+        name = "wiski_import"
+        obs_list = read_wiski_dir(dirname,
+                                  ObsClass=ObsClass,
+                                  suffix=suffix,
+                                  unpackdir=unpackdir,
+                                  force_unpack=force_unpack,
+                                  preserve_datetime=preserve_datetime,
+                                  verbose=verbose,
+                                  keep_all_obs=keep_all_obs,
+                                  **kwargs)
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
@@ -1086,10 +1129,11 @@ class ObsCollection(pd.DataFrame):
 
         from .io.io_pastas import create_pastas_project
         
-        project = create_pastas_project(self, pr=None, project_name='',
-                                        obs_column='stand_m_tov_nap',
-                                        kind='oseries', add_metadata=True,
-                                        verbose=False, **kwargs)
+        project = create_pastas_project(self, pr=pr, 
+                                        project_name=project_name,
+                                        obs_column=obs_column,
+                                        kind=kind, add_metadata=add_metadata,
+                                        verbose=verbose, **kwargs)
     
         
         
