@@ -644,8 +644,11 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     return knmi_df, meta
 
 
-def get_knmi_obslist(locations, meteo_vars, 
-                     start, end, ObsClass=None, 
+def get_knmi_obslist(locations=None, stns=None,
+                     meteo_vars=("RD"), 
+                     start=[None, None], 
+                     end=[None, None], 
+                     ObsClass=None, 
                      fill_missing_obs=True, 
                      normalize_index=True,
                      interval='daily',
@@ -653,21 +656,26 @@ def get_knmi_obslist(locations, meteo_vars,
                      cache=False,
                      raise_exceptions=False,
                      verbose=False):
-    """Get a list of observations of the knmi stations closest the given 
-    locations.
+    """Get a list of observations of knmi stations. Either specify a list of
+    knmi stations (stns) or a dataframe with x, y coordinates (locations).
 
     Parameters
     ----------
-    locations : pd.DataFrame
-        x and y coordinates
-    meteo_vars : list of str
-        meteo variables e.g. ["RD", "EV24"].
+    locations : pd.DataFrame or None
+        dataframe with x and y coordinates. The default is None
+    stns : list of str or None
+        list of knmi stations. The default is None
+    meteo_vars : list or tuple of str
+        meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
     start : list of str, datetime or None]
-        start date of observations per meteo variable.
+        start date of observations per meteo variable. The default is 
+        [None, None]
     end : list of str, datetime or None]
-        end date of observations per meteo variable.
-    ObsClass : type
-        class of the observations, only KnmiObs is supported for now
+        end date of observations per meteo variable. The default is 
+        [None, None]
+    ObsClass : type or None
+        class of the observations, only KnmiObs is supported for now. The 
+        default is None
     fill_missing_obs : bool, optional
         if True nan values in time series are filled with nearby time series. 
         The default is True.
@@ -692,8 +700,9 @@ def get_knmi_obslist(locations, meteo_vars,
     """
     obs_list = []
     for i, meteo_var in enumerate(meteo_vars):
-        stations = get_stations(meteo_var=meteo_var)
-        stns = get_nearest_station_df(locations, stations=stations)
+        if stns is None:
+            stations = get_stations(meteo_var=meteo_var)
+            stns = get_nearest_station_df(locations, stations=stations)
         
         for stn in stns:
             if cache:

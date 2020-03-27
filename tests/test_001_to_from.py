@@ -348,9 +348,19 @@ def test_knmi_obs_from_obs():
     pb = test_observation_gw()
     return obs.KnmiObs.from_obs(pb, "EV24", fill_missing_obs=False)
 
-def test_knmi_collection_from_oc():
+def test_knmi_collection_from_locations():
     obsc = test_obscollection_dino_download_extent_cache()
-    oc_knmi = oc.ObsCollection.from_knmi(obsc, ["EV24", "RD"], 
+    oc_knmi = oc.ObsCollection.from_knmi(locations=obsc, 
+                                         meteo_vars=["EV24", "RD"], 
+                                         start=['2010', '2010'],
+                                         end=['2015', '2015'],
+                                         verbose=True)
+    return oc_knmi
+
+def test_knmi_collection_from_stns():
+    stns = [344, 260] #Rotterdam en de Bilt
+    oc_knmi = oc.ObsCollection.from_knmi(stns=stns, 
+                                         meteo_vars=["EV24", "RH"], 
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
                                          verbose=True)

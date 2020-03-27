@@ -631,12 +631,38 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=modelname)
     
     @classmethod
-    def from_knmi(cls, locations, meteo_types, 
-                  name='', 
+    def from_knmi(cls, locations=None, stns=None, 
+                  meteo_vars=("RD"), name='', 
                   start=[None, None], end=[None, None],
                   ObsClass=obs.KnmiObs,
                   **kwargs
                   ):
+        """ get knmi observations from a list of locations or a list of
+        stations
+        
+
+        Parameters
+        ----------
+        locations : pd.DataFrame or None
+            dataframe with x and y coordinates. The default is None
+        stns : list of str or None
+            list of knmi stations. The default is None
+        meteo_vars : list or tuple of str
+            meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
+        name : str, optional
+            name of the obscollection. The default is ''.
+        start : list of str, datetime or None]
+            start date of observations per meteo variable. The default is 
+            [None, None]
+        end : list of str, datetime or None]
+            end date of observations per meteo variable. The default is 
+            [None, None]
+        ObsClass : type or None
+            class of the observations, only KnmiObs is supported for now. The 
+            default is None
+        **kwargs : 
+            kwargs are passed to the io_knmi.get_knmi_obslist function
+        """
         
         from .io.io_knmi import get_knmi_obslist
         
@@ -645,9 +671,9 @@ class ObsCollection(pd.DataFrame):
         meta['end'] = end
         meta['name'] = name
         meta['ObsClass'] = ObsClass
-        meta['meteo_types'] = meteo_types
+        meta['meteo_vars'] = meteo_vars
         
-        obs_list = get_knmi_obslist(locations, meteo_types,
+        obs_list = get_knmi_obslist(locations, stns, meteo_vars,
                                     ObsClass=ObsClass,
                                     start=start,
                                     end=end, **kwargs)

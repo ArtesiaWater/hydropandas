@@ -53,8 +53,19 @@ def test_fill_missing_measurements_rd_278():
 
 def test_obslist_from_locations():
     locations = pd.DataFrame(data={'x': [100000], 'y':[350000]})
-    obs_list = io_knmi.get_knmi_obslist(locations, ['EV24'], start=[None, None],
+    obs_list = io_knmi.get_knmi_obslist(locations, meteo_vars=['EV24'], 
+                                        start=[None, None],
                                         ObsClass=obs.KnmiObs,
                                         end=[None,None])
+    
+    return obs_list
+
+def test_obslist_from_stns():
+    stns = [344, 260] #Rotterdam en de Bilt
+    obs_list = io_knmi.get_knmi_obslist(stns=stns, meteo_vars=['RH', 'EV24'], 
+                                        start=['2010', '2010'],
+                                        ObsClass=obs.KnmiObs,
+                                        end=['2015', '2015'],
+                                        verbose=True)
     
     return obs_list
