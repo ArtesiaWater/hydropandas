@@ -23,9 +23,9 @@ def get_stations(variable='RD'):
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if variable == "RD":
-        fname = "../../data/knmi_neerslagstation.json"
+        fname = "../data/knmi_neerslagstation.json"
     else:
-        fname = "../../data/knmi_meteostation.json"
+        fname = "../data/knmi_meteostation.json"
 
     stations = pd.read_json(os.path.join(dir_path, fname))
 
