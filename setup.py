@@ -30,5 +30,6 @@ setup(
     install_requires=['numpy>=1.15', 'matplotlib>=3.0',
                       'pandas>=0.24', 'scipy>=1.2', ],
     packages=find_packages(exclude=[]),
-    include_package_data=True,
+    package_data={"observations": ["data/*.json"]},
+    include_package_data=True
 )
