@@ -24,9 +24,9 @@ def get_stations(meteo_var='RD'):
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if meteo_var == "RD":
-        fname = "../../data/knmi_neerslagstation.json"
+        fname = "../data/knmi_neerslagstation.json"
     else:
-        fname = "../../data/knmi_meteostation.json"
+        fname = "../data/knmi_meteostation.json"
 
     stations = pd.read_json(os.path.join(dir_path, fname))
 
@@ -596,7 +596,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     end : str, datetime or None, optional
         end date of observations. The default is None.
     fill_missing_obs : bool, optional
-        if True nan values in time series are filled with nearby time series. 
+        if True nan values in time series are filled with nearby time series.
         The default is True.
     interval : str, optional
         desired time interval for observations. The default is 'daily'.
@@ -639,20 +639,20 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     x = stations.loc[stn, 'x']
     y = stations.loc[stn, 'y']
     meta.update({'x': x, 'y': y, 'station': stn, 'name': name})
-    
+
 
     return knmi_df, meta
 
 
 def get_knmi_obslist(locations=None, stns=None,
-                     meteo_vars=("RD"), 
-                     start=[None, None], 
-                     end=[None, None], 
-                     ObsClass=None, 
-                     fill_missing_obs=True, 
+                     meteo_vars=("RD"),
+                     start=[None, None],
+                     end=[None, None],
+                     ObsClass=None,
+                     fill_missing_obs=True,
                      normalize_index=True,
                      interval='daily',
-                     inseason=False, 
+                     inseason=False,
                      cache=False,
                      raise_exceptions=False,
                      verbose=False):
@@ -668,16 +668,16 @@ def get_knmi_obslist(locations=None, stns=None,
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
     start : list of str, datetime or None]
-        start date of observations per meteo variable. The default is 
+        start date of observations per meteo variable. The default is
         [None, None]
     end : list of str, datetime or None]
-        end date of observations per meteo variable. The default is 
+        end date of observations per meteo variable. The default is
         [None, None]
     ObsClass : type or None
-        class of the observations, only KnmiObs is supported for now. The 
+        class of the observations, only KnmiObs is supported for now. The
         default is None
     fill_missing_obs : bool, optional
-        if True nan values in time series are filled with nearby time series. 
+        if True nan values in time series are filled with nearby time series.
         The default is True.
     normalize_index : bool, optional
         if True the index is normalized.
@@ -712,10 +712,10 @@ def get_knmi_obslist(locations=None, stns=None,
                 cache_dir = os.path.join(tempfile.gettempdir(), 'knmi')
                 if not os.path.isdir(cache_dir):
                     os.mkdir(cache_dir)
-                    
+
                 fname = os.path.join(
                     cache_dir, f'{stn}-{meteo_var}' + '.pklz')
-                
+
                 if os.path.isfile(fname):
                     if verbose:
                         print(f'reading {stn}-{meteo_var} from cache')
@@ -725,7 +725,7 @@ def get_knmi_obslist(locations=None, stns=None,
                                            fill_missing_obs=fill_missing_obs,
                                            verbose=verbose)
                     o = o.loc[:, [meteo_var]]
-                    o.to_pickle(fname) 
+                    o.to_pickle(fname)
             else:
                 o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
                                        fill_missing_obs=fill_missing_obs,
@@ -733,7 +733,7 @@ def get_knmi_obslist(locations=None, stns=None,
                 o = o.loc[:, [meteo_var]]
             if normalize_index:
                 o.index = o.index.normalize()
-            
+
             obs_list.append(o)
 
     return obs_list
