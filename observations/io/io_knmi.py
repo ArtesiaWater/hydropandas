@@ -702,9 +702,12 @@ def get_knmi_obslist(locations=None, stns=None,
     for i, meteo_var in enumerate(meteo_vars):
         if stns is None:
             stations = get_stations(meteo_var=meteo_var)
-            stns = get_nearest_station_df(locations, stations=stations)
+            _stns = get_nearest_station_df(locations, stations=stations,
+                                          meteo_var=meteo_var)
+        else:
+            _stns = stns
         
-        for stn in stns:
+        for stn in _stns:
             if cache:
                 cache_dir = os.path.join(tempfile.gettempdir(), 'knmi')
                 if not os.path.isdir(cache_dir):
@@ -719,11 +722,13 @@ def get_knmi_obslist(locations=None, stns=None,
                     o = pd.read_pickle(fname)
                 else:
                     o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
+                                           fill_missing_obs=fill_missing_obs,
                                            verbose=verbose)
                     o = o.loc[:, [meteo_var]]
                     o.to_pickle(fname) 
             else:
                 o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
+                                       fill_missing_obs=fill_missing_obs,
                                        verbose=verbose)
                 o = o.loc[:, [meteo_var]]
             if normalize_index:
