@@ -367,6 +367,17 @@ def test_knmi_collection_from_stns():
     return oc_knmi
 
 
+def test_knmi_collection_from_grid():
+    #somewhere in Noord-Holland (near Castricum)
+    xmid = np.array([104150., 104550.])
+    ymid = np.array([510150., 510550.])
+    oc_knmi = oc.ObsCollection.from_knmi(xmid=xmid, ymid=ymid, 
+                                         meteo_vars=["RD"], 
+                                         start=['2010', '2010'],
+                                         end=['2015', '2015'],
+                                         verbose=True)
+    return oc_knmi
+
 # %% WATERINFO
 
 def test_waterinfo_from_dir():

@@ -133,6 +133,47 @@ def get_nearest_station_df(locations, xcol='x', ycol='y',
 
     return stns
 
+def get_nearest_station_grid(xmid, ymid,
+                             stations=None, 
+                             meteo_var="RD", ignore=None):
+    """find the KNMI stations that measure 'meteo_var' closest to all
+    cells in a grid. 
+
+    Parameters
+    ----------
+    xmid : np.array
+        x coördinates of the cell centers of your grid shape(ncol)
+    ymid : np.array
+        y coördinates of the cell centers of your grid shape(nrow)
+    stations : pd.DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
+    meteo_var : str
+        measurement variable e.g. 'RD' or 'EV24'
+    ignore : list, optional
+        list of stations to ignore. The default is None.
+
+    Returns
+    -------
+    stns : list
+        station numbers.
+        
+    Notes
+    -----
+    assumes you have a structured rectangular grid.
+
+    """
+    mg = np.meshgrid(xmid, ymid)
+    
+    locations = pd.DataFrame(data={'x': mg[0].ravel(),
+                                   'y': mg[1].ravel()})
+    
+    stns = get_nearest_station_df(locations, xcol='x', ycol='y',
+                                  stations=stations, meteo_var=meteo_var, 
+                                  ignore=ignore)
+
+    return stns
+
 
 def _start_end_to_datetime(start, end):
     """convert start and endtime to datetime
@@ -645,6 +686,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
 
 def get_knmi_obslist(locations=None, stns=None,
+                     xmid=None, ymid=None,
                      meteo_vars=("RD"),
                      start=[None, None],
                      end=[None, None],
@@ -665,6 +707,10 @@ def get_knmi_obslist(locations=None, stns=None,
         dataframe with x and y coordinates. The default is None
     stns : list of str or None
         list of knmi stations. The default is None
+    xmid : np.array, optional
+        x coördinates of the cell centers of your grid shape(ncol)
+    ymid : np.array, optional
+        y coördinates of the cell centers of your grid shape(nrow)
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
     start : list of str, datetime or None]
@@ -702,8 +748,17 @@ def get_knmi_obslist(locations=None, stns=None,
     for i, meteo_var in enumerate(meteo_vars):
         if stns is None:
             stations = get_stations(meteo_var=meteo_var)
-            _stns = get_nearest_station_df(locations, stations=stations,
-                                          meteo_var=meteo_var)
+            if (locations is None) and (xmid is not None):
+                _stns = get_nearest_station_grid(xmid, ymid, 
+                                                 stations=stations,
+                                                 meteo_var=meteo_var)
+            elif locations is not None:
+                _stns = get_nearest_station_df(locations, 
+                                               stations=stations,
+                                               meteo_var=meteo_var)
+            else:
+                raise ValueError('stns, location and xmid are all None'\
+                                 'please specify one of these')
         else:
             _stns = stns
         
