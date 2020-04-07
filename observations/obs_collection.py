@@ -633,7 +633,7 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_knmi(cls, locations=None, stns=None, 
                   xmid=None, ymid=None,
-                  meteo_vars=("RD"), name='', 
+                  meteo_vars=["RD"], name='', 
                   start=[None, None], end=[None, None],
                   ObsClass=obs.KnmiObs,
                   **kwargs

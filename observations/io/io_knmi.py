@@ -687,7 +687,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
 def get_knmi_obslist(locations=None, stns=None,
                      xmid=None, ymid=None,
-                     meteo_vars=("RD"),
+                     meteo_vars=["RD"],
                      start=[None, None],
                      end=[None, None],
                      ObsClass=None,
@@ -746,6 +746,7 @@ def get_knmi_obslist(locations=None, stns=None,
     """
     obs_list = []
     for i, meteo_var in enumerate(meteo_vars):
+        
         if stns is None:
             stations = get_stations(meteo_var=meteo_var)
             if (locations is None) and (xmid is not None):
@@ -767,20 +768,21 @@ def get_knmi_obslist(locations=None, stns=None,
                 cache_dir = os.path.join(tempfile.gettempdir(), 'knmi')
                 if not os.path.isdir(cache_dir):
                     os.mkdir(cache_dir)
+                    
+                    
+                fname = f'{stn}-{meteo_var}-{str(start[i])}-{str(end[i])}-{fill_missing_obs}' + '.pklz'
+                pklz_path = os.path.join(cache_dir, fname)
 
-                fname = os.path.join(
-                    cache_dir, f'{stn}-{meteo_var}' + '.pklz')
-
-                if os.path.isfile(fname):
+                if os.path.isfile(pklz_path):
                     if verbose:
-                        print(f'reading {stn}-{meteo_var} from cache')
-                    o = pd.read_pickle(fname)
+                        print(f'reading {fname} from cache')
+                    o = pd.read_pickle(pklz_path)
                 else:
                     o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
                                            fill_missing_obs=fill_missing_obs,
                                            verbose=verbose)
                     o = o.loc[:, [meteo_var]]
-                    o.to_pickle(fname)
+                    o.to_pickle(pklz_path)
             else:
                 o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
                                        fill_missing_obs=fill_missing_obs,
