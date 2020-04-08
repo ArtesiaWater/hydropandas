@@ -337,8 +337,10 @@ def test_obs_from_pystore_item():
 
 # %% KNMI
 def test_knmi_obs_from_stn():
-    return obs.KnmiObs.from_knmi(829, "RD")
+    return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
 
+def test_knmi_obs_from_stn_without_data_in_time_period():
+    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2')
 
 def test_knmi_obs_from_xy():
     return obs.KnmiObs.from_nearest_xy(100000, 350000, "RD")

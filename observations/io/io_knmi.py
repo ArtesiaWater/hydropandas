@@ -202,11 +202,53 @@ def _start_end_to_datetime(start, end):
     # start date one day before because later the datetime index is modified
     start = start - pd.Timedelta(1, 'D')
     if end is None:
-        end = pd.Timestamp.today()
+        end = pd.Timestamp.today() - pd.Timedelta(1, unit='D')
     else:
         end = pd.to_datetime(end)
 
     return start, end
+
+def _check_latest_measurement_date_RD_debilt(verbose=False):
+    """ According to the website of the knmi it can take up to 3 weeks before
+    precipitation data is updated. If you use the fill_missing_measurements
+    method to fill a time series untill today, it will keep looking at all
+    stations to find the data of these last days that probably does not exist.
+    
+    To prevent this, this function will find the last day there are measure-
+    ments at knmi station de Bilt. It is assumed that if de Bilt doesn't have
+    recent measurements, no station will have measurements for these dates.
+    
+    website knmi: https://www.knmi.nl/nederland-nu/klimatologie/monv/reeksen
+    
+    Parameters
+    ----------
+    verbose : boolean, optional
+        Print additional information to the screen (default is False).
+
+    Returns
+    -------
+    last_measurement_date_debilt : pd.TimeStamp
+        last date with measurements at station de Bilt
+
+    """
+    
+    url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
+    start = pd.datetime.now() - pd.Timedelta(21, unit='D')
+    end = pd.datetime.now()
+
+    knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", start, end, False, verbose=verbose)
+    knmi_df = knmi_df.dropna()
+    if knmi_df.empty:
+        raise ValueError('knmi station de Bilt has no RD measurements in the past 3 weeks. HELP!')
+        
+    last_measurement_date_debilt = knmi_df.index[-1]
+    
+    if verbose:
+        print(f'last measurement available at the Bilt is from'
+              f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}' 
+              f' changing end_date accordingly')
+    
+    return last_measurement_date_debilt
 
 
 def download_knmi_data(stn, meteo_var='RD', start=None, end=None, interval='daily',
@@ -233,7 +275,7 @@ def download_knmi_data(stn, meteo_var='RD', start=None, end=None, interval='dail
     raise_exceptions : bool, optional
         if True you get errors when no data is returned. The default is True.
     verbose : boolean, optional
-            Print additional information to the screen (default is False).
+        Print additional information to the screen (default is False).
 
     Raises
     ------
@@ -265,7 +307,7 @@ def download_knmi_data(stn, meteo_var='RD', start=None, end=None, interval='dail
         raise NotImplementedError('season stuff not implemented')
 
     start, end = _start_end_to_datetime(start, end)
-
+    
     # convert possible integer to string
     stn = str(stn)
 
@@ -834,7 +876,8 @@ def add_missing_indices(knmi_df, stn, start, end, verbose=False):
         if verbose:
             print(
                 f'station {stn} has no measurements before {knmi_df.index[0]}')
-    if (knmi_df.index[-1] - end).days < 2:
+    
+    if (end- knmi_df.index[-1]).days < 2:
         new_end = knmi_df.index[-1]
     else:
         new_end = pd.Timestamp(year=end.year, month=end.month, day=end.day,
@@ -893,6 +936,8 @@ def fill_missing_measurements(stn, meteo_var='RD', start=None, end=None,
     stations = get_stations(meteo_var=meteo_var)
     
     start, end = _start_end_to_datetime(start, end)
+    if (meteo_var=='RD') and (end>(pd.datetime.now()-pd.Timedelta(21, unit='D'))):
+        end = min(end,_check_latest_measurement_date_RD_debilt(verbose))
 
     if verbose:
         print('Download ' + meteo_var + ' from ' +
