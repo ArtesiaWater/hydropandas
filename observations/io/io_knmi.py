@@ -196,7 +196,7 @@ def _start_end_to_datetime(start, end):
     """
 
     if start is None:
-        start = pd.Timestamp(pd.Timestamp.today().year, 1, 1)
+        start = pd.Timestamp(pd.Timestamp.today().year-1, 1, 1)
     else:
         start = pd.to_datetime(start)
     # start date one day before because later the datetime index is modified
@@ -347,8 +347,8 @@ def get_knmi_daily_rainfall(url, stn, meteo_var, start, end, inseason, verbose=F
     f = StringIO(result)
     knmi_df, variables = read_knmi_daily_rainfall(f, meteo_var, verbose=verbose)
     if int(stn) not in knmi_df.STN.unique():
-        raise ValueError(f'KNMI station {stn} not recognized please provide '
-                         'valid rainfall station number')
+        raise ValueError(f'KNMI station {stn} does not exists or has no ' 
+                         'measurements in the given period')
 
     return knmi_df[[meteo_var]], variables
 
@@ -435,11 +435,12 @@ def read_knmi_daily_rainfall(f, meteo_var, verbose=False):
     df = df.drop('YYYYMMDD', axis=1)
 
     # sometimes the last row is messed up, check for that and remove it
-    if df.iloc[-1].isna().any():
-        if verbose:
-            print('last row contains no data, remove last row')
-        df = df.drop(index=df.index[-1])
-        df.loc[:, meteo_var] = df[meteo_var].astype(float)
+    if not df.empty:
+        if df.iloc[-1].isna().any():
+            if verbose:
+                print('last row contains no data, remove last row')
+            df = df.drop(index=df.index[-1])
+            df.loc[:, meteo_var] = df[meteo_var].astype(float)
 
     # daily precipitation amount in 0.1 mm over the period 08.00
     # preceding day - 08.00 UTC present day
@@ -746,7 +747,7 @@ def get_knmi_obslist(locations=None, stns=None,
     """
     obs_list = []
     for i, meteo_var in enumerate(meteo_vars):
-        
+        start[i], end[i] = _start_end_to_datetime(start[i], end[i])
         if stns is None:
             stations = get_stations(meteo_var=meteo_var)
             if (locations is None) and (xmid is not None):
@@ -770,7 +771,7 @@ def get_knmi_obslist(locations=None, stns=None,
                     os.mkdir(cache_dir)
                     
                     
-                fname = f'{stn}-{meteo_var}-{str(start[i])}-{str(end[i])}-{fill_missing_obs}' + '.pklz'
+                fname = f'{stn}-{meteo_var}-{start[i].strftime("%Y%m%d")}-{end[i].strftime("%Y%m%d")}-{fill_missing_obs}' + '.pklz'
                 pklz_path = os.path.join(cache_dir, fname)
 
                 if os.path.isfile(pklz_path):
@@ -890,15 +891,8 @@ def fill_missing_measurements(stn, meteo_var='RD', start=None, end=None,
         raise (TypeError('Only one variable supported for now'))
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var)
-
-    if start is None:
-        start = pd.Timestamp(pd.Timestamp.today().year, 1, 1)
-    else:
-        start = pd.to_datetime(start)
-    if end is None:
-        end = pd.Timestamp.today()
-    else:
-        end = pd.to_datetime(end)
+    
+    start, end = _start_end_to_datetime(start, end)
 
     if verbose:
         print('Download ' + meteo_var + ' from ' +

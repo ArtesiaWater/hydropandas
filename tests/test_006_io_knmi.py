@@ -10,6 +10,13 @@ from observations import observation as obs
 import pandas as pd
 import numpy as np
 
+def test_get_knmi_ts():
+    ts, meta = io_knmi.get_knmi_timeseries_stn(441, "RD",
+                                               start=None,
+                                               end=None,
+                                               fill_missing_obs=True,
+                                               verbose=True)
+    return ts, meta
 
 def test_download_rd_210():
     knmi_df, variables, stations = io_knmi.download_knmi_data(210, 

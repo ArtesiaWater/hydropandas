@@ -354,7 +354,7 @@ def test_knmi_collection_from_locations():
                                          meteo_vars=["EV24", "RD"], 
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
-                                         verbose=True)
+                                         verbose=True, cache=True)
     return oc_knmi
 
 def test_knmi_collection_from_stns():
