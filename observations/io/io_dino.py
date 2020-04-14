@@ -1176,7 +1176,7 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     ----------
     location : str
         location str of the piezometer, i.e. B57F0077
-    filternr : str, int, float
+    filternr : int or float
         filter number, is converted to str, i.e. 004
     tmin : str or pandas.Timestamp
         start date in format YYYY-MM-DD (will be converted if Timestamp)
@@ -1193,9 +1193,7 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
         dictionary with metadata
 
     """
-
-    if isinstance(filternr, float) or isinstance(filternr, int):
-        filternr = "{0:03g}".format(filternr)
+    filternr = "{0:03g}".format(int(filternr))
 
     # download data from dino
     dino = DinoWSDL()
