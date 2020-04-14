@@ -1076,8 +1076,7 @@ class DinoWSDL:
 
         """
 
-        if isinstance(filter_nr, float) or isinstance(filter_nr, int):
-            filter_nr = "{0:03g}".format(filter_nr)
+        filter_nr = "{0:03g}".format(int(filter_nr))
 
         data = {"WELL_NITG_NR": location,
                 "WELL_TUBE_NR": filter_nr}
