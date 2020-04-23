@@ -234,9 +234,8 @@ def _check_latest_measurement_date_RD_debilt(verbose=False):
     
     url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
     start = pd.datetime.now() - pd.Timedelta(21, unit='D')
-    end = pd.datetime.now()
-
-    knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", start, end, False, verbose=verbose)
+    knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", None, None, 
+                                                 False, verbose=verbose)
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
         raise ValueError('knmi station de Bilt has no RD measurements in the past 3 weeks. HELP!')
@@ -342,7 +341,9 @@ def download_knmi_data(stn, meteo_var='RD', start=None, end=None, interval='dail
     return knmi_df, variables, stations
 
 
-def get_knmi_daily_rainfall(url, stn, meteo_var, start, end, inseason, verbose=False):
+def get_knmi_daily_rainfall(url, stn, meteo_var, 
+                            start=None, end=None, inseason=False, 
+                            verbose=False):
     """download and read knmi daily rainfall
 
 
@@ -377,12 +378,15 @@ def get_knmi_daily_rainfall(url, stn, meteo_var, start, end, inseason, verbose=F
     """
 
     data = {
-        'start': start.strftime('%Y%m%d'),
-        'end': end.strftime('%Y%m%d'),
         'inseason': str(int(inseason)),
         'vars': meteo_var,
-        'stns': stn,
-    }
+        'stns': stn}
+    
+    if start is not None:
+        data['start'] = start.strftime('%Y%m%d')
+        
+    if end is not None:
+        data['end'] =  end.strftime('%Y%m%d')
 
     result = requests.get(url, params=data).text
 
@@ -401,6 +405,7 @@ def _read_knmi_header(f, verbose=False):
     line = f.readline()
     if 'DOCTYPE HTML PUBLIC' in line:
         if verbose:
+            
             print(f.read())
         raise ValueError('Internal Server Error')
     for iline in range(500):

@@ -490,6 +490,7 @@ class KnmiObs(Obs):
                                                    startdate, enddate,
                                                    fill_missing_obs,
                                                    verbose=verbose)
+        
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
 

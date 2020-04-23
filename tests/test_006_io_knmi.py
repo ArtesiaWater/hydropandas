@@ -13,7 +13,7 @@ import numpy as np
 def test_get_knmi_ts():
     ts, meta = io_knmi.get_knmi_timeseries_stn(441, "RD",
                                                start='2010-1-2',
-                                               end=None,
+                                               end='2040-1-2',
                                                fill_missing_obs=True,
                                                verbose=True)
     return ts, meta
