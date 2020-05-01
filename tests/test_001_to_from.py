@@ -51,7 +51,7 @@ def test_observation_dino_download2():
     # download dino
     gw2 = obs.GroundwaterObs.from_dino(location="B57B0069", filternr=1.,
                                        tmin="2000-01-01",
-                                       tmax="2010-01-01", unit="NAP")
+                                       tmax="2030-01-01", unit="NAP")
     return gw2
 
 
@@ -64,7 +64,7 @@ def test_observation_dino_download3():
     gw3 = obs.GroundwaterObs.from_dino(location=location,
                                        filternr=filternr,
                                        tmin="1900-01-01",
-                                       tmax="2020-01-01", unit="NAP")
+                                       tmax="1901-01-01", unit="NAP")
     return gw3
 
 
@@ -226,7 +226,7 @@ def test_obscollection_fews_selection():
 
 
 # %% WISKI
-
+@pytest.mark.slow
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.csv",
@@ -243,7 +243,7 @@ def test_observation_wiskicsv_gw():
 
     return wiski_gw
 
-
+@pytest.mark.slow
 def test_obscollection_wiskizip_gw():
     wiski_col = oc.ObsCollection.from_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.zip",

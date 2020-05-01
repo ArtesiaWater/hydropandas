@@ -44,7 +44,7 @@ def test_fill_missing_measurements_ev24_278():
     knmi_df, variables, stations = io_knmi.fill_missing_measurements(278,
                                                                      meteo_var='EV24',
                                                                      start='1952',
-                                                                     end=None,
+                                                                     end='1954',
                                                                      raise_exceptions=False,
                                                                      verbose=False)
     return knmi_df, variables, stations
