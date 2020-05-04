@@ -238,7 +238,7 @@ def _check_latest_measurement_date_RD_debilt(verbose=False):
                                                  False, verbose=verbose)
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
-        raise ValueError('knmi station de Bilt has no RD measurements in the past 3 weeks. HELP!')
+        raise ValueError('knmi station de Bilt has no RD measurements in the past 3 weeks.')
         
     last_measurement_date_debilt = knmi_df.index[-1]
     
