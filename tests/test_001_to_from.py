@@ -51,7 +51,7 @@ def test_observation_dino_download2():
     # download dino
     gw2 = obs.GroundwaterObs.from_dino(location="B57B0069", filternr=1.,
                                        tmin="2000-01-01",
-                                       tmax="2010-01-01", unit="NAP")
+                                       tmax="2030-01-01", unit="NAP")
     return gw2
 
 
@@ -64,7 +64,7 @@ def test_observation_dino_download3():
     gw3 = obs.GroundwaterObs.from_dino(location=location,
                                        filternr=filternr,
                                        tmin="1900-01-01",
-                                       tmax="2020-01-01", unit="NAP")
+                                       tmax="1901-01-01", unit="NAP")
     return gw3
 
 
@@ -226,7 +226,7 @@ def test_obscollection_fews_selection():
 
 
 # %% WISKI
-
+@pytest.mark.slow
 def test_observation_wiskicsv_gw():
     wiski_gw = obs.GroundwaterObs.from_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.csv",
@@ -243,7 +243,7 @@ def test_observation_wiskicsv_gw():
 
     return wiski_gw
 
-
+@pytest.mark.slow
 def test_obscollection_wiskizip_gw():
     wiski_col = oc.ObsCollection.from_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.zip",
@@ -337,8 +337,10 @@ def test_obs_from_pystore_item():
 
 # %% KNMI
 def test_knmi_obs_from_stn():
-    return obs.KnmiObs.from_knmi(829, "RD")
+    return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
 
+def test_knmi_obs_from_stn_without_data_in_time_period():
+    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2')
 
 def test_knmi_obs_from_xy():
     return obs.KnmiObs.from_nearest_xy(100000, 350000, "RD")
@@ -354,7 +356,7 @@ def test_knmi_collection_from_locations():
                                          meteo_vars=["EV24", "RD"], 
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
-                                         verbose=True)
+                                         verbose=True, cache=True)
     return oc_knmi
 
 def test_knmi_collection_from_stns():
@@ -366,6 +368,17 @@ def test_knmi_collection_from_stns():
                                          verbose=True)
     return oc_knmi
 
+
+def test_knmi_collection_from_grid():
+    #somewhere in Noord-Holland (near Castricum)
+    xmid = np.array([104150., 104550.])
+    ymid = np.array([510150., 510550.])
+    oc_knmi = oc.ObsCollection.from_knmi(xmid=xmid, ymid=ymid, 
+                                         meteo_vars=["RD"], 
+                                         start=['2010', '2010'],
+                                         end=['2015', '2015'],
+                                         verbose=True)
+    return oc_knmi
 
 # %% WATERINFO
 
