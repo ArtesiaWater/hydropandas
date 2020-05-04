@@ -27,8 +27,6 @@ class ObsCollection(pd.DataFrame):
 
     Parameters
     ----------
-    bbox : tuple
-        bounding box of the obs collection
     name : str
         name of the observation collection
     meta : dic
@@ -39,8 +37,7 @@ class ObsCollection(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ['bbox',
-                 'name',
+    _metadata = ['name',
                  'meta',
                  ]
 
@@ -51,7 +48,6 @@ class ObsCollection(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        self.bbox = kwargs.pop('bbox', ())
         self.name = kwargs.pop('name', '')
         self.meta = kwargs.pop('meta', {})
         # self.plots = CollectionPlots(self)
@@ -275,7 +271,7 @@ class ObsCollection(pd.DataFrame):
 
         obs_df = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, bbox=bbox, meta=meta)
+        return cls(obs_df, name=name, meta=meta)
 
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
@@ -337,7 +333,7 @@ class ObsCollection(pd.DataFrame):
         if bbox is None:
             bbox = [extent[0], extent[2], extent[1], extent[3]]
 
-        return cls(obs_df, name=name, bbox=bbox, meta=meta)
+        return cls(obs_df, name=name, meta=meta)
 
     @classmethod
     def from_dino_dir(
