@@ -20,7 +20,7 @@ def get_stations(meteo_var='RD'):
     -------
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
-
+    
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if meteo_var == "RD":
@@ -480,6 +480,11 @@ def read_knmi_daily_rainfall(f, meteo_var, verbose=False):
     df.set_index(pd.to_datetime(df.YYYYMMDD, format='%Y%m%d'),
                  inplace=True)
     df = df.drop('YYYYMMDD', axis=1)
+    
+    if df.index.duplicated().sum() > 0:
+        df = df.loc[~df.index.duplicated(keep='first')]
+        if verbose:
+            print('duplicate indices removed from RD measurements')
 
     # sometimes the last row is messed up, check for that and remove it
     if not df.empty:
