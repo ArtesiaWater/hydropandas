@@ -107,7 +107,8 @@ def _read_dino_groundwater_metadata(f, line):
                              ] = float(meta[key]) / 100.
             if i == 0:
                 for key in meta_tsi.keys():
-                    meta_ts[key] = pd.Series(name=key)
+                    meta_ts[key] = pd.Series(name=key, 
+                                             dtype=type(meta_tsi[key]))
 
             for key in meta_tsi.keys():
                 meta_ts[key].loc[start_date] = meta_tsi[key]
@@ -1509,7 +1510,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
     p_meta = re.compile(
         'Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum')
     p_data = re.compile(
-        'Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid')
+        r'Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid')
 
     with open(fname, 'r') as f:
         line = f.readline()

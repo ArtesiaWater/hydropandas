@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 from . import accessor
 
@@ -268,7 +269,7 @@ class StatsAccessorObs:
 
     def obs_per_year(self, col):
         if self._obj.empty:
-            return pd.Series()
+            return pd.Series(dtype=float)
         else:
             return self._obj.groupby(self._obj.index.year).count()[col]
 
@@ -280,9 +281,10 @@ class StatsAccessorObs:
         if obs_per_year.empty:
             # no obs, set series to current year with 0 obs
             obs_per_year_all = pd.Series(
-                index=[pd.datetime.now().year], data=0)
+                index=[dt.datetime.now().year], data=0)
         else:
-            obs_per_year_all = pd.Series(index=range(obs_per_year.index[0],
+            obs_per_year_all = pd.Series(dtype=float,
+                                         index=range(obs_per_year.index[0],
                                                      obs_per_year.index[-1] + 1))
             obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 

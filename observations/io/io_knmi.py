@@ -5,6 +5,7 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
+import datetime as dt
 import requests
 
 
@@ -233,7 +234,7 @@ def _check_latest_measurement_date_RD_debilt(verbose=False):
     """
     
     url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
-    start = pd.datetime.now() - pd.Timedelta(21, unit='D')
+    start = dt.datetime.now() - pd.Timedelta(21, unit='D')
     knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", None, None, 
                                                  False, verbose=verbose)
     knmi_df = knmi_df.dropna()
@@ -946,7 +947,7 @@ def fill_missing_measurements(stn, meteo_var='RD', start=None, end=None,
     stations = get_stations(meteo_var=meteo_var)
     
     start, end = _start_end_to_datetime(start, end)
-    if (meteo_var=='RD') and (end>(pd.datetime.now()-pd.Timedelta(21, unit='D'))):
+    if (meteo_var=='RD') and (end>(dt.datetime.now()-pd.Timedelta(21, unit='D'))):
         end = min(end,_check_latest_measurement_date_RD_debilt(verbose))
 
     if verbose:
