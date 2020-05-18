@@ -11,9 +11,9 @@ version = {}
 with open("version.py") as fp:
     exec(fp.read(), version)
 setup(
-    name='observations',
+    name='hydropandas',
     version=version['__version__'],
-    description='Observations module by Artesia',
+    description='hydropandas module by Artesia',
     long_description=l_d,
     url='https://artesia-water.nl',
     author='Artesia',
@@ -30,6 +30,6 @@ setup(
     install_requires=['numpy>=1.15', 'matplotlib>=3.0',
                       'pandas>=0.24', 'scipy>=1.2', ],
     packages=find_packages(exclude=[]),
-    package_data={"observations": ["data/*.json"]},
+    package_data={"hydropandas": ["data/*.json"]},
     include_package_data=True
 )

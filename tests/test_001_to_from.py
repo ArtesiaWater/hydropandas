@@ -1,6 +1,6 @@
 # import os
-from observations import observation as obs
-from observations import obs_collection as oc
+from hydropandas import observation as obs
+from hydropandas import obs_collection as oc
 import numpy as np
 import pytest
 
