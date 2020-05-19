@@ -133,7 +133,7 @@ class ObsCollection(pd.DataFrame):
             if verbose:
                 print(f'set attribute {att_name} of {iname} to {value}')
             o.meta.update({att_name: value})
-            
+
     @classmethod
     def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
                     verbose=False):
@@ -180,7 +180,7 @@ class ObsCollection(pd.DataFrame):
                   **kwargs):
         """ Read dino data within an extent from the server or from a 
         directory with downloaded files.
-        
+
         Parameters
         ----------
         dirname : str, optional
@@ -236,15 +236,15 @@ class ObsCollection(pd.DataFrame):
                     }
 
             obs_list = read_dino_dir(dirname,
-                                    ObsClass,
-                                    subdir,
-                                    suffix,
-                                    unpackdir,
-                                    force_unpack,
-                                    preserve_datetime,
-                                    verbose,
-                                    keep_all_obs,
-                                    **kwargs)
+                                     ObsClass,
+                                     subdir,
+                                     suffix,
+                                     unpackdir,
+                                     force_unpack,
+                                     preserve_datetime,
+                                     verbose,
+                                     keep_all_obs,
+                                     **kwargs)
 
         elif extent is not None or bbox is not None:
             # read dino data within extent
@@ -275,10 +275,10 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_dino_server(cls, extent=None, bbox=None,
-                          ObsClass=obs.GroundwaterObs,
-                          name=None, keep_all_obs=True,
-                          verbose=False, **kwargs
-                          ):
+                         ObsClass=obs.GroundwaterObs,
+                         name=None, keep_all_obs=True,
+                         verbose=False, **kwargs
+                         ):
         """ Read dino data from a server
 
         Parameters
@@ -308,7 +308,8 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+        warnings.warn(
+            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         from .io.io_dino import download_dino_within_extent
 
@@ -383,7 +384,8 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        warnings.warn("this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+        warnings.warn(
+            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
 
         from .io.io_dino import read_dino_dir
 
@@ -589,7 +591,7 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=fieldlogger_meta)
-    
+
     @classmethod
     def from_imod(cls, obs_collection, ml, runfile, mtime, model_ws,
                   modelname='', nlay=None, exclude_layers=0, verbose=False):
@@ -625,18 +627,18 @@ class ObsCollection(pd.DataFrame):
                                     verbose=verbose)
         obs_df = util._obslist_to_frame(mo_list)
         return cls(obs_df, name=modelname)
-    
+
     @classmethod
-    def from_knmi(cls, locations=None, stns=None, 
+    def from_knmi(cls, locations=None, stns=None,
                   xmid=None, ymid=None,
-                  meteo_vars=["RD"], name='', 
+                  meteo_vars=["RD"], name='',
                   start=[None, None], end=[None, None],
                   ObsClass=obs.KnmiObs,
                   **kwargs
                   ):
         """ get knmi observations from a list of locations or a list of
         stations
-        
+
 
         Parameters
         ----------
@@ -664,28 +666,27 @@ class ObsCollection(pd.DataFrame):
         **kwargs : 
             kwargs are passed to the io_knmi.get_knmi_obslist function
         """
-        
+
         from .io.io_knmi import get_knmi_obslist
-        
+
         meta = {}
         meta['start'] = start
         meta['end'] = end
         meta['name'] = name
         meta['ObsClass'] = ObsClass
         meta['meteo_vars'] = meteo_vars
-        
-        obs_list = get_knmi_obslist(locations, stns, 
+
+        obs_list = get_knmi_obslist(locations, stns,
                                     xmid, ymid,
                                     meteo_vars,
                                     ObsClass=ObsClass,
                                     start=start,
                                     end=end, **kwargs)
-        
+
         obs_df = util._obslist_to_frame(obs_list)
-        
+
         return cls(obs_df, name=name, meta=meta)
-    
-    
+
     @classmethod
     def from_list(cls, obs_list, name='', verbose=False):
         """read observations from a list of obs objects
@@ -717,8 +718,6 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=menyanthes_meta)
-
-    
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
@@ -772,7 +771,6 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, meta=pr_meta, name=name)
 
-
     @classmethod
     def from_pystore(cls, storename, pystore_path,
                      ObsClass=obs.GroundwaterObs,
@@ -825,7 +823,7 @@ class ObsCollection(pd.DataFrame):
                                 obs.GroundwaterObs,
                                 extent=extent,
                                 collection_names=collection_names,
-                                item_names=item_names, nameby="item",
+                                item_names=item_names, nameby=nameby,
                                 read_series=read_series, verbose=verbose,
                                 progressbar=progressbar)
         # if read series is False, returns dataframe with only metadata
@@ -837,7 +835,6 @@ class ObsCollection(pd.DataFrame):
             obs_df = obs_list
 
         return cls(obs_df, name=storename, meta=meta)
-
 
     @classmethod
     def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
@@ -874,8 +871,7 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
-    
-    
+
     @classmethod
     def from_wiski(cls, dirname, ObsClass=obs.GroundwaterObs, suffix='.csv',
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
@@ -1084,8 +1080,7 @@ class ObsCollection(pd.DataFrame):
             self['# metingen'] = self.obs.apply(lambda x: x.shape[0])
 
         return self[columns]
-    
-    
+
     def to_pastastore(self, pstore=None, pstore_name='',
                       obs_column='stand_m_tov_nap',
                       kind='oseries', add_metadata=True,
@@ -1115,14 +1110,11 @@ class ObsCollection(pd.DataFrame):
             the pastas project with the series from the ObsCollection
         """
         from .io.io_pastas import create_pastastore
-        
-        pstore = create_pastastore(self, pstore, pstore_name, 
+
+        pstore = create_pastastore(self, pstore, pstore_name,
                                    add_metadata=add_metadata,
                                    kind=kind,
                                    obs_column=obs_column)
-    
-        
-        
 
         return pstore
 
@@ -1154,21 +1146,18 @@ class ObsCollection(pd.DataFrame):
         pr : pastas.project
             the pastas project with the series from the ObsCollection
         """
-        warnings.warn("this method will be removed in future versions, use to_pastastore instead", DeprecationWarning)
+        warnings.warn(
+            "this method will be removed in future versions, use to_pastastore instead", DeprecationWarning)
 
         from .io.io_pastas import create_pastas_project
-        
-        project = create_pastas_project(self, pr=pr, 
+
+        project = create_pastas_project(self, pr=pr,
                                         project_name=project_name,
                                         obs_column=obs_column,
                                         kind=kind, add_metadata=add_metadata,
                                         verbose=verbose, **kwargs)
-    
-        
-        
 
         return project
-        
 
     def to_shapefile(self, fname, xcol='x', ycol='y'):
         """save ObsCollection as shapefile
