@@ -1,10 +1,10 @@
 <img src="/doc/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
-[![Build Status](https://travis-ci.com/ArtesiaWater/observations.svg?branch=master)](https://travis-ci.com/ArtesiaWater/observations)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3cfd43a484ac4591a9ce1c117d062bab)](https://www.codacy.com/manual/ArtesiaWater/observations?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/observations&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.com/ArtesiaWater/hydropandas.svg?branch=master)](https://travis-ci.com/ArtesiaWater/hydropandas)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3cfd43a484ac4591a9ce1c117d062bab)](https://www.codacy.com/manual/ArtesiaWater/hydropandas?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/hydropandas&amp;utm_campaign=Badge_Grade)
 
-# observations
-The observations module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The observations module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
+# hydropandas
+The hydropandas module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The hydropandas module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
 
 
 ## The Obs class
@@ -12,8 +12,8 @@ The Obs class holds the measurements and metadata for one timeseries. There are 
 - GroundwaterObs: for groundwater measurements
 - GroundwaterQualityObs: for groundwater quality measurements
 - WaterlvlObs: for surface water level measurements
-- ModelObs: for observations from a MODFLOW model
-- KnmiObs: for (daily) KNMI observations
+- ModelObs: for hydropandas from a MODFLOW model
+- KnmiObs: for (daily) KNMI hydropandas
 
 Each of these Obs classes is essentially a pandas DataFrame with additional methods and attributes related to the type of measurement that it holds. The classes also contain specific methods to read data from specific sources.
 

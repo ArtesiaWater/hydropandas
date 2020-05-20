@@ -6,8 +6,8 @@ Created on Mon Jun 24 11:43:27 2019
 """
 # import sys
 # sys.path.insert(1, "..")
-from observations import observation as obs
-from observations.io import io_wiski
+from hydropandas import observation as obs
+from hydropandas.io import io_wiski
 # import os
 
 # TEST_DIR = os.path.dirname(os.path.abspath(__file__))

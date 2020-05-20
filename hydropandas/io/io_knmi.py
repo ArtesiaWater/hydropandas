@@ -5,6 +5,7 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
+import datetime as dt
 import requests
 
 
@@ -20,7 +21,7 @@ def get_stations(meteo_var='RD'):
     -------
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
-
+    
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if meteo_var == "RD":
@@ -233,7 +234,7 @@ def _check_latest_measurement_date_RD_debilt(verbose=False):
     """
     
     url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
-    start = pd.datetime.now() - pd.Timedelta(21, unit='D')
+    start = dt.datetime.now() - pd.Timedelta(21, unit='D')
     knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", None, None, 
                                                  False, verbose=verbose)
     knmi_df = knmi_df.dropna()
@@ -480,6 +481,11 @@ def read_knmi_daily_rainfall(f, meteo_var, verbose=False):
     df.set_index(pd.to_datetime(df.YYYYMMDD, format='%Y%m%d'),
                  inplace=True)
     df = df.drop('YYYYMMDD', axis=1)
+    
+    if df.index.duplicated().sum() > 0:
+        df = df.loc[~df.index.duplicated(keep='first')]
+        if verbose:
+            print('duplicate indices removed from RD measurements')
 
     # sometimes the last row is messed up, check for that and remove it
     if not df.empty:
@@ -941,7 +947,7 @@ def fill_missing_measurements(stn, meteo_var='RD', start=None, end=None,
     stations = get_stations(meteo_var=meteo_var)
     
     start, end = _start_end_to_datetime(start, end)
-    if (meteo_var=='RD') and (end>(pd.datetime.now()-pd.Timedelta(21, unit='D'))):
+    if (meteo_var=='RD') and (end>(dt.datetime.now()-pd.Timedelta(21, unit='D'))):
         end = min(end,_check_latest_measurement_date_RD_debilt(verbose))
 
     if verbose:

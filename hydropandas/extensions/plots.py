@@ -161,7 +161,7 @@ class CollectionPlots:
             see col_name_lat
         zoom_start : int, optional
             start zoom level of the folium ma
-        create_interactive_plots : boolean, optinal
+        create_interactive_plots : boolean, optional
             if True interactive plots will be created, if False the iplot_fname
             attribute of the observations is used.
         verbose : boolean, optional
@@ -404,6 +404,8 @@ class ObsPlots:
 
         # save plot
         if savedir is not None:
+            if not os.path.isdir(savedir):
+                os.makedirs(savedir)
             self._obj.iplot_fname = os.path.join(
                 savedir, self._obj.name + '.html')
             save(p, self._obj.iplot_fname, resources=CDN, title=self._obj.name)

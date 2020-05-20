@@ -107,3 +107,4 @@ ENV/
 *cov.xml
 
 .ignore*
+.examples/figure*

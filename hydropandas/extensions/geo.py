@@ -335,13 +335,13 @@ class GeoAccessorObs:
 
         from pyproj import Proj, transform
 
-        inProj = Proj(init=in_epsg)
-        outProj = Proj(init=out_epsg)
+        inProj = Proj(in_epsg)
+        outProj = Proj(out_epsg)
 
         if np.isnan(self._obj.x) or np.isnan(self._obj.y):
-            lon, lat = np.nan, np.nan
+            lat, lon = np.nan, np.nan
         else:
-            lon, lat = transform(inProj, outProj, self._obj.x, self._obj.y)
+            lat, lon = transform(inProj, outProj, self._obj.x, self._obj.y)
 
         return lat, lon
 

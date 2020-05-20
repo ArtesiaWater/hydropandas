@@ -5,8 +5,8 @@ Created on Sat Dec 21 09:24:29 2019
 @author: oebbe
 """
 
-from observations.io import io_knmi
-from observations import observation as obs
+from hydropandas.io import io_knmi
+from hydropandas import observation as obs
 import pandas as pd
 import numpy as np
 
