@@ -5,211 +5,258 @@ import scipy.interpolate as intp
 from . import accessor
 
 
-def findrowcolumn(xpts, ypts, ml):
-    """
-    find row and column number for points in an irregular grid. Adapted from Flopy.
-
-    Parameters
-    ----------
-    xpts : 1d array
-        x-coordinates of points
-    ypts : 1d array
-        y-coordinates of points
-    ml : flopy.modflow.mf.Modflow
-        modflow model
-
-    Returns
-    -------
-    r, c: arrays with dtype: int
-        array containing row and column indices of the points
-
-    """
-    xedge, yedge = ml.modelgrid.xyedges
-
-    if not isinstance(xpts, np.ndarray):
-        xpts = np.asarray(xpts)
-    if not isinstance(ypts, np.ndarray):
-        ypts = np.asarray(ypts)
-    if not isinstance(xedge, np.ndarray):
-        xedge = np.asarray(xedge)
-    if not isinstance(yedge, np.ndarray):
-        yedge = np.asarray(yedge)
-
-    fx = intp.interp1d(xedge, range(len(xedge)), bounds_error=False)
-    fy = intp.interp1d(yedge, range(len(yedge)), bounds_error=False)
-
-    c = np.asarray(np.floor(fx(xpts)), dtype=int)
-    r = np.asarray(np.floor(fy(ypts)), dtype=int)
-
-    return r, c
-
-
-def get_model_layer(x, y, z, ml, dis, zgr=None, left=-999, right=999):
-    """get index of model layer based on elevation
-    at a specific location.
-
-    Parameters
-    ----------
-    x : np.array
-        x-coordinate of locations
-    y : np.array
-        y-coordinate of locations
-    z : np.array
-        elevations corresponding to x, y locations
-    ml : flopy.modflow.mf.Modflow
-        modflow model
-    zgr : np.3darray, optional
-        3D array containing layer elevations for if dis
-        does not contain this information. (the default is
-        None, which uses dis to determine layer elevations)
-
-    Returns
-    -------
-    ilay: np.array
-        array containing 0-indexed model layer for each point
-
-    TODO:
-        - avoid loop if model layer elevations are equal everywhere
-        -
-    """
-
-    r, c = findrowcolumn(x, y, ml)
-
-    if zgr is None:
-        zgr = np.concatenate(
-            [dis.top.array[np.newaxis], dis.botm.array], axis=0)
-
-    ilay = np.nan * np.ones(x.shape, dtype=np.int)
-
-    for i in range(x.shape[0]):
-        ir = r[i]
-        ic = c[i]
-
-        if np.isnan(z[i]):
-            continue
-        elif (ir >= 0) & (ic >= 0):
-            zvec = zgr[:, ir, ic]
-            ilay[i] = int(np.interp(z[i], zvec[::-1], np.arange(len(zvec))[::-1],
-                                    left=left, right=right))
-
-    return ilay
-
-
-def get_pb_modellayer(x, y, ftop, fbot, ml, zgr=None, left=-999, right=999, 
+def get_model_layer_z(z, zvec, left=-999, right=999,
                       verbose=False):
-    """get index of model layer based on filterdepth of
-    piezometer.
+    """get index of model layer based on elevation. Assumptions:
+        - the highest value in zvec is the top of model layer 0.
+        - if z is equal to the bottom of a layer, the model layer above that
+        layer is assigned.
 
     Parameters
     ----------
-    x : np.array
-        x-coordinate of piezometers
-    y : np.array
-        y-coordinate of piezometers
-    ftop : np.array
-        top elevation of filter
-    fbot : np.array
-        bottom elevation of filter
-    ml : flopy.modflow.mf.Modflow
-        modflow model
-    zgr : np.3darray, optional
-        array containing model layer elevation
-        information (the default is None, which
-        gets this information from the dis object)
-    verbose : bool, optional
-        print information about how layer is
-        selected when piezometer is screened in
-        multiple layers (the default is False,
-        which prints no info)
+    z : int, float
+        elevation.
+    zvec : list, np.array
+        elevations of model layers. shape is nlay + 1
+    left : int, optional
+        if z is below the lowest value in zvec, this value is returned. 
+        The default is -999.
+    right : TYPE, optional
+        if z is above the highest value in zvec, this value is returned. 
+        The default is 999.
 
     Returns
     -------
-    ilay: np.array
-        array containing index of model layer per piezometer
+    int
+        model layer.
+        
+    Examples
+    --------
+    >>> zvec = [0, -10, -20, -30]
+    >>> get_model_layer_z(-5, zvec)
+    0
+    
+    >>> get_model_layer_z(-25, zvec)
+    2
+    
+    >>> get_model_layer_z(-50, zvec)
+    -999
+    
+    >>> get_model_layer_z(100, zvec)
+    999
+    
+    >>> get_model_layer_z(-20, zvec)
+    1
+    """
+    # make sure zvec is descending
+    zvec = np.sort(zvec)[::-1]
+    if z in zvec:
+        z+= 1e-10
+    lay = int(np.interp(z, zvec[::-1], np.arange(len(zvec))[::-1],
+              left=left, right=right))
+    
+    return lay
 
-    TODO:
-        - some things are done double in this function and in get_model_layer, necessary?
-        - speed up if model layer elevation is constant everywhere?
+def check_if_var_is_invalid(var):
+    
+    if var is None:
+        return True
+    elif np.isnan(var):
+        return True
+    
+    return False
+
+def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
+                               verbose=False):
+    """
+    
+
+    Parameters
+    ----------
+    ftop : int or float
+        top of filter.
+    fbot : int or float
+        bottom of filter, has to be lower than ftop.
+    zvec : list or np.array
+        elevations of the modellayers at the location of the filter.
+    left : int, optional
+        value to return if filter is below the modellayers. 
+        The default is -999.
+    right : int, optional
+        value to return if filter is above the modellayers. 
+        The default is-999.
+    verbose : bool, optional
+        DESCRIPTION. The default is False.
+
+    Raises
+    ------
+    ValueError
+        raised if something unexpected happens.
+
+    Returns
+    -------
+    int or np.nan
+        modellayer.
+        
+    examples
+    --------
+    >>> zvec = [0, -10, -20, -30, -40]
+    >>> get_modellayer_from_filter(-5, -7, zvec)
+    0
+    
+    >>> get_modellayer_from_filter(-25, -27, zvec)
+    2
+    
+    >>> get_modellayer_from_filter(-15, -27, zvec, verbose=True)
+    2
+    
+    >>> get_modellayer_from_filter(-5, -27, zvec, verbose=True)
+    1
+    
+    >>> get_modellayer_from_filter(-5, -37, zvec, verbose=True)
+    nan
+    
+    >>> get_modellayer_from_filter(15, -5, zvec, verbose=True)
+    0
+    
+    >>> get_modellayer_from_filter(15, 5, zvec, verbose=True)
+    999
+    
+    >>> get_modellayer_from_filter(-55, -65, zvec, verbose=True)
+    -999
+    
+    >>> get_modellayer_from_filter(15, -65, zvec, verbose=True)
+    nan
+    
+    >>> get_modellayer_from_filter(None, -7, zvec, verbose=True)
+    0
+    
+    >>> get_modellayer_from_filter(None, None, zvec, verbose=True)
+    nan
+    
+    """
+
+    zvec = np.sort(zvec)[::-1]
+    ftop_invalid = check_if_var_is_invalid(ftop)
+    fbot_invalid = check_if_var_is_invalid(fbot)
+    if ftop_invalid and fbot_invalid:
+        return np.nan
+    elif fbot_invalid:
+        lay_ftop = get_model_layer_z(ftop, zvec,
+                                     left=left, right=right)
+        return lay_ftop
+    elif ftop_invalid:
+        lay_fbot = get_model_layer_z(fbot, zvec,
+                                     left=left, right=right)
+        return lay_fbot
+    
+    if ftop<fbot:
+        if verbose:
+            print('filter top below filter bot, switch top and bot')
+        fbot, ftop = ftop, fbot
+        
+    lay_ftop = get_model_layer_z(ftop, zvec,
+                                 left=left, right=right)
+    lay_fbot = get_model_layer_z(fbot, zvec,
+                                 left=left, right=right)
+    
+    # Piezometer in layer in which majority of screen is located
+    if lay_fbot == lay_ftop:
+        return lay_fbot
+    
+    else:
+        if lay_fbot==left and lay_ftop==right:
+            if verbose:
+                print('filter spans all layers. '
+                      'return nan')
+            return np.nan
+        elif lay_ftop==right:
+            if verbose:
+                print('filter top higher than top layer. '
+                      'selected layer {}'.format(lay_fbot))
+            return lay_fbot
+        
+        elif lay_fbot==left:
+            if verbose:
+                print('filter bot lower than bottom layer. '
+                      'selected layer {}'.format(lay_ftop))
+            return lay_ftop
+        
+        if verbose:
+            print("filter crosses layer boundary:")
+            print("-layers: {0}, {1}".format(lay_ftop, lay_fbot))
+            print("-layer elev in between: {0:.2f} - {1:.2f}".format(zvec[lay_fbot+1], zvec[lay_ftop]))
+            print("-filter elev in between: {0:.2f} - {1:.2f}".format(fbot, ftop)) 
+        
+        if lay_fbot - lay_ftop > 2:
+            if verbose:
+                print(f"Piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+                      " return nan")
+            return np.nan
+        
+        elif lay_fbot - lay_ftop == 2:  # if filter spans 3 layers
+            if verbose:
+                print(f"Piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+                      f" Use middle layer {lay_ftop+1}")
+            return lay_ftop + 1  # use middle layer
+        
+        # check which layer has the biggest length of the filter 
+        length_lay_bot = zvec[lay_fbot] - fbot
+        length_lay_top = ftop - zvec[lay_fbot]
+        if verbose:
+            print(f"length per layer:\n- lay {lay_ftop}: {length_lay_top:.2f}"
+                  f"\n- lay {lay_fbot}: {length_lay_bot:.2f}")
+            
+        if length_lay_top <= length_lay_bot:
+            if verbose:
+                print("selected layer:", lay_fbot)
+            return lay_fbot
+        
+        elif length_lay_top > length_lay_bot:
+            if verbose:
+                print("selected layer:", lay_fbot)
+            return lay_ftop
+    
+    raise ValueError('something is wrong with the input please contact Artesia')
+
+    return np.nan
+
+def get_zvec(x, y, gwf=None):
+    """ get a list with the vertical layer boundaries at a point in the model
+    
+
+    Parameters
+    ----------
+    x : int or float
+        x coördinate.
+    y : int or float
+        y coordinate.
+    gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
+        modflow model with top and bottoms
+
+    Raises
+    ------
+    NotImplementedError
+        not all grid types are supported yet.
+
+    Returns
+    -------
+    zvec : list
+        list of vertical layer boundaries. length is nlay + 1.
 
     """
-    if zgr is None:
-        dis = ml.get_package('DIS')
     
-    ilay_ftop = get_model_layer(x, y, ftop, ml, dis, zgr=zgr, 
-                                left=left, right=right)
-    ilay_fbot = get_model_layer(x, y, fbot, ml, dis, zgr=zgr, 
-                                left=left, right=right)
-    
-    
-
-    if zgr is None:
-        zgr = np.concatenate(
-            [dis.top.array[np.newaxis], dis.botm.array], axis=0)
-
-    r, c = findrowcolumn(x, y, ml)
-
-    ilay = np.nan * np.ones(x.shape, dtype=np.int)
-
-    for i in range(x.shape[0]):
-        ir = r[i]
-        ic = c[i]
-
-        if (ir >= 0) & (ic >= 0):
-            zvec = zgr[:, ir, ic]
-
-            fti = ilay_ftop[i]
-            fbi = ilay_fbot[i]
-
-            if np.isnan(fti) and np.isnan(fbi):
-                continue
-            elif np.isnan(fti):
-                ilay[i] = fbi
-            elif np.isnan(fbi):
-                ilay[i] = fti
-            # Warn if piezometer is on boundary. Piezometer in layer in which majority of screen is located
-            elif fbi != fti:
-                fbi = int(fbi)
-                fti = int(fti)
-                if verbose:
-                    print("filter on layer boundary:")
-                    print("-layers: {0}, {1}".format(fbi, fti))
-                    print("-layer elev in between: {0:.2f}".format(zvec[fbi]))
-                    print("-fb, ft: {0:.2f}, {1:.2f}".format(fbot[i], ftop[i]))
-                    print("-length in layer: {0:.2f}, {1:.2f}".format(
-                          zvec[fbi] - fbot[i], ftop[i] - zvec[fbi]))
-                if fti==right and fbi==left:
-                    if verbose:
-                        print('filter spans all layers. '
-                              'not sure which layer to select')
-                elif fti==right:
-                    if verbose:
-                        print('filter top higher than top layer. '
-                              'selected layer {}'.format(fbi))
-                    ilay[i] = fbi
-                elif fbi==left:
-                    if verbose:
-                        print('filter bot lower than bottom layer. '
-                              'selected layer {}'.format(fti))
-                    ilay[i] = fti
-                elif fti - fbi > 2:
-                    ilay[i] = np.nan  # set to unknown
-                    if verbose:
-                        print("Piezometer filter spans {} layers. "
-                              "Not sure which layer to select".format(fti - fbi+1))
-                elif fti - fbi == 2:  # if filter spans 3 layers
-                    ilay[i] = fbi + 1  # use middle layer
-                elif np.abs(fbot[i] - zvec[fbi]) > np.abs(ftop[i] - zvec[fbi]):
-                    ilay[i] = fbi
-                    if verbose:
-                        print("selected layer:", fbi)
-                elif np.abs(fbot[i] - zvec[fbi]) < np.abs(ftop[i] - zvec[fbi]):
-                    ilay[i] = fti
-                    if verbose:
-                        print("selected layer:", fti)
-            else:
-                ilay[i] = fbi
-
-    return ilay
+    if gwf is not None:
+        if gwf.modelgrid.grid_type == 'structured':
+            r,c = gwf.modelgrid.intersect(x,y)
+            zvec = [gwf.modelgrid.top[r,c]] + [gwf.modelgrid.botm[i,r,c] for i in range(gwf.modelgrid.nlay)]
+        elif gwf.modelgrid.grid_type == 'vertex':
+            idx = gwf.modelgrid.intersect(x,y)
+            zvec = [gwf.modelgrid.top[idx]] +[gwf.modelgrid.botm[i, idx] for i in range(gwf.modelgrid.nlay)]
+        else:
+            raise NotImplementedError(f'gridtype {gwf.modelgrid.grid_type} not (yet) implemented' )
+        
+    return zvec
 
 
 @accessor.register_obscollection_accessor("gwobs")
@@ -367,16 +414,14 @@ class GwObsAccessor:
                         self._obj._set_metadata_value(pb_dub, 'locatie', locatie,
                                                       add_to_meta=add_to_meta)
 
-    def get_modellayers(self, ml, zgr=None, verbose=False):
+    def get_modellayers(self, gwf, verbose=False):
         """Get the modellayer per observation. The layers can be obtained
         from the modflow model or can be defined in zgr.
 
         Parameters
         ----------
-        ml : flopy.modflow.mf.Modflow
+        gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
             modflow model
-        zgr : np.3darray, optional
-            array containing model layer elevation
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -386,7 +431,8 @@ class GwObsAccessor:
         """
         modellayers = []
         for o in self._obj.obs.values:
-            modellayers.append(o.gwobs.get_modellayer(ml, zgr, verbose))
+            modellayers.append(o.gwobs.get_modellayer_modflow(gwf, 
+                                                              verbose=verbose))
             if verbose:
                 print(o.name)
 
@@ -403,28 +449,29 @@ class GeoAccessorObs:
     def __init__(self, obs):
         self._obj = obs
         
-    def get_modellayer(self, ml, zgr=None, verbose=False):
+    def get_modellayer_modflow(self, gwf, left=-999, right=999, verbose=False):
         """Add modellayer to meta dictionary
 
         Parameters
         ----------
-        ml : flopy.modflow.mf.Modflow
+        gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
             modflow model
-        zgr : np.3darray, optional
-            array containing model layer elevation
-            information (the default is None, which
-            gets this information from the dis object)
         verbose : boolean, optional
             Print additional information to the screen (default is False).
-
+        
+        Returns
+        -------
+        int
+            modellayer
         """
-        modellayer = get_pb_modellayer(np.array([self._obj.x]) - ml.modelgrid.xoffset,
-                                       np.array([self._obj.y]) -
-                                       ml.modelgrid.yoffset,
-                                       np.array([self._obj.bovenkant_filter]),
-                                       np.array([self._obj.onderkant_filter]),
-                                       ml, zgr, verbose=verbose)[0]
-
+    
+        zvec = get_zvec(self._obj.x, self._obj.y, gwf)
+        
+        modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter, 
+                                                self._obj.onderkant_filter, 
+                                                zvec, 
+                                                left=left, right=right,
+                                                verbose=verbose)
         return modellayer
         
     

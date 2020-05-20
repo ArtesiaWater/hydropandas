@@ -50,7 +50,6 @@ class ObsCollection(pd.DataFrame):
         """
         self.name = kwargs.pop('name', '')
         self.meta = kwargs.pop('meta', {})
-        # self.plots = CollectionPlots(self)
 
         super(ObsCollection, self).__init__(*args, **kwargs)
 
@@ -164,6 +163,38 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=meta)
+    
+    @classmethod
+    def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
+        """Create an observation collection from a DataFrame by adding a
+        column with empty observations.
+        
+
+        Parameters
+        ----------
+        df : pandas DataFrame
+            input dataframe. If this dataframe has a column named 'obs' the
+            column is replaced with empty observation objects.
+        ObsClass : class, optional
+            observation class used to create empty obs object, by
+            default obs.GroundwaterObs
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame with the 'obs' column
+
+        """
+        meta = {'type': obs.GroundwaterObs}
+        if isinstance(df, pd.DataFrame):
+            if obs_list is None:
+                obs_list = [ObsClass() for i in range(len(df))]
+            df['obs'] = obs_list
+        else:
+            raise TypeError(f'df should be type pandas.DataFrame not {type(df)}')
+            
+        
+        return cls(df, meta=meta)
 
     @classmethod
     def from_dino(cls, dirname=None,
@@ -336,19 +367,18 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_dino_dir(
-            cls,
-            dirname=None,
-            ObsClass=obs.GroundwaterObs,
-            subdir='Grondwaterstanden_Put',
-            suffix='1.csv',
-            unpackdir=None,
-            force_unpack=False,
-            preserve_datetime=False,
-            keep_all_obs=True,
-            name=None,
-            verbose=False,
-            **kwargs):
+    def from_dino_dir(cls,
+                      dirname=None,
+                      ObsClass=obs.GroundwaterObs,
+                      subdir='Grondwaterstanden_Put',
+                      suffix='1.csv',
+                      unpackdir=None,
+                      force_unpack=False,
+                      preserve_datetime=False,
+                      keep_all_obs=True,
+                      name=None,
+                      verbose=False,
+                      **kwargs):
         """ Read a dino directory
 
         Parameters

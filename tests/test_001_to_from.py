@@ -2,6 +2,7 @@
 from hydropandas import observation as obs
 from hydropandas import obs_collection as oc
 import numpy as np
+import pandas as pd
 import pytest
 
 # import sys
@@ -86,6 +87,14 @@ def test_obscollection_from_list():
     obs_list = [o for o in dino_gw.obs.values]
     oc_list = oc.ObsCollection.from_list(obs_list)
     return oc_list
+
+def test_obscollection_from_df():
+    df = pd.DataFrame(index=['pb1', 'pb2'], 
+                      data={'filternr': [1,1]})
+    
+    df_oc = oc.ObsCollection.from_dataframe(df)
+    
+    return df_oc
 
 
 # read dino directories
