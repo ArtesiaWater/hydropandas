@@ -4,7 +4,7 @@ A pystore is a datastore for Pandas Dataframes designed to store timeseries.
 The functions in this module aim to save an obs_collection to a pystore. The
 main advantages of a pystore are:
     - smaller file size compared to .csv files
-    - exchangable format, the pystore format is indepedent of the pc
+    - exchangable format, the pystore format is independent of the pc
     (unlike pickle)
 
 A pystore with an ObsCollection has 3 layers:
@@ -79,6 +79,8 @@ def item_to_obs(item, ObsClass, nameby="item"):
     metadata = item.metadata
     if not "name" in metadata.keys():
         metadata["name"] = name
+    else:
+        metadata.update({"name": name})
 
     obs_attr_dic = {}
     for attr in ObsClass._metadata:
@@ -288,6 +290,7 @@ def read_pystore(storename, pystore_path,
         elif nameby == "both":
             obs_df["name"] = obs_df["collection_name"] + "__" + \
                 obs_df["item_name"]
+            obs_df.set_index('name', inplace=True)
         else:
             raise ValueError("'{}' is not a valid option "
                              "for 'nameby'".format(nameby))
