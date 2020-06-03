@@ -22,7 +22,7 @@ class ObsCollection(pd.DataFrame):
     """class for a collection of point observations
 
     An ObsCollection object is a subclass of a pandas.DataFrame and allows for
-    additional attributes and methods. Additional attributes have to be
+    additional attributes and methods. Additional attributes are
     defined in the '_metadata' attribute.
 
     Parameters
@@ -30,7 +30,7 @@ class ObsCollection(pd.DataFrame):
     name : str
         name of the observation collection
     meta : dic
-        metadata of the observatino collection
+        metadata of the observation collection
     """
     # temporary properties
     _internal_names = pd.DataFrame._internal_names + ['none']
@@ -175,6 +175,8 @@ class ObsCollection(pd.DataFrame):
         df : pandas DataFrame
             input dataframe. If this dataframe has a column named 'obs' the
             column is replaced with empty observation objects.
+        obs_list : list of observation.Obs, optional
+            list of observations. Default is None
         ObsClass : class, optional
             observation class used to create empty obs object, by
             default obs.GroundwaterObs
@@ -234,8 +236,8 @@ class ObsCollection(pd.DataFrame):
         preserve_datetime : boolean, optional
             use date of the zipfile for the destination file
         keep_all_obs : boolean, optional
-            add all observation points to the collection, even without data or
-            metadata
+            add all observation points to the collection, even the points
+            without measurements or metadata
         name : str, optional
             the name of the observation collection
         verbose : boolean, optional

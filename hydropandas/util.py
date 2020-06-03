@@ -17,6 +17,20 @@ from pandas import Timedelta, Timestamp
 
 
 def _obslist_to_frame(obs_list):
+    """convert a list of observations to a pandas DataFrame
+    
+
+    Parameters
+    ----------
+    obs_list : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    obs_df : TYPE
+        DESCRIPTION.
+
+    """
     if len(obs_list) > 0:
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
                               columns=obs_list[0].to_collection_dict().keys())
