@@ -373,11 +373,11 @@ class ObsPlots:
                 lname = '{} {}'.format(plot_legend_names[i], self._obj.name)
 
             # resample data
-            if plot_freq[i] is not None:
+            if plot_freq[i] is None:
+                source = ColumnDataSource(plot_df[[column, 'date']])
+            else:
                 source = ColumnDataSource(
                     plot_df[[column, 'date']].resample(plot_freq[i]).nearest())
-            else:
-                source = ColumnDataSource(plot_df[[column, 'date']])
 
             # plot data
             if markers[i] == 'line':
