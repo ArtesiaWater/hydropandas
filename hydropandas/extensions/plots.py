@@ -381,10 +381,12 @@ class ObsPlots:
 
             # plot data
             if markers[i] == 'line':
-                p.line(xcol, column, source=source, color=colors[i], legend=lname,
+                p.line(xcol, column, source=source, color=colors[i], 
+                       legend_label=lname,
                        alpha=0.8, muted_alpha=0.2)
             elif markers[i] == 'circle':
-                p.circle(xcol, column, source=source, color=colors[i], legend=lname,
+                p.circle(xcol, column, source=source, color=colors[i], 
+                         legend_label=lname,
                          alpha=0.8, muted_alpha=0.2)
             else:
                 raise NotImplementedError("marker '{}' invalid. Only line and"
