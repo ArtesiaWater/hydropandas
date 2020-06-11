@@ -61,19 +61,18 @@ class CollectionPlots:
         -------
 
         """
-
         _color_cycle = (
-            'blue',
-            'olive',
-            'lime',
-            'red',
-            'orange',
-            'yellow',
-            'purple',
-            'silver',
-            'powderblue',
-            'salmon',
-            'tan')
+                'blue',
+                'olive',
+                'lime',
+                'red',
+                'orange',
+                'yellow',
+                'purple',
+                'silver',
+                'powderblue',
+                'salmon',
+                'tan')
 
         if per_location:
             plot_names = self._obj.groupby('locatie').count().index
@@ -361,6 +360,10 @@ class ObsPlots:
         xcol = self._obj.index.name
         if xcol is None:
             xcol = 'index'
+            
+        # get color
+        if len(colors)<len(plot_columns):
+            colors = colors * len(plot_columns)
 
         # plot multiple columns
         for i, column in enumerate(plot_columns):
