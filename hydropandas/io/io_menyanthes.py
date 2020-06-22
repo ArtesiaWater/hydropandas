@@ -11,7 +11,7 @@ import numpy as np
 from pandas import DataFrame, Series
 from scipy.io import loadmat
 
-from observations import observation
+from hydropandas import observation
 
 from ..util import matlab2datetime
 
