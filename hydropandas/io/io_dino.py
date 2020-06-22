@@ -882,7 +882,9 @@ class DinoREST:
 
         for key, item in _translate_dic_filter.items():
             meta[item] = meta.pop(key)
-
+            if meta[item] is None:
+                meta[item] = np.nan
+            
         return meta
 
     def _parse_json_gwo_details(self, json_details, field="levels",
