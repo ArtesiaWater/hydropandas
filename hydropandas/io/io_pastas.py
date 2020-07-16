@@ -49,7 +49,7 @@ def _get_metadata_from_obs(o, verbose=False):
 
 
 def create_pastastore(oc, pstore, pstore_name='',
-                      conn=pst.DictConnector("my_conn"),
+                      conn=None,
                       add_metadata=True,
                       obs_column='stand_m_tov_nap',
                       kind='oseries',
@@ -82,6 +82,8 @@ def create_pastastore(oc, pstore, pstore_name='',
         the pastas project with the series from the ObsCollection
     """
     if pstore is None:
+        if conn is None:
+            conn = pst.DictConnector("my_conn")
         pstore = pst.PastaStore(pstore_name, connector=conn)
 
     for o in oc.obs.values:
