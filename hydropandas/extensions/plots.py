@@ -7,13 +7,12 @@ from . import accessor
 class CollectionPlots:
 
     def __init__(self, oc_obj):
-        """Object containing plotting methods for ObsCollections
+        """Object containing plotting methods for ObsCollections.
 
         Parameters
         ----------
         oc : ObsCollection
             ObsCollection instance
-
         """
         self._obj = oc_obj
 
@@ -21,7 +20,7 @@ class CollectionPlots:
                           tmin=None, tmax=None,
                           per_location=True,
                           verbose=True, **kwargs):
-        """Create interactive plots of the observations using bokeh
+        """Create interactive plots of the observations using bokeh.
 
         Parameters
         ----------
@@ -59,7 +58,6 @@ class CollectionPlots:
 
         Returns
         -------
-
         """
         _color_cycle = (
                 'blue',
@@ -118,8 +116,8 @@ class CollectionPlots:
                         zoom_start=13,
                         create_interactive_plots=True,
                         verbose=False, **kwargs):
-        """ create an interactive map with interactive plots using folium
-        and bokeh.
+        """create an interactive map with interactive plots using folium and
+        bokeh.
 
         Notes
         -----
@@ -292,7 +290,7 @@ class ObsPlots:
                          ylabel='m NAP', colors=['blue'],
                          add_filter_to_legend=False,
                          return_filename=False):
-        """Create an interactive plot of the observations using bokeh
+        """Create an interactive plot of the observations using bokeh.
 
         To-Do
         -----

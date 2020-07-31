@@ -7,7 +7,7 @@ from lxml.etree import iterparse
 
 def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
              to_mnap=False, remove_nan=False, verbose=False):
-    """read a FEWS XML-file with measurements, return list of ObsClass objects
+    """read a FEWS XML-file with measurements, return list of ObsClass objects.
 
     Parameters
     ----------
@@ -27,7 +27,6 @@ def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
     -------
     list of ObsClass objects
         list of timeseries stored in ObsClass objects
-
     """
     tree = etree.parse(fname)
     root = tree.getroot()
@@ -86,7 +85,7 @@ def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
                      skip_errors=True, verbose=False):
-    """read a FEWS XML-file with measurements, memory efficient
+    """read a FEWS XML-file with measurements, memory efficient.
 
     Parameters
     ----------
@@ -122,7 +121,6 @@ def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
             list of metadata
         series_list : list of pandas Series
             list of timeseries
-
     """
 
     tags = ['{{http://www.wldelft.nl/fews/PI}}{}'.format(tag) for tag in tags]
@@ -216,14 +214,12 @@ def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
 
 
 def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
-    """
-    Write PiTimeSeries object to PI-XML file.
+    """Write PiTimeSeries object to PI-XML file.
 
     Parameters
     ----------
     fname: path
         path to XML file to be written
-
     """
 
     assert fname.endswith(

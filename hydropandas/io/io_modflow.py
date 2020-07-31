@@ -32,7 +32,6 @@ def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
         exclude modellayers from being read from imod
     verbose : boolean, optional
         Print additional information to the screen (default is False).
-
     """
     import imod
     if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
@@ -107,7 +106,6 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         exclude the observations up to these modellayers
     verbose : boolean, optional
         Print additional information to the screen (default is False).
-
     """
 
     if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:

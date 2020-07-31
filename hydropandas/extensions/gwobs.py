@@ -8,6 +8,7 @@ from . import accessor
 def get_model_layer_z(z, zvec, left=-999, right=999,
                       verbose=False):
     """get index of model layer based on elevation. Assumptions:
+
         - the highest value in zvec is the top of model layer 0.
         - if z is equal to the bottom of a layer, the model layer above that
         layer is assigned.
@@ -222,8 +223,7 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     return np.nan
 
 def get_zvec(x, y, gwf=None):
-    """ get a list with the vertical layer boundaries at a point in the model
-    
+    """get a list with the vertical layer boundaries at a point in the model.
 
     Parameters
     ----------
@@ -243,7 +243,6 @@ def get_zvec(x, y, gwf=None):
     -------
     zvec : list
         list of vertical layer boundaries. length is nlay + 1.
-
     """
     
     if gwf is not None:
@@ -269,6 +268,7 @@ class GwObsAccessor:
                        add_to_meta=False):
         """This method computes the filternumbers based on the location of the
         observations. Then it sets the value of the filternumber:
+
             - in the ObsCollection dataframe
             - as the attribute of an Obs object
             - in the meta dictionary of the Obs object (only if add_to_meta is
@@ -415,8 +415,8 @@ class GwObsAccessor:
                                                       add_to_meta=add_to_meta)
 
     def get_modellayers(self, gwf, verbose=False):
-        """Get the modellayer per observation. The layers can be obtained
-        from the modflow model or can be defined in zgr.
+        """Get the modellayer per observation. The layers can be obtained from
+        the modflow model or can be defined in zgr.
 
         Parameters
         ----------
@@ -450,7 +450,7 @@ class GeoAccessorObs:
         self._obj = obs
         
     def get_modellayer_modflow(self, gwf, left=-999, right=999, verbose=False):
-        """Add modellayer to meta dictionary
+        """Add modellayer to meta dictionary.
 
         Parameters
         ----------
@@ -458,7 +458,7 @@ class GeoAccessorObs:
             modflow model
         verbose : boolean, optional
             Print additional information to the screen (default is False).
-        
+
         Returns
         -------
         int
@@ -474,4 +474,3 @@ class GeoAccessorObs:
                                                 verbose=verbose)
         return modellayer
         
-    

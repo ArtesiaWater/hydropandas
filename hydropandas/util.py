@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 12 12:15:42 2018
+"""Created on Wed Sep 12 12:15:42 2018.
 
 @author: Artesia
 """
@@ -17,8 +16,7 @@ from pandas import Timedelta, Timestamp
 
 
 def _obslist_to_frame(obs_list):
-    """convert a list of observations to a pandas DataFrame
-    
+    """convert a list of observations to a pandas DataFrame.
 
     Parameters
     ----------
@@ -29,7 +27,6 @@ def _obslist_to_frame(obs_list):
     -------
     obs_df : TYPE
         DESCRIPTION.
-
     """
     if len(obs_list) > 0:
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
@@ -41,7 +38,7 @@ def _obslist_to_frame(obs_list):
 
 
 def unzip_file(src, dst, force=False, preserve_datetime=False):
-    """Unzip file
+    """Unzip file.
 
     Parameters
     ----------
@@ -58,7 +55,6 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     -------
     int
         1 of True
-
     """
     if os.path.exists(dst):
         if not force:
@@ -112,9 +108,7 @@ def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
 
 
 def matlab2datetime(tindex):
-    """ Transform a matlab time to a datetime, rounded to seconds
-
-    """
+    """Transform a matlab time to a datetime, rounded to seconds."""
     day = Timestamp.fromordinal(int(tindex))
     dayfrac = Timedelta(days=float(tindex) % 1) - Timedelta(days=366)
     return day + dayfrac
@@ -122,8 +116,8 @@ def matlab2datetime(tindex):
 
 def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
               preserve_datetime=False):
-    """internal method to get list of files with specific
-    extension from dirname.
+    """internal method to get list of files with specific extension from
+    dirname.
 
     Parameters
     ----------
@@ -136,7 +130,6 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
     preserve_datetime : bool, optional
         preserve datetime of unzipped files, by default False
         (useful for checking whether data has changed)
-
     """
     # check if unpackdir is same as file_or_dir, if same, this can cause
     # problems when the unpackdir still contains zips that will be unpacked
@@ -195,7 +188,7 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
 
 
 def interp_weights(xy, uv, d=2):
-    """Calculate interpolation weights
+    """Calculate interpolation weights.
 
     Parameters
     ----------
@@ -219,7 +212,6 @@ def interp_weights(xy, uv, d=2):
     Reference
     ---------
     https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
-
     """
 
     tri = qhull.Delaunay(xy)
@@ -232,8 +224,8 @@ def interp_weights(xy, uv, d=2):
 
 
 def interpolate(values, vtx, wts):
-    """interpolate values at locations defined by vertices and points,
-       as calculated by interp_weights function.
+    """interpolate values at locations defined by vertices and points, as
+    calculated by interp_weights function.
 
     Parameters
     ----------
@@ -253,16 +245,14 @@ def interpolate(values, vtx, wts):
     Reference
     ---------
     https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
-
     """
 
     return np.einsum('nj,nj->n', np.take(values, vtx), wts)
 
 
 def df2gdf(df, xcol='x', ycol='y'):
-    """Make a GeoDataFrame from a DataFrame, assuming the geometry
-    are points.
-    """
+    """Make a GeoDataFrame from a DataFrame, assuming the geometry are
+    points."""
     from shapely.geometry import Point
     from geopandas import GeoDataFrame
     gdf = GeoDataFrame(df.copy(), geometry=[Point(

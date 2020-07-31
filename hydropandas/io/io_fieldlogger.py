@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 12 12:15:42 2018
+"""Created on Wed Sep 12 12:15:42 2018.
 
 @author: Artesia
 """
@@ -12,7 +11,7 @@ from .. import observation as obs
 
 
 def _fieldlogger_groundwater_settings(df, verbose=False):
-    """Get default settings for groundwater observations
+    """Get default settings for groundwater observations.
 
     Parameters
     ----------
@@ -26,7 +25,6 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
     inputfield
     properties
     group
-
     """
 
     if verbose:
@@ -53,7 +51,7 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
 
 
 def _fieldlogger_waterlevel_settings(df, verbose=False):
-    """Get default  settings for waterlevel observations
+    """Get default  settings for waterlevel observations.
 
     Parameters
     ----------
@@ -67,7 +65,6 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
     inputfield
     properties
     group
-
     """
 
     if verbose:
@@ -89,7 +86,7 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
 
 
 def fieldlogger_csv_to_obs_list(fname, ObsClass=obs.GroundwaterObs):
-    """Read a fieldlogger file into a list of observation objects
+    """Read a fieldlogger file into a list of observation objects.
 
     Parameter
     ---------
@@ -170,7 +167,7 @@ def df_to_fieldlogger_csv(df, fname, otype=None,
                           name=None, subname=None, inputfield=None,
                           properties=None, group=None, group_color='blue',
                           verbose=False):
-    """Write a csv file that can be read by the fieldlogger app
+    """Write a csv file that can be read by the fieldlogger app.
 
     Notes
     -----

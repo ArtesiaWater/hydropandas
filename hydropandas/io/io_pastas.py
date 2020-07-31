@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 12 12:15:42 2018
+"""Created on Wed Sep 12 12:15:42 2018.
 
 @author: Artesia
 """
@@ -12,8 +11,8 @@ import pastas as ps
 
 def _get_metadata_from_obs(o, verbose=False):
     """internal method to get metadata in the right format for a pastas series.
-    A pastas timeseries cannot handle the same metadata format as an observation
-    object.
+    A pastas timeseries cannot handle the same metadata format as an
+    observation object.
 
     Parameters
     ----------
@@ -26,7 +25,6 @@ def _get_metadata_from_obs(o, verbose=False):
     -------
     meta : dictionary
         meta dictionary.
-
     """
     meta = dict()
     for attr_key in o._metadata:
@@ -55,7 +53,7 @@ def create_pastastore(oc, pstore, pstore_name='',
                       kind='oseries',
                       verbose=False
                       ):
-    """add observations to a new or existing pastastore
+    """add observations to a new or existing pastastore.
 
     Parameters
     ----------
@@ -109,7 +107,7 @@ def create_pastas_project(oc, pr=None, project_name='',
                           obs_column='stand_m_tov_nap',
                           kind='oseries', add_metadata=True,
                           verbose=False):
-    """add observations to a new or existing pastas project
+    """add observations to a new or existing pastas project.
 
     Parameters
     ----------
@@ -168,7 +166,6 @@ def read_project(pr, ObsClass, rename_dic={}):
     -------
     list : list of Obs
         list of Obs containing oseries data
-
     """
     obs_list = []
     for index, row in pr.oseries.iterrows():

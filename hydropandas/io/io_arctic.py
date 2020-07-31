@@ -22,7 +22,6 @@ def read_arctic(connstr, libname, ObsClass, verbose=False):
     -------
     obs_list : list of Obs
         list of Obs
-
     """
     arc = arctic.Arctic(connstr)
     lib = arc.get_library(libname)

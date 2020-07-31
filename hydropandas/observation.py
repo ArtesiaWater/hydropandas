@@ -1,5 +1,4 @@
-"""
-Module with a number of observation classes.
+"""Module with a number of observation classes.
 
 The Obs class is a subclass of a pandas DataFrame with
 additional attributes and methods. The specific classes (GroundwaterObs,
@@ -13,7 +12,6 @@ you need the '_constructor' method.
 
 More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
-
 """
 
 import warnings
@@ -41,7 +39,6 @@ class Obs(DataFrame):
         metadata
     filename : str
         filename with data of observation point
-
     """
     # temporary properties
     _internal_names = DataFrame._internal_names + ['none']
@@ -51,7 +48,7 @@ class Obs(DataFrame):
     _metadata = ['x', 'y', 'name', 'meta', 'filename']
 
     def __init__(self, *args, **kwargs):
-        """ constructor of Obs class
+        """constructor of Obs class.
 
         *args must be input for the pandas.DataFrame constructor,
         **kwargs can be one of the attributes listed in _metadata or
@@ -70,12 +67,12 @@ class Obs(DataFrame):
         return Obs
 
     def to_collection_dict(self, include_meta=False):
-        """get dictionary with registered attributes and their values
-        of an Obs object.
+        """get dictionary with registered attributes and their values of an Obs
+        object.
 
         This method can be used to create a dataframe from a collection
         of Obs objects.
-        
+
         Parameters
         ----------
         include_meta : boolean, optional
@@ -102,7 +99,7 @@ class Obs(DataFrame):
 
 
 class GroundwaterObs(Obs):
-    """class for groundwater quantity point observations
+    """class for groundwater quantity point observations.
 
     Subclass of the Obs class. Can have the following attributes:
         - locatie: 2 filters at one piezometer should have the same 'locatie'
@@ -114,7 +111,6 @@ class GroundwaterObs(Obs):
         - meetpunt: ? in m NAP
         - metadata_available: boolean indicating if metadata is available for
         the measurement point.
-
     """
 
     _metadata = Obs._metadata + \
@@ -168,8 +164,6 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv if
             fname is not None and otherwise to io_dino.findMeetreeks
-
-
         """
         from .io import io_dino
         if fname is not None:
@@ -280,7 +274,6 @@ class GroundwaterObs(Obs):
             dino csv filename
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
-
         """
         from .io import io_dino
         if fname is not None:
@@ -314,7 +307,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_pystore_item(cls, item):
-        """Create GroundwaterObs DataFrame from Pystore item
+        """Create GroundwaterObs DataFrame from Pystore item.
 
         Parameters
         ----------
@@ -325,7 +318,6 @@ class GroundwaterObs(Obs):
         -------
         GroundwaterObs
             GroundwaterObs DataFrame
-
         """
 
         df = item.to_pandas()
@@ -340,11 +332,10 @@ class GroundwaterObs(Obs):
 
 
 class GroundwaterQualityObs(Obs):
-    """class for groundwater quality (grondwatersamenstelling)
-    point observations.
+    """class for groundwater quality (grondwatersamenstelling) point
+    observations.
 
     Subclass of the Obs class
-
     """
 
     _metadata = Obs._metadata + \
@@ -365,7 +356,7 @@ class GroundwaterQualityObs(Obs):
 
     @classmethod
     def from_dino(cls, fname, **kwargs):
-        """read ad dino file with groundwater quality data
+        """read ad dino file with groundwater quality data.
 
         Parameters
         ----------
@@ -385,7 +376,6 @@ class WaterlvlObs(Obs):
     """class for water level point observations.
 
     Subclass of the Obs class
-
     """
 
     _metadata = Obs._metadata + ['locatie', 'metadata_available']
@@ -403,7 +393,7 @@ class WaterlvlObs(Obs):
 
     @classmethod
     def from_dino(cls, fname, **kwargs):
-        """read a dino file with waterlvl data
+        """read a dino file with waterlvl data.
 
         Parameters
         ----------
@@ -419,8 +409,7 @@ class WaterlvlObs(Obs):
 
     @classmethod
     def from_waterinfo(cls, fname, **kwargs):
-        """
-        Read data from waterinfo csv-file or zip.
+        """Read data from waterinfo csv-file or zip.
 
         Parameters
         ----------
@@ -436,7 +425,6 @@ class WaterlvlObs(Obs):
         ------
         ValueError
             if file contains data for more than one location
-
         """
         from .io import io_waterinfo
         df, metadata = io_waterinfo.read_waterinfo_file(fname,
