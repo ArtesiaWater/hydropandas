@@ -58,8 +58,8 @@ def read_waterinfo_file(path_to_file, return_metadata=False):
                              " Use ObsCollection.from_waterinfo()!")
 
         metadata = {}
-        x, y = transform(Proj(init='epsg:25831'),
-                         Proj(init='epsg:28992'),
+        x, y = transform(Proj('epsg:25831'),
+                         Proj('epsg:28992'),
                          df['X'].iloc[-1],
                          df['Y'].iloc[-1])
         metadata["name"] = df["MEETPUNT_IDENTIFICATIE"].iloc[-1]
