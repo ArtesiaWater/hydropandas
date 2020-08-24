@@ -76,7 +76,7 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
 
 
 def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
-                        debug=False):
+                        verbose=False):
     # Extract each file in a zip-file only when the properties are different
     # With the default arguments this method only checks the modification time
     with zipfile.ZipFile(zipname) as zf:
@@ -98,7 +98,7 @@ def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
             else:
                 extract = True
             if extract:
-                if debug:
+                if verbose:
                     print('extracting {}'.format(info.filename))
                 zf.extract(info.filename, pathname)
                 # set the correct modification time

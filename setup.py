@@ -15,7 +15,8 @@ setup(
     version=version['__version__'],
     description='hydropandas module by Artesia',
     long_description=l_d,
-    url='https://artesia-water.nl',
+	long_description_content_type="text/markdown",
+    url='https://github.com/ArtesiaWater/hydropandas',
     author='Artesia',
     license='MIT',
     classifiers=[
