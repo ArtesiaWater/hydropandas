@@ -4,11 +4,11 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'readme.md'), encoding='utf-8') as f:
     l_d = f.read()
 
-
 # Get the version.
 version = {}
 with open("version.py") as fp:
     exec(fp.read(), version)
+	
 setup(
     name='hydropandas',
     version=version['__version__'],
