@@ -9,8 +9,7 @@ from pyproj import Proj, transform
 
 
 def read_waterinfo_file(path_to_file, return_metadata=False):
-    """
-    Read waterinfo file (CSV or zip)
+    """Read waterinfo file (CSV or zip)
 
     Parameters
     ----------
@@ -24,7 +23,6 @@ def read_waterinfo_file(path_to_file, return_metadata=False):
     metadata : dict, optional
         dict containing metadata, returned if return_metadata is
         True, default is False
-
     """
 
     name = os.path.splitext(os.path.basename(path_to_file))[0]
@@ -74,9 +72,7 @@ def read_waterinfo_file(path_to_file, return_metadata=False):
 
 
 def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False):
-    """
-    Read waterinfo file or directory and extract locations
-    and observations.
+    """Read waterinfo file or directory and extract locations and observations.
 
     Parameters
     ----------
@@ -91,7 +87,6 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False):
     -------
     obs_collection : list
         list of Obs objects
-
     """
 
     # Waterinfo file

@@ -11,7 +11,7 @@ class GeoAccessor:
         self._obj = oc_obj
 
     def get_bounding_box(self, xcol='x', ycol='y', buffer=0):
-        """returns the bounding box of all observations
+        """returns the bounding box of all observations.
 
         Parameters
         ----------
@@ -26,7 +26,6 @@ class GeoAccessor:
         -------
         xmin, ymin, xmax, ymax
             coordinates of bouding box
-
         """
 
         xmin = self._obj[xcol].min() - buffer
@@ -37,7 +36,7 @@ class GeoAccessor:
         return (xmin, ymin, xmax, ymax)
 
     def get_extent(self, xcol='x', ycol='y', buffer=0):
-        """returns the extent of all observations
+        """returns the extent of all observations.
 
         Parameters
         ----------
@@ -52,7 +51,6 @@ class GeoAccessor:
         -------
         xmin, xmax, ymin, ymax
             coordinates of bouding box
-
         """
 
         xmin = self._obj[xcol].min() - buffer
@@ -64,8 +62,7 @@ class GeoAccessor:
 
     def set_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
                     add_to_meta=True, verbose=False):
-        """create columns with lat and lon values of the observation points
-
+        """create columns with lat and lon values of the observation points.
 
         Parameters
         ----------
@@ -82,7 +79,6 @@ class GeoAccessor:
         Returns
         -------
         None.
-
         """
 
         df_lat_lon = self._obj.geo.get_lat_lon(in_epsg, out_epsg)
@@ -97,7 +93,7 @@ class GeoAccessor:
                                           verbose)
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326'):
-        """get lattitude and longitude from x and y attributes
+        """get lattitude and longitude from x and y attributes.
 
         Parameters
         ----------
@@ -110,7 +106,6 @@ class GeoAccessor:
         -------
         pandas.DataFrame
             with columns 'lat' and 'lon'
-
         """
 
         df_lat_lon = pd.DataFrame(
@@ -125,8 +120,8 @@ class GeoAccessor:
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
                           xcol_obs1='x', ycol_obs1='y',
                           xcol_obs2='x', ycol_obs2='y', verbose=False):
-        """get nearest point of another obs collection for each
-        point in the current obs collection.
+        """get nearest point of another obs collection for each point in the
+        current obs collection.
 
         Parameters
         ----------
@@ -198,7 +193,6 @@ class GeoAccessor:
         -------
         pd.Series
             distance to the point for every observation in self._obj
-
         """
 
         gdf = self._obj[[xcol, ycol]].to_gdf(xcol=xcol, ycol=ycol)
@@ -206,7 +200,7 @@ class GeoAccessor:
         return gdf.distance(point)
 
     def within_extent(self, extent, inplace=False):
-        """Slice ObsCollection by extent
+        """Slice ObsCollection by extent.
 
         Parameters
         ----------
@@ -228,7 +222,7 @@ class GeoAccessor:
 
     def within_polygon(self, gdf=None, shapefile=None, inplace=False,
                        **kwargs):
-        """Slice ObsCollection by checking if points are within a shapefile
+        """Slice ObsCollection by checking if points are within a shapefile.
 
         Parameters
         ----------
@@ -266,8 +260,7 @@ class GeoAccessor:
     def set_surface_level(self, xcol='x', ycol='y', buffer=10.,
                           column_name='maaiveld', if_exists='error', **kwargs):
         """create column (default maaiveld) with surface level of the
-        observation points from ahn
-
+        observation points from ahn.
 
         Parameters
         ----------
@@ -293,7 +286,6 @@ class GeoAccessor:
         Returns
         -------
         None.
-
         """
         zp = self._obj.geo.get_surface_level(xcol, ycol, buffer, **kwargs)
 
@@ -318,7 +310,7 @@ class GeoAccessorObs:
         self._obj = obs
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326'):
-        """get lattitude and longitude from x and y attributes
+        """get lattitude and longitude from x and y attributes.
 
         Parameters
         ----------
@@ -330,7 +322,6 @@ class GeoAccessorObs:
         Returns
         -------
         lon, lat : longitude and lattitude of x, y coordinates
-
         """
 
         from pyproj import Proj, transform

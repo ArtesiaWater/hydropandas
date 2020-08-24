@@ -32,7 +32,7 @@ class StatsAccessor:
         return df
 
     def consecutive_obs_years(self, min_obs=12, col="stand_m_tov_nap"):
-        """ get the number of consecutive years with more than a minimum of
+        """get the number of consecutive years with more than a minimum of
         observations.
 
         Parameters
@@ -62,10 +62,9 @@ class StatsAccessor:
         return df
 
     def mean_in_period(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
-        """get the mean value of one column (col) in all observations
-        within a period defined by tmin and tmax. If both tmin and tmax are
-        None the whole period in which there are observations is used.
-
+        """get the mean value of one column (col) in all observations within a
+        period defined by tmin and tmax. If both tmin and tmax are None the
+        whole period in which there are observations is used.
 
         Parameters
         ----------
@@ -80,7 +79,6 @@ class StatsAccessor:
         -------
         pd.Series
             mean values for each observation.
-
         """
         if tmin is None:
             tmin = self._obj.dates_first_obs.min()
@@ -91,7 +89,7 @@ class StatsAccessor:
 
     def get_no_of_observations(self, column_name='stand_m_tov_nap',
                                after_date=None, before_date=None):
-        """get number of non-nan values of a column in the observation df
+        """get number of non-nan values of a column in the observation df.
 
         Parameters
         ----------
@@ -120,7 +118,7 @@ class StatsAccessor:
     def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
                           summer_months=[5, 6, 7, 8, 9, 10]):
-        """get statistics per season
+        """get statistics per season.
 
         Parameters
         ----------
@@ -137,7 +135,6 @@ class StatsAccessor:
         Returns
         -------
         DataFrame with stats for summer and winter
-
         """
 
         df_list = []
@@ -148,13 +145,12 @@ class StatsAccessor:
         return pd.concat(df_list)
 
     def get_first_last_obs_date(self):
-        """get the date of the first and the last measurement
+        """get the date of the first and the last measurement.
 
         Returns
         -------
         DataFrame with 2 columns with the dates of the first and the last
         measurement
-
         """
 
         date_first_measurement = [o.index.min() for o in self._obj.obs.values]
@@ -168,7 +164,7 @@ class StatsAccessor:
 
     def get_min(self, column_name='stand_m_tov_nap',
                 after_date=None, before_date=None):
-        """get the minimum value of every obs object
+        """get the minimum value of every obs object.
 
         Parameters
         ----------
@@ -183,7 +179,6 @@ class StatsAccessor:
         -------
         pandas series with the minimum of each observation in the obs
         collection.
-
         """
 
         def get_min_obs(o, column_name=column_name, after_date=after_date,
@@ -197,7 +192,7 @@ class StatsAccessor:
 
     def get_max(self, column_name='stand_m_tov_nap',
                 after_date=None, before_date=None):
-        """get the maximum value of every obs object
+        """get the maximum value of every obs object.
 
         Parameters
         ----------
@@ -212,7 +207,6 @@ class StatsAccessor:
         -------
         pandas series with the maximum of each observation in the obs
         collection.
-
         """
 
         def get_max_obs(o, column_name=column_name, after_date=after_date,
@@ -233,7 +227,7 @@ class StatsAccessorObs:
     def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
                           winter_months=[1, 2, 3, 4, 11, 12],
                           summer_months=[5, 6, 7, 8, 9, 10]):
-        """get statistics per season
+        """get statistics per season.
 
         Parameters
         ----------
@@ -251,7 +245,6 @@ class StatsAccessorObs:
         -------
         winter_stats, summer_stats
             two lists with the statistics for the summer and the winter.
-
         """
 
         if self._obj.empty:

@@ -1,7 +1,4 @@
-"""
-Copied from ./pandas/core/accessor.py
-
-"""
+"""Copied from ./pandas/core/accessor.py."""
 import warnings
 
 

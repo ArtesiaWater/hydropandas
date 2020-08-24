@@ -7,13 +7,12 @@ from . import accessor
 class CollectionPlots:
 
     def __init__(self, oc_obj):
-        """Object containing plotting methods for ObsCollections
+        """Object containing plotting methods for ObsCollections.
 
         Parameters
         ----------
         oc : ObsCollection
             ObsCollection instance
-
         """
         self._obj = oc_obj
 
@@ -21,7 +20,7 @@ class CollectionPlots:
                           tmin=None, tmax=None,
                           per_location=True,
                           verbose=True, **kwargs):
-        """Create interactive plots of the observations using bokeh
+        """Create interactive plots of the observations using bokeh.
 
         Parameters
         ----------
@@ -59,21 +58,19 @@ class CollectionPlots:
 
         Returns
         -------
-
         """
-
         _color_cycle = (
-            'blue',
-            'olive',
-            'lime',
-            'red',
-            'orange',
-            'yellow',
-            'purple',
-            'silver',
-            'powderblue',
-            'salmon',
-            'tan')
+                'blue',
+                'olive',
+                'lime',
+                'red',
+                'orange',
+                'yellow',
+                'purple',
+                'silver',
+                'powderblue',
+                'salmon',
+                'tan')
 
         if per_location:
             plot_names = self._obj.groupby('locatie').count().index
@@ -119,8 +116,8 @@ class CollectionPlots:
                         zoom_start=13,
                         create_interactive_plots=True,
                         verbose=False, **kwargs):
-        """ create an interactive map with interactive plots using folium
-        and bokeh.
+        """create an interactive map with interactive plots using folium and
+        bokeh.
 
         Notes
         -----
@@ -293,7 +290,7 @@ class ObsPlots:
                          ylabel='m NAP', colors=['blue'],
                          add_filter_to_legend=False,
                          return_filename=False):
-        """Create an interactive plot of the observations using bokeh
+        """Create an interactive plot of the observations using bokeh.
 
         To-Do
         -----
@@ -361,6 +358,10 @@ class ObsPlots:
         xcol = self._obj.index.name
         if xcol is None:
             xcol = 'index'
+            
+        # get color
+        if len(colors)<len(plot_columns):
+            colors = colors * len(plot_columns)
 
         # plot multiple columns
         for i, column in enumerate(plot_columns):
@@ -373,18 +374,20 @@ class ObsPlots:
                 lname = '{} {}'.format(plot_legend_names[i], self._obj.name)
 
             # resample data
-            if plot_freq[i] is not None:
+            if plot_freq[i] is None:
+                source = ColumnDataSource(plot_df[[column, 'date']])
+            else:
                 source = ColumnDataSource(
                     plot_df[[column, 'date']].resample(plot_freq[i]).nearest())
-            else:
-                source = ColumnDataSource(plot_df[[column, 'date']])
 
             # plot data
             if markers[i] == 'line':
-                p.line(xcol, column, source=source, color=colors[i], legend=lname,
+                p.line(xcol, column, source=source, color=colors[i], 
+                       legend_label=lname,
                        alpha=0.8, muted_alpha=0.2)
             elif markers[i] == 'circle':
-                p.circle(xcol, column, source=source, color=colors[i], legend=lname,
+                p.circle(xcol, column, source=source, color=colors[i], 
+                         legend_label=lname,
                          alpha=0.8, muted_alpha=0.2)
             else:
                 raise NotImplementedError("marker '{}' invalid. Only line and"

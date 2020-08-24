@@ -171,7 +171,7 @@ def _read_dino_groundwater_measurements(f, line):
 
 def read_dino_groundwater_quality_txt(fname, verbose=False):
     """Read dino groundwater quality (grondwatersamenstelling) from a dinoloket
-    txt file
+    txt file.
 
     Notes
     -----
@@ -453,7 +453,7 @@ def read_artdino_dir(dirname, ObsClass=None,
                      unpackdir=None, force_unpack=False, preserve_datetime=False,
                      verbose=False, keep_all_obs=True, **kwargs
                      ):
-    '''Read Dino directory with point observations
+    """Read Dino directory with point observations.
 
     to do:
     - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een observatie
@@ -488,8 +488,7 @@ def read_artdino_dir(dirname, ObsClass=None,
     -------
     obs_df : pd.DataFrame
         collection of multiple point observations
-
-    '''
+    """
 
     # unzip dir
     if dirname.endswith('.zip'):
@@ -531,9 +530,9 @@ def read_artdino_dir(dirname, ObsClass=None,
 
 class RemoveWSA(Plugin):
     """Helper class to remove wsa tags from header in zeep XML post.
+
     As described by:
     https://github.com/mvantellingen/python-zeep/issues/330#issuecomment-321781637
-
     """
 
     def egress(self, envelope, http_headers, operation, binding_options):
@@ -543,9 +542,10 @@ class RemoveWSA(Plugin):
 
 
 class DinoREST:
-    """This object is a first draft for retrieving data from the
-    Dinoloket REST API. Currently only tested for piezometers.
+    """This object is a first draft for retrieving data from the Dinoloket REST
+    API.
 
+    Currently only tested for piezometers.
     """
 
     aliases = {
@@ -556,7 +556,7 @@ class DinoREST:
     }
 
     def __init__(self, query_url=None, gwo_url=None):
-        """DinoREST object for getting metadata from dinoloket
+        """DinoREST object for getting metadata from dinoloket.
 
         Parameters
         ----------
@@ -580,7 +580,7 @@ class DinoREST:
             self.gwo_url = gwo_url
 
     def get(self, url, query):
-        """GET method
+        """GET method.
 
         Parameters
         ----------
@@ -593,7 +593,6 @@ class DinoREST:
         -------
         requests.models.Response
             response from dinoloket REST API
-
         """
         try:
             response = requests.get(url, params=query)
@@ -606,7 +605,7 @@ class DinoREST:
             return response
 
     def post(self, url, json):
-        """POST method
+        """POST method.
 
         Parameters
         ----------
@@ -619,7 +618,6 @@ class DinoREST:
         -------
         requests.models.Response
             response from dinoloket REST API
-
         """
         try:
             response = requests.post(url, json=json)
@@ -632,7 +630,7 @@ class DinoREST:
             return response
 
     def query_locations_by_extent(self, extent, layer="grondwatermonitoring"):
-        """Get unique locations by extent
+        """Get unique locations by extent.
 
         Parameters
         ----------
@@ -646,7 +644,6 @@ class DinoREST:
         -------
         response : requests.models.Response
             query response
-
         """
         xmin, xmax, ymin, ymax = extent
 
@@ -665,7 +662,7 @@ class DinoREST:
         return response
 
     def get_gwo_details(self, locations):
-        """Get metadata details for locations
+        """Get metadata details for locations.
 
         Parameters
         ----------
@@ -676,14 +673,13 @@ class DinoREST:
         -------
         requests.models.Response
             response from the Dino REST API
-
         """
         response = self.post(self.gwo_url, locations)
         return response
 
     def get_gwo_metadata(self, location, filternr, raw_response=False,
                          verbose=False):
-        """Get metadata details for locations
+        """Get metadata details for locations.
 
         Parameters
         ----------
@@ -693,7 +689,6 @@ class DinoREST:
         Returns
         -------
         meta dictionary or requests.models.Response
-
         """
         response = self.get_gwo_details([location])
         #response = self.post(self.gwo_url, [location])
@@ -712,7 +707,7 @@ class DinoREST:
 
     def get_locations_by_extent(self, extent, layer="grondwatermonitoring",
                                 raw=False):
-        """get locations within an extent
+        """get locations within an extent.
 
         Parameters
         ----------
@@ -729,7 +724,6 @@ class DinoREST:
         -------
         pandas.DataFrame
             DataFrame containing names and locations
-
         """
         r = self.query_locations_by_extent(extent, layer=layer)
 
@@ -757,7 +751,6 @@ class DinoREST:
         -------
         pandas.DataFrame
             DataFrame containing metadata per object
-
         """
         # get locations
         r = self.query_locations_by_extent(extent, layer=layer)
@@ -806,7 +799,7 @@ class DinoREST:
 
     def _parse_json_single_gwo_filter(self, data, location, filternr,
                                       verbose=False):
-        """ parse metadata obtained with get_dino_piezometer_metadata
+        """parse metadata obtained with get_dino_piezometer_metadata.
 
         Parameters
         ----------
@@ -821,7 +814,6 @@ class DinoREST:
         -------
         meta : dictionary
             parsed dictionary
-
         """
         _translate_dic_location = {'xcoord': 'x',
                                    'ycoord': 'y',
@@ -882,12 +874,14 @@ class DinoREST:
 
         for key, item in _translate_dic_filter.items():
             meta[item] = meta.pop(key)
-
+            if meta[item] is None:
+                meta[item] = np.nan
+            
         return meta
 
     def _parse_json_gwo_details(self, json_details, field="levels",
                                 verbose=False):
-        """convert json response to dataframe
+        """convert json response to dataframe.
 
         TODO:
         - figure out how to deal with this dictionary to convert to a
@@ -912,7 +906,6 @@ class DinoREST:
         -------
         pandas.DataFrame
             DataFrame containing metadata for all dino piezometers
-
         """
         dflist = []
         location_list = []
@@ -965,6 +958,7 @@ class DinoREST:
 
 class DinoWSDL:
     """Class for querying DINOLoket. Currently available methods are:
+
         - findMeetreeks: get timeseries for piezometer
         - findWaarnemingGegevens: get some simple all time statistics
           for a piezometer
@@ -976,11 +970,11 @@ class DinoWSDL:
     -------
     DinoWSDL :
         returns an object that can be used to query the DINO Webservice.
-
     """
 
     def __init__(self, wsdl="http://www.dinoservices.nl/gwservices/gws-v11?wsdl"):
-        """Initialize DinoWSDL object that can be used to query DINO Webservice
+        """Initialize DinoWSDL object that can be used to query DINO
+        Webservice.
 
         Parameters
         ----------
@@ -1029,7 +1023,6 @@ class DinoWSDL:
         Note
         ----
         - method sometimes returns data
-
         """
         if isinstance(tmin, pd.Timestamp):
             tmin = tmin.strftime('%Y-%m-%d')
@@ -1074,7 +1067,6 @@ class DinoWSDL:
         -------
         df or response
             returns DataFrame or zeep parsed XML response
-
         """
 
         filter_nr = "{0:03g}".format(int(filter_nr))
@@ -1095,7 +1087,7 @@ class DinoWSDL:
 
     @staticmethod
     def _parse_grondwaterstand(r, column_name='stand_m_tov_nap'):
-        """Parse the response from findMeetreeks
+        """Parse the response from findMeetreeks.
 
         Parameters
         ----------
@@ -1106,7 +1098,6 @@ class DinoWSDL:
         -------
         pandas.DataFrame
             pandas.DataFrame containing the data
-
         """
         if isinstance(r, list):
             gws = r[0]
@@ -1123,7 +1114,7 @@ class DinoWSDL:
 
     @staticmethod
     def _parse_technische_gegevens(response):
-        """Parse the response from findTechnischeGegevens
+        """Parse the response from findTechnischeGegevens.
 
         Parameters
         ----------
@@ -1134,7 +1125,6 @@ class DinoWSDL:
         -------
         pandas.DataFrame
             pandas.DataFrame containing the data
-
         """
         if isinstance(response, list):
             response = response[0]
@@ -1169,8 +1159,8 @@ class DinoWSDL:
 
 def download_dino_groundwater(location, filternr, tmin, tmax,
                               verbose=False, **kwargs):
-    """Download measurements and metadata from a dino groundwater
-    observation well
+    """Download measurements and metadata from a dino groundwater observation
+    well.
 
     Parameters
     ----------
@@ -1191,7 +1181,6 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     measurements : pd.DataFrame
     meta : dict
         dictionary with metadata
-
     """
     filternr = "{0:03g}".format(int(filternr))
 
@@ -1214,7 +1203,7 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
 
 def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
                        response_fname=None, split_dx=None):
-    """Get a GeoDataFrame with dinoloket-locations from a wfs
+    """Get a GeoDataFrame with dinoloket-locations from a wfs.
 
     Parameters
     ----------
@@ -1233,7 +1222,6 @@ def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
 
     if kind=None
         a geodataframe with the properties of the locations
-
     """
 
     # get extent
@@ -1334,7 +1322,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     -------
     obs_df : pd.DataFrame
         collection of multiple point observations
-
     """
 
     # read locations
@@ -1492,7 +1479,7 @@ def _read_dino_waterlvl_measurements(f, line):
 
 
 def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False):
-    '''Read dino waterlevel data from a dinoloket csv file.
+    """Read dino waterlevel data from a dinoloket csv file.
 
     Parameters
     ----------
@@ -1503,7 +1490,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
         if False only metadata is read, default is True
     verbose : boolean, optional
         print additional information to the screen (default is False).
-    '''
+    """
     if verbose:
         print('reading -> {}'.format(os.path.split(fname)[-1]))
 
@@ -1536,7 +1523,7 @@ def read_dino_dir(dirname, ObsClass=None,
                   unpackdir=None, force_unpack=False, preserve_datetime=False, verbose=False,
                   keep_all_obs=True, **kwargs
                   ):
-    '''Read Dino directory with point observations
+    """Read Dino directory with point observations.
 
     to do:
     - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een observatie
@@ -1571,8 +1558,7 @@ def read_dino_dir(dirname, ObsClass=None,
     -------
     obs_df : pd.DataFrame
         collection of multiple point observations
-
-    '''
+    """
 
     # unzip dir
     if dirname.endswith('.zip'):

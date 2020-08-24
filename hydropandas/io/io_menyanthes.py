@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 10 11:01:22 2019
+"""Created on Thu Oct 10 11:01:22 2019.
 
 @author: oebbe
 """
@@ -11,15 +10,13 @@ import numpy as np
 from pandas import DataFrame, Series
 from scipy.io import loadmat
 
-from observations import observation
+from hydropandas import observation
 
 from ..util import matlab2datetime
 
 
 def read_file(fname, ObsClass, verbose=False):
-    """This method is used to read the file.
-
-    """
+    """This method is used to read the file."""
 
     if verbose:
         print('reading menyanthes file {}'.format(fname))
@@ -79,8 +76,7 @@ def read_file(fname, ObsClass, verbose=False):
 
 
 def read_oseries(mat):
-    """Read the oseries from a mat file from menyanthes
-    """
+    """Read the oseries from a mat file from menyanthes."""
     d_h = {}
     # Check if more then one time series model is present
     if not isinstance(mat['H'], np.ndarray):

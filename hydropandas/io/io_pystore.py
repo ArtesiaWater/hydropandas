@@ -1,5 +1,4 @@
-"""
-A pystore is a datastore for Pandas Dataframes designed to store timeseries.
+"""A pystore is a datastore for Pandas Dataframes designed to store timeseries.
 
 The functions in this module aim to save an obs_collection to a pystore. The
 main advantages of a pystore are:
@@ -22,7 +21,6 @@ A pystore with an ObsCollection has 3 layers:
     3. Inside the pystore collection are directories with the items of the
     pystore. An item of a pystore contains all the data from an Observation
     object.
-
 """
 
 import os
@@ -36,7 +34,7 @@ from ..observation import GroundwaterObs
 
 
 def set_pystore_path(pystore_path):
-    """Set pystore path
+    """Set pystore path.
 
     Parameters
     ----------
@@ -47,7 +45,7 @@ def set_pystore_path(pystore_path):
 
 
 def item_to_obs(item, ObsClass, nameby="item"):
-    """convert pystore Item to ObsClass
+    """convert pystore Item to ObsClass.
 
     Parameters
     ----------
@@ -93,7 +91,7 @@ def item_to_obs(item, ObsClass, nameby="item"):
 
 def collection_to_obslist(store, collection, ObsClass=GroundwaterObs,
                           item_names=None, nameby="item", verbose=True):
-    """pystore collection to list of observations
+    """pystore collection to list of observations.
 
     Parameters
     ----------
@@ -139,7 +137,7 @@ def collection_to_obslist(store, collection, ObsClass=GroundwaterObs,
 def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
                      item_names=None, nameby="item", verbose=True,
                      progressbar=False):
-    """convert pystore to list of ObsClass
+    """convert pystore to list of ObsClass.
 
     Parameters
     ----------
@@ -158,7 +156,6 @@ def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
     -------
     list : list of obs
         list of ObsClass DataFrames
-
     """
     store = pystore.store(store)
     obs_list = []
@@ -175,7 +172,7 @@ def store_to_obslist(store, ObsClass=GroundwaterObs, collection_names=None,
 
 
 def read_store_metadata(store, items='all', verbose=False):
-    """read only metadata from pystore
+    """read only metadata from pystore.
 
     Parameters
     ----------
@@ -192,7 +189,6 @@ def read_store_metadata(store, items='all', verbose=False):
     -------
     list : list of dictionaries
         list of dictionaries containing metadata
-
     """
     store = pystore.store(store)
     meta_list = []
@@ -219,7 +215,7 @@ def read_store_metadata(store, items='all', verbose=False):
 
 
 def pystore_obslist_to_obscollection(obs_list, name="obs_coll"):
-    """convert list of Obs to ObsCollection
+    """convert list of Obs to ObsCollection.
 
     Parameters
     ----------
