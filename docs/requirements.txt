@@ -1,0 +1,5 @@
+sphinx_rtd_theme
+Ipython
+ipykernel
+nbsphinx
+nbsphinx_link

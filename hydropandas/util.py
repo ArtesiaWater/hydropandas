@@ -188,7 +188,7 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
 
 
 def interp_weights(xy, uv, d=2):
-    """Calculate interpolation weights.
+    """Calculate interpolation weights [1]_.
 
     Parameters
     ----------
@@ -209,10 +209,9 @@ def interp_weights(xy, uv, d=2):
         array containing interpolation weights per point
 
 
-    Reference
-    ---------
-
-    - https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
+    References
+    ----------
+    .. [1] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
 
     tri = qhull.Delaunay(xy)
@@ -225,7 +224,7 @@ def interp_weights(xy, uv, d=2):
 
 
 def interpolate(values, vtx, wts):
-    """interpolate values at locations defined by vertices and points, as
+    """Interpolate values at locations defined by vertices and points [2]_, as
     calculated by interp_weights function.
 
     Parameters
@@ -243,10 +242,9 @@ def interpolate(values, vtx, wts):
         array containing interpolated values at locations as given by
         vtx and wts
 
-    Reference
-    ---------
-
-    - https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
+    References
+    ----------
+    .. [2] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
 
     return np.einsum('nj,nj->n', np.take(values, vtx), wts)
