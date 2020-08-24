@@ -1,10 +1,9 @@
 from setuptools import setup, find_packages
 
-try:
-    import pypandoc
-    l_d = pypandoc.convert('README.md')
-except:
-    l_d = ''
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'readme.md'), encoding='utf-8') as f:
+    l_d = f.read()
+
 
 # Get the version.
 version = {}
@@ -24,8 +23,7 @@ setup(
         'Intended Audience :: Science/Research',
         'Intended Audience :: Other Audience',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3',
     ],
     platforms='Windows, Mac OS-X',
     install_requires=['numpy>=1.15', 'matplotlib>=3.0',
