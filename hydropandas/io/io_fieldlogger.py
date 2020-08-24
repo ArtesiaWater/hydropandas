@@ -88,8 +88,8 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
 def fieldlogger_csv_to_obs_list(fname, ObsClass=obs.GroundwaterObs):
     """Read a fieldlogger file into a list of observation objects.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     fname : str
         name of the fieldlogger location csv file
     ObsClass : observation class
@@ -97,7 +97,8 @@ def fieldlogger_csv_to_obs_list(fname, ObsClass=obs.GroundwaterObs):
 
     Returns
     -------
-    obs_list : list of observation objects
+    obs_list : list
+        list of observation objects
     """
     # read header
     fieldlogger_meta = {}
@@ -259,4 +260,3 @@ def df_to_fieldlogger_csv(df, fname, otype=None,
         fieldlogger_df.to_csv(fo, header=True, columns=columns, sep=';')
 
     return fieldlogger_df
-

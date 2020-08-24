@@ -79,8 +79,8 @@ def get_nearest_stations_xy(x, y, meteo_var, n=1, stations=None, ignore=None):
     return d.nsmallest(n).index.to_list()
 
 
-def get_nearest_station_df(locations, xcol='x', ycol='y',
-                           stations=None, meteo_var="RD", ignore=None):
+def get_nearest_station_df(locations, xcol='x', ycol='y', stations=None,
+                           meteo_var="RD", ignore=None):
     """find the KNMI stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
 
@@ -131,9 +131,8 @@ def get_nearest_station_df(locations, xcol='x', ycol='y',
     return stns
 
 
-def get_nearest_station_grid(xmid, ymid,
-                             stations=None,
-                             meteo_var="RD", ignore=None):
+def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RD",
+                             ignore=None):
     """find the KNMI stations that measure 'meteo_var' closest to all cells in
     a grid.
 
@@ -290,7 +289,7 @@ def download_knmi_data(stn, meteo_var='RD', start=None, end=None,
     """
     # checks
     if interval.startswith('hour') and meteo_var == 'RD':
-        message = 'Interval can not be hourly for rainfall-stations'
+        message = 'Interval cannot be hourly for rainfall-stations'
         raise (ValueError(message))
 
     if interval != 'daily':
@@ -578,7 +577,7 @@ def get_knmi_daily_meteo(url, stn, meteo_var, start, end, inseason, verbose=Fals
     result = requests.get(url, params=data).text
 
     f = StringIO(result)
-    knmi_df, variables, stations = read_knmi_daily_meteo(f)
+    knmi_df, variables, stations = read_knmi_daily_meteo(f, verbose=verbose)
 
     return knmi_df[[meteo_var]], variables, stations
 
@@ -729,19 +728,11 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     return knmi_df, meta
 
 
-def get_knmi_obslist(locations=None, stns=None,
-                     xmid=None, ymid=None,
-                     meteo_vars=["RD"],
-                     start=[None, None],
-                     end=[None, None],
-                     ObsClass=None,
-                     fill_missing_obs=True,
-                     normalize_index=True,
-                     interval='daily',
-                     inseason=False,
-                     cache=False,
-                     raise_exceptions=False,
-                     verbose=False):
+def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
+                     meteo_vars=["RD"], start=[None], end=[None],
+                     ObsClass=None, fill_missing_obs=True,
+                     normalize_index=True, interval='daily', inseason=False,
+                     cache=False, raise_exceptions=False, verbose=False):
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
 
@@ -758,11 +749,9 @@ def get_knmi_obslist(locations=None, stns=None,
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
     start : list of str, datetime or None]
-        start date of observations per meteo variable. The default is
-        [None, None]
+        start date of observations per meteo variable. The default is [None]
     end : list of str, datetime or None]
-        end date of observations per meteo variable. The default is
-        [None, None]
+        end date of observations per meteo variable. The default is [None]
     ObsClass : type or None
         class of the observations, only KnmiObs is supported for now. The
         default is None
@@ -812,7 +801,9 @@ def get_knmi_obslist(locations=None, stns=None,
                 if not os.path.isdir(cache_dir):
                     os.mkdir(cache_dir)
 
-                fname = f'{stn}-{meteo_var}-{start[i].strftime("%Y%m%d")}-{end[i].strftime("%Y%m%d")}-{fill_missing_obs}' + '.pklz'
+                fname = (f'{stn}-{meteo_var}-{start[i].strftime("%Y%m%d")}'
+                         f'-{end[i].strftime("%Y%m%d")}'
+                         f'-{fill_missing_obs}' + '.pklz')
                 pklz_path = os.path.join(cache_dir, fname)
 
                 if os.path.isfile(pklz_path):
@@ -822,12 +813,18 @@ def get_knmi_obslist(locations=None, stns=None,
                 else:
                     o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
                                            fill_missing_obs=fill_missing_obs,
+                                           interval=interval,
+                                           inseason=inseason,
+                                           raise_exceptions=raise_exceptions,
                                            verbose=verbose)
                     o = o.loc[:, [meteo_var]]
                     o.to_pickle(pklz_path)
             else:
                 o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
                                        fill_missing_obs=fill_missing_obs,
+                                       interval=interval,
+                                       inseason=inseason,
+                                       raise_exceptions=raise_exceptions,
                                        verbose=verbose)
                 o = o.loc[:, [meteo_var]]
             if normalize_index:
@@ -894,8 +891,8 @@ def add_missing_indices(knmi_df, stn, start, end, verbose=False):
 
 
 def fill_missing_measurements(stn, meteo_var='RD', start=None, end=None,
-                              interval='daily',
-                              raise_exceptions=False, verbose=False):
+                              interval='daily', raise_exceptions=False,
+                              verbose=False):
     """fill missing measurements in knmi data.
 
     Parameters

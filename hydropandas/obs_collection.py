@@ -159,7 +159,7 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=meta)
-    
+
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
         """Create an observation collection from a DataFrame by adding a column
@@ -187,14 +187,16 @@ class ObsCollection(pd.DataFrame):
                 obs_list = [ObsClass() for i in range(len(df))]
             df['obs'] = obs_list
         else:
-            raise TypeError(f'df should be type pandas.DataFrame not {type(df)}')
-            
-        
+            raise TypeError(
+                f'df should be type pandas.DataFrame not {type(df)}')
+
         return cls(df, meta=meta)
 
     @classmethod
-    def from_dino(cls, dirname=None,
-                  extent=None, bbox=None,
+    def from_dino(cls,
+                  dirname=None,
+                  extent=None,
+                  bbox=None,
                   ObsClass=obs.GroundwaterObs,
                   subdir='Grondwaterstanden_Put',
                   suffix='1.csv',
@@ -211,12 +213,13 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         dirname : str, optional
-            directory name, can be a .zip file or the parent directory of subdir
+            directory name, can be a .zip file or the parent directory
+            of subdir
         extent : list, tuple or numpy-array (user must specify extent or bbox)
             get dinodata online within this extent [xmin, xmax, ymin, ymax]
         bbox : list, tuple or numpy-array (user must specify extent or bbox)
-            The bounding box, in RD-coordinates, for which you want to retreive locations
-            [xmin, ymin, xmax, ymax]
+            The bounding box, in RD-coordinates, for which you want to
+            retrieve locations [xmin, ymin, xmax, ymax]
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
         subdir : str
@@ -295,9 +298,10 @@ class ObsCollection(pd.DataFrame):
             obs_list = download_dino_within_extent(
                 extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
                 keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+        else:
+            raise ValueError("No data source provided!")
 
         obs_df = util._obslist_to_frame(obs_list)
-
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
@@ -335,7 +339,8 @@ class ObsCollection(pd.DataFrame):
         """
 
         warnings.warn(
-            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+            "this method will be removed in future versions,"
+            " use from_dino instead", DeprecationWarning)
 
         from .io.io_dino import download_dino_within_extent
 
@@ -596,8 +601,8 @@ class ObsCollection(pd.DataFrame):
     def from_fieldlogger(cls, fname, name='', ObsClass=obs.GroundwaterObs):
         """Read a fieldlogger file into a list of observation objects.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         fname : str
             name of the fieldlogger location csv file
         name : str, optional
@@ -650,13 +655,9 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=modelname)
 
     @classmethod
-    def from_knmi(cls, locations=None, stns=None,
-                  xmid=None, ymid=None,
-                  meteo_vars=["RD"], name='',
-                  start=[None, None], end=[None, None],
-                  ObsClass=obs.KnmiObs,
-                  **kwargs
-                  ):
+    def from_knmi(cls, locations=None, stns=None, xmid=None, ymid=None,
+                  meteo_vars=["RD"], name='', start=[None, None],
+                  end=[None, None], ObsClass=obs.KnmiObs, **kwargs):
         """get knmi observations from a list of locations or a list of
         stations.
 
@@ -701,7 +702,8 @@ class ObsCollection(pd.DataFrame):
                                     meteo_vars,
                                     ObsClass=ObsClass,
                                     start=start,
-                                    end=end, **kwargs)
+                                    end=end, 
+                                    **kwargs)
 
         obs_df = util._obslist_to_frame(obs_list)
 
