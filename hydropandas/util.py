@@ -205,13 +205,14 @@ def interp_weights(xy, uv, d=2):
     -------
     vertices: np.array
         array containing interpolation vertices
-
     weights: np.array
         array containing interpolation weights per point
 
+
     Reference
     ---------
-    https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
+
+    - https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
 
     tri = qhull.Delaunay(xy)
@@ -244,7 +245,8 @@ def interpolate(values, vtx, wts):
 
     Reference
     ---------
-    https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
+
+    - https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
 
     return np.einsum('nj,nj->n', np.take(values, vtx), wts)
@@ -252,7 +254,8 @@ def interpolate(values, vtx, wts):
 
 def df2gdf(df, xcol='x', ycol='y'):
     """Make a GeoDataFrame from a DataFrame, assuming the geometry are
-    points."""
+    points.
+    """
     from shapely.geometry import Point
     from geopandas import GeoDataFrame
     gdf = GeoDataFrame(df.copy(), geometry=[Point(

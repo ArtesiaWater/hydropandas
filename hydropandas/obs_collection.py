@@ -702,7 +702,7 @@ class ObsCollection(pd.DataFrame):
                                     meteo_vars,
                                     ObsClass=ObsClass,
                                     start=start,
-                                    end=end, 
+                                    end=end,
                                     **kwargs)
 
         obs_df = util._obslist_to_frame(obs_list)

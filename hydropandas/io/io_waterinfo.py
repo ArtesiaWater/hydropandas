@@ -4,8 +4,8 @@ import zipfile
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from pyproj import Proj, transform
+from tqdm import tqdm
 
 
 def read_waterinfo_file(path_to_file, return_metadata=False):

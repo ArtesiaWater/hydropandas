@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 import re
 import tempfile
@@ -5,7 +6,6 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
-import datetime as dt
 import requests
 
 

@@ -1,7 +1,8 @@
 import os
+import xml.etree.ElementTree as etree
+
 import numpy as np
 import pandas as pd
-import xml.etree.ElementTree as etree
 from lxml.etree import iterparse
 
 
