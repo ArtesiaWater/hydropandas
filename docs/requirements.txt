@@ -5,5 +5,4 @@ nbsphinx
 nbsphinx_link
 tqdm
 arctic
-pystore
 pastastore
