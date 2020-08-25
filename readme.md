@@ -1,7 +1,7 @@
 <img src="/docs/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
 [![Build Status](https://travis-ci.com/ArtesiaWater/hydropandas.svg?branch=master)](https://travis-ci.com/ArtesiaWater/hydropandas)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3cfd43a484ac4591a9ce1c117d062bab)](https://www.codacy.com/manual/ArtesiaWater/hydropandas?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/hydropandas&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/998663562724492c812831f714d3c244)](https://www.codacy.com/manual/ArtesiaWater/hydropandas?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/hydropandas&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
 
