@@ -27,8 +27,12 @@ A pystore with an ObsCollection has 3 layers:
 import os
 
 import pandas as pd
-import pystore
 from tqdm import tqdm
+
+try:
+    import pystore
+except ModuleNotFoundError:
+    pass
 
 from ..obs_collection import ObsCollection
 from ..observation import GroundwaterObs
