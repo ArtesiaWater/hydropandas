@@ -2,25 +2,26 @@
 
 The functions in this module aim to save an obs_collection to a pystore. The
 main advantages of a pystore are:
-    - smaller file size compared to .csv files
-    - exchangable format, the pystore format is independent of the pc
-    (unlike pickle)
+
+- smaller file size compared to .csv files
+- exchangable format, the pystore format is independent of the pc
+  (unlike pickle)
 
 A pystore with an ObsCollection has 3 layers:
-    1. directory with name of the pystore with all the information of an
-    ObsCollection.
 
-    2. Inside the pystore directory are directories with the collections of the
-    pystore. One pystore collection corresponds to a subcollection of an
-    ObsCollection (which is an ObsCollection on its own).
+1. directory with name of the pystore with all the information of an
+   ObsCollection.
+2. Inside the pystore directory are directories with the collections of the
+   pystore. One pystore collection corresponds to a subcollection of an
+   ObsCollection (which is an ObsCollection on its own).
 
-    You can use pystore collections to group observations from an ObsCollection
-    by a certain feature, for example the location of the observation. One
-    location can have multiple observations.
+   You can use pystore collections to group observations from an ObsCollection
+   by a certain feature, for example the location of the observation. One
+   location can have multiple observations.
 
-    3. Inside the pystore collection are directories with the items of the
-    pystore. An item of a pystore contains all the data from an Observation
-    object.
+3. Inside the pystore collection are directories with the items of the
+   pystore. An item of a pystore contains all the data from an Observation
+   object.
 """
 
 import os

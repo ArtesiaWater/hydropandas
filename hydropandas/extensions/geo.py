@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
 from . import accessor
 
 
@@ -172,8 +171,6 @@ class GeoAccessor:
             lambda row: nearest_point(row.geometry), axis=1)
         gdf1['distance nearest point'] = gdf1.apply(
             lambda row: distance_nearest_point(row.geometry), axis=1)
-        
-        
 
         return gdf1[['nearest point', 'distance nearest point']]
 
@@ -335,5 +332,3 @@ class GeoAccessorObs:
             lat, lon = transform(inProj, outProj, self._obj.x, self._obj.y)
 
         return lat, lon
-
-

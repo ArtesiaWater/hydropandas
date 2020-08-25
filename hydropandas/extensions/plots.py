@@ -1,5 +1,7 @@
 import os
+
 import numpy as np
+
 from . import accessor
 
 
@@ -32,45 +34,32 @@ class CollectionPlots:
             end date for timeseries plot
         per_location : bool, optional
             if True plot multiple filters on the same location in one figure
-
-
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         **kwargs :
-            will be passed to the Obs.to_interactive_plot method
+            will be passed to the Obs.to_interactive_plot method, options
+            include:
 
-            plot_columns : list of str
-                name of the column in the obs df that will be plotted with bokeh
-            hoover_names : list of str, optional
-                names will be displayed together with the plot_column value
-                when hoovering over plot
-            plot_freq : str, optional
-                bokeh plot is resampled with this frequency to reduce the size
-            plot_legend_name : str, optional
-                legend in bokeh plot
-            ylabel : str, optional
-                label on the y-axis
-            color : str, optional
-                color of the lines on the plots
-            add_filter_to_legend : boolean, optional
-                if True the attributes bovenkant_filter and onderkant_filter
-                are added to the graph legend
-
-        Returns
-        -------
+            - plot_columns : list of str
+            - hoover_names : list of str
+            - plot_freq : str
+            - plot_legend_name : str
+            - ylabel : str
+            - color : str
+            - add_filter_to_legend : boolean
         """
         _color_cycle = (
-                'blue',
-                'olive',
-                'lime',
-                'red',
-                'orange',
-                'yellow',
-                'purple',
-                'silver',
-                'powderblue',
-                'salmon',
-                'tan')
+            'blue',
+            'olive',
+            'lime',
+            'red',
+            'orange',
+            'yellow',
+            'purple',
+            'silver',
+            'powderblue',
+            'salmon',
+            'tan')
 
         if per_location:
             plot_names = self._obj.groupby('locatie').count().index
@@ -107,26 +96,32 @@ class CollectionPlots:
                     o.iplot_fname = None
 
     def interactive_map(self, plot_dir, m=None,
-                        tiles='OpenStreetMap', fname=None,
+                        tiles='OpenStreetMap',
+                        fname=None,
                         per_location=True,
-                        color='blue', legend_name=None,
+                        color='blue',
+                        legend_name=None,
                         add_legend=True,
-                        map_label='', map_label_size=20,
-                        col_name_lat='lat', col_name_lon='lon',
+                        map_label='',
+                        map_label_size=20,
+                        col_name_lat='lat',
+                        col_name_lon='lon',
                         zoom_start=13,
                         create_interactive_plots=True,
-                        verbose=False, **kwargs):
-        """create an interactive map with interactive plots using folium and
+                        verbose=False,
+                        **kwargs):
+        """Create an interactive map with interactive plots using folium and
         bokeh.
 
         Notes
         -----
-        - if you want to have multiple obs collections on one folium map, only
-        the last one should have add_legend = True to create a correct legend
-        - the color of the observation point on the map is now the same color
-        as the line of the observation measurements. Also a built-in color
-        cycle is used for different measurements on the same location.
+        Some notes on this method:
 
+        - if you want to have multiple obs collections on one folium map, only
+          the last one should have add_legend = True to create a correct legend
+        - the color of the observation point on the map is now the same color
+          as the line of the observation measurements. Also a built-in color
+          cycle is used for different measurements on the same location.
 
         Parameters
         ----------
@@ -166,25 +161,14 @@ class CollectionPlots:
         **kwargs :
             will be passed to the to_interactive_plots method options are:
 
-            plot_columns : list str, optional
-                name of the column in the obs df that will be plotted with bokeh
-            hoover_names : list of str, optional
-                names will be displayed together with the plot_column value
-                when hoovering over plot
-            plot_legend_name : str, optional
-                the name of the observation points in the time series plot
-            ylabel : str, optional
-                label on the y-axis
-            add_filter_to_legend : boolean, optional
-                if True the attributes bovenkant_filter and onderkant_filter
-                are added to the graph title
-            plot_freq : str, optional
-                bokeh plot is resampled with this frequency to reduce the size
-                of the complete folium map
-            tmin : dt.datetime, optional
-                start date for timeseries plot
-            tmax : dt.datetime, optional
-                end date for timeseries plot
+            - plot_columns : list of str
+            - hoover_names : list of str
+            - plot_legend_name : str
+            - ylabel : str
+            - add_filter_to_legend : boolean
+            - plot_freq : str
+            - tmin : dt.datetime
+            - tmax : dt.datetime
 
         Returns
         -------
@@ -279,22 +263,26 @@ class ObsPlots:
     def __init__(self, obs):
         self._obj = obs
 
-    def interactive_plot(self, savedir=None,
+    def interactive_plot(self,
+                         savedir=None,
                          plot_columns=['stand_m_tov_nap'],
                          markers=['line'],
                          p=None,
                          plot_legend_names=[''],
-                         plot_freq=[None], tmin=None, tmax=None,
+                         plot_freq=[None],
+                         tmin=None,
+                         tmax=None,
                          hoover_names=['Peil'],
                          hoover_date_format="%Y-%m-%d",
-                         ylabel='m NAP', colors=['blue'],
+                         ylabel='m NAP',
+                         colors=['blue'],
                          add_filter_to_legend=False,
                          return_filename=False):
         """Create an interactive plot of the observations using bokeh.
 
-        To-Do
-        -----
-        add options for hoovers, markers, linestyle
+        Todo:
+
+        - add options for hoovers, markers, linestyle
 
         Parameters
         ----------
@@ -358,9 +346,9 @@ class ObsPlots:
         xcol = self._obj.index.name
         if xcol is None:
             xcol = 'index'
-            
+
         # get color
-        if len(colors)<len(plot_columns):
+        if len(colors) < len(plot_columns):
             colors = colors * len(plot_columns)
 
         # plot multiple columns
@@ -382,11 +370,11 @@ class ObsPlots:
 
             # plot data
             if markers[i] == 'line':
-                p.line(xcol, column, source=source, color=colors[i], 
+                p.line(xcol, column, source=source, color=colors[i],
                        legend_label=lname,
                        alpha=0.8, muted_alpha=0.2)
             elif markers[i] == 'circle':
-                p.circle(xcol, column, source=source, color=colors[i], 
+                p.circle(xcol, column, source=source, color=colors[i],
                          legend_label=lname,
                          alpha=0.8, muted_alpha=0.2)
             else:

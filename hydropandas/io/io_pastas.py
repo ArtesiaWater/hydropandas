@@ -5,8 +5,9 @@
 """
 
 import pandas as pd
-import pastastore as pst
+
 import pastas as ps
+import pastastore as pst
 
 
 def _get_metadata_from_obs(o, verbose=False):

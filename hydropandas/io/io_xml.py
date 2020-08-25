@@ -1,13 +1,14 @@
 import os
+import xml.etree.ElementTree as etree
+
 import numpy as np
 import pandas as pd
-import xml.etree.ElementTree as etree
 from lxml.etree import iterparse
 
 
 def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
              to_mnap=False, remove_nan=False, verbose=False):
-    """read a FEWS XML-file with measurements, return list of ObsClass objects.
+    """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
     Parameters
     ----------
@@ -80,12 +81,13 @@ def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
     return obs_list
 
 
-def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
+def iterparse_pi_xml(fname, ObsClass,
+                     translate_dic={'locationId': 'locatie'},
                      locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
                      skip_errors=True, verbose=False):
-    """read a FEWS XML-file with measurements, memory efficient.
+    """Read a FEWS XML-file with measurements, memory efficient.
 
     Parameters
     ----------
@@ -105,22 +107,20 @@ def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
     tags : list of strings, optional
         Select the tags to be parsed. Defaults to series, header and event
     return_df : bool, optional
-        return a DataFame with the data, instead of two lists (defaults to
+        return a DataFame with the data, instead of two lists (default is
         False)
     skip_errors: bool, optional
         if True, continue after error, else raise error
 
     Returns
     -------
-
-    if return_df == True:
-        df : pandas DataFrame
-            a DataFrame containing the metadata and the series
-    else:
-        header_list : list of dictionaries
-            list of metadata
-        series_list : list of pandas Series
-            list of timeseries
+    df : pandas.DataFrame
+        a DataFrame containing the metadata and the series if 'return_df' 
+        is True
+    header_list : list of dictionaries
+        list of metadata if 'return_df' is False
+    series_list : list of pandas Series
+        list of timeseries if 'return_df' is False
     """
 
     tags = ['{{http://www.wldelft.nl/fews/PI}}{}'.format(tag) for tag in tags]
@@ -214,12 +214,12 @@ def iterparse_pi_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
 
 
 def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
-    """Write PiTimeSeries object to PI-XML file.
+    """Write TimeSeries object to PI-XML file.
 
     Parameters
     ----------
     fname: path
-        path to XML file to be written
+        path to XML file
     """
 
     assert fname.endswith(

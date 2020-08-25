@@ -124,7 +124,8 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
         if verbose:
-            print("reading {0}/{1} -> {2}".format(i+1, len(unzip_fnames), csv))
+            print("reading {0}/{1} -> {2}".format(i +
+                                                  1, len(unzip_fnames), csv))
         obs = ObsClass.from_wiski(os.path.join(
             dirname, csv), verbose=False, **kwargs)
 
