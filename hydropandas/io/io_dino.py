@@ -107,7 +107,7 @@ def _read_dino_groundwater_metadata(f, line):
                              ] = float(meta[key]) / 100.
             if i == 0:
                 for key in meta_tsi.keys():
-                    meta_ts[key] = pd.Series(name=key, 
+                    meta_ts[key] = pd.Series(name=key,
                                              dtype=type(meta_tsi[key]))
 
             for key in meta_tsi.keys():
@@ -876,7 +876,7 @@ class DinoREST:
             meta[item] = meta.pop(key)
             if meta[item] is None:
                 meta[item] = np.nan
-            
+
         return meta
 
     def _parse_json_gwo_details(self, json_details, field="levels",
@@ -1387,7 +1387,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                        tmax=tmax_t,
                                        unit=unit)
                 o.to_pickle(fname)
-        else:  
+        else:
             o = ObsClass.from_dino(location=loc.locatie,
                                    filternr=float(loc.filternr),
                                    tmin=tmin_t,

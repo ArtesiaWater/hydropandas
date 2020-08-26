@@ -151,5 +151,3 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         mo_list.append(mo)
 
     return mo_list
-
-

@@ -84,11 +84,11 @@ class Obs(DataFrame):
         d : dictionary
             dictionary with Obs information
         """
-        
+
         attrs = self._metadata.copy()
         if not include_meta:
             attrs.remove('meta')
-        
+
         d = {}
         for att in attrs:
             d[att] = getattr(self, att)
@@ -99,18 +99,19 @@ class Obs(DataFrame):
 
 
 class GroundwaterObs(Obs):
-    """class for groundwater quantity point observations.
+    """Class for groundwater quantity observations.
 
     Subclass of the Obs class. Can have the following attributes:
-        - locatie: 2 filters at one piezometer should have the same 'locatie'
-        - filternr: 2 filters at one piezometer should have a different 'filternr'.
-        a higher filter number is preferably deeper than a lower filter number.
-        - bovenkant_filter: top op the filter in m NAP
-        - onderkant_filter: bottom of the filter in m NAP
-        - maaiveld: surface level in m NAP
-        - meetpunt: ? in m NAP
-        - metadata_available: boolean indicating if metadata is available for
-        the measurement point.
+
+    - locatie: 2 filters at one piezometer should have the same 'locatie'
+    - filternr: 2 filters at one piezometer should have a different 'filternr'.
+      a higher filter number is preferably deeper than a lower filter number.
+    - bovenkant_filter: top op the filter in m NAP
+    - onderkant_filter: bottom of the filter in m NAP
+    - maaiveld: surface level in m NAP
+    - meetpunt: ? in m NAP
+    - metadata_available: boolean indicating if metadata is available for
+      the measurement point.
     """
 
     _metadata = Obs._metadata + \
@@ -471,33 +472,40 @@ class KnmiObs(Obs):
 
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
-                  fill_missing_obs=True, verbose=False):
+                  fill_missing_obs=True, interval='daily', inseason=False,
+                  raise_exceptions=False, verbose=False):
         from .io import io_knmi
 
-        ts, meta = io_knmi.get_knmi_timeseries_stn(stn, variable,
-                                                   startdate, enddate,
-                                                   fill_missing_obs,
-                                                   verbose=verbose)
-        
+        ts, meta = io_knmi.get_knmi_timeseries_stn(
+            stn, variable, startdate, enddate, fill_missing_obs,
+            interval=interval, inseason=inseason,
+            raise_exceptions=raise_exceptions,
+            verbose=verbose
+        )
+
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
 
     @classmethod
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
-                        fill_missing_obs=True, verbose=False):
+                        fill_missing_obs=True, interval='daily',
+                        inseason=False, raise_exceptions=False, verbose=False):
         from .io import io_knmi
 
-        ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
-                                                  startdate, enddate,
-                                                  fill_missing_obs,
-                                                  verbose=verbose)
+        ts, meta = io_knmi.get_knmi_timeseries_xy(
+            x, y, variable, startdate, enddate, fill_missing_obs,
+            interval=interval, inseason=inseason,
+            raise_exceptions=raise_exceptions,
+            verbose=verbose
+        )
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
 
     @classmethod
     def from_obs(cls, obs, variable, startdate=None, enddate=None,
-                 fill_missing_obs=True, verbose=False):
+                 fill_missing_obs=True, interval='daily', inseason=False,
+                 raise_exceptions=False, verbose=False):
 
         from .io import io_knmi
 
@@ -509,10 +517,12 @@ class KnmiObs(Obs):
         if enddate is None:
             enddate = obs.index[-1]
 
-        ts, meta = io_knmi.get_knmi_timeseries_xy(x, y, variable,
-                                                  startdate, enddate,
-                                                  fill_missing_obs,
-                                                  verbose=verbose)
+        ts, meta = io_knmi.get_knmi_timeseries_xy(
+            x, y, variable, startdate, enddate, fill_missing_obs,
+            interval=interval, inseason=inseason,
+            raise_exceptions=raise_exceptions,
+            verbose=verbose
+        )
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])

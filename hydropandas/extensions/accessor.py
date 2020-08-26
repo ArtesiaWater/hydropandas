@@ -3,8 +3,8 @@ import warnings
 
 
 class CachedAccessor:
-    """
-    Custom property-like object (descriptor) for caching accessors.
+    """Custom property-like object (descriptor) for caching accessors.
+
     Parameters
     ----------
     name : str
