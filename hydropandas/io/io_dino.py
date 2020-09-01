@@ -839,24 +839,24 @@ class DinoREST:
                                  item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print(f'cannot find piezometer metadata for location '
-                          '{location} and filternr {filternr}')
+                    print('cannot find piezometer metadata for location '
+                          f'{location} and filternr {filternr}')
         if levels:
             try:
                 meta.update(next(item for item in levels if
                                  item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print(f'cannot find level metadata for location '
-                          '{location} and filternr {filternr}')
+                    print('cannot find level metadata for location '
+                          f'{location} and filternr {filternr}')
         if samples:
             try:
                 meta.update(next(item for item in samples if
                                  item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print(f'cannot find sample metadata for location '
-                          '{location} and filternr {filternr}')
+                    print('cannot find sample metadata for location '
+                          f'{location} and filternr {filternr}')
 
         meta.update(data)
         meta.pop('dinoId')
@@ -979,7 +979,8 @@ class DinoWSDL:
         Parameters
         ----------
         wsdl : str, optional
-            wsdl url, by default "http://www.dinoservices.nl/gwservices/gws-v11?wsdl"
+            wsdl url, by default 
+            "http://www.dinoservices.nl/gwservices/gws-v11?wsdl"
         """
 
         # Create some plugins, some currently unused but left here as a reminder.
@@ -996,7 +997,7 @@ class DinoWSDL:
         self.client.set_ns_prefix("v11", "http://v11.ws.gws.dino.tno.nl/")
 
     def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
-                      raw_response=False):
+                      raw_response=False, verbose=False):
         """Get a timeseries for a piezometer.
 
         Parameters
@@ -1014,6 +1015,8 @@ class DinoWSDL:
         raw_response : bool, optional
             if True, return the zeep parsed XML response, by default
             False which will return a DataFrame
+        verbose : bool, optional
+            print logging information to console
 
         Returns
         -------
@@ -1030,8 +1033,8 @@ class DinoWSDL:
         if isinstance(tmax, pd.Timestamp):
             tmax = tmax.strftime('%Y-%m-%d')
 
-        assert unit in ["NAP", "SFL",
-                        "MP"], "'unit' must be one of 'NAP', 'SFL', 'MP'!"
+        if unit not in ["NAP", "SFL", "MP"]:
+            raise ValueError("'unit' must be one of 'NAP', 'SFL', 'MP'!")
 
         data = {"WELL_NITG_NR": location,
                 "WELL_TUBE_NR": filternr,
@@ -1040,9 +1043,19 @@ class DinoWSDL:
                 "UNIT": unit}
 
         try:
+            if verbose:
+                print(f"Downloading: {location} - {filternr}... ", end="")
             r = self.client.service.findMeetreeks(**data)
         except Exception as e:
+            if verbose:
+                print(e)
             raise e
+
+        if verbose:
+            if r:
+                print("OK!")
+            else:
+                print(f"ERROR {r.status_code}!")
 
         if raw_response:
             return r
@@ -1172,7 +1185,8 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
         start date in format YYYY-MM-DD (will be converted if Timestamp)
     tmax : str or pandas.Timestamp
         end date in format YYYY-MM-DD (will be converted if Timestamp)
-    verbose :
+    verbose : bool
+        print logging inforation to console, default is False
     kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
 
@@ -1189,7 +1203,7 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
 
     # measurements
     measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
-                                      **kwargs)
+                                      verbose=verbose, **kwargs)
 
     # old metadata method
     #meta = dino.findTechnischeGegevens(location, filternr)
@@ -1199,6 +1213,51 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
 
     return measurements, meta
+
+
+def download_dino_groundwater_bulk(locations, ObsClass=None,
+                                   filtersep="-", verbose=False,
+                                   stop_on_error=True,
+                                   **kwargs):
+    """Download DINO groundwater level timeseries based on a list of locations.
+
+    Parameters
+    ----------
+    locations : list of str
+        list of locations including filter numbers (i.e. B00H0001-001)
+    ObsClass : Obs, optional
+        ObsClass to use for storing timeseries, by default None. It is 
+        recommended to use GroundwaterObs.
+    filtersep : str, optional
+        separation character(s) between location code and filter 
+        number, by default "-"
+    verbose : bool, optional
+        print logging information to console, by default False
+    stop_on_error : bool, optional
+        if download fails for some reason, raise the error, otherwise 
+        continue, by default True
+
+    Returns
+    -------
+    obs_list : list of ObsClass
+        list of ObsClass objects containing dino groundwater timeseries and
+        metadata
+    """
+    obslist = []
+    for loc in locations:
+        iloc, filternr = loc.split(filtersep)
+        try:
+            obslist.append(ObsClass.from_dino(
+                location=iloc, filternr=filternr, verbose=verbose, **kwargs))
+        except Exception as e:
+            if stop_on_error:
+                raise e
+            else:
+                if verbose:
+                    print(loc, e)
+                continue
+
+    return obslist
 
 
 def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
@@ -1309,8 +1368,8 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     unit : str, optional
         unit in which the timeseries are returned, by default "NAP"
     keep_all_obs : boolean, optional
-            add all observation points to the collection, even without data or
-            metadata
+        add all observation points to the collection, even without data or
+        metadata
     cache : boolean, optional
         if True each observation that has been downloaded is cached. Can be
         helpful because the dino server give errors frequently. default is
