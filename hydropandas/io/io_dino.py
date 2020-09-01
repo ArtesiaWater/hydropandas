@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import requests
 import zeep
+from timeit import default_timer
 from requests.exceptions import HTTPError
 from shapely.geometry import Point
 from zeep import Plugin
@@ -1043,24 +1044,27 @@ class DinoWSDL:
                 "UNIT": unit}
 
         try:
+            start = default_timer()
             if verbose:
-                print(f"Downloading: {location} - {filternr}... ", end="")
+                print(f"Downloading: {location}-{filternr}... ", end="",
+                      flush=True)
             r = self.client.service.findMeetreeks(**data)
         except Exception as e:
             if verbose:
                 print(e)
             raise e
-
+        time = default_timer() - start
         if verbose:
             if r:
-                print("OK!")
+                print(f"OK! {time:.3f}s", flush=True)
             else:
-                print(f"ERROR {r.status_code}!")
+                print(f"ERROR {r.status_code}!", flush=True)
 
         if raw_response:
             return r
         else:
             df = self._parse_grondwaterstand(r, f'stand_m_tov_{unit.lower()}')
+
             return df
 
     def findTechnischeGegevens(self, location, filter_nr, raw_response=False):

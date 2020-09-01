@@ -305,6 +305,12 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
 
         elif locations is not None:
+            name = "DINO"
+
+            meta = {'dirname': dirname,
+                    'type': ObsClass,
+                    'verbose': verbose}
+
             obs_list = download_dino_groundwater_bulk(locations,
                                                       ObsClass=ObsClass,
                                                       verbose=verbose,
