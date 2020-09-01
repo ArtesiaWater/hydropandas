@@ -197,6 +197,7 @@ class ObsCollection(pd.DataFrame):
                   dirname=None,
                   extent=None,
                   bbox=None,
+                  locations=None,
                   ObsClass=obs.GroundwaterObs,
                   subdir='Grondwaterstanden_Put',
                   suffix='1.csv',
@@ -220,6 +221,9 @@ class ObsCollection(pd.DataFrame):
         bbox : list, tuple or numpy-array (user must specify extent or bbox)
             The bounding box, in RD-coordinates, for which you want to
             retrieve locations [xmin, ymin, xmax, ymax]
+        locations : list of str, optional
+            list of names with location and filter number, separated by 
+            'filtersep'
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
         subdir : str
@@ -248,7 +252,8 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_dino import read_dino_dir, download_dino_within_extent
+        from .io.io_dino import (read_dino_dir, download_dino_within_extent,
+                                 download_dino_groundwater_bulk)
 
         if dirname is not None:
             # read dino directory
@@ -298,6 +303,12 @@ class ObsCollection(pd.DataFrame):
             obs_list = download_dino_within_extent(
                 extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
                 keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+
+        elif locations is not None:
+            obs_list = download_dino_groundwater_bulk(locations,
+                                                      ObsClass=ObsClass,
+                                                      verbose=verbose,
+                                                      **kwargs)
         else:
             raise ValueError("No data source provided!")
 
