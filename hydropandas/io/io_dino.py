@@ -841,7 +841,7 @@ class DinoREST:
             except StopIteration:
                 if verbose:
                     print('cannot find piezometer metadata for location '
-                          f'{location} and filternr {filternr}')
+                          f'{location} with filternr {filternr}')
         if levels:
             try:
                 meta.update(next(item for item in levels if
@@ -849,7 +849,7 @@ class DinoREST:
             except StopIteration:
                 if verbose:
                     print('cannot find level metadata for location '
-                          f'{location} and filternr {filternr}')
+                          f'{location} with filternr {filternr}')
         if samples:
             try:
                 meta.update(next(item for item in samples if
@@ -857,7 +857,7 @@ class DinoREST:
             except StopIteration:
                 if verbose:
                     print('cannot find sample metadata for location '
-                          f'{location} and filternr {filternr}')
+                          f'{location} with filternr {filternr}')
 
         meta.update(data)
         meta.pop('dinoId')
