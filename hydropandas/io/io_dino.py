@@ -913,8 +913,8 @@ class DinoREST:
         for i in range(len(json_details)):
             data = json_details[i]
             location = data['dinoId']
-            if location == 'B50F0158':
-                break
+            # if location == 'B50F0158':
+            #     break
 
             if location in location_list:
                 raise ValueError
@@ -945,10 +945,9 @@ class DinoREST:
 
             # get metadata for every filter
             for filternr in filter_dic.keys():
-                meta = self._parse_json_single_gwo_filter(data.copy(), location,
-                                                          str(filternr).zfill(
-                                                              3),
-                                                          verbose=verbose)
+                meta = self._parse_json_single_gwo_filter(
+                    data.copy(), location, str(filternr).zfill(3),
+                    verbose=verbose)
                 idf = pd.DataFrame(meta, index=[meta.pop('name')])
                 dflist.append(idf)
 
@@ -1398,8 +1397,8 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     if gdf_loc.empty:
         return pd.DataFrame()
 
-    gdf_loc["startDate"] = gdf_loc.startDate.astype('datetime64[ns]')
-    gdf_loc["endDate"] = gdf_loc.endDate.astype('datetime64[ns]')
+    gdf_loc["startDate"] = gdf_loc.startDate.astype('datetime64[ms]')
+    gdf_loc["endDate"] = gdf_loc.endDate.astype('datetime64[ms]')
 
     # slice by properties
     if tmin is not None:
@@ -1418,6 +1417,8 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         gdf_loc = gdf_loc.loc[mask]
 
     if gdf_loc.empty:
+        if verbose:
+            print("no data found!")
         return pd.DataFrame()
 
     # read measurements
