@@ -1147,7 +1147,8 @@ class ObsCollection(pd.DataFrame):
         pstore = create_pastastore(self, pstore, pstore_name,
                                    add_metadata=add_metadata,
                                    kind=kind,
-                                   obs_column=obs_column)
+                                   obs_column=obs_column, 
+                                   verbose=verbose)
 
         return pstore
 
