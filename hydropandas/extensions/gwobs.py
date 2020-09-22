@@ -225,7 +225,8 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
             return lay_ftop
 
     raise ValueError(
-        'something is wrong with the input please contact Artesia')
+        'Something is wrong with the input. Please submit an issue if you'
+        ' think this is a bug.')
 
     return np.nan
 
@@ -255,13 +256,19 @@ def get_zvec(x, y, gwf=None):
 
     if gwf is not None:
         if gwf.modelgrid.grid_type == 'structured':
-            r, c = gwf.modelgrid.intersect(x, y)
-            zvec = [gwf.modelgrid.top[r, c]] + [gwf.modelgrid.botm[i, r, c]
-                                                for i in range(gwf.modelgrid.nlay)]
+            r, c = gwf.modelgrid.intersect(x, y, forgive=True)
+            if np.isfinite(r) & np.isfinite(c):
+                zvec = [gwf.modelgrid.top[r, c]] + [gwf.modelgrid.botm[i, r, c]
+                                                    for i in range(gwf.modelgrid.nlay)]
+            else:
+                zvec = np.nan
         elif gwf.modelgrid.grid_type == 'vertex':
-            idx = gwf.modelgrid.intersect(x, y)
-            zvec = [gwf.modelgrid.top[idx]] + [gwf.modelgrid.botm[i, idx]
-                                               for i in range(gwf.modelgrid.nlay)]
+            idx = gwf.modelgrid.intersect(x, y, forgive=True)
+            if np.isfinite(idx):
+                zvec = [gwf.modelgrid.top[idx]] + [gwf.modelgrid.botm[i, idx]
+                                                for i in range(gwf.modelgrid.nlay)]
+            else:
+                zvec = np.nan
         else:
             raise NotImplementedError(
                 f'gridtype {gwf.modelgrid.grid_type} not (yet) implemented')
@@ -483,10 +490,13 @@ class GeoAccessorObs:
         """
 
         zvec = get_zvec(self._obj.x, self._obj.y, gwf)
-
-        modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter,
-                                                self._obj.onderkant_filter,
-                                                zvec,
-                                                left=left, right=right,
-                                                verbose=verbose)
-        return modellayer
+        
+        if np.all(np.isnan(zvec)):
+            return np.nan
+        else:
+            modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter,
+                                                    self._obj.onderkant_filter,
+                                                    zvec,
+                                                    left=left, right=right,
+                                                    verbose=verbose)
+            return modellayer
