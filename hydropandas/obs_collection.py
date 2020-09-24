@@ -759,7 +759,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
-                     modelname='', nlay=None, exclude_layers=0, verbose=False):
+                     modelname='', nlay=None, exclude_layers=None, verbose=False):
         """Read modflow groundwater heads at points in obs_collection.
 
         Parameters
@@ -776,8 +776,8 @@ class ObsCollection(pd.DataFrame):
             modelname
         nlay : int, optional
             number of layers if None the number of layers from ml is used.
-        exclude_layers : int, optional
-            exclude the observations up to these modellayers
+        exclude_layers : list of int, optional
+            exclude the observations in these model layers
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         """
