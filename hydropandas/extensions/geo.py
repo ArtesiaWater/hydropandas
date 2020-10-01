@@ -254,52 +254,6 @@ class GeoAccessor:
         else:
             return new_oc
 
-    def set_surface_level(self, xcol='x', ycol='y', buffer=10.,
-                          column_name='maaiveld', if_exists='error', **kwargs):
-        """create column (default maaiveld) with surface level of the
-        observation points from ahn.
-
-        Parameters
-        ----------
-        xcol : str, optional
-            column name with x coordinates, by default 'x'
-        ycol : str, optional
-            column name with y coordinates, by default 'y'
-        buffer: int or float, optional
-            buffer used to get surrounding ahn values
-        column_name: str, optional
-            name of the column in the ObsCollection to store surface levels
-        if_exists : str, optional
-            what to do if an observation point already has a maaiveld, options:
-            'error', 'replace' or 'keep', by default 'error'
-        **kwargs : TYPE
-            DESCRIPTION.
-
-        Raises
-        ------
-        KeyError
-            if the column already exists and if_exists=='error'
-
-        Returns
-        -------
-        None.
-        """
-        zp = self._obj.geo.get_surface_level(xcol, ycol, buffer, **kwargs)
-
-        if if_exists == 'error' and column_name in self._obj.columns:
-            raise KeyError(
-                f"{column_name} already in columns set if_exists to 'keep' or 'replace' to overwrite")
-        elif if_exists == 'replace':
-            self._obj[column_name] = np.nan
-        elif column_name not in self._obj.columns:
-            self._obj[column_name] = np.nan
-
-        obs_new_maaiveld = self._obj[column_name].isna()
-        maaiveld_arr = zp[obs_new_maaiveld]
-
-        for i, iname in enumerate(self._obj.loc[obs_new_maaiveld].index):
-            self._obj._set_metadata_value(iname, column_name, maaiveld_arr[i])
-
 
 @accessor.register_obs_accessor("geo")
 class GeoAccessorObs:
