@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import xarray as xr
 import scipy.interpolate as intp
 
 from . import accessor
@@ -477,6 +478,23 @@ class GwObsAccessor:
                                 name='modellayer')
 
         return modellayers
+    
+    def get_regis_layers(self, verbose=False):
+        """Get the regis layer per observation.
+
+        Parameters
+        ----------
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        pd.Series with the names of the regis layer of each observation
+        """
+        
+
+        return self._obj.obs.apply(lambda o: o.gwobs.get_regis_layer(verbose))
+    
 
 
 @accessor.register_obs_accessor("gwobs")
@@ -511,3 +529,52 @@ class GeoAccessorObs:
                                                     left=left, right=right,
                                                     verbose=verbose)
             return modellayer
+    
+    def get_regis_layer(self, verbose=False):
+        """find the name of the REGIS layer based on the filter depth.
+        
+        Parameters
+        ----------
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+        
+        Returns
+        -------
+        str
+            name of REGIS layer
+        
+        
+        """
+        
+        if np.isnan(self._obj.bovenkant_filter) or np.isnan(self._obj.onderkant_filter):
+            return 'nan'
+        
+        #connect to regis netcdf
+        regis_url = r'http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc'
+        regis_ds = xr.open_dataset(regis_url, decode_times=False)
+        
+        #rename layer in regis netcdf
+        regis_ds = regis_ds.rename({'layer': 'layer_old'})
+        regis_ds.coords['layer'] = regis_ds.layer_old.astype(str)
+        regis_ds = regis_ds.swap_dims({'layer_old': 'layer'})
+        
+        #get zvec regis netcdf
+        z = regis_ds['bottom'].sel(x=self._obj.x, y=self._obj.y, 
+                                   method='nearest').dropna(dim='layer')
+        ztop = regis_ds['top'].sel(x=self._obj.x, y=self._obj.y, 
+                                   method='nearest').max()
+        zvec = np.concatenate([[ztop.values],z.values])
+        
+        #get index of regis model layer
+        layer_i = get_modellayer_from_filter(self._obj.bovenkant_filter,
+                                             self._obj.onderkant_filter,
+                                             zvec, 
+                                             left=-999, right=999,
+                                             verbose=verbose)
+        
+        if layer_i==999:
+            return 'above'
+        elif layer_i==-999:
+            return 'below'
+        
+        return str(z.layer[layer_i].values)
