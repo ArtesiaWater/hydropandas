@@ -197,6 +197,7 @@ class ObsCollection(pd.DataFrame):
                   dirname=None,
                   extent=None,
                   bbox=None,
+                  locations=None,
                   ObsClass=obs.GroundwaterObs,
                   subdir='Grondwaterstanden_Put',
                   suffix='1.csv',
@@ -220,6 +221,9 @@ class ObsCollection(pd.DataFrame):
         bbox : list, tuple or numpy-array (user must specify extent or bbox)
             The bounding box, in RD-coordinates, for which you want to
             retrieve locations [xmin, ymin, xmax, ymax]
+        locations : list of str, optional
+            list of names with location and filter number, separated by 
+            'filtersep'
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
         subdir : str
@@ -248,7 +252,8 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_dino import read_dino_dir, download_dino_within_extent
+        from .io.io_dino import (read_dino_dir, download_dino_within_extent,
+                                 download_dino_groundwater_bulk)
 
         if dirname is not None:
             # read dino directory
@@ -298,6 +303,18 @@ class ObsCollection(pd.DataFrame):
             obs_list = download_dino_within_extent(
                 extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
                 keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+
+        elif locations is not None:
+            name = "DINO"
+
+            meta = {'dirname': dirname,
+                    'type': ObsClass,
+                    'verbose': verbose}
+
+            obs_list = download_dino_groundwater_bulk(locations,
+                                                      ObsClass=ObsClass,
+                                                      verbose=verbose,
+                                                      **kwargs)
         else:
             raise ValueError("No data source provided!")
 
@@ -742,7 +759,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
-                     modelname='', nlay=None, exclude_layers=0, verbose=False):
+                     modelname='', nlay=None, exclude_layers=None, verbose=False):
         """Read modflow groundwater heads at points in obs_collection.
 
         Parameters
@@ -759,8 +776,8 @@ class ObsCollection(pd.DataFrame):
             modelname
         nlay : int, optional
             number of layers if None the number of layers from ml is used.
-        exclude_layers : int, optional
-            exclude the observations up to these modellayers
+        exclude_layers : list of int, optional
+            exclude the observations in these model layers
         verbose : boolean, optional
             Print additional information to the screen (default is False).
         """
@@ -1130,7 +1147,8 @@ class ObsCollection(pd.DataFrame):
         pstore = create_pastastore(self, pstore, pstore_name,
                                    add_metadata=add_metadata,
                                    kind=kind,
-                                   obs_column=obs_column)
+                                   obs_column=obs_column, 
+                                   verbose=verbose)
 
         return pstore
 
