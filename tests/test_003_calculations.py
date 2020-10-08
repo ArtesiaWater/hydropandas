@@ -55,7 +55,7 @@ def test_get_nearest_point():
 
 def test_get_surface_level_oc():
     try:
-        from art_tools import obs_extension
+        from art_tools import hpd_extension
         gw = ttf.test_obscollection_fews_lowmemory()
         zp = gw.art.geo_get_surface_level()
         return zp
@@ -67,7 +67,7 @@ def test_get_surface_level_oc():
 
 def test_get_surface_level_gwobs():
     try:
-        from art_tools import obs_extension
+        from art_tools import hpd_extension
         gw = ttf.test_observation_gw()
         mv = gw.art.geo_get_surface_level()
         return mv

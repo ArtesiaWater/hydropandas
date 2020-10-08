@@ -90,3 +90,8 @@ def test_get_modellayers_mf6_structured():
     modellayers = dino_gw.gwobs.get_modellayers(gwf)
 
     return modellayers
+
+def test_get_regis_layer():
+    dino_gw = ttf.test_obscollection_dinozip_gw()
+    
+    return dino_gw.gwobs.get_regis_layers()

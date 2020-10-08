@@ -120,7 +120,7 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     1
 
     >>> get_modellayer_from_filter(-5, -37, zvec, verbose=True)
-    nan
+    1
 
     >>> get_modellayer_from_filter(15, -5, zvec, verbose=True)
     0
@@ -199,39 +199,31 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
         if verbose:
             print("- filter crosses layer boundary:")
             print("  - layers: {0}, {1}".format(lay_ftop, lay_fbot))
-            # print(
-            #     "-layer elev in between: {0:.2f} - {1:.2f}".format(zvec[lay_fbot + 1], zvec[lay_ftop]))
-            # print(
-            #     "-filter elev in between: {0:.2f} - {1:.2f}".format(fbot, ftop))
 
-        if lay_fbot - lay_ftop > 2:
-            if verbose:
-                print(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
-                      " return nan")
-            return np.nan
-
-        elif lay_fbot - lay_ftop == 2:  # if filter spans 3 layers
-            if verbose:
-                print(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
-                      f" use middle layer: {lay_ftop+1}")
-            return lay_ftop + 1  # use middle layer
-
-        # check which layer has the biggest length of the filter
-        length_lay_bot = zvec[lay_fbot] - fbot
-        length_lay_top = ftop - zvec[lay_fbot]
         if verbose:
-            print(f"- length per layer:\n  - lay {lay_ftop}: {length_lay_top:.2f}"
-                  f"\n  - lay {lay_fbot}: {length_lay_bot:.2f}")
-
-        if length_lay_top <= length_lay_bot:
+            print(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+                  " checking length per layer")
+            print("  - length per layer:")
+            
+        # check which layer has the biggest length of the filter        
+        length_layers = np.zeros(lay_fbot-lay_ftop+1)
+        for i in range(len(length_layers)):
+            if i==0:
+                length_layers[i] = ftop - zvec[lay_ftop+1]
+            elif (i+1)==len(length_layers):
+                length_layers[i] = zvec[lay_ftop+i] - fbot
+            else:
+                length_layers[i] = zvec[lay_ftop+i] - zvec[lay_ftop+1+i]
+                
             if verbose:
-                print("  - selected layer:", lay_fbot)
-            return lay_fbot
-
-        elif length_lay_top > length_lay_bot:
-            if verbose:
-                print("  - selected layer:", lay_fbot)
-            return lay_ftop
+                print(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
+                
+        # choose layer with biggest length
+        rel_layer = np.argmax(length_layers)
+        lay_out = lay_ftop + rel_layer
+        if verbose:
+            print(f"  - selected layer: {lay_out}")
+        return lay_out
 
     raise ValueError(
         'Something is wrong with the input. Please submit an issue if you'
