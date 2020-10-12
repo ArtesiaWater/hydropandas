@@ -14,3 +14,4 @@ branca
 folium
 bokeh
 pastas
+xarray
