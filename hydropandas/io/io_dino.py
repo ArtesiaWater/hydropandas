@@ -6,6 +6,7 @@ import warnings
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import datetime as dt
 import requests
 import zeep
 from timeit import default_timer
@@ -605,14 +606,14 @@ class DinoREST:
         else:
             return response
 
-    def post(self, url, json):
+    def post(self, url, json_d):
         """POST method.
 
         Parameters
         ----------
         url : str
             url
-        json : dict
+        json_d : dict
             dictionary containing payload as JSON
 
         Returns
@@ -621,7 +622,7 @@ class DinoREST:
             response from dinoloket REST API
         """
         try:
-            response = requests.post(url, json=json)
+            response = requests.post(url, json=json_d)
             response.raise_for_status()
         except HTTPError as http_err:
             raise http_err
@@ -840,7 +841,7 @@ class DinoREST:
                                  item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print('cannot find piezometer metadata for location '
+                    print('no piezometer metadata in metadata json '
                           f'{location} with filternr {filternr}')
         if levels:
             try:
@@ -848,7 +849,7 @@ class DinoREST:
                                  item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print('cannot find level metadata for location '
+                    print('no level metadata in metadata json '
                           f'{location} with filternr {filternr}')
         if samples:
             try:
@@ -856,7 +857,7 @@ class DinoREST:
                                  item["piezometerNr"] == filternr))
             except StopIteration:
                 if verbose:
-                    print('cannot find sample metadata for location '
+                    print('no sample metadata in metadata json '
                           f'{location} with filternr {filternr}')
 
         meta.update(data)
@@ -998,7 +999,9 @@ class DinoWSDL:
 
     def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
                       raw_response=False, verbose=False):
-        """Get a timeseries for a piezometer.
+        """Get a timeseries for a piezometer. If the piezometer is part of 
+        a cluster this function returns the combined timeseries of all the
+        piezometers in the cluster.
 
         Parameters
         ----------
@@ -1174,6 +1177,7 @@ class DinoWSDL:
 
 
 def download_dino_groundwater(location, filternr, tmin, tmax,
+                              split_cluster=True,
                               verbose=False, **kwargs):
     """Download measurements and metadata from a dino groundwater observation
     well.
@@ -1188,6 +1192,10 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
         start date in format YYYY-MM-DD (will be converted if Timestamp)
     tmax : str or pandas.Timestamp
         end date in format YYYY-MM-DD (will be converted if Timestamp)
+    split_cluster : bool
+        if False and the piezometer belongs to a cluster, the combined
+        time series of the cluster is used. if True the indvidual time
+        series of each piezometer is used. Default is True
     verbose : bool
         print logging inforation to console, default is False
     kwargs : key-word arguments
@@ -1208,12 +1216,19 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
                                       verbose=verbose, **kwargs)
 
-    # old metadata method
-    #meta = dino.findTechnischeGegevens(location, filternr)
-
     # new metadata method
     dinorest = DinoREST()
     meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
+    
+    if ('clusterList' in meta.keys()) and split_cluster and (not measurements.empty):
+        if verbose:
+            print(f'piezometer {location}-{filternr} is part of a cluster')
+            print('slicing time series to avoid using combined cluster series')
+        
+        start_time = dt.timedelta(seconds=meta['startDate']/1000) + dt.datetime(1970,1,1,1)
+        end_time = dt.timedelta(seconds=meta['endDate']/1000) + dt.datetime(1970,1,1,1)
+        measurements = measurements[start_time:end_time]
+       
 
     return measurements, meta
 

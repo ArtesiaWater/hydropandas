@@ -44,7 +44,7 @@ def test_observation_dino_download():
     gw2 = obs.GroundwaterObs.from_dino(location=location,
                                        filternr=filternr,
                                        tmin="2000-01-01",
-                                       tmax="2010-01-01", unit="NAP")
+                                       tmax="2010-01-01")
     return gw2
 
 
@@ -52,7 +52,7 @@ def test_observation_dino_download2():
     # download dino
     gw2 = obs.GroundwaterObs.from_dino(location="B57B0069", filternr=1.,
                                        tmin="2000-01-01",
-                                       tmax="2030-01-01", unit="NAP")
+                                       tmax="2030-01-01")
     return gw2
 
 
@@ -65,8 +65,38 @@ def test_observation_dino_download3():
     gw3 = obs.GroundwaterObs.from_dino(location=location,
                                        filternr=filternr,
                                        tmin="1900-01-01",
-                                       tmax="1901-01-01", unit="NAP")
+                                       tmax="1901-01-01")
     return gw3
+
+def test_observation_dino_download_as_cluster():
+    # download dino data from pb that belongs to a cluster
+    
+    filternr = 1.
+
+    gw_cl0 = obs.GroundwaterObs.from_dino(location="B45E0458",
+                                          filternr=filternr,
+                                          split_cluster=False)
+    gw_cl1 = obs.GroundwaterObs.from_dino(location="B45E0459",
+                                          filternr=filternr,
+                                          split_cluster=False)
+    
+    assert gw_cl0.equals(gw_cl1)
+    
+    return gw_cl0, gw_cl1
+
+def test_observation_dino_download_split_cluster():
+    # download dino data from pb that belongs to a cluster
+    
+    filternr = 1.
+
+    gw_cl0 = obs.GroundwaterObs.from_dino(location="B45E0458",
+                                          filternr=filternr)
+    gw_cl1 = obs.GroundwaterObs.from_dino(location="B45E0459",
+                                          filternr=filternr)
+    
+    assert not gw_cl0.equals(gw_cl1)
+    
+    return gw_cl0, gw_cl1
 
 
 def test_obscollection_fieldlogger():
