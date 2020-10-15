@@ -1,4 +1,5 @@
 import test_001_to_from as ttf
+import geopandas as gpd
 
 
 def test_within_extent():
@@ -40,7 +41,7 @@ def test_obscollection_get_max():
     omax = gw.stats.get_max()
     return omax
 
-#%%
+#%% geo
 
 
 def test_get_nearest_point():
@@ -52,6 +53,31 @@ def test_get_nearest_point():
             ] = dino_gw.geo.get_nearest_point(fl)
     return dino_gw
 
+def test_get_nearest_polygon():
+    # check two of the same observation collections
+    # every point must find itself as the nearest point
+    dino_gw = ttf.test_obscollection_dinozip_gw()
+    extent = dino_gw.geo.get_extent()
+    from shapely.geometry import Polygon
+    polygon1 = Polygon(((extent[0], extent[2]), 
+                       (extent[0], extent[3]), 
+                       (extent[1], extent[3]), 
+                       (extent[1], extent[2]), 
+                       (extent[0], extent[2])))
+    polygon2 = Polygon(((-extent[0], -extent[2]), 
+                       (-extent[0], -extent[3]), 
+                       (-extent[1], -extent[3]), 
+                       (-extent[1], -extent[2]), 
+                       (-extent[0], -extent[2])))
+    gdf = gpd.GeoDataFrame({'name':[1,2],
+                            'geometry':[polygon1, polygon2]})
+    
+    dino_gw[['nearest polygon', 'distance nearest polygon']
+            ] = dino_gw.geo.get_nearest_polygon(gdf)
+    assert (dino_gw['nearest polygon']==0.0).all()
+    assert (dino_gw['distance nearest polygon']==0.0).all()
+    
+    return dino_gw[['nearest polygon', 'distance nearest polygon']]
 
 def test_get_surface_level_oc():
     try:

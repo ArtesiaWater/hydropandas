@@ -173,6 +173,39 @@ class GeoAccessor:
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
+    
+    def get_nearest_polygon(self, gdf=None,
+                            xcol_obs='x', ycol_obs='y',
+                            verbose=False):
+        """get nearest polygon for each point in the obs collection.
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            dataframe with polygon features
+        xcol_obs : str, optional
+            x column in self._obj used to get geometry
+        ycol_obs : str, optional
+            y column in self._obj used to get geometry
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        pandas.DataFrame
+            with columns 'nearest polygon' and 'distance nearest polygon'
+        """
+
+        gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
+        
+        for i, point in gdf_obs.geometry.items():
+            distances = [point.distance(pol) for pol in gdf.geometry.values]
+            if (np.array(distances)==np.min(distances)).sum()>1:
+                raise ValueError('multiple polygons are nearest')
+            gdf_obs.loc[i, 'nearest polygon'] = gdf.iloc[np.argmin(distances)].name
+            gdf_obs.loc[i, 'distance nearest polygon'] = np.min(distances)
+
+        return gdf_obs[['nearest polygon', 'distance nearest polygon']]
 
     def get_distance_to_point(self, point, xcol='x', ycol='y'):
         """get distance of every observation to a point.
