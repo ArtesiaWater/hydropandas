@@ -47,13 +47,15 @@ def _get_metadata_from_obs(o, verbose=False):
     return meta
 
 
-def create_pastastore(oc, pstore, pstore_name='',
+def create_pastastore(oc,
+                      pstore,
+                      pstore_name='',
                       conn=None,
                       add_metadata=True,
                       obs_column='stand_m_tov_nap',
                       kind='oseries',
-                      verbose=False
-                      ):
+                      overwrite=False,
+                      verbose=False):
     """add observations to a new or existing pastastore.
 
     Parameters
@@ -72,6 +74,8 @@ def create_pastastore(oc, pstore, pstore_name='',
         The kind of series that is added to the pastas project
     add_metadata : boolean, optional
         If True metadata from the observations added to the project.
+    overwrite: bool, optional
+        Whether to overwrite existing data in store.
     verbose : boolean, optional
         Print additional information to the screen (default is False).
 
@@ -96,10 +100,12 @@ def create_pastastore(oc, pstore, pstore_name='',
 
         if kind == 'oseries':
             pstore.conn.add_oseries(o[obs_column], o.name,
-                                    metadata=meta)
+                                    metadata=meta,
+                                    overwrite=overwrite)
         else:
             pstore.conn.add_stress(o[obs_column], o.name,
-                                   kind, metadata=meta)
+                                   kind, metadata=meta,
+                                   overwrite=overwrite)
 
     return pstore
 
