@@ -101,7 +101,7 @@ class Obs(DataFrame):
 class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.
 
-    Subclass of the Obs class. Can have the following attributes:
+    Subclass of the Obs class. Has the following attributes:
 
     - locatie: 2 filters at one piezometer should have the same 'locatie'
     - filternr: 2 filters at one piezometer should have a different 'filternr'.
