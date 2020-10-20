@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import xarray as xr
 import scipy.interpolate as intp
 
 from . import accessor
@@ -119,7 +120,7 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     1
 
     >>> get_modellayer_from_filter(-5, -37, zvec, verbose=True)
-    nan
+    1
 
     >>> get_modellayer_from_filter(15, -5, zvec, verbose=True)
     0
@@ -145,19 +146,25 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     ftop_invalid = check_if_var_is_invalid(ftop)
     fbot_invalid = check_if_var_is_invalid(fbot)
     if ftop_invalid and fbot_invalid:
+        if verbose:
+            print("- values for ftop and fbot are invalid!")
         return np.nan
     elif fbot_invalid:
         lay_ftop = get_model_layer_z(ftop, zvec,
                                      left=left, right=right)
+        if verbose:
+            print(f"- fbot invalid. selected based on ftop: {lay_ftop}")
         return lay_ftop
     elif ftop_invalid:
         lay_fbot = get_model_layer_z(fbot, zvec,
                                      left=left, right=right)
+        if verbose:
+            print(f"- ftop invalid. selected based on fbot: {lay_fbot}")
         return lay_fbot
 
     if ftop < fbot:
         if verbose:
-            print('filter top below filter bot, switch top and bot')
+            print('- filter top below filter bot, switch top and bot')
         fbot, ftop = ftop, fbot
 
     lay_ftop = get_model_layer_z(ftop, zvec,
@@ -167,65 +174,60 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
 
     # Piezometer in layer in which majority of screen is located
     if lay_fbot == lay_ftop:
+        if verbose:
+            print(f"- selected layer {lay_fbot}")
         return lay_fbot
 
     else:
         if lay_fbot == left and lay_ftop == right:
             if verbose:
-                print('filter spans all layers. '
+                print('- filter spans all layers. '
                       'return nan')
             return np.nan
         elif lay_ftop == right:
             if verbose:
-                print('filter top higher than top layer. '
+                print('- filter top higher than top layer. '
                       'selected layer {}'.format(lay_fbot))
             return lay_fbot
 
         elif lay_fbot == left:
             if verbose:
-                print('filter bot lower than bottom layer. '
+                print('- filter bot lower than bottom layer. '
                       'selected layer {}'.format(lay_ftop))
             return lay_ftop
 
         if verbose:
-            print("filter crosses layer boundary:")
-            print("-layers: {0}, {1}".format(lay_ftop, lay_fbot))
-            print(
-                "-layer elev in between: {0:.2f} - {1:.2f}".format(zvec[lay_fbot + 1], zvec[lay_ftop]))
-            print(
-                "-filter elev in between: {0:.2f} - {1:.2f}".format(fbot, ftop))
+            print("- filter crosses layer boundary:")
+            print("  - layers: {0}, {1}".format(lay_ftop, lay_fbot))
 
-        if lay_fbot - lay_ftop > 2:
-            if verbose:
-                print(f"Piezometer filter spans {lay_fbot - lay_ftop +1} layers."
-                      " return nan")
-            return np.nan
-
-        elif lay_fbot - lay_ftop == 2:  # if filter spans 3 layers
-            if verbose:
-                print(f"Piezometer filter spans {lay_fbot - lay_ftop +1} layers."
-                      f" Use middle layer {lay_ftop+1}")
-            return lay_ftop + 1  # use middle layer
-
-        # check which layer has the biggest length of the filter
-        length_lay_bot = zvec[lay_fbot] - fbot
-        length_lay_top = ftop - zvec[lay_fbot]
         if verbose:
-            print(f"length per layer:\n- lay {lay_ftop}: {length_lay_top:.2f}"
-                  f"\n- lay {lay_fbot}: {length_lay_bot:.2f}")
-
-        if length_lay_top <= length_lay_bot:
+            print(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+                  " checking length per layer")
+            print("  - length per layer:")
+            
+        # check which layer has the biggest length of the filter        
+        length_layers = np.zeros(lay_fbot-lay_ftop+1)
+        for i in range(len(length_layers)):
+            if i==0:
+                length_layers[i] = ftop - zvec[lay_ftop+1]
+            elif (i+1)==len(length_layers):
+                length_layers[i] = zvec[lay_ftop+i] - fbot
+            else:
+                length_layers[i] = zvec[lay_ftop+i] - zvec[lay_ftop+1+i]
+                
             if verbose:
-                print("selected layer:", lay_fbot)
-            return lay_fbot
-
-        elif length_lay_top > length_lay_bot:
-            if verbose:
-                print("selected layer:", lay_fbot)
-            return lay_ftop
+                print(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
+                
+        # choose layer with biggest length
+        rel_layer = np.argmax(length_layers)
+        lay_out = lay_ftop + rel_layer
+        if verbose:
+            print(f"  - selected layer: {lay_out}")
+        return lay_out
 
     raise ValueError(
-        'something is wrong with the input please contact Artesia')
+        'Something is wrong with the input. Please submit an issue if you'
+        ' think this is a bug.')
 
     return np.nan
 
@@ -255,13 +257,21 @@ def get_zvec(x, y, gwf=None):
 
     if gwf is not None:
         if gwf.modelgrid.grid_type == 'structured':
-            r, c = gwf.modelgrid.intersect(x, y)
-            zvec = [gwf.modelgrid.top[r, c]] + [gwf.modelgrid.botm[i, r, c]
-                                                for i in range(gwf.modelgrid.nlay)]
+            r, c = gwf.modelgrid.intersect(x, y, forgive=True)
+            if np.isfinite(r) & np.isfinite(c):
+                zvec = [gwf.modelgrid.top[r, c]] + [gwf.modelgrid.botm[i, r, c]
+                                                    for i in range(gwf.modelgrid.nlay)]
+            else:
+                print("Point is not within model extent! Returning NaN.")
+                zvec = np.nan
         elif gwf.modelgrid.grid_type == 'vertex':
-            idx = gwf.modelgrid.intersect(x, y)
-            zvec = [gwf.modelgrid.top[idx]] + [gwf.modelgrid.botm[i, idx]
-                                               for i in range(gwf.modelgrid.nlay)]
+            idx = gwf.modelgrid.intersect(x, y, forgive=True)
+            if np.isfinite(idx):
+                zvec = [gwf.modelgrid.top[idx]] + [gwf.modelgrid.botm[i, idx]
+                                                   for i in range(gwf.modelgrid.nlay)]
+            else:
+                print("Point is not within model extent! Returning NaN.")
+                zvec = np.nan
         else:
             raise NotImplementedError(
                 f'gridtype {gwf.modelgrid.grid_type} not (yet) implemented')
@@ -450,15 +460,33 @@ class GwObsAccessor:
         """
         modellayers = []
         for o in self._obj.obs.values:
+            if verbose:
+                print("-" * 10 + "\n " + o.name + ":")
+
             modellayers.append(o.gwobs.get_modellayer_modflow(gwf,
                                                               verbose=verbose))
-            if verbose:
-                print(o.name)
 
         modellayers = pd.Series(index=self._obj.index, data=modellayers,
                                 name='modellayer')
 
         return modellayers
+    
+    def get_regis_layers(self, verbose=False):
+        """Get the regis layer per observation.
+
+        Parameters
+        ----------
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        pd.Series with the names of the regis layer of each observation
+        """
+        
+
+        return self._obj.obs.apply(lambda o: o.gwobs.get_regis_layer(verbose))
+    
 
 
 @accessor.register_obs_accessor("gwobs")
@@ -484,9 +512,61 @@ class GeoAccessorObs:
 
         zvec = get_zvec(self._obj.x, self._obj.y, gwf)
 
-        modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter,
-                                                self._obj.onderkant_filter,
-                                                zvec,
-                                                left=left, right=right,
-                                                verbose=verbose)
-        return modellayer
+        if np.all(np.isnan(zvec)):
+            return np.nan
+        else:
+            modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter,
+                                                    self._obj.onderkant_filter,
+                                                    zvec,
+                                                    left=left, right=right,
+                                                    verbose=verbose)
+            return modellayer
+    
+    def get_regis_layer(self, verbose=False):
+        """find the name of the REGIS layer based on the filter depth.
+        
+        Parameters
+        ----------
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+        
+        Returns
+        -------
+        str
+            name of REGIS layer
+        
+        
+        """
+        
+        if np.isnan(self._obj.bovenkant_filter) or np.isnan(self._obj.onderkant_filter):
+            return 'nan'
+        
+        #connect to regis netcdf
+        regis_url = r'http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc'
+        regis_ds = xr.open_dataset(regis_url, decode_times=False)
+        
+        #rename layer in regis netcdf
+        regis_ds = regis_ds.rename({'layer': 'layer_old'})
+        regis_ds.coords['layer'] = regis_ds.layer_old.astype(str)
+        regis_ds = regis_ds.swap_dims({'layer_old': 'layer'})
+        
+        #get zvec regis netcdf
+        z = regis_ds['bottom'].sel(x=self._obj.x, y=self._obj.y, 
+                                   method='nearest').dropna(dim='layer')
+        ztop = regis_ds['top'].sel(x=self._obj.x, y=self._obj.y, 
+                                   method='nearest').max()
+        zvec = np.concatenate([[ztop.values],z.values])
+        
+        #get index of regis model layer
+        layer_i = get_modellayer_from_filter(self._obj.bovenkant_filter,
+                                             self._obj.onderkant_filter,
+                                             zvec, 
+                                             left=-999, right=999,
+                                             verbose=verbose)
+        
+        if layer_i==999:
+            return 'above'
+        elif layer_i==-999:
+            return 'below'
+        
+        return str(z.layer[layer_i].values)

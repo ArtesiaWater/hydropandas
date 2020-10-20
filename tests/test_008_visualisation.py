@@ -32,7 +32,7 @@ def test_obscollection_dino_to_imap():
 
 def test_obscollection_dino_to_mapgraph():
     try:
-        from art_tools import obs_extension
+        from art_tools import hpd_extension
         gw = ttf.test_obscollection_dinozip_gw()
         gw.art.plot_mapgraphs(plot_ylim='min_dy')
         return
@@ -43,7 +43,7 @@ def test_obscollection_dino_to_mapgraph():
 
 def test_obscollection_to_map():
     try:
-        from art_tools import obs_extension
+        from art_tools import hpd_extension
         fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
         ax = fews_gw_prod.art.plot_mapfig()
         return ax

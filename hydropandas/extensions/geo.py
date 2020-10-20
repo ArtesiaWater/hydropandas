@@ -173,6 +173,39 @@ class GeoAccessor:
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
+    
+    def get_nearest_polygon(self, gdf=None,
+                            xcol_obs='x', ycol_obs='y',
+                            verbose=False):
+        """get nearest polygon for each point in the obs collection.
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            dataframe with polygon features
+        xcol_obs : str, optional
+            x column in self._obj used to get geometry
+        ycol_obs : str, optional
+            y column in self._obj used to get geometry
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        pandas.DataFrame
+            with columns 'nearest polygon' and 'distance nearest polygon'
+        """
+
+        gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
+        
+        for i, point in gdf_obs.geometry.items():
+            distances = [point.distance(pol) for pol in gdf.geometry.values]
+            if (np.array(distances)==np.min(distances)).sum()>1:
+                raise ValueError('multiple polygons are nearest')
+            gdf_obs.loc[i, 'nearest polygon'] = gdf.iloc[np.argmin(distances)].name
+            gdf_obs.loc[i, 'distance nearest polygon'] = np.min(distances)
+
+        return gdf_obs[['nearest polygon', 'distance nearest polygon']]
 
     def get_distance_to_point(self, point, xcol='x', ycol='y'):
         """get distance of every observation to a point.
@@ -253,52 +286,6 @@ class GeoAccessor:
             self._obj._update_inplace(new_oc)
         else:
             return new_oc
-
-    def set_surface_level(self, xcol='x', ycol='y', buffer=10.,
-                          column_name='maaiveld', if_exists='error', **kwargs):
-        """create column (default maaiveld) with surface level of the
-        observation points from ahn.
-
-        Parameters
-        ----------
-        xcol : str, optional
-            column name with x coordinates, by default 'x'
-        ycol : str, optional
-            column name with y coordinates, by default 'y'
-        buffer: int or float, optional
-            buffer used to get surrounding ahn values
-        column_name: str, optional
-            name of the column in the ObsCollection to store surface levels
-        if_exists : str, optional
-            what to do if an observation point already has a maaiveld, options:
-            'error', 'replace' or 'keep', by default 'error'
-        **kwargs : TYPE
-            DESCRIPTION.
-
-        Raises
-        ------
-        KeyError
-            if the column already exists and if_exists=='error'
-
-        Returns
-        -------
-        None.
-        """
-        zp = self._obj.geo.get_surface_level(xcol, ycol, buffer, **kwargs)
-
-        if if_exists == 'error' and column_name in self._obj.columns:
-            raise KeyError(
-                f"{column_name} already in columns set if_exists to 'keep' or 'replace' to overwrite")
-        elif if_exists == 'replace':
-            self._obj[column_name] = np.nan
-        elif column_name not in self._obj.columns:
-            self._obj[column_name] = np.nan
-
-        obs_new_maaiveld = self._obj[column_name].isna()
-        maaiveld_arr = zp[obs_new_maaiveld]
-
-        for i, iname in enumerate(self._obj.loc[obs_new_maaiveld].index):
-            self._obj._set_metadata_value(iname, column_name, maaiveld_arr[i])
 
 
 @accessor.register_obs_accessor("geo")

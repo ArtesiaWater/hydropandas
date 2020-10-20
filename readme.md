@@ -4,19 +4,18 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/998663562724492c812831f714d3c244)](https://www.codacy.com/manual/ArtesiaWater/hydropandas?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/hydropandas&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
-
+[![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/pastas)
 
 # hydropandas
 The hydropandas module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The hydropandas module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
 
-
 ## The Obs class
 The Obs class holds the measurements and metadata for one timeseries. There are currently 5 specific Obs classes for different types of measurements:
-- GroundwaterObs: for groundwater measurements
-- GroundwaterQualityObs: for groundwater quality measurements
-- WaterlvlObs: for surface water level measurements
-- ModelObs: for hydropandas from a MODFLOW model
-- KnmiObs: for (daily) KNMI hydropandas
+  - GroundwaterObs: for groundwater measurements
+  - GroundwaterQualityObs: for groundwater quality measurements
+  - WaterlvlObs: for surface water level measurements
+  - ModelObs: for hydropandas from a MODFLOW model
+  - KnmiObs: for (daily) KNMI hydropandas
 
 Each of these Obs classes is essentially a pandas DataFrame with additional methods and attributes related to the type of measurement that it holds. The classes also contain specific methods to read data from specific sources.
 
@@ -27,6 +26,7 @@ Like the Obs class, the ObsCollection class contains a bunch of methods for read
 
 ## Supported data sources
 Currently supported datasources that can be read:
+
 - FEWS PI-XML
 - [DINO](https://www.dinoloket.nl) csv
 - WISKI csv
@@ -40,12 +40,12 @@ Currently supported datasources that can be read:
 - IMOD groundwater models
 
 ObsCollection can be exported to:
-- Artesia Fieldlogger
-- Shapefile
-- Pastas projects (deprecated)
-- Pastastore
-- Arctic
-- Pystore
+  - Artesia Fieldlogger
+  - Shapefile
+  - Pastas projects (deprecated)
+  - Pastastore
+  - Arctic
+  - Pystore
 
 ## Example usage
 Importing a single DINO csv file:
@@ -68,6 +68,6 @@ dino_gw = obs.ObsCollection.from_dino(dirname=dinozip,
 ```
 
 ## Authors
- - Onno Ebbens, Artesia
- - Ruben Caljé, Artesia
- - Davíd Brakenhoff, Artesia
+  - Onno Ebbens, Artesia
+  - Ruben Caljé, Artesia
+  - Davíd Brakenhoff, Artesia

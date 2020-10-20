@@ -28,7 +28,7 @@ class StatsAccessor:
         return self._obj.dates_last_obs - self._obj.dates_first_obs
 
     def obs_per_year(self, col="stand_m_tov_nap"):
-        pblist = {o.name: o.obs_per_year(col=col) for o in self._obj.obs}
+        pblist = {o.name: o.stats.obs_per_year(col=col) for o in self._obj.obs}
         df = pd.DataFrame.from_dict(pblist)
         return df
 
@@ -82,9 +82,9 @@ class StatsAccessor:
             mean values for each observation.
         """
         if tmin is None:
-            tmin = self._obj.dates_first_obs.min()
+            tmin = self._obj.stats.dates_first_obs.min()
         if tmax is None:
-            tmax = self._obj.dates_last_obs.max()
+            tmax = self._obj.stats.dates_last_obs.max()
 
         return self._obj.obs.apply(lambda o: o.loc[tmin:tmax, col].mean())
 

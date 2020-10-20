@@ -101,7 +101,7 @@ class Obs(DataFrame):
 class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.
 
-    Subclass of the Obs class. Can have the following attributes:
+    Subclass of the Obs class. Has the following attributes:
 
     - locatie: 2 filters at one piezometer should have the same 'locatie'
     - filternr: 2 filters at one piezometer should have a different 'filternr'.
@@ -147,6 +147,7 @@ class GroundwaterObs(Obs):
     @classmethod
     def from_dino(cls, fname=None, location=None, filternr=1.,
                   tmin="1900-01-01", tmax="2040-01-01",
+                  split_cluster=True,
                   **kwargs):
         """download dino data from the server.
 
@@ -162,6 +163,10 @@ class GroundwaterObs(Obs):
             start date in format YYYY-MM-DD
         tmax : str
             end date in format YYYY-MM-DD
+        split_cluster : bool
+            if False and the piezometer belongs to a cluster, the combined
+            time series of the cluster is used. if True the indvidual time
+            series of each piezometer is used. Default is True
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv if
             fname is not None and otherwise to io_dino.findMeetreeks
@@ -178,6 +183,7 @@ class GroundwaterObs(Obs):
             measurements, meta = io_dino.download_dino_groundwater(location,
                                                                    filternr,
                                                                    tmin, tmax,
+                                                                   split_cluster,
                                                                    **kwargs)
 
             if meta['metadata_available']:
