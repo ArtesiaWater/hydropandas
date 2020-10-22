@@ -6,3 +6,5 @@ nbsphinx_link
 tqdm
 arctic
 pastastore
+xarray
+netCDF4
