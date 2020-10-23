@@ -480,6 +480,34 @@ class KnmiObs(Obs):
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
                   raise_exceptions=False, verbose=False):
+        """Get a KnmiObs object.
+
+        Parameters
+        ----------
+        stn : int or str
+            measurement station e.g. 829.
+        variable : str, optional
+            observation type e.g. "RD" or "EV24".
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is True.
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+    
+        Returns
+        -------
+        KnmiObs object with time series and attributes
+        """
         from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
@@ -496,6 +524,37 @@ class KnmiObs(Obs):
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
                         inseason=False, raise_exceptions=False, verbose=False):
+        """Get KnmiObs object with measurements from station closest to
+        the given (x,y) coördinates. 
+        
+        Parameters
+        ----------
+        x : int or float
+            x coördinate in m RD.
+        y : int or float
+            y coördinate in m RD.
+        variable : str
+            e.g. 'EV24'.
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        fill_missing_obs : bool
+            if True missing observations are filled with values of next closest
+            KNMI station
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        KnmiObs object with time series and attributes
+        """
         from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(

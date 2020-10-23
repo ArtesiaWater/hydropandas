@@ -636,6 +636,41 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end, fill_missing_obs=True,
                            interval='daily', inseason=False,
                            raise_exceptions=False,
                            verbose=False):
+    """Get timeseries with measurements from station closest to the given 
+    (x,y) coördinates.
+
+    Parameters
+    ----------
+    x : int or float
+        x coördinate in m RD.
+    y : int or float
+        y coördinate in m RD.
+    meteo_var : str
+        e.g. 'EV24'.
+    start : pd.TimeStamp
+        start time of observations.
+    end : pd.TimeStamp
+        end time of observations.
+    fill_missing_obs : bool
+        if True missing observations are filled with values of next closest
+        KNMI station
+    interval : str, optional
+        desired time interval for observations. The default is 'daily'.
+    inseason : boolean, optional
+        flag to obtain inseason data. The default is False
+    raise_exceptions : bool, optional
+        if True you get errors when no data is returned. The default is False.
+    verbose : boolean, optional
+        Print additional information to the screen (default is False).
+
+    Returns
+    -------
+    knmi_df : pd.DataFrame
+        time series.
+    meta : dic
+        dictionary with metadata.
+
+    """
 
     # get station
     stations = get_stations(meteo_var=meteo_var)
