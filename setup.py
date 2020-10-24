@@ -31,7 +31,9 @@ setup(
                       'pandas>=0.24', 'scipy>=1.2', 
 					  'geopandas >= 0.6.0', 'zeep >= 3.4.0',
 					  'bokeh >= 2.0.2','branca >= 0.3.1',
-					  'folium >= 0.8.2', 'pastas >= 0.13.0'],
+					  'folium >= 0.8.2', 'pastas >= 0.13.0',
+                      'flopy >= 3.3.0', 'xarray >= 0.15.0', 
+                      'netCDF4 >= 1.5.4'],
     packages=find_packages(exclude=[]),
     package_data={"hydropandas": ["data/*.json"]},
     include_package_data=True
