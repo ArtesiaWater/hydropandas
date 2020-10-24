@@ -4,7 +4,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/998663562724492c812831f714d3c244)](https://www.codacy.com/manual/ArtesiaWater/hydropandas?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/hydropandas&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
-[![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/pastas)
+[![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
 
 # hydropandas
 The hydropandas module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The hydropandas module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
