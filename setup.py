@@ -35,7 +35,7 @@ setup(
                       'flopy >= 3.3.0', 'xarray >= 0.15.0', 
                       'netCDF4 >= 1.5.4', 'requests >= 2.22.0',
                       'shapely >= 1.7.0', 'pyproj >= 2.6.0',
-                      'geopandas >= 0.7.0', 'tqdm >= 4.42.1'],
+                      'tqdm >= 4.42.1'],
     packages=find_packages(exclude=[]),
     package_data={"hydropandas": ["data/*.json"]},
     include_package_data=True
