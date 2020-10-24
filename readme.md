@@ -10,7 +10,9 @@
 The hydropandas module is a Python package for reading timeseries data into DataFrames. The basic idea behind the package is to allow users to manipulate data using all of the wonderful features included in pandas, but to also allow the addition of custom methods and attributes related to the timeseries. The hydropandas module extends pandas.DataFrame with extra functionality and stores metadata related to the type of measurements.
 
 ## Installation
-Install the module by typing `pip install hydropandas`.
+Install the module with pip
+
+`pip install hydropandas`
 
 Please note that some of the dependencies cannot be installed automatically on Windows. If you do not have these packages already
 you can install them manually using the following instructions:
@@ -28,7 +30,7 @@ Use CTRL+F to find the download link on the page. Be sure to download the correc
 
 This is the GDAL version for Python 3.8 (as can be seen from the cp38 in the name), for 64-bits Python (as derived from the amd64 in the name).
 
-Once you have downloaded the correct files, open Anaconda Prompt, and navigate to the directory in which you saved your downloads. Now type the following commands (the order is important):
+Once you have downloaded the correct files, navigate to the directory in which you saved your downloads. Now type the following commands (the order is important):
 1. `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
 2. `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
 3. `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
