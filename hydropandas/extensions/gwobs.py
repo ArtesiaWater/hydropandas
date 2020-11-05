@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
-import scipy.interpolate as intp
 
 from . import accessor
 
@@ -224,10 +223,6 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
         if verbose:
             print(f"  - selected layer: {lay_out}")
         return lay_out
-
-    raise ValueError(
-        'Something is wrong with the input. Please submit an issue if you'
-        ' think this is a bug.')
 
     return np.nan
 
