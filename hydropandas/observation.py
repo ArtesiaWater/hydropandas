@@ -479,7 +479,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  raise_exceptions=False, verbose=False):
+                  raise_exceptions=True, verbose=False):
         """Get a KnmiObs object.
 
         Parameters

@@ -852,7 +852,7 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
                                            inseason=inseason,
                                            raise_exceptions=raise_exceptions,
                                            verbose=verbose)
-                    o = o.loc[:, [meteo_var]]
+                    #o = o.loc[:, [meteo_var]]
                     o.to_pickle(pklz_path)
             else:
                 o = ObsClass.from_knmi(stn, meteo_var, start[i], end[i],
@@ -861,7 +861,7 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
                                        inseason=inseason,
                                        raise_exceptions=raise_exceptions,
                                        verbose=verbose)
-                o = o.loc[:, [meteo_var]]
+                #o = o.loc[:, [meteo_var]]
             if normalize_index:
                 o.index = o.index.normalize()
 
@@ -967,15 +967,15 @@ def fill_missing_measurements(stn, meteo_var='RD', start=None, end=None,
     if (meteo_var == 'RD') and (end > (dt.datetime.now() - pd.Timedelta(21, unit='D'))):
         end = min(end, _check_latest_measurement_date_RD_debilt(verbose))
 
-    if verbose:
-        print('Download ' + meteo_var + ' from ' +
-              str(stn) + ' ' + stations.loc[stn, 'naam'])
     knmi_df, variables, station_meta = \
         download_knmi_data(stn, meteo_var, start=start,
                            end=end, interval=interval,
                            inseason=False,
                            raise_exceptions=raise_exceptions,
                            verbose=verbose)
+    if verbose:
+        print('Download ' + meteo_var + ' from ' +
+              str(stn) + ' ' + stations.loc[stn, 'naam'])
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]

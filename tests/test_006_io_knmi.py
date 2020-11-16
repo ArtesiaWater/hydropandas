@@ -29,6 +29,35 @@ def test_download_rd_210():
     return knmi_df, variables, stations
 
 
+def test_download_without_data():
+    try:
+        knmi_df, variables, stations = io_knmi.download_knmi_data(210, 
+                                                                  meteo_var='RD',
+                                                                  start='2018',
+                                                                  end='2020',
+                                                                  interval='daily',
+                                                                  inseason=False,
+                                                                  verbose=False)
+    except ValueError:
+        pass
+    
+    return 1
+
+def test_download_without_data_no_error():    
+    knmi_df, variables, stations = io_knmi.download_knmi_data(210, 
+                                                              meteo_var='RD',
+                                                              start='2018',
+                                                              end='2020',
+                                                              interval='daily',
+                                                              inseason=False,
+                                                              raise_exceptions=False,
+                                                              verbose=False)
+    
+    assert (knmi_df.empty, variables=={}, stations.empty) == (True, True, True)
+    
+    return knmi_df, variables, stations
+
+
 def test_download_ev24_240():
     knmi_df, variables, stations = io_knmi.download_knmi_data(210, 
                                                               meteo_var='EV24',

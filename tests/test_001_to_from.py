@@ -378,8 +378,18 @@ def test_obs_from_pystore_item():
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
 
-def test_knmi_obs_from_stn_without_data_in_time_period():
-    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2')
+def test_knmi_obs_from_stn_without_any_data():
+    try:
+        obs.KnmiObs.from_knmi(210, "RD",
+                              verbose=True)
+    except ValueError:
+        pass
+    
+    return 1
+
+def test_knmi_obs_from_stn_with_missing_data_in_time_period():
+    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2',
+                                 verbose=True)
 
 def test_knmi_obs_from_xy():
     return obs.KnmiObs.from_nearest_xy(100000, 350000, "RD")
@@ -395,7 +405,7 @@ def test_knmi_collection_from_locations():
                                          meteo_vars=["EV24", "RD"], 
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
-                                         verbose=True, cache=True)
+                                         verbose=True, cache=False)
     return oc_knmi
 
 def test_knmi_collection_from_stns():
