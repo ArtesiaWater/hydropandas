@@ -1405,9 +1405,12 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     gdf_loc = get_dino_locations(extent=extent, bbox=bbox, layer=layer)
 
     if verbose:
-        print('\ndownload {} data from dino within:\n'
-              '- extent: {} or\n'
-              '- bbox: {}'.format(layer, extent, bbox))
+        if bbox is None:
+            print(f'\ndownload {layer} data from dino within:\n'
+                  '- extent: {extent}')
+        elif extent is None:
+            print(f'\ndownload {layer} data from dino within:\n'
+                  '- bbox: {bbox}')
 
     if gdf_loc.empty:
         return pd.DataFrame()
