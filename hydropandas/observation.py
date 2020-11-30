@@ -24,7 +24,8 @@ class Obs(DataFrame):
 
     An Obs object is a subclass of a pandas.DataFrame and allows for additional
     attributes and methods.
-    pandas can be found here:
+    More information about subclassing pandas DataFrames pandas can be 
+    found here:
     http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 
     Parameters
