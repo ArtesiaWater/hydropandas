@@ -1406,11 +1406,11 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
     if verbose:
         if bbox is None:
-            print(f'\ndownload {layer} data from dino within:\n'
-                  '- extent: {extent}')
+            print('\ndownload {layer} data from dino within:\n'
+                  f'- extent: {extent}')
         elif extent is None:
-            print(f'\ndownload {layer} data from dino within:\n'
-                  '- bbox: {bbox}')
+            print('\ndownload {layer} data from dino within:\n'
+                  f'- bbox: {bbox}')
 
     if gdf_loc.empty:
         return pd.DataFrame()
