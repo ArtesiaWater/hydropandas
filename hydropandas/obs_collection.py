@@ -85,7 +85,7 @@ class ObsCollection(pd.DataFrame):
         """ Set a value on three different levels at once:
             1. the value in an ObsCollection DataFrame
             2. the attribute of the observation
-            3. the value in the meta dictionary of an observation
+            3. the value in the meta dictionary of an observation (optional)
 
         Parameters
         ----------
@@ -127,7 +127,7 @@ class ObsCollection(pd.DataFrame):
                 print(f'set attribute {att_name} of {iname} to {value}')
 				
         if add_to_meta:
-			o.meta.update({att_name: value})
+            o.meta.update({att_name: value})
             if verbose:
                 print(f'add {att_name} of {iname} with value {value} to meta')
 				
