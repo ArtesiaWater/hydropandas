@@ -125,10 +125,12 @@ class ObsCollection(pd.DataFrame):
             setattr(o, att_name, value)
             if verbose:
                 print(f'set attribute {att_name} of {iname} to {value}')
+				
         if add_to_meta:
+			o.meta.update({att_name: value})
             if verbose:
-                print(f'set attribute {att_name} of {iname} to {value}')
-            o.meta.update({att_name: value})
+                print(f'add {att_name} of {iname} with value {value} to meta')
+				
 
     @classmethod
     def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
