@@ -96,7 +96,7 @@ def test_get_surface_level_oc():
         return zp
     except ModuleNotFoundError as e:
         print(e)
-        return
+    return
 
 
 def test_get_surface_level_gwobs():
