@@ -101,7 +101,7 @@ def iterparse_pi_xml(fname, ObsClass,
         full path to file
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    locations : tuple or list of str, optional
+    locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
     return_events : bool, optional
@@ -194,13 +194,24 @@ def iterparse_pi_xml(fname, ObsClass,
                 for key, item in translate_dic.items():
                     header[item] = header.pop(key)
 
+                if "x" in header.keys():
+                    x = np.float(header["x"])
+                else:
+                    x = np.nan
+                if "y" in header.keys():
+                    y = np.float(header["y"])
+                else:
+                    y = np.nan
+
                 if ObsClass is GroundwaterObs:
                     o = ObsClass(s, name=header['locatie'],
                                  locatie=header['locatie'],
+                                 x=x, y=y,
                                  meta=header)
                 else:
                     o = ObsClass(s,
                                  name=header['locatie'],
+                                 x=x, y=y,
                                  meta=header)
                 header_list.append(header)
                 series_list.append(o)
