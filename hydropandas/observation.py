@@ -24,7 +24,7 @@ class Obs(DataFrame):
 
     An Obs object is a subclass of a pandas.DataFrame and allows for additional
     attributes and methods.
-    More information about subclassing pandas DataFrames pandas can be 
+    More information about subclassing pandas DataFrames pandas can be
     found here:
     http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 
@@ -505,15 +505,15 @@ class KnmiObs(Obs):
             if True you get errors when no data is returned. The default is False.
         verbose : boolean, optional
             Print additional information to the screen (default is False).
-    
+
         Returns
         -------
         KnmiObs object with time series and attributes
-        
+
         List of possible variables:
             DDVEC     = Vectorgemiddelde windrichting in graden (360=noord, 90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean wind direction in degrees (360=north, 90=east, 180=south, 270=west, 0=calm/variable)
             FHVEC     = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean windspeed (in 0.1 m/s)
-            FG        = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean windspeed (in 0.1 m/s) 
+            FG        = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean windspeed (in 0.1 m/s)
             FHX       = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum hourly mean windspeed (in 0.1 m/s)
             FHXH      = Uurvak waarin FHX is gemeten / Hourly division in which FHX was measured
             FHN       = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum hourly mean windspeed (in 0.1 m/s)
@@ -526,7 +526,7 @@ class KnmiObs(Obs):
             TX        = Maximum temperatuur (in 0.1 graden Celsius) / Maximum temperature (in 0.1 degrees Celsius)
             TXH       = Uurvak waarin TX is gemeten / Hourly division in which TX was measured
             T10N      = Minimum temperatuur op 10 cm hoogte (in 0.1 graden Celsius) / Minimum temperature at 10 cm above surface (in 0.1 degrees Celsius)
-            T10NH     = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT, 24=18-24 UT 
+            T10NH     = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT, 24=18-24 UT
             SQ        = Zonneschijnduur (in 0.1 uur) berekend uit de globale straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour) calculated from global radiation (-1 for <0.05 hour)
             SP        = Percentage van de langst mogelijke zonneschijnduur / Percentage of maximum potential sunshine duration
             Q         = Globale straling (in J/cm2) / Global radiation (in J/cm2)
@@ -567,9 +567,9 @@ class KnmiObs(Obs):
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
                         inseason=False, raise_exceptions=False, verbose=False):
-        """Get KnmiObs object with measurements from station closest to
-        the given (x,y) coördinates. 
-        
+        """Get KnmiObs object with measurements from station closest to the
+        given (x,y) coördinates.
+
         Parameters
         ----------
         x : int or float

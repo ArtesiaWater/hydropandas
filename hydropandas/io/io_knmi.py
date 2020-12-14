@@ -636,8 +636,8 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end, fill_missing_obs=True,
                            interval='daily', inseason=False,
                            raise_exceptions=False,
                            verbose=False):
-    """Get timeseries with measurements from station closest to the given 
-    (x,y) coördinates.
+    """Get timeseries with measurements from station closest to the given (x,y)
+    coördinates.
 
     Parameters
     ----------
@@ -669,7 +669,6 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end, fill_missing_obs=True,
         time series.
     meta : dic
         dictionary with metadata.
-
     """
 
     # get station

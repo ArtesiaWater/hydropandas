@@ -121,7 +121,7 @@ def iterparse_pi_xml(fname, ObsClass,
     Returns
     -------
     df : pandas.DataFrame
-        a DataFrame containing the metadata and the series if 'return_df' 
+        a DataFrame containing the metadata and the series if 'return_df'
         is True
     header_list : list of dictionaries
         list of metadata if 'return_df' is False

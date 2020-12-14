@@ -125,12 +125,11 @@ class ObsCollection(pd.DataFrame):
             setattr(o, att_name, value)
             if verbose:
                 print(f'set attribute {att_name} of {iname} to {value}')
-				
+
         if add_to_meta:
             o.meta.update({att_name: value})
             if verbose:
                 print(f'add {att_name} of {iname} with value {value} to meta')
-				
 
     @classmethod
     def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
@@ -224,7 +223,7 @@ class ObsCollection(pd.DataFrame):
             The bounding box, in RD-coordinates, for which you want to
             retrieve locations [xmin, ymin, xmax, ymax]
         locations : list of str, optional
-            list of names with location and filter number, separated by 
+            list of names with location and filter number, separated by
             'filtersep'
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
@@ -434,7 +433,8 @@ class ObsCollection(pd.DataFrame):
         """
 
         warnings.warn(
-            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+            "this method will be removed in future "
+            "versions, use from_dino instead", DeprecationWarning)
 
         from .io.io_dino import read_dino_dir
 
@@ -549,12 +549,12 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_fews(cls, file_or_dir, ObsClass=obs.GroundwaterObs, name='fews',
-                  translate_dic={'locationId': 'locatie'}, locations=None,
-                  to_mnap=True, remove_nan=True, low_memory=True,
-                  unpackdir=None, force_unpack=False,
-                  preserve_datetime=False, verbose=False):
-        """Read one or several XML-files with measurements from FEWS.
+    def from_fews_xml(cls, file_or_dir, ObsClass=obs.GroundwaterObs,
+                      name='fews', translate_dic={'locationId': 'locatie'},
+                      locations=None, to_mnap=True, remove_nan=True,
+                      low_memory=True, unpackdir=None, force_unpack=False,
+                      preserve_datetime=False, verbose=False):
+        """Read one or several FEWS PI-XML files.
 
         Parameters
         ----------
@@ -596,9 +596,10 @@ class ObsCollection(pd.DataFrame):
         from .io.io_xml import parse_xml_filelist
 
         # get files
-        dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml",
-                                               force_unpack=force_unpack,
-                                               preserve_datetime=preserve_datetime)
+        dirname, unzip_fnames = util.get_files(
+            file_or_dir, ext=".xml", unpackdir=unpackdir,
+            force_unpack=force_unpack, preserve_datetime=preserve_datetime)
+
         meta = {'filename': dirname,
                 'type': ObsClass,
                 'verbose': verbose
@@ -706,11 +707,11 @@ class ObsCollection(pd.DataFrame):
             default is None
         **kwargs :
             kwargs are passed to the io_knmi.get_knmi_obslist function
-            
+
         List of possible meteo variables:
             DDVEC     = Vectorgemiddelde windrichting in graden (360=noord, 90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean wind direction in degrees (360=north, 90=east, 180=south, 270=west, 0=calm/variable)
             FHVEC     = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean windspeed (in 0.1 m/s)
-            FG        = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean windspeed (in 0.1 m/s) 
+            FG        = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean windspeed (in 0.1 m/s)
             FHX       = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum hourly mean windspeed (in 0.1 m/s)
             FHXH      = Uurvak waarin FHX is gemeten / Hourly division in which FHX was measured
             FHN       = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum hourly mean windspeed (in 0.1 m/s)
@@ -723,7 +724,7 @@ class ObsCollection(pd.DataFrame):
             TX        = Maximum temperatuur (in 0.1 graden Celsius) / Maximum temperature (in 0.1 degrees Celsius)
             TXH       = Uurvak waarin TX is gemeten / Hourly division in which TX was measured
             T10N      = Minimum temperatuur op 10 cm hoogte (in 0.1 graden Celsius) / Minimum temperature at 10 cm above surface (in 0.1 degrees Celsius)
-            T10NH     = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT, 24=18-24 UT 
+            T10NH     = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT, 24=18-24 UT
             SQ        = Zonneschijnduur (in 0.1 uur) berekend uit de globale straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour) calculated from global radiation (-1 for <0.05 hour)
             SP        = Percentage van de langst mogelijke zonneschijnduur / Percentage of maximum potential sunshine duration
             Q         = Globale straling (in J/cm2) / Global radiation (in J/cm2)
@@ -747,7 +748,6 @@ class ObsCollection(pd.DataFrame):
             UN        = Minimale relatieve vochtigheid (in procenten) / Minimum relative atmospheric humidity (in percents)
             UNH       = Uurvak waarin UN is gemeten / Hourly division in which UN was measured
             EV24      = Referentiegewasverdamping (Makkink) (in 0.1 mm) / Potential evapotranspiration (Makkink) (in 0.1 mm)
-
         """
 
         from .io.io_knmi import get_knmi_obslist
@@ -1192,7 +1192,7 @@ class ObsCollection(pd.DataFrame):
         pstore = create_pastastore(self, pstore, pstore_name,
                                    add_metadata=add_metadata,
                                    kind=kind,
-                                   obs_column=obs_column, 
+                                   obs_column=obs_column,
                                    verbose=verbose)
 
         return pstore

@@ -252,10 +252,9 @@ def interpolate(values, vtx, wts):
 
 def df2gdf(df, xcol='x', ycol='y'):
     """Make a GeoDataFrame from a DataFrame, assuming the geometry are
-    points.
-    """
-    from shapely.geometry import Point
+    points."""
     from geopandas import GeoDataFrame
+    from shapely.geometry import Point
     gdf = GeoDataFrame(df.copy(), geometry=[Point(
         (s[xcol], s[ycol])) for i, s in df.iterrows()])
     return gdf
