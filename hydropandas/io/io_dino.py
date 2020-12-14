@@ -1588,6 +1588,10 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
             line = f.readline()
             if p_meta.match(line):
                 meta = _read_dino_waterlvl_metadata(f, line)
+                if meta:
+                    meta['metadata_available'] = True
+                else:
+                    meta['metadata_available'] = False
                 meta['filename'] = fname
             elif p_data.match(line):
                 if read_series:
