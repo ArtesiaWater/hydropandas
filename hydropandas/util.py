@@ -258,3 +258,24 @@ def df2gdf(df, xcol='x', ycol='y'):
     gdf = GeoDataFrame(df.copy(), geometry=[Point(
         (s[xcol], s[ycol])) for i, s in df.iterrows()])
     return gdf
+
+
+def show_versions():
+    """Method to print the version of dependencies.
+
+    """
+    from pandas import __version__ as pd_version
+    from numpy import __version__ as np_version
+    from scipy import __version__ as sc_version
+    from matplotlib import __version__ as mpl_version
+    from sys import version as os_version
+
+    msg = (
+        f"Python version    : {os_version}\n"
+        f"Numpy version     : {np_version}\n"
+        f"Scipy version     : {sc_version}\n"
+        f"Pandas version    : {pd_version}\n"
+        f"Matplotlib version: {mpl_version}"
+    )
+
+    return print(msg)
