@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import xarray as xr
 
 from . import accessor
 
@@ -528,7 +527,8 @@ class GeoAccessorObs:
         str
             name of REGIS layer
         """
-
+        import xarray as xr
+        
         if np.isnan(self._obj.bovenkant_filter) or np.isnan(self._obj.onderkant_filter):
             return 'nan'
 
