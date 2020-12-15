@@ -7,7 +7,7 @@ Created on Fri Nov  8 11:46:51 2019
 
 import test_001_to_from as ttf
 
-plot_dir = r"./tests/data/2019-Dino-test/plots"
+plot_dir = "./tests/data/2019-Dino-test/plots"
 
 
 def test_interactive_plot():
@@ -58,6 +58,9 @@ def test_obscollection_to_imap():
     # add metadata to obscollection DF
     fews_gw_prod.add_meta_to_df("lat")
     fews_gw_prod.add_meta_to_df("lon")
+    # convert columns to float
+    fews_gw_prod["lat"] = fews_gw_prod["lat"].astype(float)
+    fews_gw_prod["lon"] = fews_gw_prod["lon"].astype(float)
 
     fews_gw_prod.gwobs.set_filter_num_location('locatie',
                                                if_exists="replace")

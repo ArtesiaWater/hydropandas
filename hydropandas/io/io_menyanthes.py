@@ -7,10 +7,9 @@
 import os
 
 import numpy as np
+from hydropandas import observation
 from pandas import DataFrame, Series
 from scipy.io import loadmat
-
-from hydropandas import observation
 
 from ..util import matlab2datetime
 

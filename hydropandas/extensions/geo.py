@@ -173,7 +173,7 @@ class GeoAccessor:
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
-    
+
     def get_nearest_polygon(self, gdf=None,
                             xcol_obs='x', ycol_obs='y',
                             verbose=False):
@@ -197,12 +197,13 @@ class GeoAccessor:
         """
 
         gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
-        
+
         for i, point in gdf_obs.geometry.items():
             distances = [point.distance(pol) for pol in gdf.geometry.values]
-            if (np.array(distances)==np.min(distances)).sum()>1:
+            if (np.array(distances) == np.min(distances)).sum() > 1:
                 raise ValueError('multiple polygons are nearest')
-            gdf_obs.loc[i, 'nearest polygon'] = gdf.iloc[np.argmin(distances)].name
+            gdf_obs.loc[i, 'nearest polygon'] = gdf.iloc[np.argmin(
+                distances)].name
             gdf_obs.loc[i, 'distance nearest polygon'] = np.min(distances)
 
         return gdf_obs[['nearest polygon', 'distance nearest polygon']]

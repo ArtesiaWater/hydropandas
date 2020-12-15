@@ -1,15 +1,15 @@
+import datetime as dt
 import os
 import re
 import tempfile
 import warnings
+from timeit import default_timer
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import datetime as dt
 import requests
 import zeep
-from timeit import default_timer
 from requests.exceptions import HTTPError
 from shapely.geometry import Point
 from zeep import Plugin
@@ -980,7 +980,7 @@ class DinoWSDL:
         Parameters
         ----------
         wsdl : str, optional
-            wsdl url, by default 
+            wsdl url, by default
             "http://www.dinoservices.nl/gwservices/gws-v11?wsdl"
         """
 
@@ -999,8 +999,8 @@ class DinoWSDL:
 
     def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
                       raw_response=False, verbose=False):
-        """Get a timeseries for a piezometer. If the piezometer is part of 
-        a cluster this function returns the combined timeseries of all the
+        """Get a timeseries for a piezometer. If the piezometer is part of a
+        cluster this function returns the combined timeseries of all the
         piezometers in the cluster.
 
         Parameters
@@ -1219,16 +1219,17 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     # new metadata method
     dinorest = DinoREST()
     meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
-    
+
     if ('clusterList' in meta.keys()) and split_cluster and (not measurements.empty):
         if verbose:
             print(f'piezometer {location}-{filternr} is part of a cluster')
             print('slicing time series to avoid using combined cluster series')
-        
-        start_time = dt.timedelta(seconds=meta['startDate']/1000) + dt.datetime(1970,1,1,1)
-        end_time = dt.timedelta(seconds=meta['endDate']/1000) + dt.datetime(1970,1,1,1)
+
+        start_time = dt.timedelta(
+            seconds=meta['startDate'] / 1000) + dt.datetime(1970, 1, 1, 1)
+        end_time = dt.timedelta(
+            seconds=meta['endDate'] / 1000) + dt.datetime(1970, 1, 1, 1)
         measurements = measurements[start_time:end_time]
-       
 
     return measurements, meta
 
@@ -1244,15 +1245,15 @@ def download_dino_groundwater_bulk(locations, ObsClass=None,
     locations : list of str
         list of locations including filter numbers (i.e. B00H0001-001)
     ObsClass : Obs, optional
-        ObsClass to use for storing timeseries, by default None. It is 
+        ObsClass to use for storing timeseries, by default None. It is
         recommended to use GroundwaterObs.
     filtersep : str, optional
-        separation character(s) between location code and filter 
+        separation character(s) between location code and filter
         number, by default "-"
     verbose : bool, optional
         print logging information to console, by default False
     stop_on_error : bool, optional
-        if download fails for some reason, raise the error, otherwise 
+        if download fails for some reason, raise the error, otherwise
         continue, by default True
 
     Returns
@@ -1405,9 +1406,12 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     gdf_loc = get_dino_locations(extent=extent, bbox=bbox, layer=layer)
 
     if verbose:
-        print('\ndownload {} data from dino within:\n'
-              '- extent: {} or\n'
-              '- bbox: {}'.format(layer, extent, bbox))
+        if bbox is None:
+            print('\ndownload {layer} data from dino within:\n'
+                  f'- extent: {extent}')
+        elif extent is None:
+            print('\ndownload {layer} data from dino within:\n'
+                  f'- bbox: {bbox}')
 
     if gdf_loc.empty:
         return pd.DataFrame()
@@ -1584,6 +1588,10 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
             line = f.readline()
             if p_meta.match(line):
                 meta = _read_dino_waterlvl_metadata(f, line)
+                if meta:
+                    meta['metadata_available'] = True
+                else:
+                    meta['metadata_available'] = False
                 meta['filename'] = fname
             elif p_data.match(line):
                 if read_series:

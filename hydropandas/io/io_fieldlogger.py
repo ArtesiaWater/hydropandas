@@ -20,6 +20,7 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
 
     Returns
     -------
+    heading
     name
     subname
     inputfield
@@ -30,21 +31,23 @@ def _fieldlogger_groundwater_settings(df, verbose=False):
     if verbose:
         print('use default settings for groundwater observations')
 
-    heading = 'use_standard_time;NO\nNAME;INPUTTYPE;HINT\nStand;number;GWS t.o.v. bkpb (cm)\nOpmerking;text;maak opmerking...\n'
+    heading = ('use_standard_time;NO\nNAME;INPUTTYPE;HINT'
+               '\nStand;number;GWS t.o.v. bkpb (cm)'
+               '\nOpmerking;text;maak opmerking...\n')
     name = df.locatie
     subname = df.index
     inputfield = 'Stand|Opmerking'
-    properties = df.obs.apply(lambda o: "bovenkant peilbuis|{:+.2f} mNAP|"
-                                        "onderkant peilbuis|{:+.2f} mNAP|"
-                                        "Maximaal gemeten|{:+.2f} mNAP|"
-                                        "Gemiddeldeld gemeten|{:+.2f} mNAP|"
-                                        "Minimaal gemeten|{:+.2f} mNAP".format(o.meta['bovenkant_filter'],
-                                                                               o.meta['onderkant_filter'],
-                                                                               o['stand_m_tov_nap'].max(
-                                        ),
-                                            o['stand_m_tov_nap'].mean(
-                                        ),
-                                            o['stand_m_tov_nap'].min()))
+    properties = df.obs.apply(
+        lambda o: "bovenkant peilbuis|{:+.2f} mNAP|"
+        "onderkant peilbuis|{:+.2f} mNAP|"
+        "Maximaal gemeten|{:+.2f} mNAP|"
+        "Gemiddeldeld gemeten|{:+.2f} mNAP|"
+        "Minimaal gemeten|{:+.2f} mNAP".format(
+            o.meta['bovenkant_filter'],
+            o.meta['onderkant_filter'],
+            o['stand_m_tov_nap'].max(),
+            o['stand_m_tov_nap'].mean(),
+            o['stand_m_tov_nap'].min()))
     group = df.name
 
     return heading, name, subname, inputfield, properties, group
@@ -70,16 +73,19 @@ def _fieldlogger_waterlevel_settings(df, verbose=False):
     if verbose:
         print('use default settings for waterlevel observations')
 
-    heading = 'use_standard_time;NO\nNAME;INPUTTYPE;HINT\nStand;number;oppw t.o.v. kruinhoogte stuw (cm)\nOpmerking;text;maak opmerking...\n'
+    heading = ('use_standard_time;NO\nNAME;INPUTTYPE;HINT\n'
+               'Stand;number;oppw t.o.v. kruinhoogte stuw (cm)\n'
+               'Opmerking;text;maak opmerking...\n')
     name = df.index
     subname = df.index
     inputfield = 'Stand|Opmerking'
-    properties = df.obs.apply(lambda o: "Maximaal gemeten|{:+.2f} mNAP|"
-                                        "Gemiddeldeld gemeten|{:+.2f} mNAP|"
-                                        "Minimaal gemeten|{:+.2f} mNAP".format(o['stand_m_tov_nap'].max(),
-                                                                               o['stand_m_tov_nap'].mean(
-                                        ),
-                                            o['stand_m_tov_nap'].min()))
+    properties = df.obs.apply(
+        lambda o: "Maximaal gemeten|{:+.2f} mNAP|"
+        "Gemiddeldeld gemeten|{:+.2f} mNAP|"
+        "Minimaal gemeten|{:+.2f} mNAP".format(
+            o['stand_m_tov_nap'].max(),
+            o['stand_m_tov_nap'].mean(),
+            o['stand_m_tov_nap'].min()))
     group = df.name
 
     return heading, name, subname, inputfield, properties, group
@@ -211,7 +217,9 @@ def df_to_fieldlogger_csv(df, fname, otype=None,
 
     # csv heading
     if heading is None:
-        heading = 'use_standard_time;NO\nNAME;INPUTTYPE;HINT\nStand;number;GWS t.o.v. bkpb (cm)\nOpmerking;text;maak opmerking...\n'
+        heading = ('use_standard_time;NO\nNAME;INPUTTYPE;HINT\n'
+                   'Stand;number;GWS t.o.v. bkpb (cm)\n'
+                   'Opmerking;text;maak opmerking...\n')
 
     columns = ['SUBNAME', 'XCOOR', 'YCOOR', 'INPUTFIELD', 'PROPERTIES']
 

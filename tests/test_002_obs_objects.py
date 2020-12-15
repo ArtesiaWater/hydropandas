@@ -5,11 +5,11 @@ Created on Fri Jan 31 13:26:04 2020
 @author: oebbe
 """
 
-# import os
-from hydropandas import observation as obs
-from hydropandas import obs_collection as oc
 import numpy as np
 import pandas as pd
+from hydropandas import obs_collection as oc
+from hydropandas import observation as obs
+
 # import sys
 # sys.path.insert(1, "..")
 
@@ -36,7 +36,8 @@ def test_groundwater_obs(name='grondwaterobs_001', filternr=2):
                              metadata_available=True,
                              filternr=filternr,
                              filename='',
-                             meta={'info': 'in deze dictionary kan je extra informatie kwijt'})
+                             meta={'info': 'in deze dictionary '
+                                   'kan je extra informatie kwijt'})
     return gwo
 
 
@@ -47,7 +48,8 @@ def test_waterlvl_obs():
     y = np.random.randint(10000, 20000)
     wlvl = obs.WaterlvlObs(df, name='waterlvl_obs1', locatie='obs1',
                            x=x, y=y, filename='',
-                           meta={'info': 'in deze dictionary kan je extra informatie kwijt'})
+                           meta={'info': 'in deze dictionary '
+                                 'kan je extra informatie kwijt'})
     return wlvl
 
 
@@ -56,7 +58,8 @@ def test_groundwater_quality_obs():
         '2020-1-1', '2020-1-10'), data={'pH': np.random.rand(10)})
     gwq = obs.WaterlvlObs(df, name='waterquality_obs1', locatie='waterquality',
                           x=3, y=4, filename='',
-                          meta={'info': 'in deze dictionary kan je extra informatie kwijt'})
+                          meta={'info': 'in deze dictionary '
+                                'kan je extra informatie kwijt'})
     return gwq
 
 

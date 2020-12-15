@@ -3,6 +3,7 @@ import xml.etree.ElementTree as etree
 
 import numpy as np
 import pandas as pd
+from hydropandas.observation import GroundwaterObs
 from lxml.etree import iterparse
 
 
@@ -75,9 +76,14 @@ def read_xml(fname, ObsClass, translate_dic={'locationId': 'locatie'},
             for key, item in translate_dic.items():
                 series[item] = series.pop(key)
 
-            obs_list.append(ObsClass(ts, name=series['locatie'],
-                                     locatie=series['locatie'],
-                                     x=x, y=y, meta=series))
+            if ObsClass is GroundwaterObs:
+                o = ObsClass(ts, x=x, y=y, meta=series,
+                             name=series['locatie'],
+                             locatie=series['locatie'])
+            else:
+                o = ObsClass(ts, x=x, y=y, meta=series,
+                             name=series['locatie'])
+            obs_list.append(o)
     return obs_list
 
 
@@ -95,7 +101,7 @@ def iterparse_pi_xml(fname, ObsClass,
         full path to file
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    locations : tuple or list of str, optional
+    locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
     return_events : bool, optional
@@ -115,7 +121,7 @@ def iterparse_pi_xml(fname, ObsClass,
     Returns
     -------
     df : pandas.DataFrame
-        a DataFrame containing the metadata and the series if 'return_df' 
+        a DataFrame containing the metadata and the series if 'return_df'
         is True
     header_list : list of dictionaries
         list of metadata if 'return_df' is False
@@ -188,9 +194,25 @@ def iterparse_pi_xml(fname, ObsClass,
                 for key, item in translate_dic.items():
                     header[item] = header.pop(key)
 
-                o = ObsClass(s, name=header['locatie'],
-                             locatie=header['locatie'],
-                             meta=header)
+                if "x" in header.keys():
+                    x = np.float(header["x"])
+                else:
+                    x = np.nan
+                if "y" in header.keys():
+                    y = np.float(header["y"])
+                else:
+                    y = np.nan
+
+                if ObsClass is GroundwaterObs:
+                    o = ObsClass(s, name=header['locatie'],
+                                 locatie=header['locatie'],
+                                 x=x, y=y,
+                                 meta=header)
+                else:
+                    o = ObsClass(s,
+                                 name=header['locatie'],
+                                 x=x, y=y,
+                                 meta=header)
                 header_list.append(header)
                 series_list.append(o)
 
@@ -341,16 +363,17 @@ def parse_xml_filelist(fnames, ObsClass, directory=None, locations=None,
 
         # selection of xml parse method
         if low_memory:
+            _, olist = iterparse_pi_xml(fullpath,
+                                        ObsClass,
+                                        translate_dic=translate_dic,
+                                        locationIds=locations,
+                                        verbose=verbose)
+        else:
             olist = read_xml(fullpath,
                              ObsClass=ObsClass,
                              translate_dic=translate_dic,
                              to_mnap=to_mnap,
                              remove_nan=remove_nan,
-                             verbose=False)
-        else:
-            _, olist = iterparse_pi_xml(fullpath, ObsClass,
-                                        translate_dic=translate_dic,
-                                        locationIds=locations,
-                                        verbose=verbose)
+                             verbose=verbose)
         obs_list += olist
     return obs_list
