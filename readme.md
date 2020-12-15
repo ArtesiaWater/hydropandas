@@ -1,5 +1,6 @@
 <img src="/docs/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
+![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
 [![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
