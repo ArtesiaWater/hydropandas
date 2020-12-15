@@ -1,5 +1,6 @@
 <img src="/docs/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
+![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
 [![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
@@ -32,11 +33,12 @@ Use CTRL+F to find the download link on the page. Be sure to download the correc
 This is the GDAL version for Python 3.8 (as can be seen from the cp38 in the name), for 64-bits Python (as derived from the amd64 in the name).
 
 Once you have downloaded the correct files, navigate to the directory in which you saved your downloads. Now type the following commands (the order is important):
-1\. `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
-2\. `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
-3\. `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
-4\. `pip install python_snappy-0.5.4-cp38-cp38-win_amd64.whl`
-5\. `pip install fastparquet-0.4.1-cp38-cp38-win_amd64.whl`
+
+1.  `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
+2.  `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
+3.  `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
+4.  `pip install python_snappy-0.5.4-cp38-cp38-win_amd64.whl`
+5.  `pip install fastparquet-0.4.1-cp38-cp38-win_amd64.whl`
 
 After you've done this you can install hydropandas using `pip install hydropandas`
 
