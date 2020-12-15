@@ -58,6 +58,9 @@ def test_obscollection_to_imap():
     # add metadata to obscollection DF
     fews_gw_prod.add_meta_to_df("lat")
     fews_gw_prod.add_meta_to_df("lon")
+    # convert columns to float
+    fews_gw_prod["lat"] = fews_gw_prod["lat"].astype(float)
+    fews_gw_prod["lon"] = fews_gw_prod["lon"].astype(float)
 
     fews_gw_prod.gwobs.set_filter_num_location('locatie',
                                                if_exists="replace")
