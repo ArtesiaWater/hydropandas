@@ -43,6 +43,7 @@ setup(
                       'netCDF4 >= 1.5.4',
                       'requests >= 2.22.0',
                       'shapely >= 1.7.0',
+					  'cython >= 0.29.21',
                       'pyproj >= 2.6.0',
                       'tqdm >= 4.42.1'],
     packages=find_packages(exclude=[]),
