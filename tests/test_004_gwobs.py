@@ -5,7 +5,6 @@ Created on Tue Mar 24 09:17:55 2020
 @author: oebbe
 """
 
-import flopy
 import numpy as np
 from hydropandas import obs_collection as oc
 from hydropandas import observation as obs
@@ -33,6 +32,7 @@ def test_set_filter_num_location():
 
 
 def test_get_modellayers_mf2005():
+    import flopy
     modelname = 'test_mf2005'
     ml = flopy.modflow.Modflow(modelname, exe_name='mf2005')
     # Model domain and grid definition
@@ -59,6 +59,7 @@ def test_get_modellayers_mf2005():
 
 
 def test_get_modellayers_mf6_structured():
+    import flopy
     # Create the Flopy simulation object
     model_name = 'test_mf6_structured'
     sim = flopy.mf6.MFSimulation(sim_name=model_name, exe_name='mf6',
