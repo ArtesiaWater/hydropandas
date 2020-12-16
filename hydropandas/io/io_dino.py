@@ -10,7 +10,6 @@ import pandas as pd
 import requests
 import zeep
 from requests.exceptions import HTTPError
-from shapely.geometry import Point
 from zeep import Plugin
 from zeep.plugins import HistoryPlugin
 from zeep.wsa import WsAddressingPlugin
