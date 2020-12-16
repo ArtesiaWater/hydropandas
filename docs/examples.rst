@@ -9,19 +9,19 @@ Example snippets
 
 Importing a single CSV-file downloaded from DINOLoket::
 
-   import observation as obs
+   import hydropandas as hpd
    fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-   gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
+   gw = hpd.GroundwaterObs.from_dino(fname=fname, verbose=True)
 
 
 Or for a zipfile::
 
-   import observation as obs
+   import hydropandas as hpd
    dinozip = './tests/data/2019-Dino-test/dino.zip'
-   dino_gw = obs.ObsCollection.from_dino(dirname=dinozip,
+   dino_gw = hpd.ObsCollection.from_dino(dirname=dinozip,
                                          subdir='Grondwaterstanden_Put',
                                          suffix='1.csv',
-                                         ObsClass=obs.GroundwaterObs,
+                                         ObsClass=hpd.GroundwaterObs,
                                          keep_all_obs=False,
                                          verbose=False)
 
