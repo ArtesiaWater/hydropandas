@@ -99,17 +99,12 @@ Currently supported datasources that can be read:
 -   FEWS PI-XML
 -   [DINO](https://www.dinoloket.nl) csv
 -   WISKI csv
--   Artesia Fieldlogger for [Android](https://play.google.com/store/apps/details?id=nl.artesia.fieldlogger&hl=en) 
-    and [iOS](https://apps.apple.com/nl/app/fieldlogger/id924565721)
+-   Artesia Fieldlogger for [Android](https://play.google.com/store/apps/details?id=nl.artesia.fieldlogger&hl=en) and [iOS](https://apps.apple.com/nl/app/fieldlogger/id924565721)
 -   [Pastas](https://github.com/pastas/pastas) projects (deprecated)
--   [Pastastore](https://github.com/pastas/pastastore), for managing Pastas 
-    timeseries and models
--   [PyStore](https://github.com/ranaroussi/pystore), a fast datastore for 
-    pandas timeseries
--   [Arctic](https://github.com/man-group/arctic), a timeseries / dataframe 
-    database that sits atop MongoDB
--   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script) 
-    data
+-   [Pastastore](https://github.com/pastas/pastastore), for managing Pastas timeseries and models
+-   [PyStore](https://github.com/ranaroussi/pystore), a fast datastore for pandas timeseries
+-   [Arctic](https://github.com/man-group/arctic), a timeseries / dataframe database that sits atop MongoDB
+-   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script) data
 -   MODFLOW groundwater models
 -   IMOD groundwater models
 
