@@ -1,5 +1,3 @@
-import geopandas as gpd
-
 import test_001_to_from as ttf
 
 
@@ -62,11 +60,12 @@ def test_get_nearest_point():
 
 
 def test_get_nearest_polygon():
+    import geopandas as gpd
+    from shapely.geometry import Polygon
     # check two of the same observation collections
     # every point must find itself as the nearest point
     dino_gw = ttf.test_obscollection_dinozip_gw()
     extent = dino_gw.geo.get_extent()
-    from shapely.geometry import Polygon
     polygon1 = Polygon(((extent[0], extent[2]),
                         (extent[0], extent[3]),
                         (extent[1], extent[3]),

@@ -5,7 +5,6 @@ import tempfile
 import warnings
 from timeit import default_timer
 
-import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
@@ -781,25 +780,24 @@ class DinoREST:
                 raise NotImplementedError(
                     "Not yet implemented for '{}'!".format(layer))
 
-    def _parse_json_features(self, js, field="features"):
+    @staticmethod
+    def _parse_json_features(js, field="features"):
         data = js[field]
         if len(data) == 0:
             return pd.DataFrame()
-        gdf = gpd.GeoDataFrame()
-        geometry = []
+        df = pd.DataFrame()
         for idx, idat in enumerate(data):
             for name, value in idat["attributes"].items():
-                gdf.loc[idx, name] = value
+                df.loc[idx, name] = value
             x = idat["geometry"]["x"]
             y = idat["geometry"]["y"]
-            geometry.append(Point(x, y))
-            gdf.loc[idx, "x"] = x
-            gdf.loc[idx, "y"] = y
-        gdf["geometry"] = geometry
-        gdf.set_index("DINO_NR", inplace=True)
-        return gdf
+            df.loc[idx, "x"] = x
+            df.loc[idx, "y"] = y
+        df.set_index("DINO_NR", inplace=True)
+        return df
 
-    def _parse_json_single_gwo_filter(self, data, location, filternr,
+    @staticmethod
+    def _parse_json_single_gwo_filter(data, location, filternr,
                                       verbose=False):
         """parse metadata obtained with get_dino_piezometer_metadata.
 
@@ -914,8 +912,6 @@ class DinoREST:
         for i in range(len(json_details)):
             data = json_details[i]
             location = data['dinoId']
-            # if location == 'B50F0158':
-            #     break
 
             if location in location_list:
                 raise ValueError

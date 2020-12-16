@@ -3,9 +3,7 @@
 
 @author: Artesia
 """
-
 import pandas as pd
-import pastas as ps
 import pastastore as pst
 
 
@@ -137,7 +135,7 @@ def create_pastas_project(oc, pr=None, project_name='',
     pr : pastas.project
         the pastas project with the series from the ObsCollection
     """
-
+    import pastas as ps
     if pr is None:
         pr = ps.Project(project_name)
 
