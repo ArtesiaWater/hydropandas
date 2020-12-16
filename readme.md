@@ -1,6 +1,7 @@
 <img src="/docs/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
 ![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://www.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ArtesiaWater/hydropandas&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
 [![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
