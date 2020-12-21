@@ -182,7 +182,8 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
         unzip_fnames = [os.path.basename(file_or_dir)]  # get file name
         dirname = os.path.dirname(file_or_dir)  # get directory path
     else:
-        raise NotImplementedError("Cannot parse 'file_or_dir'!")
+        raise NotImplementedError("Cannot parse 'file_or_dir': "
+                                  f"{file_or_dir}!")
 
     return dirname, unzip_fnames
 

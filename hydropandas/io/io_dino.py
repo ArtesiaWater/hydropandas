@@ -691,7 +691,7 @@ class DinoREST:
         meta dictionary or requests.models.Response
         """
         response = self.get_gwo_details([location])
-        #response = self.post(self.gwo_url, [location])
+        # response = self.post(self.gwo_url, [location])
 
         if raw_response:
             return response
@@ -1549,9 +1549,9 @@ def _read_dino_waterlvl_measurements(f, line):
                                dayfirst=True,
                                usecols=usecols)
 
-    #measurements['Stand (m t.o.v. NAP)'] = measurements['Stand (cm t.o.v. NAP)'] /100.
+    # measurements['Stand (m t.o.v. NAP)'] = measurements['Stand (cm t.o.v. NAP)'] /100.
 
-    #measurements.set_index('Peildatum', inplace=True)
+    # measurements.set_index('Peildatum', inplace=True)
 
     return measurements
 
