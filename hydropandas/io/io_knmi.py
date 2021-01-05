@@ -227,9 +227,10 @@ def _check_latest_measurement_date_RD_debilt(verbose=False):
     """
 
     url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
-    start = dt.datetime.now() - pd.Timedelta(21, unit='D')
-    knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", None, None,
-                                                 False, verbose=verbose)
+    start = dt.datetime.now() - pd.Timedelta(90, unit='D')
+    knmi_df, variables = get_knmi_daily_rainfall(url, 550, "RD", start=start,
+                                                 end=None, inseason=False,
+                                                 verbose=verbose)
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
         raise ValueError(
