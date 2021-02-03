@@ -62,7 +62,7 @@ def read_xml_fname(fname, ObsClass,
     """
     if translate_dic is None:
         translate_dic = {'locationId': 'locatie'}
-        
+
     if low_memory is True:
         obs_list = iterparse_pi_xml(fname, ObsClass,
                                     translate_dic,
@@ -295,7 +295,7 @@ def read_xml_root(root, ObsClass, translate_dic=None,
     """
     if translate_dic is None:
         translate_dic = {'locationId': 'locatie'}
-        
+
     obs_list = []
     for item in root:
         if item.tag.endswith('series'):
@@ -531,7 +531,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     """
     if translate_dic is None:
         translate_dic = {'locationId': 'locatie'}
-        
+
     obs_list = []
     nfiles = len(fnames)
     for j, ixml in enumerate(fnames):
