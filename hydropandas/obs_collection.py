@@ -561,7 +561,7 @@ class ObsCollection(pd.DataFrame):
         ----------
         file_or_dir :  str
             zip, xml or directory with zips or xml files to read
-        
+
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
@@ -596,7 +596,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
         from .io.io_fews import read_xml_filelist, read_xmlstring
-        
+
         meta = {'type': ObsClass,
                 'verbose': verbose}
 
@@ -605,7 +605,7 @@ class ObsCollection(pd.DataFrame):
             dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml", unpackdir=unpackdir,
                 force_unpack=force_unpack, preserve_datetime=preserve_datetime)
             meta.update({'filename': dirname})
-            
+
             obs_list = read_xml_filelist(unzip_fnames,
                                          ObsClass,
                                          directory=dirname,
@@ -615,24 +615,19 @@ class ObsCollection(pd.DataFrame):
                                          remove_nan=remove_nan,
                                          low_memory=low_memory,
                                          verbose=verbose)
-        
+
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
-            
+
         elif (file_or_dir is None) and (xmlstring is not None):
             obs_list = read_xmlstring(xmlstring, ObsClass, translate_dic,
                                       locations, low_memory,
                                       to_mnap, remove_nan, verbose)
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
-        
+
         else:
             raise ValueError('either specify variables file_or_dir or xmlstring')
-      
-
-        
-
-        
 
     @classmethod
     def from_fieldlogger(cls, fname, name='', ObsClass=obs.GroundwaterObs):

@@ -8,16 +8,16 @@ from lxml.etree import iterparse
 from io import StringIO
 
 
-def read_xml_fname(fname, ObsClass, 
+def read_xml_fname(fname, ObsClass,
                    translate_dic={'locationId': 'locatie'},
                    low_memory=True,
                    locationIds=None, return_events=True,
                    keep_flags=(0, 1), return_df=False,
                    tags=('series', 'header', 'event'),
-                   skip_errors=True,  to_mnap=False, remove_nan=False, 
+                   skip_errors=True, to_mnap=False, remove_nan=False,
                    verbose=False):
     """ read an xml filename into a list of observations objects.
-    
+
     Parameters
     ----------
     fname : str
@@ -68,12 +68,12 @@ def read_xml_fname(fname, ObsClass,
     else:
         tree = etree.parse(fname)
         root = tree.getroot()
-        obs_list =  read_xml_root(root, ObsClass, translate_dic,
+        obs_list = read_xml_root(root, ObsClass, translate_dic,
                                   locationIds,
                                   to_mnap, remove_nan, verbose)
-    
+
     return obs_list
- 
+
 
 def iterparse_pi_xml(fname, ObsClass,
                      translate_dic={'locationId': 'locatie'},
@@ -177,7 +177,7 @@ def iterparse_pi_xml(fname, ObsClass,
                     ts = pd.to_numeric(
                         df.loc[mask, 'value'], errors="coerce")
 
-            o, header = _obs_from_meta(ts, header, translate_dic, 
+            o, header = _obs_from_meta(ts, header, translate_dic,
                                        ObsClass)
             header_list.append(header)
             obs_list.append(o)
@@ -198,9 +198,10 @@ def iterparse_pi_xml(fname, ObsClass,
             h['series'] = s
         return pd.DataFrame(header_list)
     else:
-        return obs_list 
-    
-def read_xmlstring(xmlstring, ObsClass, 
+        return obs_list
+
+
+def read_xmlstring(xmlstring, ObsClass,
                    translate_dic={'locationId': 'locatie'},
                    locationIds=None, low_memory=True,
                    to_mnap=False, remove_nan=False, verbose=False):
@@ -235,20 +236,20 @@ def read_xmlstring(xmlstring, ObsClass,
         list of timeseries stored in ObsClass objects
 
     """
-    
+
     if low_memory:
         obs_list = iterparse_pi_xml(StringIO(xmlstring), ObsClass,
                                     translate_dic,
                                     locationIds, verbose=verbose)
     else:
         root = etree.fromstring(xmlstring)
-        
-        obs_list =  read_xml_root(root, ObsClass, translate_dic,
+
+        obs_list = read_xml_root(root, ObsClass, translate_dic,
                                   locationIds,
                                   to_mnap, remove_nan, verbose)
-    
+
     return obs_list
-    
+
 
 def read_xml_root(root, ObsClass, translate_dic={'locationId': 'locatie'},
                   locationIds=None,
@@ -301,31 +302,31 @@ def read_xml_root(root, ObsClass, translate_dic={'locationId': 'locatie'},
                     date.append(root[i][j].attrib.pop('date'))
                     time.append(root[i][j].attrib.pop('time'))
                     events.append({**root[i][j].attrib})
-                    
+
             # combine events in a dataframe
             index = pd.to_datetime(
                 [d + ' ' + t for d, t in zip(date, time)],
                 errors="coerce")
             ts = pd.DataFrame(events, index=index, dtype=float)
-            
+
             if remove_nan and (not ts.empty):
                 ts.dropna(subset=['value'], inplace=True)
             if to_mnap and (not ts.empty):
                 ts['stand_m_tov_nap'] = ts['value']
-                
+
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             if locationIds is not None:
                 if header['locatie'] in locationIds:
                     obs_list.append(o)
             else:
                 obs_list.append(o)
-            
+
     return obs_list
 
 
 def _obs_from_meta(ts, header, translate_dic, ObsClass):
     """ internal method to convert timeseries and header into Obs objects.
-    
+
     Parameters
     ----------
     ts : pd.DataFrame
@@ -364,13 +365,13 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
     else:
         o = ObsClass(ts, x=x, y=y, meta=header,
                      name=header['locatie'])
-        
+
     return o, header
-    
+
 
 def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
     """Write TimeSeries object to PI-XML file.
-    
+
     Parameters
     ----------
     fname: path
@@ -478,11 +479,11 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
 def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
                       translate_dic={'locationId': 'locatie'},
-                      to_mnap=False, remove_nan=False,low_memory=True,
+                      to_mnap=False, remove_nan=False, low_memory=True,
                       verbose=False,
                       ):
     """ read a list of xml files into a list of observation objects.
-    
+
 
     Parameters
     ----------
@@ -529,7 +530,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
             fullpath = os.path.join(directory, ixml)
 
         # read xml fname
-        obs_list += read_xml_fname(fullpath, ObsClass, 
+        obs_list += read_xml_fname(fullpath, ObsClass,
                                    translate_dic,
                                    low_memory,
                                    locationIds=locations,
