@@ -298,15 +298,15 @@ def read_xml_root(root, ObsClass, translate_dic=None,
         translate_dic = {'locationId': 'locatie'}
         
     obs_list = []
-    for i, item in enumerate(root):
+    for item in root:
         if item.tag.endswith('series'):
             header = {}
             date = []
             time = []
             events = []
-            for j, subitem in enumerate(item):
+            for subitem in item:
                 if subitem.tag.endswith('header'):
-                    for k, subsubitem in enumerate(subitem):
+                    for subsubitem in subitem:
                         prop = subsubitem.tag.split('}')[-1]
                         val = subsubitem.text
                         if prop == 'x' or prop == 'y' or prop == 'lat' or prop == 'lon':
