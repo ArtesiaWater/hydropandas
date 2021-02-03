@@ -87,7 +87,7 @@ def iterparse_pi_xml(fname, ObsClass,
                      tags=('series', 'header', 'event'),
                      skip_errors=False, verbose=False):
     """Read a FEWS XML-file with measurements, memory efficient.
-    
+
     Parameters
     ----------
     fname : str
@@ -245,7 +245,6 @@ def read_xmlstring(xmlstring, ObsClass,
     -------
     list of ObsClass objects
         list of timeseries stored in ObsClass objects
-
     """
     if translate_dic is None:
         translate_dic = {'locationId': 'locatie'}
@@ -361,7 +360,6 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         hyrdopandas observation object.
     header : dictionary
         metadata.
-
     """
     for key, item in translate_dic.items():
         header[item] = header.pop(key)
@@ -501,7 +499,6 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
                       ):
     """Read a list of xml files into a list of observation objects.
 
-
     Parameters
     ----------
     fnames : TYPE
@@ -531,7 +528,6 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     -------
     list of ObsClass objects
         list of timeseries stored in ObsClass objects
-
     """
     if translate_dic is None:
         translate_dic = {'locationId': 'locatie'}

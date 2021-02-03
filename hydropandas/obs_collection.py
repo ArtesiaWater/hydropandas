@@ -596,10 +596,10 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
         from .io.io_fews import read_xml_filelist, read_xmlstring
-        
+
         if translate_dic is None:
             translate_dic = {'locationId': 'locatie'}
-        
+
         meta = {'type': ObsClass,
                 'verbose': verbose}
 
