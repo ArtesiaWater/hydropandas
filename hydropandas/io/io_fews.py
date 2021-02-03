@@ -1,22 +1,23 @@
 import os
-import xml.etree.ElementTree as etree
-
 import numpy as np
 import pandas as pd
-from hydropandas.observation import GroundwaterObs, WaterlvlObs
-from lxml.etree import iterparse
 from io import StringIO
+
+from hydropandas.observation import GroundwaterObs, WaterlvlObs
+
+from lxml.etree import iterparse
+import xml.etree.ElementTree as etree
 
 
 def read_xml_fname(fname, ObsClass,
-                   translate_dic={'locationId': 'locatie'},
+                   translate_dic=None,
                    low_memory=True,
                    locationIds=None, return_events=True,
                    keep_flags=(0, 1), return_df=False,
                    tags=('series', 'header', 'event'),
                    skip_errors=True, to_mnap=False, remove_nan=False,
                    verbose=False):
-    """ read an xml filename into a list of observations objects.
+    """Read an xml filename into a list of observations objects.
 
     Parameters
     ----------
@@ -24,8 +25,9 @@ def read_xml_fname(fname, ObsClass,
         full path to file
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    translate_dic : dic, optional
-        translate names from fews. The default is {'locationId': 'locatie'}.
+    translate_dic : dic or None, optional
+        translate names from fews. If None this default dictionary is used:
+        {'locationId': 'locatie'}.
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
@@ -58,6 +60,9 @@ def read_xml_fname(fname, ObsClass,
     list of ObsClass objects
         list of timeseries stored in ObsClass objects
     """
+    if translate_dic is None:
+        translate_dic = {'locationId': 'locatie'}
+        
     if low_memory is True:
         obs_list = iterparse_pi_xml(fname, ObsClass,
                                     translate_dic,
@@ -76,19 +81,22 @@ def read_xml_fname(fname, ObsClass,
 
 
 def iterparse_pi_xml(fname, ObsClass,
-                     translate_dic={'locationId': 'locatie'},
+                     translate_dic=None,
                      locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
                      skip_errors=False, verbose=False):
     """Read a FEWS XML-file with measurements, memory efficient.
-
+    
     Parameters
     ----------
     fname : str
         full path to file
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
+    translate_dic : dic or None, optional
+        translate names from fews. If None this default dictionary is used:
+        {'locationId': 'locatie'}.
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
@@ -114,6 +122,8 @@ def iterparse_pi_xml(fname, ObsClass,
     obs_list : list of pandas Series
         list of timeseries if 'return_df' is False
     """
+    if translate_dic is None:
+        translate_dic = {'locationId': 'locatie'}
 
     tags = ['{{http://www.wldelft.nl/fews/PI}}{}'.format(tag) for tag in tags]
 
@@ -202,10 +212,10 @@ def iterparse_pi_xml(fname, ObsClass,
 
 
 def read_xmlstring(xmlstring, ObsClass,
-                   translate_dic={'locationId': 'locatie'},
+                   translate_dic=None,
                    locationIds=None, low_memory=True,
                    to_mnap=False, remove_nan=False, verbose=False):
-    """ read xmlstring into an list of Obs objects. Xmlstrings are usually
+    """Read xmlstring into an list of Obs objects. Xmlstrings are usually
     obtained using a fews api.
 
     Parameters
@@ -214,8 +224,9 @@ def read_xmlstring(xmlstring, ObsClass,
         xml string to be parsed. Typically from a fews api.
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    translate_dic : dic, optional
-        translate names from fews. The default is {'locationId': 'locatie'}.
+    translate_dic : dic or None, optional
+        translate names from fews. If None this default dictionary is used:
+        {'locationId': 'locatie'}.
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
@@ -236,6 +247,8 @@ def read_xmlstring(xmlstring, ObsClass,
         list of timeseries stored in ObsClass objects
 
     """
+    if translate_dic is None:
+        translate_dic = {'locationId': 'locatie'}
 
     if low_memory:
         obs_list = iterparse_pi_xml(StringIO(xmlstring), ObsClass,
@@ -251,7 +264,7 @@ def read_xmlstring(xmlstring, ObsClass,
     return obs_list
 
 
-def read_xml_root(root, ObsClass, translate_dic={'locationId': 'locatie'},
+def read_xml_root(root, ObsClass, translate_dic=None,
                   locationIds=None,
                   to_mnap=False, remove_nan=False, verbose=False):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
@@ -262,8 +275,9 @@ def read_xml_root(root, ObsClass, translate_dic={'locationId': 'locatie'},
         root element of a fews xml
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    translate_dic : dic, optional
-        translate names from fews. The default is {'locationId': 'locatie'}.
+    translate_dic : dic or None, optional
+        translate names from fews. If None this default dictionary is used:
+        {'locationId': 'locatie'}.
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
@@ -280,28 +294,31 @@ def read_xml_root(root, ObsClass, translate_dic={'locationId': 'locatie'},
     list of ObsClass objects
         list of timeseries stored in ObsClass objects
     """
+    if translate_dic is None:
+        translate_dic = {'locationId': 'locatie'}
+        
     obs_list = []
-    for i in range(len(root)):
-        if root[i].tag.endswith('series'):
+    for i, item in enumerate(root):
+        if item.tag.endswith('series'):
             header = {}
             date = []
             time = []
             events = []
-            for j in range(len(root[i])):
-                if root[i][j].tag.endswith('header'):
-                    for k in range(len(root[i][j])):
-                        prop = root[i][j][k].tag.split('}')[-1]
-                        val = root[i][j][k].text
+            for j, subitem in enumerate(item):
+                if subitem.tag.endswith('header'):
+                    for k, subsubitem in enumerate(subitem):
+                        prop = subsubitem.tag.split('}')[-1]
+                        val = subsubitem.text
                         if prop == 'x' or prop == 'y' or prop == 'lat' or prop == 'lon':
                             val = float(val)
                         header[prop] = val
                         if verbose:
                             if prop == 'locationId':
                                 print('read {}'.format(val))
-                elif root[i][j].tag.endswith('event'):
-                    date.append(root[i][j].attrib.pop('date'))
-                    time.append(root[i][j].attrib.pop('time'))
-                    events.append({**root[i][j].attrib})
+                elif subitem.tag.endswith('event'):
+                    date.append(subitem.attrib.pop('date'))
+                    time.append(subitem.attrib.pop('time'))
+                    events.append({**subitem.attrib})
 
             # combine events in a dataframe
             index = pd.to_datetime(
@@ -325,7 +342,7 @@ def read_xml_root(root, ObsClass, translate_dic={'locationId': 'locatie'},
 
 
 def _obs_from_meta(ts, header, translate_dic, ObsClass):
-    """ internal method to convert timeseries and header into Obs objects.
+    """Internal function to convert timeseries and header into Obs objects.
 
     Parameters
     ----------
@@ -478,11 +495,11 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
 
 def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
-                      translate_dic={'locationId': 'locatie'},
+                      translate_dic=None,
                       to_mnap=False, remove_nan=False, low_memory=True,
                       verbose=False,
                       ):
-    """ read a list of xml files into a list of observation objects.
+    """Read a list of xml files into a list of observation objects.
 
 
     Parameters
@@ -496,8 +513,9 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     locations : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
-    translate_dic : dic, optional
-        translate names from fews. The default is {'locationId': 'locatie'}.
+    translate_dic : dic or None, optional
+        translate names from fews. If None this default dictionary is used:
+        {'locationId': 'locatie'}.
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
     remove_nan : boolean, optional
@@ -515,6 +533,9 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
         list of timeseries stored in ObsClass objects
 
     """
+    if translate_dic is None:
+        translate_dic = {'locationId': 'locatie'}
+        
     obs_list = []
     nfiles = len(fnames)
     for j, ixml in enumerate(fnames):

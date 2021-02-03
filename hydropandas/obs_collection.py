@@ -551,7 +551,7 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_fews_xml(cls, file_or_dir=None,
                       xmlstring=None, ObsClass=obs.GroundwaterObs,
-                      name='fews', translate_dic={'locationId': 'locatie'},
+                      name='fews', translate_dic=None,
                       locations=None, to_mnap=True, remove_nan=True,
                       low_memory=True, unpackdir=None, force_unpack=False,
                       preserve_datetime=False, verbose=False):
@@ -566,9 +566,9 @@ class ObsCollection(pd.DataFrame):
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
             name of the observation collection, 'fews' by default
-        translate_dic : dict
-            translate name of attribute by passing key: value pairs in
-            dictionary
+        translate_dic : dic or None, optional
+            translate names from fews. If None this default dictionary is used:
+            {'locationId': 'locatie'}.
         locations : list of str, optional
             list of locationId's to read from XML file, others are skipped.
             If None (default) all locations are read. Only supported by
@@ -596,7 +596,10 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
         from .io.io_fews import read_xml_filelist, read_xmlstring
-
+        
+        if translate_dic is None:
+            translate_dic = {'locationId': 'locatie'}
+        
         meta = {'type': ObsClass,
                 'verbose': verbose}
 
