@@ -549,8 +549,9 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_fews_xml(cls, file_or_dir, ObsClass=obs.GroundwaterObs,
-                      name='fews', translate_dic={'locationId': 'locatie'},
+    def from_fews_xml(cls, file_or_dir=None,
+                      xmlstring=None, ObsClass=obs.GroundwaterObs,
+                      name='fews', translate_dic=None,
                       locations=None, to_mnap=True, remove_nan=True,
                       low_memory=True, unpackdir=None, force_unpack=False,
                       preserve_datetime=False, verbose=False):
@@ -560,13 +561,14 @@ class ObsCollection(pd.DataFrame):
         ----------
         file_or_dir :  str
             zip, xml or directory with zips or xml files to read
+
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
             name of the observation collection, 'fews' by default
-        translate_dic : dict
-            translate name of attribute by passing key: value pairs in
-            dictionary
+        translate_dic : dic or None, optional
+            translate names from fews. If None this default dictionary is used:
+            {'locationId': 'locatie'}.
         locations : list of str, optional
             list of locationId's to read from XML file, others are skipped.
             If None (default) all locations are read. Only supported by
@@ -593,29 +595,42 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_xml import parse_xml_filelist
+        from .io.io_fews import read_xml_filelist, read_xmlstring
 
-        # get files
-        dirname, unzip_fnames = util.get_files(
-            file_or_dir, ext=".xml", unpackdir=unpackdir,
-            force_unpack=force_unpack, preserve_datetime=preserve_datetime)
+        if translate_dic is None:
+            translate_dic = {'locationId': 'locatie'}
 
-        meta = {'filename': dirname,
-                'type': ObsClass,
-                'verbose': verbose
-                }
+        meta = {'type': ObsClass,
+                'verbose': verbose}
 
-        obs_list = parse_xml_filelist(unzip_fnames,
-                                      ObsClass,
-                                      directory=dirname,
-                                      translate_dic=translate_dic,
-                                      locations=locations,
-                                      to_mnap=to_mnap,
-                                      remove_nan=remove_nan,
-                                      low_memory=low_memory,
-                                      verbose=verbose)
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name, meta=meta)
+        if (file_or_dir is not None):
+            # get files
+            dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml", unpackdir=unpackdir,
+                force_unpack=force_unpack, preserve_datetime=preserve_datetime)
+            meta.update({'filename': dirname})
+
+            obs_list = read_xml_filelist(unzip_fnames,
+                                         ObsClass,
+                                         directory=dirname,
+                                         translate_dic=translate_dic,
+                                         locations=locations,
+                                         to_mnap=to_mnap,
+                                         remove_nan=remove_nan,
+                                         low_memory=low_memory,
+                                         verbose=verbose)
+
+            obs_df = util._obslist_to_frame(obs_list)
+            return cls(obs_df, name=name, meta=meta)
+
+        elif (file_or_dir is None) and (xmlstring is not None):
+            obs_list = read_xmlstring(xmlstring, ObsClass, translate_dic,
+                                      locations, low_memory,
+                                      to_mnap, remove_nan, verbose)
+            obs_df = util._obslist_to_frame(obs_list)
+            return cls(obs_df, name=name, meta=meta)
+
+        else:
+            raise ValueError('either specify variables file_or_dir or xmlstring')
 
     @classmethod
     def from_fieldlogger(cls, fname, name='', ObsClass=obs.GroundwaterObs):
