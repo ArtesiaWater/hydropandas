@@ -5,14 +5,6 @@ import pytest
 from hydropandas import obs_collection as oc
 from hydropandas import observation as obs
 
-# import sys
-# sys.path.insert(1, "..")
-
-# TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-# PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
-# sys.path.insert(0, PROJECT_DIR)
-# os.chdir(TEST_DIR)
-
 # %% DINO
 
 dinozip = './tests/data/2019-Dino-test/dino.zip'
@@ -35,70 +27,6 @@ def test_observation_gw():
     fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
     gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
     return gw
-
-
-def test_observation_dino_download():
-    # download dino
-    location = "B57F0077"
-    filternr = 4.
-    gw2 = obs.GroundwaterObs.from_dino(location=location,
-                                       filternr=filternr,
-                                       tmin="2000-01-01",
-                                       tmax="2010-01-01")
-    return gw2
-
-
-def test_observation_dino_download2():
-    # download dino
-    gw2 = obs.GroundwaterObs.from_dino(location="B57B0069", filternr=1.,
-                                       tmin="2000-01-01",
-                                       tmax="2030-01-01")
-    return gw2
-
-
-def test_observation_dino_download3():
-    # download dino data from pb without extra metadata. For this pb
-    # io_dino.get_dino_piezometer_metadata() returns an empty list
-    location = "B45G1147"
-    filternr = 1.
-
-    gw3 = obs.GroundwaterObs.from_dino(location=location,
-                                       filternr=filternr,
-                                       tmin="1900-01-01",
-                                       tmax="1901-01-01")
-    return gw3
-
-
-def test_observation_dino_download_as_cluster():
-    # download dino data from pb that belongs to a cluster
-
-    filternr = 1.
-
-    gw_cl0 = obs.GroundwaterObs.from_dino(location="B45E0458",
-                                          filternr=filternr,
-                                          split_cluster=False)
-    gw_cl1 = obs.GroundwaterObs.from_dino(location="B45E0459",
-                                          filternr=filternr,
-                                          split_cluster=False)
-
-    assert gw_cl0.equals(gw_cl1)
-
-    return gw_cl0, gw_cl1
-
-
-def test_observation_dino_download_split_cluster():
-    # download dino data from pb that belongs to a cluster
-
-    filternr = 1.
-
-    gw_cl0 = obs.GroundwaterObs.from_dino(location="B45E0458",
-                                          filternr=filternr)
-    gw_cl1 = obs.GroundwaterObs.from_dino(location="B45E0459",
-                                          filternr=filternr)
-
-    assert not gw_cl0.equals(gw_cl1)
-
-    return gw_cl0, gw_cl1
 
 
 def test_obscollection_fieldlogger():
@@ -177,56 +105,12 @@ def test_obscollection_dinozip_gwq():
     return dino_gwq
 
 
-def test_obscollection_dino_download_extent():
-    # download DINO from extent
-    extent = [117850, 117980, 439550, 439700]  # Schoonhoven zoomed
-    dino_gw_extent = oc.ObsCollection.from_dino(
-        extent=extent, ObsClass=obs.GroundwaterObs, verbose=True)
-    return dino_gw_extent
-
-
-def test_obscollection_dino_download_extent_cache():
-    # download DINO from extent
-    extent = [117850, 117980, 439550, 439700]  # Schoonhoven zoomed
-    dino_gw_extent = oc.ObsCollection.from_dino(
-        extent=extent, ObsClass=obs.GroundwaterObs, cache=True, verbose=True)
-    return dino_gw_extent
-
-
-def test_obscollection_dino_download_bbox():
-    # download DINO from bbox
-    bbox = [117850, 439550, 117980, 439700]  # Schoonhoven zoomed
-    bbox = np.array([191608.334, 409880.402, 193072.317, 411477.894])
-    dino_gw_bbox = oc.ObsCollection.from_dino(
-        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
-    return dino_gw_bbox
-
-
-def test_obscollection_dino_download_bbox_only_metadata():
-    # check if the keep_all_obs argument works
-    bbox = [120110.8948323, 389471.92587313, 121213.23597266, 390551.29918915]
-    dino_gw_bbox = oc.ObsCollection.from_dino(bbox=bbox, verbose=True)
-
-    dino_gw_bbox_empty = oc.ObsCollection.from_dino(bbox=bbox,
-                                                    keep_all_obs=False,
-                                                    verbose=True)
-    assert dino_gw_bbox_empty.empty
-
-    return dino_gw_bbox
-
-
 def test_obscollection_dino_download_bbox_empty():
     # download DINO from bbox
     bbox = [88596.63500000164, 407224.8449999988,
             89623.4149999991, 407804.27800000086]
     dino_gw_bbox = oc.ObsCollection.from_dino(
         bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
-    return dino_gw_bbox
-
-
-def test_obscollection_dino_download_bbox_do_not_keep_all_obs():
-    bbox = [120110.8948323, 389471.92587313, 121213.23597266, 390551.29918915]
-    dino_gw_bbox = oc.ObsCollection.from_dino(bbox=bbox, verbose=True)
     return dino_gw_bbox
 
 
@@ -411,7 +295,7 @@ def test_knmi_obs_from_obs():
 
 
 def test_knmi_collection_from_locations():
-    obsc = test_obscollection_dino_download_extent_cache()
+    obsc = test_obscollection_dinozip_gw()
     oc_knmi = oc.ObsCollection.from_knmi(locations=obsc,
                                          meteo_vars=["EV24", "RD"],
                                          start=['2010', '2010'],

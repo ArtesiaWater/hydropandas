@@ -320,12 +320,14 @@ class GwObsAccessor:
             raised
         """
 
-        if self._obj['filternr'].dtype != np.number:
-            self._obj['filternr'] = pd.to_numeric(
-                self._obj['filternr'], errors='coerce')
-
         # check if column exists in obscollection
         if 'filternr' in self._obj.columns:
+            # set type to numeric
+            if self._obj['filternr'].dtype != np.number:
+                self._obj['filternr'] = pd.to_numeric(
+                    self._obj['filternr'], errors='coerce')
+
+            # check if name should be replaced
             if if_exists == 'error':
                 raise RuntimeError(
                     "the column 'filternr' already exist, set if_exists='replace' to replace the current values")
@@ -528,7 +530,7 @@ class GeoAccessorObs:
             name of REGIS layer
         """
         import xarray as xr
-        
+
         if np.isnan(self._obj.bovenkant_filter) or np.isnan(self._obj.onderkant_filter):
             return 'nan'
 
