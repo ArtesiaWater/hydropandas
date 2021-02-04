@@ -978,6 +978,8 @@ class DinoWSDL:
             wsdl url, by default
             "http://www.dinoservices.nl/gwservices/gws-v11?wsdl"
         """
+        
+        raise RuntimeError('Dino WSDL API is down since January 2020, hopefully something new will arrive soon!')
 
         # Create some plugins, some currently unused but left here as a reminder.
         history = HistoryPlugin()
