@@ -606,7 +606,7 @@ class ObsCollection(pd.DataFrame):
         if (file_or_dir is not None):
             # get files
             dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml", unpackdir=unpackdir,
-                force_unpack=force_unpack, preserve_datetime=preserve_datetime)
+                                                   force_unpack=force_unpack, preserve_datetime=preserve_datetime)
             meta.update({'filename': dirname})
 
             obs_list = read_xml_filelist(unzip_fnames,
@@ -630,7 +630,8 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError('either specify variables file_or_dir or xmlstring')
+            raise ValueError(
+                'either specify variables file_or_dir or xmlstring')
 
     @classmethod
     def from_fieldlogger(cls, fname, name='', ObsClass=obs.GroundwaterObs):
@@ -1065,8 +1066,8 @@ class ObsCollection(pd.DataFrame):
         return f_df
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
-        from .io import io_xml
-        io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
+        from .io import io_fews
+        io_fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
     def to_pystore(self, store_name, pystore_path, groupby, item_name=None,
                    overwrite=False):
@@ -1177,7 +1178,7 @@ class ObsCollection(pd.DataFrame):
     def to_pastastore(self, pstore=None, pstore_name='',
                       obs_column='stand_m_tov_nap',
                       kind='oseries', add_metadata=True,
-                      verbose=False):
+                      overwrite=False, verbose=False):
         """add observations to a new or existing pastastore.
 
         Parameters
@@ -1193,7 +1194,9 @@ class ObsCollection(pd.DataFrame):
         kind : str, optional
             The kind of series that is added to the pastas project
         add_metadata : boolean, optional
-            If True metadata from the observations added to the project.
+            If True metadata from the observations added to the project
+        overwrite : boolean, optional
+            if True, overwrite existing series in pastastore, default is False
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -1208,7 +1211,7 @@ class ObsCollection(pd.DataFrame):
                                    add_metadata=add_metadata,
                                    kind=kind,
                                    obs_column=obs_column,
-                                   verbose=verbose)
+                                   verbose=verbose, overwrite=overwrite)
 
         return pstore
 

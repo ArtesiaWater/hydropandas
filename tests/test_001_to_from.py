@@ -266,10 +266,12 @@ def test_obs_from_pystore_item():
 
 
 # %% KNMI
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_obs_from_stn_without_any_data():
     try:
         obs.KnmiObs.from_knmi(210, "RD",
@@ -280,20 +282,24 @@ def test_knmi_obs_from_stn_without_any_data():
     return 1
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
     return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2',
                                  verbose=True)
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_obs_from_xy():
     return obs.KnmiObs.from_nearest_xy(100000, 350000, "RD")
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
     return obs.KnmiObs.from_obs(pb, "EV24", fill_missing_obs=False)
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
     oc_knmi = oc.ObsCollection.from_knmi(locations=obsc,
@@ -304,6 +310,7 @@ def test_knmi_collection_from_locations():
     return oc_knmi
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_collection_from_stns():
     stns = [344, 260]  # Rotterdam en de Bilt
     oc_knmi = oc.ObsCollection.from_knmi(stns=stns,
@@ -314,6 +321,7 @@ def test_knmi_collection_from_stns():
     return oc_knmi
 
 
+@pytest.mark.skip(reason="KNMI API is down")
 def test_knmi_collection_from_grid():
     # somewhere in Noord-Holland (near Castricum)
     xmid = np.array([104150., 104550.])

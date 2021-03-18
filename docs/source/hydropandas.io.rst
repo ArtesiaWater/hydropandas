@@ -81,10 +81,10 @@ hydropandas.io.io\_wiski module
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_xml module
------------------------------
+hydropandas.io.io\_fews module
+------------------------------
 
-.. automodule:: hydropandas.io.io_xml
+.. automodule:: hydropandas.io.io_fews
    :members:
    :undoc-members:
    :show-inheritance:
