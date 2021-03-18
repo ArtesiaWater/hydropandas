@@ -1066,8 +1066,8 @@ class ObsCollection(pd.DataFrame):
         return f_df
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
-        from .io import io_xml
-        io_xml.write_pi_xml(self, fname, timezone=timezone, version=version)
+        from .io import io_fews
+        io_fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
     def to_pystore(self, store_name, pystore_path, groupby, item_name=None,
                    overwrite=False):
