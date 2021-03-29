@@ -107,10 +107,12 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
     verbose : boolean, optional
         Print additional information to the screen (default is False).
     """
-
-    if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
-        warnings.warn('you probably want to set the xll '
-                      'and/or yll attributes in DIS!')
+    if ml.modelgrid.grid_type == 'structured':
+        if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
+            warnings.warn('you probably want to set the xll '
+                          'and/or yll attributes in DIS!')
+    
+    
 
     if nlay is None:
         nlay = ml.modelgrid.nlay
@@ -119,8 +121,12 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         modelname = ml.name
 
     xmid, ymid, _ = ml.modelgrid.xyzcellcenters
-
-    xy = np.array([xmid.ravel(), ymid.ravel()]).T
+    
+    if ml.modelgrid.grid_type == 'structured':
+        xy = np.array([xmid.ravel(), ymid.ravel()]).T
+    elif ml.modelgrid.grid_type == 'vertex':
+        xy = np.array([xmid, ymid]).T
+        
     uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
     vtx, wts = util.interp_weights(xy, uv)
 
