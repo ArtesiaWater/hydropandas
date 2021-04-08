@@ -551,7 +551,7 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_fews_xml(cls, file_or_dir=None,
                       xmlstring=None, ObsClass=obs.GroundwaterObs,
-                      name='fews', translate_dic=None,
+                      name='fews', translate_dic=None, filterdict=None,
                       locations=None, to_mnap=True, remove_nan=True,
                       low_memory=True, unpackdir=None, force_unpack=False,
                       preserve_datetime=False, verbose=False):
@@ -569,6 +569,10 @@ class ObsCollection(pd.DataFrame):
         translate_dic : dic or None, optional
             translate names from fews. If None this default dictionary is used:
             {'locationId': 'locatie'}.
+        filterdict : dict, optional
+            dictionary with tag name to apply filter to as keys, and list of 
+            accepted names as dictionary values to keep in final result, 
+            i.e. {"locationId": ["B001", "B002"]}
         locations : list of str, optional
             list of locationId's to read from XML file, others are skipped.
             If None (default) all locations are read. Only supported by
@@ -605,14 +609,16 @@ class ObsCollection(pd.DataFrame):
 
         if (file_or_dir is not None):
             # get files
-            dirname, unzip_fnames = util.get_files(file_or_dir, ext=".xml", unpackdir=unpackdir,
-                                                   force_unpack=force_unpack, preserve_datetime=preserve_datetime)
+            dirname, unzip_fnames = util.get_files(
+                file_or_dir, ext=".xml", unpackdir=unpackdir,
+                force_unpack=force_unpack, preserve_datetime=preserve_datetime)
             meta.update({'filename': dirname})
 
             obs_list = read_xml_filelist(unzip_fnames,
                                          ObsClass,
                                          directory=dirname,
                                          translate_dic=translate_dic,
+                                         filterdict=filterdict,
                                          locations=locations,
                                          to_mnap=to_mnap,
                                          remove_nan=remove_nan,
@@ -623,9 +629,15 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         elif (file_or_dir is None) and (xmlstring is not None):
-            obs_list = read_xmlstring(xmlstring, ObsClass, translate_dic,
-                                      locations, low_memory,
-                                      to_mnap, remove_nan, verbose)
+            obs_list = read_xmlstring(xmlstring,
+                                      ObsClass, 
+                                      translate_dic=translate_dic,
+                                      filterdict=filterdict, 
+                                      locationIds=locations, 
+                                      low_memory=low_memory,
+                                      to_mnap=to_mnap, 
+                                      remove_nan=remove_nan, 
+                                      verbose=verbose)
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
 

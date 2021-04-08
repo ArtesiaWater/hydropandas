@@ -436,7 +436,8 @@ class WaterlvlObs(Obs):
         """
         from .io import io_waterinfo
         df, metadata = io_waterinfo.read_waterinfo_file(fname,
-                                                        return_metadata=True)
+                                                        return_metadata=True,
+                                                        **kwargs)
         return cls(df, meta=metadata, **metadata)
 
 

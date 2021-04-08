@@ -8,7 +8,9 @@ from pyproj import Proj, transform
 from tqdm import tqdm
 
 
-def read_waterinfo_file(path_to_file, return_metadata=False):
+def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
+                        value_col=None, location_col=None, 
+                        xcol=None, ycol=None, transform_coords=True):
     """Read waterinfo file (CSV or zip)
 
     Parameters
@@ -36,33 +38,52 @@ def read_waterinfo_file(path_to_file, return_metadata=False):
         raise NotImplementedError("File type '{}' not supported!".format(
             os.path.splitext(path_to_file)[-1]))
 
+    if index_cols is None:
+        index_cols = ['WAARNEMINGDATUM', 'WAARNEMINGTIJD']
+
+    if value_col is None:
+        value_col = 'NUMERIEKEWAARDE'
+    
+    if location_col is None:
+        location_col = "MEETPUNT_IDENTIFICATIE"
+
+    if xcol is None:
+        xcol = "X"
+    
+    if ycol is None:
+        ycol = "Y"
+
     # read data
     df = pd.read_csv(f,
                      sep=';',
                      decimal=',',
                      encoding="ISO-8859-1",
-                     parse_dates=[['WAARNEMINGDATUM', 'WAARNEMINGTIJD']],
+                     parse_dates=[index_cols],
                      dayfirst=True,
                      infer_datetime_format=True,
-                     index_col='WAARNEMINGDATUM_WAARNEMINGTIJD')
+                     index_col="_".join(index_cols))
 
     # do some conversions
-    df.loc[df['NUMERIEKEWAARDE'] ==
-           999999999, 'NUMERIEKEWAARDE'] = np.NaN
-    df['NUMERIEKEWAARDE'] = df['NUMERIEKEWAARDE'] / 100.
+    df.loc[df[value_col] ==
+           999999999, value_col] = np.NaN
+    df[value_col] = df[value_col] / 100.
 
     # parse metadata into dict
     if return_metadata:
-        if len(df["MEETPUNT_IDENTIFICATIE"].unique()) > 1:
+        if len(df[location_col].unique()) > 1:
             raise ValueError("File contains data for more than one location!"
                              " Use ObsCollection.from_waterinfo()!")
 
         metadata = {}
-        x, y = transform(Proj('epsg:25831'),
-                         Proj('epsg:28992'),
-                         df['X'].iloc[-1],
-                         df['Y'].iloc[-1])
-        metadata["name"] = df["MEETPUNT_IDENTIFICATIE"].iloc[-1]
+        if transform_coords:
+            x, y = transform(Proj('epsg:25831'),
+                            Proj('epsg:28992'),
+                            df[xcol].iloc[-1],
+                            df[ycol].iloc[-1])
+        else:
+            x = df[xcol].iloc[-1] / 100.
+            y = df[ycol].iloc[-1] / 100.
+        metadata["name"] = df[location_col].iloc[-1]
         metadata["x"] = x
         metadata["y"] = y
 

@@ -1,18 +1,20 @@
+import datetime
 import os
-import numpy as np
-import pandas as pd
+import xml.etree.ElementTree as etree
 from io import StringIO
 
+import numpy as np
+import pandas as pd
 from hydropandas.observation import GroundwaterObs, WaterlvlObs
-
 from lxml.etree import iterparse
-import xml.etree.ElementTree as etree
 
 
 def read_xml_fname(fname, ObsClass,
                    translate_dic=None,
                    low_memory=True,
-                   locationIds=None, return_events=True,
+                   locationIds=None,
+                   filterdict=None,
+                   return_events=True,
                    keep_flags=(0, 1), return_df=False,
                    tags=('series', 'header', 'event'),
                    skip_errors=True, to_mnap=False, remove_nan=False,
@@ -34,6 +36,10 @@ def read_xml_fname(fname, ObsClass,
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
+    filterdict : dict, optional
+        dictionary with tag name to apply filter to as keys, and list of 
+        accepted names as dictionary values to keep in final result, 
+        i.e. {"locationId": ["B001", "B002"]}
     return_events : bool, optional
         return all event-information in a DataFrame per location, instead of
         just a Series (defaults to False). Overrules keep_flags kwarg.
@@ -64,24 +70,33 @@ def read_xml_fname(fname, ObsClass,
         translate_dic = {'locationId': 'locatie'}
 
     if low_memory is True:
-        obs_list = iterparse_pi_xml(fname, ObsClass,
-                                    translate_dic,
-                                    locationIds, return_events,
-                                    keep_flags, return_df,
-                                    tags,
-                                    skip_errors, verbose)
+        obs_list = iterparse_pi_xml(fname,
+                                    ObsClass,
+                                    translate_dic=translate_dic,
+                                    locationIds=locationIds,
+                                    filterdict=filterdict,
+                                    return_events=return_events,
+                                    keep_flags=keep_flags,
+                                    return_df=return_df,
+                                    tags=tags,
+                                    skip_errors=skip_errors,
+                                    verbose=verbose)
     else:
         tree = etree.parse(fname)
         root = tree.getroot()
-        obs_list = read_xml_root(root, ObsClass, translate_dic,
-                                  locationIds,
-                                  to_mnap, remove_nan, verbose)
+        obs_list = read_xml_root(root,
+                                 ObsClass,
+                                 translate_dic=translate_dic,
+                                 locationIds=locationIds,
+                                 to_mnap=to_mnap,
+                                 remove_nan=remove_nan,
+                                 verbose=verbose)
 
     return obs_list
 
 
 def iterparse_pi_xml(fname, ObsClass,
-                     translate_dic=None,
+                     translate_dic=None, filterdict=None,
                      locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
@@ -100,6 +115,10 @@ def iterparse_pi_xml(fname, ObsClass,
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
+    filterdict : dict, optional
+        dictionary with tag name to apply filter to as keys, and list of 
+        accepted names as dictionary values to keep in final result, 
+        i.e. {"locationId": ["B001", "B002"]}
     return_events : bool, optional
         return all event-information in a DataFrame per location, instead of
         just a Series (defaults to False). Overrules keep_flags kwarg.
@@ -134,38 +153,75 @@ def iterparse_pi_xml(fname, ObsClass,
 
     keep_flags = [str(flag) for flag in keep_flags]
 
-    # try:
     for _, element in context:
         if element.tag.endswith("header"):
             header = {}
             for h_attr in element:
                 tag = h_attr.tag.replace("{{{0}}}".format(
                     "http://www.wldelft.nl/fews/PI"), "")
+
+                if verbose and tag.startswith("locationId"):
+                    print("reading {}".format(h_attr.text), end="")
+
                 # if specific locations are provided only read those
                 if locationIds is not None and tag.startswith("locationId"):
                     loc = h_attr.text
                     if loc not in locationIds:
+                        if verbose:
+                            print(f" ... skipping '{loc}', not in locationIds",
+                                  end="")
                         continue
+
+                if filterdict is not None:
+                    for k, v in filterdict.items():
+                        if tag.startswith(k):
+                            attr = h_attr.text
+                            if attr not in v:
+                                if verbose:
+                                    print(f" ... skipping '{attr}' not "
+                                          f"in accepted values for '{k}'",
+                                          end="")
+                                continue
+
                 if h_attr.text is not None:
                     header[tag] = h_attr.text
                 elif len(h_attr.attrib) != 0:
                     header[tag] = {**h_attr.attrib}
                 else:
                     header[tag] = None
-                if verbose and tag.startswith("locationId"):
-                    print("reading {}".format(header[tag]))
+            if verbose:
+                print()
             events = []
+
         elif element.tag.endswith("event"):
             # if specific locations are provided only read those
             if locationIds is not None:
                 if loc not in locationIds:
                     continue
+
+            if filterdict is not None:
+                skip = False
+                for k, v, in filterdict.items():
+                    if header.get(k, None) not in v:
+                        skip = True
+                if skip:
+                    continue
             events.append({**element.attrib})
+
         elif element.tag.endswith('series'):
             # if specific locations are provided only read those
             if locationIds is not None:
                 if loc not in locationIds:
                     continue
+
+            if filterdict is not None:
+                skip = False
+                for k, v, in filterdict.items():
+                    if header.get(k, None) not in v:
+                        skip = True
+                if skip:
+                    continue
+
             if len(events) == 0:
                 if return_events:
                     ts = pd.DataFrame()
@@ -197,12 +253,6 @@ def iterparse_pi_xml(fname, ObsClass,
         # while element.getprevious() is not None:
         #    del element.getparent()[0]
 
-    # except Exception as e:
-    #     if skip_errors:
-    #         print("ERROR! Skipped {}".format(fname))
-    #     else:
-    #         raise(e)
-
     if return_df:
         for h, s in zip(header_list, obs_list):
             h['series'] = s
@@ -212,7 +262,7 @@ def iterparse_pi_xml(fname, ObsClass,
 
 
 def read_xmlstring(xmlstring, ObsClass,
-                   translate_dic=None,
+                   translate_dic=None, filterdict=None,
                    locationIds=None, low_memory=True,
                    to_mnap=False, remove_nan=False, verbose=False):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
@@ -250,22 +300,28 @@ def read_xmlstring(xmlstring, ObsClass,
         translate_dic = {'locationId': 'locatie'}
 
     if low_memory:
-        obs_list = iterparse_pi_xml(StringIO(xmlstring), ObsClass,
-                                    translate_dic,
-                                    locationIds, verbose=verbose)
+        obs_list = iterparse_pi_xml(StringIO(xmlstring),
+                                    ObsClass,
+                                    translate_dic=translate_dic,
+                                    filterdict=filterdict,
+                                    locationIds=locationIds,
+                                    verbose=verbose)
     else:
         root = etree.fromstring(xmlstring)
-
-        obs_list = read_xml_root(root, ObsClass, translate_dic,
-                                  locationIds,
-                                  to_mnap, remove_nan, verbose)
+        obs_list = read_xml_root(root,
+                                 ObsClass,
+                                 translate_dic=translate_dic,
+                                 locationIds=locationIds,
+                                 to_mnap=to_mnap,
+                                 remove_nan=remove_nan,
+                                 verbose=verbose)
 
     return obs_list
 
 
 def read_xml_root(root, ObsClass, translate_dic=None,
-                  locationIds=None,
-                  to_mnap=False, remove_nan=False, verbose=False):
+                  locationIds=None, to_mnap=False, remove_nan=False,
+                  verbose=False):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
     Parameters
@@ -462,10 +518,10 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
             # write timeseries
             dates = o.reset_index()["index"].apply(
-                lambda s: pd.datetime.strftime(s, "%Y-%m-%d")
+                lambda s: datetime.datetime.strftime(s, "%Y-%m-%d")
             )
             times = o.reset_index()["index"].apply(
-                lambda s: pd.datetime.strftime(s, "%H:%M:%S")
+                lambda s: datetime.datetime.strftime(s, "%H:%M:%S")
             )
             # set date and time attributes
             events = (
@@ -493,7 +549,7 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
 
 def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
-                      translate_dic=None,
+                      translate_dic=None, filterdict=None,
                       to_mnap=False, remove_nan=False, low_memory=True,
                       verbose=False,
                       ):
@@ -513,6 +569,10 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
         {'locationId': 'locatie'}.
+    filterdict : dict, optional
+        dictionary with tag name to apply filter to as keys, and list of 
+        accepted names as dictionary values to keep in final result, 
+        i.e. {"locationId": ["B001", "B002"]}
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
     remove_nan : boolean, optional
@@ -547,9 +607,11 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
             fullpath = os.path.join(directory, ixml)
 
         # read xml fname
-        obs_list += read_xml_fname(fullpath, ObsClass,
-                                   translate_dic,
-                                   low_memory,
+        obs_list += read_xml_fname(fullpath,
+                                   ObsClass,
+                                   translate_dic=translate_dic,
+                                   filterdict=filterdict,
+                                   low_memory=low_memory,
                                    locationIds=locations,
                                    verbose=verbose)
 
