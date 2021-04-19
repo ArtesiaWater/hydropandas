@@ -147,6 +147,7 @@ def iterparse_pi_xml(fname, ObsClass,
     tags = ['{{http://www.wldelft.nl/fews/PI}}{}'.format(tag) for tag in tags]
 
     context = iterparse(fname, tag=tags)
+    # _, root = next(context)
 
     header_list = []
     obs_list = []
@@ -167,6 +168,7 @@ def iterparse_pi_xml(fname, ObsClass,
                 if locationIds is not None and tag.startswith("locationId"):
                     loc = h_attr.text
                     if loc not in locationIds:
+                        element.clear()
                         if verbose:
                             print(f" ... skipping '{loc}', not in locationIds",
                                   end="")
@@ -177,6 +179,7 @@ def iterparse_pi_xml(fname, ObsClass,
                         if tag.startswith(k):
                             attr = h_attr.text
                             if attr not in v:
+                                element.clear()
                                 if verbose:
                                     print(f" ... skipping '{attr}' not "
                                           f"in accepted values for '{k}'",
@@ -197,6 +200,7 @@ def iterparse_pi_xml(fname, ObsClass,
             # if specific locations are provided only read those
             if locationIds is not None:
                 if loc not in locationIds:
+                    element.clear()
                     continue
 
             if filterdict is not None:
@@ -205,6 +209,7 @@ def iterparse_pi_xml(fname, ObsClass,
                     if header.get(k, None) not in v:
                         skip = True
                 if skip:
+                    element.clear()
                     continue
             events.append({**element.attrib})
 
@@ -212,6 +217,7 @@ def iterparse_pi_xml(fname, ObsClass,
             # if specific locations are provided only read those
             if locationIds is not None:
                 if loc not in locationIds:
+                    element.clear()
                     continue
 
             if filterdict is not None:
@@ -220,6 +226,7 @@ def iterparse_pi_xml(fname, ObsClass,
                     if header.get(k, None) not in v:
                         skip = True
                 if skip:
+                    element.clear()
                     continue
 
             if len(events) == 0:
@@ -250,8 +257,6 @@ def iterparse_pi_xml(fname, ObsClass,
 
         # Free memory.
         element.clear()
-        # while element.getprevious() is not None:
-        #    del element.getparent()[0]
 
     if return_df:
         for h, s in zip(header_list, obs_list):
