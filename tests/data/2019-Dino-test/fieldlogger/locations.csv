@@ -7,6 +7,7 @@ Grondwaterstanden_Put;blue
 NAME;SUBNAME;XCOOR;YCOOR;INPUTFIELD;PROPERTIES;GROUP
 B02H0092;B02H0092-001;219890.0;600030.0;Stand|Opmerking;bovenkant peilbuis|+nan mNAP|onderkant peilbuis|+nan mNAP|Maximaal gemeten|+nan mNAP|Gemiddeldeld gemeten|+nan mNAP|Minimaal gemeten|+nan mNAP;Grondwaterstanden_Put
 B02H1007;B02H1007-001;219661.0;600632.0;Stand|Opmerking;bovenkant peilbuis|+nan mNAP|onderkant peilbuis|+nan mNAP|Maximaal gemeten|+nan mNAP|Gemiddeldeld gemeten|+nan mNAP|Minimaal gemeten|+nan mNAP;Grondwaterstanden_Put
+B22D0155;B22D0155-001;233830.0;502530.0;Stand|Opmerking;bovenkant peilbuis|+7.80 mNAP|onderkant peilbuis|+6.80 mNAP|Maximaal gemeten|+9.28 mNAP|Gemiddeldeld gemeten|+8.71 mNAP|Minimaal gemeten|+6.78 mNAP;Grondwaterstanden_Put
 B33F0080;B33F0080-001;213260.0;473900.0;Stand|Opmerking;bovenkant peilbuis|+3.85 mNAP|onderkant peilbuis|+2.85 mNAP|Maximaal gemeten|+6.40 mNAP|Gemiddeldeld gemeten|+5.59 mNAP|Minimaal gemeten|+4.90 mNAP;Grondwaterstanden_Put
 B33F0080;B33F0080-002;213260.0;473900.0;Stand|Opmerking;bovenkant peilbuis|-10.15 mNAP|onderkant peilbuis|-12.15 mNAP|Maximaal gemeten|+6.30 mNAP|Gemiddeldeld gemeten|+5.59 mNAP|Minimaal gemeten|+5.01 mNAP;Grondwaterstanden_Put
 B33F0133;B33F0133-001;210400.0;473366.0;Stand|Opmerking;bovenkant peilbuis|-67.50 mNAP|onderkant peilbuis|-70.00 mNAP|Maximaal gemeten|+3.63 mNAP|Gemiddeldeld gemeten|+2.90 mNAP|Minimaal gemeten|+0.72 mNAP;Grondwaterstanden_Put
