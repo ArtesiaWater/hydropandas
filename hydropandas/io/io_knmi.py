@@ -260,14 +260,15 @@ def _check_latest_measurement_date_RD_debilt(use_api=False,
 
     look_back_days = 90
     start = dt.datetime.now() - pd.Timedelta(look_back_days, unit='D')
+    end = dt.datetime.now() + pd.Timedelta(10, unit='D')
     if use_api:
         url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
         knmi_df, variables = get_knmi_daily_rainfall_api(url, 550, "RD", start=start,
-                                                         end=None, inseason=False,
+                                                         end=end, inseason=False,
                                                          verbose=verbose)
     else:
         knmi_df, variables = get_knmi_daily_rainfall_url(
-                        550, 'DE-BILT', 'RD', start, end=None, inseason=False, verbose=verbose)
+                        550, 'DE-BILT', 'RD', start, end, inseason=False, verbose=verbose)
 
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
@@ -499,10 +500,15 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
     fname_zip = os.path.join(tempfile.gettempdir(), 'knmi', f'neerslaggeg_{stn}.zip')
     fname_dir = os.path.join(tempfile.gettempdir(), 'knmi', f'neerslaggeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'neerslaggeg_{stn_name}_{stn}.txt')
-
+    
+    # check if file should be downloaded and unzipped
+    donwload_and_unzip = True
     if os.path.exists(fname_txt) and use_cache:
-        pass
-    else:
+        fname_time_mod = dt.datetime.fromtimestamp(os.path.getmtime(fname_txt))
+        if fname_time_mod > end:
+            donwload_and_unzip = False
+
+    if donwload_and_unzip:
         # download zip file
         r = requests.get(url, stream=True)
         if r.status_code != 200:
@@ -795,9 +801,14 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end,
     fname_dir = os.path.join(tempfile.gettempdir(), 'knmi', f'etmgeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'etmgeg_{stn}.txt')
 
+    # check if file should be downloaded and unzipped
+    donwload_and_unzip = True
     if os.path.exists(fname_txt) and use_cache:
-        pass
-    else:
+        fname_time_mod = dt.datetime.fromtimestamp(os.path.getmtime(fname_txt))
+        if fname_time_mod > end:
+            donwload_and_unzip = False
+
+    if donwload_and_unzip:
         # download zip file
         r = requests.get(url, stream=True)
         with open(fname_zip, 'wb') as fd:
@@ -1248,7 +1259,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
     stations = get_stations(meteo_var=meteo_var)
 
     start, end = _start_end_to_datetime(start, end)
-    if (meteo_var == 'RD') and (end > (dt.datetime.now() - pd.Timedelta(21, unit='D'))):
+    if (meteo_var == 'RD') and (end > (dt.datetime.now() - pd.Timedelta(90, unit='D'))):
         end = min(end, _check_latest_measurement_date_RD_debilt(verbose=verbose))
 
     knmi_df, variables, station_meta = \
