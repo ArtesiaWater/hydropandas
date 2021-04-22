@@ -23,7 +23,6 @@ def get_stations(meteo_var='RD'):
     -------
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if meteo_var == "RD":
@@ -60,7 +59,6 @@ def get_station_name(stn, stations):
     str
         Name of the station.
     """
-
     stn_name = stations.loc[stn, 'naam']
     stn_name = stn_name.upper().replace(' ', '-')
     stn_name = stn_name.replace('(', '').replace(')', '')
