@@ -630,13 +630,13 @@ class ObsCollection(pd.DataFrame):
 
         elif (file_or_dir is None) and (xmlstring is not None):
             obs_list = read_xmlstring(xmlstring,
-                                      ObsClass, 
+                                      ObsClass,
                                       translate_dic=translate_dic,
-                                      filterdict=filterdict, 
-                                      locationIds=locations, 
+                                      filterdict=filterdict,
+                                      locationIds=locations,
                                       low_memory=low_memory,
-                                      to_mnap=to_mnap, 
-                                      remove_nan=remove_nan, 
+                                      to_mnap=to_mnap,
+                                      remove_nan=remove_nan,
                                       verbose=verbose)
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)

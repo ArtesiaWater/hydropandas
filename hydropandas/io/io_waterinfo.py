@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
-                        value_col=None, location_col=None, 
+                        value_col=None, location_col=None,
                         xcol=None, ycol=None, transform_coords=True):
     """Read waterinfo file (CSV or zip)
 
@@ -43,13 +43,13 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
 
     if value_col is None:
         value_col = 'NUMERIEKEWAARDE'
-    
+
     if location_col is None:
         location_col = "MEETPUNT_IDENTIFICATIE"
 
     if xcol is None:
         xcol = "X"
-    
+
     if ycol is None:
         ycol = "Y"
 
@@ -64,8 +64,8 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
                      index_col="_".join(index_cols))
 
     # do some conversions
-    df.loc[df[value_col] ==
-           999999999, value_col] = np.NaN
+    df.loc[df[value_col]
+           == 999999999, value_col] = np.NaN
     df[value_col] = df[value_col] / 100.
 
     # parse metadata into dict

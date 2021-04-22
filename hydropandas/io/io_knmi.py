@@ -46,7 +46,7 @@ def get_stations(meteo_var='RD'):
 def get_station_name(stn, stations):
     """ returns the station name from a station. Modifies the station name
     in such a way that a valid url can be obtained.
-    
+
 
     Parameters
     ----------
@@ -61,12 +61,13 @@ def get_station_name(stn, stations):
         Name of the station.
 
     """
-    
+
     stn_name = stations.loc[stn, 'naam']
     stn_name = stn_name.upper().replace(' ', '-')
     stn_name = stn_name.replace('(', '').replace(')', '')
-    
+
     return stn_name
+
 
 def get_nearest_stations_xy(x, y, meteo_var, n=1, stations=None, ignore=None):
     """find the KNMI stations that measure 'variable' closest to the x, y
@@ -263,11 +264,11 @@ def _check_latest_measurement_date_RD_debilt(use_api=False,
     end = dt.datetime.now() + pd.Timedelta(10, unit='D')
     if use_api:
         url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
-        knmi_df, variables = get_knmi_daily_rainfall_api(url, 550, "RD", start=start,
+        knmi_df, _ = get_knmi_daily_rainfall_api(url, 550, "RD", start=start,
                                                          end=end, inseason=False,
                                                          verbose=verbose)
     else:
-        knmi_df, variables = get_knmi_daily_rainfall_url(
+        knmi_df, _ = get_knmi_daily_rainfall_url(
                         550, 'DE-BILT', 'RD', start, end, inseason=False, verbose=verbose)
 
     knmi_df = knmi_df.dropna()
@@ -500,7 +501,7 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
     fname_zip = os.path.join(tempfile.gettempdir(), 'knmi', f'neerslaggeg_{stn}.zip')
     fname_dir = os.path.join(tempfile.gettempdir(), 'knmi', f'neerslaggeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'neerslaggeg_{stn_name}_{stn}.txt')
-    
+
     # check if file should be downloaded and unzipped
     donwload_and_unzip = True
     if os.path.exists(fname_txt) and use_cache:
@@ -569,7 +570,7 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
 
         df, variables = _transform_variables(df, variables, verbose)
 
-    return df.loc[start:end,[meteo_var]], variables
+    return df.loc[start:end, [meteo_var]], variables
 
 
 def _read_knmi_header(f, verbose=False):
@@ -848,7 +849,6 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end,
                 df = df.drop('YYYYMMDD', axis=1)
 
                 df = df.loc[df.index.notnull(), :]
-                
 
                 # add a full day for meteorological data, so that the
                 # timestamp is at the end of the period in the data
@@ -856,7 +856,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end,
 
                 # from UT to UT+1 (standard-time in the Netherlands)
                 df.index = df.index + pd.to_timedelta(1, unit='h')
-                df = df.loc[start:end,[meteo_var]]
+                df = df.loc[start:end, [meteo_var]]
                 df = df.dropna()
                 df, variables = _transform_variables(df, variables, verbose)
                 break
@@ -916,7 +916,7 @@ def read_knmi_hourly(f):
     return knmi_df
 
 
-def get_knmi_timeseries_xy(x, y, meteo_var, start, end, 
+def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
                            stn_name=None,
                            fill_missing_obs=True,
                            interval='daily', inseason=False,
@@ -972,7 +972,7 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
             download_knmi_data(stn, stn_name, meteo_var, start, end,
                                interval, inseason, raise_exceptions,
                                verbose=verbose)
-            
+
     if not station_meta is None:
         meta = station_meta.to_dict()
     else:
@@ -1026,8 +1026,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
     # get station
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(stn, stations) 
-    
+    stn_name = get_station_name(stn, stations)
 
     # download data
     if fill_missing_obs:
@@ -1269,8 +1268,8 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
                            raise_exceptions=raise_exceptions,
                            verbose=verbose)
     if verbose:
-        print('Download ' + meteo_var + ' from '
-              + str(stn) + ' ' + stations.loc[stn, 'naam'])
+        print('Download ' + meteo_var + ' from ' +
+              str(stn) + ' ' + stations.loc[stn, 'naam'])
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
@@ -1279,8 +1278,8 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore)[0]
         stn_name = get_station_name(stn, stations)
         if verbose:
-            print('Download ' + meteo_var + ' from '
-                  + str(stn) + ' ' + stations.loc[stn, 'naam'])
+            print('Download ' + meteo_var + ' from ' +
+                  str(stn) + ' ' + stations.loc[stn, 'naam'])
         knmi_df, variables, station_meta = \
             download_knmi_data(stn, stn_name, meteo_var, start=start,
                                end=end, interval=interval,
@@ -1300,7 +1299,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
     while np.any(missing) and not np.all(missing):
         stn_comp = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore)
-        
+
         if verbose:
             print(f'trying to fill {missing.sum()} '
                   f'measurements with station {stn_comp}')
