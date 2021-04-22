@@ -47,7 +47,6 @@ def get_station_name(stn, stations):
     """ returns the station name from a station. Modifies the station name
     in such a way that a valid url can be obtained.
 
-
     Parameters
     ----------
     stn : int
@@ -297,7 +296,7 @@ def download_knmi_data(stn, stn_name=None,
     Parameters
     ----------
     stn : int or str
-        number of measurements 
+        number of measurements
     stn_name : str
         Only necesary if meteo_var is RD and use_api is True.
     meteo_var : str, optional

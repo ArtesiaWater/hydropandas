@@ -570,8 +570,8 @@ class ObsCollection(pd.DataFrame):
             translate names from fews. If None this default dictionary is used:
             {'locationId': 'locatie'}.
         filterdict : dict, optional
-            dictionary with tag name to apply filter to as keys, and list of 
-            accepted names as dictionary values to keep in final result, 
+            dictionary with tag name to apply filter to as keys, and list of
+            accepted names as dictionary values to keep in final result,
             i.e. {"locationId": ["B001", "B002"]}
         locations : list of str, optional
             list of locationId's to read from XML file, others are skipped.
