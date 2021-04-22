@@ -44,8 +44,8 @@ def get_stations(meteo_var='RD'):
 
 
 def get_station_name(stn, stations):
-    """ returns the station name from a station. Modifies the station name
-    in such a way that a valid url can be obtained.
+    """returns the station name from a station. Modifies the station name in
+    such a way that a valid url can be obtained.
 
     Parameters
     ----------
