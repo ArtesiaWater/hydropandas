@@ -44,8 +44,9 @@ def get_stations(meteo_var='RD'):
 
 
 def get_station_name(stn, stations):
-    """ returns the station name from a station. Modifies the station name
-    in such a way that a valid url can be obtained.
+    """Returns the station name from a KNMI station.
+
+    Modifies the station name in such a way that a valid url can be obtained.
 
     Parameters
     ----------
@@ -263,11 +264,11 @@ def _check_latest_measurement_date_RD_debilt(use_api=False,
     if use_api:
         url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
         knmi_df, _ = get_knmi_daily_rainfall_api(url, 550, "RD", start=start,
-                                                         end=end, inseason=False,
-                                                         verbose=verbose)
+                                                 end=end, inseason=False,
+                                                 verbose=verbose)
     else:
         knmi_df, _ = get_knmi_daily_rainfall_url(
-                        550, 'DE-BILT', 'RD', start, end, inseason=False, verbose=verbose)
+            550, 'DE-BILT', 'RD', start, end, inseason=False, verbose=verbose)
 
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
@@ -383,11 +384,11 @@ def download_knmi_data(stn, stn_name=None,
                     stations_df = get_stations(meteo_var=meteo_var)
                     stn_name = get_station_name(int(stn), stations_df)
                 knmi_df, variables = get_knmi_daily_rainfall_url(
-                            stn, stn_name, meteo_var, start, end, inseason, verbose)
+                    stn, stn_name, meteo_var, start, end, inseason, verbose)
             else:
                 # daily data from meteorological stations
                 knmi_df, variables, stations = get_knmi_daily_meteo_url(
-                            stn, meteo_var, start, end, inseason, verbose)
+                    stn, meteo_var, start, end, inseason, verbose)
     except (ValueError, KeyError) as e:
         if verbose:
             print(e)
@@ -496,8 +497,10 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
     basedir = os.path.join(tempfile.gettempdir(), 'knmi')
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(), 'knmi', f'neerslaggeg_{stn}.zip')
-    fname_dir = os.path.join(tempfile.gettempdir(), 'knmi', f'neerslaggeg_{stn}')
+    fname_zip = os.path.join(tempfile.gettempdir(),
+                             'knmi', f'neerslaggeg_{stn}.zip')
+    fname_dir = os.path.join(tempfile.gettempdir(),
+                             'knmi', f'neerslaggeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'neerslaggeg_{stn_name}_{stn}.txt')
 
     # check if file should be downloaded and unzipped
@@ -511,7 +514,8 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
         # download zip file
         r = requests.get(url, stream=True)
         if r.status_code != 200:
-            raise ValueError(f'invalid url {url} please check station name {stn_name}')
+            raise ValueError(
+                f'invalid url {url} please check station name {stn_name}')
         with open(fname_zip, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=128):
                 fd.write(chunk)
@@ -796,7 +800,8 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end,
     basedir = os.path.join(tempfile.gettempdir(), 'knmi')
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(), 'knmi', f'etmgeg_{stn}.zip')
+    fname_zip = os.path.join(tempfile.gettempdir(),
+                             'knmi', f'etmgeg_{stn}.zip')
     fname_dir = os.path.join(tempfile.gettempdir(), 'knmi', f'etmgeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'etmgeg_{stn}.txt')
 
