@@ -17,6 +17,15 @@ def test_dino_csv():
     return measurements, meta
 
 
+def test_dino_csv_duplicate_index():
+    # can be used to test removing duplicate indices
+    fname = ('./tests/data/2019-Dino-test/Grondwaterstanden_Put/'
+             'B22D0155001_1.csv')
+    measurements, meta = io_dino.read_dino_groundwater_csv(fname)
+
+    return measurements, meta
+
+
 def test_dino_metadata():
     # download metadata
     dinorest = io_dino.DinoREST()

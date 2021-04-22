@@ -294,7 +294,7 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
 
             # add time variant metadata to measurements
             for s in meta_ts.values():
-                measurements = pd.concat([measurements, s], axis=1)
+                measurements = measurements.join(s, how='outer')
                 measurements.loc[:,
                                  s.name] = measurements.loc[:, s.name].ffill()
 

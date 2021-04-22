@@ -12,22 +12,20 @@ from hydropandas import observation as obs
 from hydropandas.io import io_knmi
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_get_knmi_ts():
     ts, meta = io_knmi.get_knmi_timeseries_stn(
         441,
         "RD",
-        start='2010-1-2',
-        end='2040-1-2',
+        start='2010-1-1',
+        end='2040-1-1',
         fill_missing_obs=True,
         verbose=True)
     return ts, meta
 
 
-@pytest.mark.skip(reason="KNMI API is down")
-def test_download_rd_210():
+def test_download_rd_550():
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        210,
+        550,
         meteo_var='RD',
         start='1952',
         end=None,
@@ -37,11 +35,10 @@ def test_download_rd_210():
     return knmi_df, variables, stations
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_download_without_data():
     try:
         knmi_df, variables, stations = io_knmi.download_knmi_data(
-            210,
+            550,
             meteo_var='RD',
             start='2018',
             end='2020',
@@ -54,10 +51,9 @@ def test_download_without_data():
     return 1
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_download_without_data_no_error():
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        210,
+        324,
         meteo_var='RD',
         start='2018',
         end='2020',
@@ -72,7 +68,6 @@ def test_download_without_data_no_error():
     return knmi_df, variables, stations
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_download_ev24_240():
     knmi_df, variables, stations = io_knmi.download_knmi_data(
         210,
@@ -81,23 +76,21 @@ def test_download_ev24_240():
         end=None,
         interval='daily',
         inseason=False,
-        verbose=False)
+        verbose=True)
     return knmi_df, variables, stations
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_fill_missing_measurements_ev24_278():
     knmi_df, variables, stations = io_knmi.fill_missing_measurements(
         278,
         meteo_var='EV24',
-        start='1952',
-        end='1954',
-        raise_exceptions=False,
-        verbose=False)
+        start='1959',
+        end='1963',
+        raise_exceptions=True,
+        verbose=True)
     return knmi_df, variables, stations
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_fill_missing_measurements_rd_278():
     knmi_df, variables, stations = io_knmi.fill_missing_measurements(
         892,
@@ -109,7 +102,6 @@ def test_fill_missing_measurements_rd_278():
     return knmi_df, variables, stations
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_obslist_from_grid():
     xmid = np.array([104150., 104550.])
     ymid = np.array([510150., 510550.])
@@ -122,7 +114,6 @@ def test_obslist_from_grid():
     return obs_list
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_obslist_from_locations():
     locations = pd.DataFrame(data={'x': [100000], 'y': [350000]})
     obs_list = io_knmi.get_knmi_obslist(locations, meteo_vars=['EV24'],
@@ -133,7 +124,6 @@ def test_obslist_from_locations():
     return obs_list
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_obslist_from_stns():
     stns = [344, 260]  # Rotterdam en de Bilt
     obs_list = io_knmi.get_knmi_obslist(stns=stns, meteo_vars=['RH', 'EV24'],
