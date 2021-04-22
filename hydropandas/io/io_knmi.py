@@ -58,7 +58,6 @@ def get_station_name(stn, stations):
     -------
     str
         Name of the station.
-
     """
 
     stn_name = stations.loc[stn, 'naam']
