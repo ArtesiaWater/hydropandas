@@ -116,8 +116,8 @@ def iterparse_pi_xml(fname, ObsClass,
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
     filterdict : dict, optional
-        dictionary with tag name to apply filter to as keys, and list of 
-        accepted names as dictionary values to keep in final result, 
+        dictionary with tag name to apply filter to as keys, and list of
+        accepted names as dictionary values to keep in final result,
         i.e. {"locationId": ["B001", "B002"]}
     return_events : bool, optional
         return all event-information in a DataFrame per location, instead of
@@ -575,8 +575,8 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
         translate names from fews. If None this default dictionary is used:
         {'locationId': 'locatie'}.
     filterdict : dict, optional
-        dictionary with tag name to apply filter to as keys, and list of 
-        accepted names as dictionary values to keep in final result, 
+        dictionary with tag name to apply filter to as keys, and list of
+        accepted names as dictionary values to keep in final result,
         i.e. {"locationId": ["B001", "B002"]}
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
