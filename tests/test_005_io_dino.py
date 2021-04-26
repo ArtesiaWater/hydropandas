@@ -18,11 +18,21 @@ def test_dino_csv():
 
 
 def test_dino_csv_duplicate_index():
-    # can be used to test removing duplicate indices
+    # contains 1 duplicate index 2019-11-19
     fname = ('./tests/data/2019-Dino-test/Grondwaterstanden_Put/'
              'B22D0155001_1.csv')
     measurements, meta = io_dino.read_dino_groundwater_csv(fname)
-
+    
+    # check if measurements contains duplicate indices
+    assert measurements.index.duplicated().any()
+    
+    measurements, meta = io_dino.read_dino_groundwater_csv(fname,
+                                                           remove_duplicates=True,
+                                                           keep_dup='last')
+    
+    # check if measurements contains no duplicate indices
+    assert measurements.index.duplicated().any() == False
+    
     return measurements, meta
 
 

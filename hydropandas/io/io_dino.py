@@ -239,7 +239,10 @@ def read_dino_groundwater_quality_txt(fname, verbose=False):
 
 
 def read_dino_groundwater_csv(fname, to_mnap=True,
-                              read_series=True, verbose=False,):
+                              read_series=True, 
+                              remove_duplicates=False,
+                              keep_dup='last', 
+                              verbose=False,):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
     Parameters
@@ -250,6 +253,11 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
         if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
         if False only metadata is read, default is True
+    remove_duplicates : boolean, optional
+        if True duplicate indices are removed. Default is False.
+    keep_dup : str, optional
+        indicate which duplicate indices should be kept, only used when 
+        remove_duplicates is True. Default is 'last'
     verbose : boolean, optional
         print additional information to the screen (default is False).
 
@@ -291,6 +299,8 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
                 print('no NAP measurements available -> {}'.format(fname))
             if to_mnap and measurements is not None:
                 measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
+            if remove_duplicates:
+                measurements = measurements[~measurements.index.duplicated(keep=keep_dup)]
 
             # add time variant metadata to measurements
             for s in meta_ts.values():
