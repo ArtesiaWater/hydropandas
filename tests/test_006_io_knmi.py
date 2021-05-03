@@ -35,6 +35,18 @@ def test_download_rd_550():
     return knmi_df, variables, stations
 
 
+def test_download_rd_12():
+    knmi_df, variables, stations = io_knmi.download_knmi_data(
+        12,
+        meteo_var='RD',
+        start='2010',
+        end=None,
+        interval='daily',
+        inseason=False,
+        verbose=False)
+    return knmi_df, variables, stations
+
+
 def test_download_without_data():
     try:
         knmi_df, variables, stations = io_knmi.download_knmi_data(

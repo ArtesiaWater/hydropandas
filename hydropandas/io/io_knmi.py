@@ -489,6 +489,7 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
     variables : dictionary
         additional information about the variables
     """
+    stn = f'{int(stn):03}'
     url = f"https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
 
     # get file name
