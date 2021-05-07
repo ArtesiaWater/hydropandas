@@ -1078,9 +1078,13 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
     start : list of str, datetime or None]
-        start date of observations per meteo variable. The default is [None]
+        start date of observations per meteo variable. The start date is
+        included in the time series. If start is None the start date will
+        be January 1st of the previous year. The default is [None]
     end : list of str, datetime or None]
-        end date of observations per meteo variable. The default is [None]
+        end date of observations per meteo variable. The end date is not
+        included in the time series. If end is None the last date with 
+        measurements is used. The default is [None]
     ObsClass : type or None
         class of the observations, only KnmiObs is supported for now. The
         default is None

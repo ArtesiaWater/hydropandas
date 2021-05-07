@@ -725,11 +725,13 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the obscollection. The default is ''.
         start : list of str, datetime or None]
-            start date of observations per meteo variable. The default is
-            [None, None]
+            start date of observations per meteo variable. The start date is
+            included in the time series. If start is None the start date will
+            be January 1st of the previous year. The default is [None, None]
         end : list of str, datetime or None]
-            end date of observations per meteo variable. The default is
-            [None, None]
+            end date of observations per meteo variable. The end date is
+            not included in the time series. If end is None the last date
+            with measurements is used. The default is [None, None]
         ObsClass : type or None
             class of the observations, only KnmiObs is supported for now. The
             default is None
