@@ -5,7 +5,7 @@
 """
 import pandas as pd
 import pastastore as pst
-
+import numbers
 
 def _get_metadata_from_obs(o, verbose=False):
     """internal method to get metadata in the right format for a pastas series.
@@ -29,10 +29,14 @@ def _get_metadata_from_obs(o, verbose=False):
         val = getattr(o, attr_key)
         if isinstance(val, (int, float, str, bool)):
             meta[attr_key] = val
+        elif isinstance(val, numbers.Number):
+            meta[attr_key] = float(val)
         elif isinstance(val, dict):
             for k, v in val.items():
                 if isinstance(v, (int, float, str, bool)):
                     meta[k] = v
+                elif isinstance(v, numbers.Number):
+                    meta[k] = float(v)
                 else:
                     if verbose:
                         print(
