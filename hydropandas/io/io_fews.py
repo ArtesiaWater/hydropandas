@@ -433,11 +433,17 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         y = np.float(header["y"])
     else:
         y = np.nan
+        
+    if np.isnan(x) or np.isnan(y):
+        metadata_available=False
+    else:
+        metadata_available=True
 
     if ObsClass in [GroundwaterObs, WaterlvlObs]:
         o = ObsClass(ts, x=x, y=y, meta=header,
                      name=header['locatie'],
-                     locatie=header['locatie'])
+                     locatie=header['locatie'],
+                     metadata_available=metadata_available)
     else:
         o = ObsClass(ts, x=x, y=y, meta=header,
                      name=header['locatie'])

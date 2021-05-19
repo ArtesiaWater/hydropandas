@@ -561,7 +561,9 @@ class ObsCollection(pd.DataFrame):
         ----------
         file_or_dir :  str
             zip, xml or directory with zips or xml files to read
-
+        xmlstring : str or None
+            string with xml data, only used if file_or_dir is None. Default is
+            None
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
         name : str, optional
