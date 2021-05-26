@@ -20,8 +20,8 @@ from pandas import DataFrame
 
 from _io import StringIO
 from pandas._config import get_option
-from pandas.io.formats import console
-
+from pandas.io.formats import console, format as fmt
+from html import escape
 
 class Obs(DataFrame):
     """class for point observations.
@@ -105,6 +105,84 @@ class Obs(DataFrame):
         )
     
         return buf.getvalue()
+    
+    def _repr_html_(self, metadata_out=True):
+        """
+        Return a html representation for a particular Observation.
+
+        Mainly for IPython notebook.
+        """
+
+        if self._info_repr():
+            buf = StringIO("")
+            self.info(buf=buf)
+            # need to escape the <class>, should be the first line.
+            val = buf.getvalue().replace("<", r"&lt;", 1)
+            val = val.replace(">", r"&gt;", 1)
+            return "<pre>" + val + "</pre>"
+        
+  
+
+        if get_option("display.notebook_repr_html"):
+            max_rows = get_option("display.max_rows")
+            min_rows = get_option("display.min_rows")
+            max_cols = get_option("display.max_columns")
+            show_dimensions = get_option("display.show_dimensions")
+
+            formatter = fmt.DataFrameFormatter(
+                self,
+                columns=None,
+                col_space=None,
+                na_rep="NaN",
+                formatters=None,
+                float_format=None,
+                sparsify=None,
+                justify=None,
+                index_names=True,
+                header=True,
+                index=True,
+                bold_rows=True,
+                escape=True,
+                max_rows=max_rows,
+                min_rows=min_rows,
+                max_cols=max_cols,
+                show_dimensions=show_dimensions,
+                decimal=".",
+            )
+            
+            df_out = fmt.DataFrameRenderer(formatter).to_html(notebook=True)
+            
+            if metadata_out:
+                obj_type = "hydropandas.{}".format(type(self).__name__)
+                header = f"<div class='xr-header'><div class='xr-obj-type'>{escape(obj_type)}</div></div><hr>"
+                meta_dic = {key: getattr(self, key) for key in self._metadata}
+                meta_out = DataFrame(meta_dic, index=['metadata']).T
+                formatter2 = fmt.DataFrameFormatter(
+                    meta_out,
+                    columns=None,
+                    col_space=None,
+                    na_rep="NaN",
+                    formatters=None,
+                    float_format=None,
+                    sparsify=None,
+                    justify=None,
+                    index_names=True,
+                    header=True,
+                    index=True,
+                    bold_rows=True,
+                    escape=True,
+                    max_rows=len(self._metadata)+1,
+                    min_rows=0,
+                    max_cols=2,
+                    show_dimensions=show_dimensions,
+                    decimal=".",)
+                df_meta_out = fmt.DataFrameRenderer(formatter2).to_html(notebook=True)
+                return header+df_meta_out+df_out
+            
+            else:
+                return df_out
+        else:
+            return None
 
     @property
     def _constructor(self):
