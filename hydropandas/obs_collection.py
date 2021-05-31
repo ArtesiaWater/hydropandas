@@ -11,6 +11,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 
 from . import observation as obs
 from . import util
@@ -1290,10 +1291,18 @@ class ObsCollection(pd.DataFrame):
         if 'obs' in gdf.columns:
             gdf.drop(columns='obs', inplace=True)
 
-        # cast boolean columns to int
+        # change dtypes that are not accepted for shapefiles
         for colname, coltype in gdf.dtypes.items():
-            if coltype == bool:
+            # ommit geometry dtype
+            if isinstance(coltype, gpd.array.GeometryDtype):
+                pass
+            # cast boolean columns to int
+            elif coltype == bool:
                 gdf[colname] = gdf[colname].astype(int)
+            # cast datetime columns to str
+            elif np.issubdtype(coltype, np.datetime64):
+                gdf[colname] = gdf[colname].astype(str)
+
         gdf.to_file(fname)
 
     def add_meta_to_df(self, key):
