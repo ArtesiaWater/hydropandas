@@ -186,6 +186,10 @@ class CollectionPlots:
                                               verbose=verbose,
                                               per_location=per_location,
                                               **kwargs)
+            
+        # check if observation collection has lat and lon values
+        if (not col_name_lat in self.columns) and (not col_name_lon in self.columns):
+            self.geo.set_lat_lon()
 
         # determine start location of map
         northing = np.mean(

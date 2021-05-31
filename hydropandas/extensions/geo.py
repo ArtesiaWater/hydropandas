@@ -173,11 +173,15 @@ class GeoAccessor:
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
-
-    def get_nearest_polygon(self, gdf=None,
-                            xcol_obs='x', ycol_obs='y',
-                            verbose=False):
-        """get nearest polygon for each point in the obs collection.
+    
+    
+    def _get_nearest_geometry(self, gdf=None,
+                              xcol_obs='x', ycol_obs='y',
+                              geometry_type='polygon',
+                              multiple_geometries='error',
+                              verbose=False):
+        """get nearest geometry for each point in the obs collection. Function
+        works for line and polygon geometries.
 
         Parameters
         ----------
@@ -187,6 +191,73 @@ class GeoAccessor:
             x column in self._obj used to get geometry
         ycol_obs : str, optional
             y column in self._obj used to get geometry
+        geometry_type : str, optional
+            geometry type, can be 'polygon' or 'line'.
+        multiple_geometries : str, optional
+            keyword on how to deal with multiple geometries being nearest.
+            Options are:
+                'error' -> raise a ValueError
+                'keep_all' -> return the indices of multiple geometries as a
+                string seperated by a comma
+                'keep_first' -> return the index of the first geometry
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        pandas.DataFrame
+            with columns 'nearest geometry' and 'distance nearest geometry'
+        """
+        
+        gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
+        gdf = gdf.copy()
+        for i, point in gdf_obs.geometry.items():
+            distances = [point.distance(pol) for pol in gdf.geometry.values]
+            if (np.array(distances) == np.min(distances)).sum() > 1:
+                if multiple_geometries=='error':
+                    raise ValueError(f'multiple {geometry_type}s are nearest')
+                elif multiple_geometries=='keep_all':
+                    ids = []
+                    for i_min in np.where(np.array(distances) == np.min(distances))[0]:
+                        ids.append(gdf.index[i_min])
+                    gdf_obs.loc[i, f'nearest {geometry_type}'] = ', '.join(ids)
+                    gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
+                elif multiple_geometries=='keep_first':
+                    gdf_obs.loc[i, f'nearest {geometry_type}'] = gdf.iloc[np.argmin(
+                    distances)].name
+                    gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
+                else:
+                    raise ValueError(f'invalid value for multiple_geometries -> {multiple_geometries}')
+            else:
+                gdf_obs.loc[i, f'nearest {geometry_type}'] = gdf.iloc[np.argmin(
+                    distances)].name
+                gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
+
+        return gdf_obs[[f'nearest {geometry_type}', f'distance nearest {geometry_type}']]
+
+    def get_nearest_line(self, gdf=None,
+                         xcol_obs='x', ycol_obs='y',
+                         multiple_lines='error',
+                         verbose=False):
+        """get nearest line for each point in the obs collection. Function
+        calls the nearest_polygon function.
+
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            dataframe with line features
+        xcol_obs : str, optional
+            x column in self._obj used to get geometry
+        ycol_obs : str, optional
+            y column in self._obj used to get geometry
+        multiple_lines : str, optional
+            keyword on how to deal with multiple lines being nearest.
+            Options are:
+                'error' -> raise a ValueError
+                'keep_all' -> return the indices of multiple lines as a
+                string seperated by a comma
+                'keep_first' -> return the index of the first line
         verbose : boolean, optional
             Print additional information to the screen (default is False).
 
@@ -195,18 +266,51 @@ class GeoAccessor:
         pandas.DataFrame
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
+        return self._get_nearest_geometry(gdf=gdf, 
+                                          xcol_obs=xcol_obs, 
+                                          ycol_obs=ycol_obs,
+                                          multiple_geometries=multiple_lines,
+                                          geometry_type='line',
+                                          verbose=verbose)
 
-        gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
 
-        for i, point in gdf_obs.geometry.items():
-            distances = [point.distance(pol) for pol in gdf.geometry.values]
-            if (np.array(distances) == np.min(distances)).sum() > 1:
-                raise ValueError('multiple polygons are nearest')
-            gdf_obs.loc[i, 'nearest polygon'] = gdf.iloc[np.argmin(
-                distances)].name
-            gdf_obs.loc[i, 'distance nearest polygon'] = np.min(distances)
+    def get_nearest_polygon(self, gdf=None,
+                            xcol_obs='x', ycol_obs='y',
+                            multiple_polygons='error',
+                            verbose=False):
+        """get nearest polygon for each point in the obs collection. Function
+        also works for lines instead of polygons
+        
 
-        return gdf_obs[['nearest polygon', 'distance nearest polygon']]
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            dataframe with polygon features
+        xcol_obs : str, optional
+            x column in self._obj used to get geometry
+        ycol_obs : str, optional
+            y column in self._obj used to get geometry
+        multiple_polygons : str, optional
+            keyword on how to deal with multiple polygons being nearest.
+            Options are:
+                'error' -> raise a ValueError
+                'keep_all' -> return the indices of multiple polygons as a
+                string seperated by a comma
+                'keep_first' -> return the index of the first polygon
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
+        Returns
+        -------
+        pandas.DataFrame
+            with columns 'nearest polygon' and 'distance nearest polygon'
+        """
+        return self._get_neareset_geometry(gdf=gdf, 
+                                           xcol_obs=xcol_obs, 
+                                           ycol_obs=ycol_obs,
+                                           multiple_geometries=multiple_polygons,
+                                           geometry_type='polygon',
+                                           verbose=verbose)
 
     def get_distance_to_point(self, point, xcol='x', ycol='y'):
         """get distance of every observation to a point.
