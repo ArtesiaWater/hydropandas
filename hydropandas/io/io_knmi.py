@@ -359,17 +359,17 @@ def download_knmi_data(stn, stn_name=None,
         if use_api:
             if interval.startswith('hour'):
                 # hourly data from meteorological stations
-                url = 'http://projects.knmi.nl/klimatologie/uurgegevens/getdata_uur.cgi'
+                url = 'https://www.daggegevens.knmi.nl/klimatologie/uurgegevens'
                 knmi_df = get_knmi_hourly_api(url, stn, meteo_var, start, end)
 
             elif meteo_var == 'RD':
                 # daily data from rainfall-stations
-                url = 'http://projects.knmi.nl/klimatologie/monv/reeksen/getdata_rr.cgi'
+                url = 'https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen'
                 knmi_df, variables = get_knmi_daily_rainfall_api(
                     url, stn, meteo_var, start, end, inseason, verbose)
             else:
                 # daily data from meteorological stations
-                url = 'http://projects.knmi.nl/klimatologie/daggegevens/getdata_dag.cgi'
+                url = 'https://www.daggegevens.knmi.nl/klimatologie/daggegevens'
                 knmi_df, variables, stations = get_knmi_daily_meteo_api(
                     url, stn, meteo_var, start, end, inseason, verbose)
         else:
@@ -587,9 +587,12 @@ def _read_knmi_header(f, verbose=False):
             print(f.read())
         raise ValueError('Internal Server Error')
     for iline in range(500):
-        if ' = ' in line:
+        if ' = ' in line or ' : ' in line:
             line = line.lstrip(' #').strip('\n')
-            varDes = line.split(' = ')
+            if ' = ' in line:
+                varDes = line.split(' = ')
+            else:
+                varDes = line.split(' : ')
             variables[varDes[0].strip()] = varDes[1].strip()
 
         if 'STN,YY' in line:
