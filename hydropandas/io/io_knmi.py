@@ -286,8 +286,8 @@ def _check_latest_measurement_date_RD_debilt(use_api=False,
 def download_knmi_data(stn, stn_name=None,
                        meteo_var='RD', start=None, end=None,
                        interval='daily', inseason=False,
-                       use_api=False,
-                       raise_exceptions=True, verbose=False):
+                       use_api=False, raise_exceptions=True,
+                       verbose=False):
     """download knmi data of a measurements station for certain observation
     type.
 
@@ -442,9 +442,12 @@ def get_knmi_daily_rainfall_api(url, stn, meteo_var,
     if end is not None:
         data['end'] = end.strftime('%Y%m%d')
 
-    result = requests.get(url, params=data).text
+    result = requests.get(url, params=data)
 
-    f = StringIO(result)
+    if result.status_code != 200:
+        raise requests.ConnectionError(f"Cannot connect to {url}")
+
+    f = StringIO(result.text)
     knmi_df, variables = read_knmi_daily_rainfall(
         f, meteo_var, verbose=verbose)
     if int(stn) not in knmi_df.STN.unique():
@@ -756,9 +759,12 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason, verbose=
         'stns': stn,
     }
 
-    result = requests.get(url, params=data).text
+    result = requests.get(url, params=data)
 
-    f = StringIO(result)
+    if result.status_code != 200:
+        raise requests.ConnectionError(f"Cannot connect to {url}")
+
+    f = StringIO(result.text)
     knmi_df, variables, stations = read_knmi_daily_meteo(f, verbose=verbose)
 
     return knmi_df[[meteo_var]], variables, stations
@@ -905,8 +911,12 @@ def get_knmi_hourly_api(url, stn, meteo_var, start, end):
         'stns': stn,
     }
 
-    result = requests.get(url, params=data).text
-    f = StringIO(result)
+    result = requests.get(url, params=data)
+
+    if result.status_code != 200:
+        raise requests.ConnectionError(f"Cannot connect to {url}")
+
+    f = StringIO(result.text)
     knmi_series = read_knmi_hourly(f)
 
     return knmi_series
@@ -921,7 +931,8 @@ def read_knmi_hourly(f):
 def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
                            stn_name=None,
                            fill_missing_obs=True,
-                           interval='daily', inseason=False,
+                           interval='daily',
+                           inseason=False,
                            raise_exceptions=False,
                            verbose=False):
     """Get timeseries with measurements from station closest to the given (x,y)
@@ -1225,7 +1236,8 @@ def add_missing_indices(knmi_df, stn, start, end, verbose=False):
 
 def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
                               start=None, end=None,
-                              interval='daily', raise_exceptions=False,
+                              interval='daily',
+                              raise_exceptions=False,
                               verbose=False):
     """fill missing measurements in knmi data.
 
