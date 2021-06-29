@@ -239,9 +239,9 @@ def read_dino_groundwater_quality_txt(fname, verbose=False):
 
 
 def read_dino_groundwater_csv(fname, to_mnap=True,
-                              read_series=True, 
+                              read_series=True,
                               remove_duplicates=False,
-                              keep_dup='last', 
+                              keep_dup='last',
                               verbose=False,):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
@@ -300,11 +300,16 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
             if to_mnap and measurements is not None:
                 measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
             if remove_duplicates:
-                measurements = measurements[~measurements.index.duplicated(keep=keep_dup)]
+                measurements = measurements[~measurements.index.duplicated(
+                    keep=keep_dup)]
 
             # add time variant metadata to measurements
             for s in meta_ts.values():
-                measurements = measurements.join(s, how='outer')
+                if measurements is None:
+                    measurements = pd.DataFrame(
+                        data=s.copy(), columns=[s.name])
+                else:
+                    measurements = measurements.join(s, how='outer')
                 measurements.loc[:,
                                  s.name] = measurements.loc[:, s.name].ffill()
 
@@ -989,7 +994,8 @@ class DinoWSDL:
             "http://www.dinoservices.nl/gwservices/gws-v11?wsdl"
         """
 
-        raise RuntimeError('Dino WSDL API is down since January 2021, hopefully something new will arrive soon!')
+        raise RuntimeError(
+            'Dino WSDL API is down since January 2021, hopefully something new will arrive soon!')
 
         # Create some plugins, some currently unused but left here as a reminder.
         history = HistoryPlugin()
