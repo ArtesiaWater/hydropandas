@@ -267,11 +267,11 @@ class GeoAccessor:
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
         return self._get_nearest_geometry(gdf=gdf, 
-                                          xcol_obs=xcol_obs, 
-                                          ycol_obs=ycol_obs,
-                                          multiple_geometries=multiple_lines,
-                                          geometry_type='line',
-                                          verbose=verbose)
+                                               xcol_obs=xcol_obs, 
+                                               ycol_obs=ycol_obs,
+                                               multiple_geometries=multiple_lines,
+                                               geometry_type='line',
+                                               verbose=verbose)
 
 
     def get_nearest_polygon(self, gdf=None,
@@ -305,12 +305,12 @@ class GeoAccessor:
         pandas.DataFrame
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
-        return self._get_neareset_geometry(gdf=gdf, 
-                                           xcol_obs=xcol_obs, 
-                                           ycol_obs=ycol_obs,
-                                           multiple_geometries=multiple_polygons,
-                                           geometry_type='polygon',
-                                           verbose=verbose)
+        return self._get_nearest_geometry(gdf=gdf, 
+                                          xcol_obs=xcol_obs, 
+                                          ycol_obs=ycol_obs,
+                                          multiple_geometries=multiple_polygons,
+                                          geometry_type='polygon',
+                                          verbose=verbose)
 
     def get_distance_to_point(self, point, xcol='x', ycol='y'):
         """get distance of every observation to a point.
