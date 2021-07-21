@@ -952,7 +952,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
-                       progressbar=True):
+                       progressbar=True, **kwargs):
         """Read waterinfo file or directory.
 
         Parameters
@@ -980,7 +980,7 @@ class ObsCollection(pd.DataFrame):
         }
 
         obs_list = io_waterinfo.read_waterinfo_obs(
-            file_or_dir, ObsClass, progressbar=progressbar)
+            file_or_dir, ObsClass, progressbar=progressbar, **kwargs)
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
