@@ -286,7 +286,7 @@ def _check_latest_measurement_date_RD_debilt(use_api=False,
 def download_knmi_data(stn, stn_name=None,
                        meteo_var='RD', start=None, end=None,
                        interval='daily', inseason=False,
-                       use_api=False, raise_exceptions=True,
+                       use_api=True, raise_exceptions=True,
                        verbose=False):
     """download knmi data of a measurements station for certain observation
     type.
@@ -596,7 +596,7 @@ def _read_knmi_header(f, verbose=False):
             variables[varDes[0].strip()] = varDes[1].strip()
 
         if 'STN,YY' in line:
-            header = line.split(',')
+            header = line.replace('#', '').split(',')
             header = [item.lstrip().rstrip() for item in header]
             break
 
@@ -604,6 +604,8 @@ def _read_knmi_header(f, verbose=False):
 
     if iline > 498:
         raise ValueError('cannot read measurements from file')
+        
+    
 
     return f, variables, header
 
@@ -652,6 +654,7 @@ def _transform_variables(df, variables, verbose=False):
 
 
 def read_knmi_daily_rainfall(f, meteo_var, verbose=False):
+    
 
     f, variables, header = _read_knmi_header(f)
 
@@ -710,10 +713,10 @@ def _read_station_location(f, verbose=False):
                 except ValueError:
                     pass
 
-            if ':' in f.readline():
-                raise ValueError(
-                    'KNMI station number not recognized please provide '
-                    'valid meteo station number')
+            # if ':' in f.readline():
+            #     raise ValueError(
+            #         'KNMI station number not recognized please provide '
+            #         'valid meteo station number')
             break
 
         line = f.readline()
