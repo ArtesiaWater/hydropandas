@@ -627,7 +627,7 @@ class KnmiObs(Obs):
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
             if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since July 2021.
+            Default is True since the api is back online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
         verbose : boolean, optional
