@@ -188,8 +188,8 @@ class CollectionPlots:
                                               **kwargs)
             
         # check if observation collection has lat and lon values
-        if (not col_name_lat in self.columns) and (not col_name_lon in self.columns):
-            self.geo.set_lat_lon()
+        if (not col_name_lat in self._obj.columns) and (not col_name_lon in self._obj.columns):
+            self._obj.geo.set_lat_lon()
 
         # determine start location of map
         northing = np.mean(
@@ -370,7 +370,7 @@ class ObsPlots:
                 source = ColumnDataSource(plot_df[[column, 'date']])
             else:
                 source = ColumnDataSource(
-                    plot_df[[column, 'date']].resample(plot_freq[i]).nearest())
+                    plot_df[[column, 'date']].resample(plot_freq[i]).first())
 
             # plot data
             if markers[i] == 'line':
