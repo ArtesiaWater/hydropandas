@@ -310,7 +310,7 @@ def download_knmi_data(stn, stn_name=None,
     use_api : bool, optional
         if True the api is used to obtain the data, API documentation is here:
             https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-        Default is False as the API is down (apr 2021).
+        Default is True as the API since (July 2021).
     raise_exceptions : bool, optional
         if True you get errors when no data is returned. The default is True.
     verbose : boolean, optional
@@ -1009,7 +1009,7 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
 
 def get_knmi_timeseries_stn(stn, meteo_var, start, end,
                             fill_missing_obs=True, interval='daily',
-                            inseason=False, raise_exceptions=False,
+                            inseason=False, use_api=True, raise_exceptions=False,
                             verbose=False):
     """Get a knmi time series and metadata.
 
@@ -1030,6 +1030,10 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
         desired time interval for observations. The default is 'daily'.
     inseason : boolean, optional
         flag to obtain inseason data. The default is False
+    use_api : bool, optional
+        if True the api is used to obtain the data, API documentation is here:
+            https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+        Default is True as the API since (July 2021).
     raise_exceptions : bool, optional
         if True you get errors when no data is returned. The default is True.
     verbose : boolean, optional
@@ -1051,12 +1055,14 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     if fill_missing_obs:
         knmi_df, variables, station_meta = \
             fill_missing_measurements(stn, stn_name, meteo_var, start, end,
-                                      interval, raise_exceptions,
+                                      interval, use_api=use_api,
+                                      raise_exceptions=raise_exceptions,
                                       verbose=verbose)
     else:
         knmi_df, variables, station_meta = \
             download_knmi_data(stn, stn_name, meteo_var, start, end,
-                               interval, inseason, use_api=False,
+                               interval, inseason,
+                               use_api=use_api,
                                raise_exceptions=raise_exceptions,
                                verbose=verbose)
     if not station_meta is None:
@@ -1243,6 +1249,7 @@ def add_missing_indices(knmi_df, stn, start, end, verbose=False):
 def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
                               start=None, end=None,
                               interval='daily',
+                              use_api=True,
                               raise_exceptions=False,
                               verbose=False):
     """fill missing measurements in knmi data.
@@ -1251,15 +1258,18 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
     ----------
     stn : int or str
         measurement station.
-
-    interval : str, optional
-        desired time interval for observations. The default is 'daily'.
     meteo_var : str, optional
         observation type. The default is 'RD'.
     start : str, datetime or None, optional
         start date of observations. The default is None.
     end : str, datetime or None, optional
         end date of observations. The default is None.
+    interval : str, optional
+        desired time interval for observations. The default is 'daily'.
+    use_api : bool, optional
+        if True the api is used to obtain the data, API documentation is here:
+            https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+        Default is True as the API since (July 2021).
     raise_exceptions : bool, optional
         if True you get errors when no data is returned. The default is True.
     verbose : boolean, optional
@@ -1289,6 +1299,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
         download_knmi_data(stn, stn_name, meteo_var, start=start,
                            end=end, interval=interval,
                            inseason=False,
+                           use_api=use_api,
                            raise_exceptions=raise_exceptions,
                            verbose=verbose)
     if verbose:
@@ -1308,6 +1319,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
             download_knmi_data(stn, stn_name, meteo_var, start=start,
                                end=end, interval=interval,
                                inseason=False,
+                               use_api=use_api,
                                raise_exceptions=raise_exceptions,
                                verbose=verbose)
         ignore.append(stn)
@@ -1341,6 +1353,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
                                start=start, end=end,
                                interval=interval,
                                inseason=False,
+                               use_api=use_api,
                                raise_exceptions=raise_exceptions,
                                verbose=verbose)
 

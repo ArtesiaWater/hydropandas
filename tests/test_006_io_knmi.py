@@ -35,6 +35,19 @@ def test_download_rd_550():
     return knmi_df, variables, stations
 
 
+def test_download_rd_550_no_api():
+    knmi_df, variables, stations = io_knmi.download_knmi_data(
+        550,
+        meteo_var='RD',
+        start='1952',
+        end=None,
+        interval='daily',
+        use_api=False,
+        inseason=False,
+        verbose=False)
+    return knmi_df, variables, stations
+
+
 def test_download_rd_12():
     knmi_df, variables, stations = io_knmi.download_knmi_data(
         12,
@@ -50,7 +63,7 @@ def test_download_rd_12():
 def test_download_without_data():
     try:
         knmi_df, variables, stations = io_knmi.download_knmi_data(
-            550,
+            324,
             meteo_var='RD',
             start='2018',
             end='2020',
@@ -80,7 +93,7 @@ def test_download_without_data_no_error():
     return knmi_df, variables, stations
 
 
-def test_download_ev24_240():
+def test_download_ev24_210():
     knmi_df, variables, stations = io_knmi.download_knmi_data(
         210,
         meteo_var='EV24',
@@ -91,6 +104,18 @@ def test_download_ev24_240():
         verbose=True)
     return knmi_df, variables, stations
 
+
+def test_download_ev24_210_no_api():
+    knmi_df, variables, stations = io_knmi.download_knmi_data(
+        210,
+        meteo_var='EV24',
+        start='1952',
+        end=None,
+        interval='daily',
+        use_api=False,
+        inseason=False,
+        verbose=True)
+    return knmi_df, variables, stations
 
 def test_fill_missing_measurements_ev24_278():
     knmi_df, variables, stations = io_knmi.fill_missing_measurements(

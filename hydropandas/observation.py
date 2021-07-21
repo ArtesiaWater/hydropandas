@@ -602,7 +602,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  raise_exceptions=True, verbose=False):
+                  use_api=True, raise_exceptions=True, verbose=False):
         """Get a KnmiObs object.
 
         Parameters
@@ -623,6 +623,11 @@ class KnmiObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since July 2021.
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
         verbose : boolean, optional
@@ -678,6 +683,7 @@ class KnmiObs(Obs):
         ts, meta = io_knmi.get_knmi_timeseries_stn(
             stn, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
+            use_api=use_api,
             raise_exceptions=raise_exceptions,
             verbose=verbose
         )

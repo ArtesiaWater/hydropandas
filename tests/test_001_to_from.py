@@ -269,6 +269,10 @@ def test_obs_from_pystore_item():
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
 
+def test_knmi_obs_from_stn_no_api():
+    return obs.KnmiObs.from_knmi(233, "RD", verbose=True,
+                                 use_api=False)
+
 
 def test_knmi_obs_from_stn_without_any_data():
     try:
