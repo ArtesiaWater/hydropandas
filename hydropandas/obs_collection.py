@@ -1200,8 +1200,6 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        oc : observation.ObsCollection
-            collection of observations
         pstore : pastastore.PastasProject, optional
             Existing pastastore, if None a new project is created
         pstore_name : str, optional
