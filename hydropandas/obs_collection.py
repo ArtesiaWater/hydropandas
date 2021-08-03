@@ -1195,6 +1195,7 @@ class ObsCollection(pd.DataFrame):
     def to_pastastore(self, pstore=None, pstore_name='',
                       obs_column='stand_m_tov_nap',
                       kind='oseries', add_metadata=True,
+                      conn=None,
                       overwrite=False, verbose=False):
         """add observations to a new or existing pastastore.
 
@@ -1210,6 +1211,9 @@ class ObsCollection(pd.DataFrame):
             The kind of series that is added to the pastas project
         add_metadata : boolean, optional
             If True metadata from the observations added to the project
+        conn : pastastore.connectors or None, optional
+            type of connector, if None the DictConnector is used. Default is
+            None.
         overwrite : boolean, optional
             if True, overwrite existing series in pastastore, default is False
         verbose : boolean, optional
@@ -1226,6 +1230,7 @@ class ObsCollection(pd.DataFrame):
                                    add_metadata=add_metadata,
                                    kind=kind,
                                    obs_column=obs_column,
+                                   conn=conn,
                                    verbose=verbose, overwrite=overwrite)
 
         return pstore
