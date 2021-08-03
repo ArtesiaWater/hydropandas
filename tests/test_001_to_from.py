@@ -113,7 +113,7 @@ def test_obscollection_dino_download_bbox_empty():
 def test_obscollection_to_fieldlogger():
     dino_gw = test_obscollection_dinozip_gw()
     fdf = dino_gw.to_fieldlogger(
-        './tests/data/2019-Dino-test/fieldlogger/locations.csv', verbose=True)
+        './tests/data/2019-Dino-test/fieldlogger/locations.csv')
     return fdf
 
 
@@ -122,7 +122,6 @@ def test_obscollection_fews_highmemory():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         './tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
         translate_dic={'locationId': 'locatie'},
-        verbose=True,
         to_mnap=False,
         remove_nan=False,
         low_memory=False)
@@ -132,7 +131,6 @@ def test_obscollection_fews_highmemory():
 def test_obscollection_fews_lowmemory():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         './tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
-        verbose=True,
         locations=None,
         low_memory=True)
     return fews_gw_prod
@@ -141,7 +139,6 @@ def test_obscollection_fews_lowmemory():
 def test_obscollection_fews_selection():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         './tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
-        verbose=True,
         locations=("MPN-N-2",)
     )
     return fews_gw_prod
@@ -160,8 +157,7 @@ def test_observation_wiskicsv_gw():
         translate_dic={
             'name': 'Station Number',
             'x': 'GlobalX',
-            'y': 'GlobalY'},
-        verbose=True)
+            'y': 'GlobalY'})
 
     return wiski_gw
 
@@ -179,8 +175,7 @@ def test_obscollection_wiskizip_gw():
         dayfirst=True,
         header_identifier=':',
         parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
-        verbose=True)
+        index_col=["datetime"])
 
     return wiski_col
 
@@ -190,7 +185,7 @@ def test_obscollection_wiskizip_gw():
 def test_to_pastas_project():
 
     dino_gw = test_obscollection_dinozip_gw()
-    pr = dino_gw.to_pastas_project(verbose=True)
+    pr = dino_gw.to_pastas_project()
 
     return pr
 
@@ -199,7 +194,7 @@ def test_to_pastas_project():
 def test_to_pastastore():
 
     dino_gw = test_obscollection_dinozip_gw()
-    pstore = dino_gw.to_pastastore(verbose=True)
+    pstore = dino_gw.to_pastastore()
 
     return pstore
 
@@ -334,6 +329,6 @@ def test_waterinfo_from_dir():
 # def test_obscollection_menyanthes():
 #
 #    fname = r'export_from_ADI.men'
-#    obsc = oc.ObsCollection.from_menyanthes(fname, verbose=True)
+#    obsc = oc.ObsCollection.from_menyanthes(fname)
 #
 #    return obsc

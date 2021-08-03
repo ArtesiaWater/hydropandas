@@ -533,7 +533,7 @@ class ObsCollection(pd.DataFrame):
                       name='fews', translate_dic=None, filterdict=None,
                       locations=None, to_mnap=True, remove_nan=True,
                       low_memory=True, unpackdir=None, force_unpack=False,
-                      preserve_datetime=False, verbose=False):
+                      preserve_datetime=False):
         """Read one or several FEWS PI-XML files.
 
         Parameters
@@ -572,8 +572,6 @@ class ObsCollection(pd.DataFrame):
             force unpack if dst already exists
         preserve_datetime : boolean, optional
             whether to preserve datetime from zip archive
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -585,8 +583,7 @@ class ObsCollection(pd.DataFrame):
         if translate_dic is None:
             translate_dic = {'locationId': 'locatie'}
 
-        meta = {'type': ObsClass,
-                'verbose': verbose}
+        meta = {'type': ObsClass}
 
         if (file_or_dir is not None):
             # get files
@@ -603,8 +600,7 @@ class ObsCollection(pd.DataFrame):
                                          locations=locations,
                                          to_mnap=to_mnap,
                                          remove_nan=remove_nan,
-                                         low_memory=low_memory,
-                                         verbose=verbose)
+                                         low_memory=low_memory)
 
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
@@ -617,8 +613,7 @@ class ObsCollection(pd.DataFrame):
                                       locationIds=locations,
                                       low_memory=low_memory,
                                       to_mnap=to_mnap,
-                                      remove_nan=remove_nan,
-                                      verbose=verbose)
+                                      remove_nan=remove_nan)
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
 
@@ -783,7 +778,7 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_list(cls, obs_list, name='', verbose=False):
+    def from_list(cls, obs_list, name=''):
         """read observations from a list of obs objects.
 
         Parameters
@@ -792,30 +787,27 @@ class ObsCollection(pd.DataFrame):
             list of observations
         name : str, optional
             name of the observation collection
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
+            
         """
         obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, name=name)
 
     @classmethod
-    def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs,
-                        verbose=False):
+    def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs):
 
         from .io.io_menyanthes import read_file
 
         menyanthes_meta = {'filename': fname,
-                           'type': ObsClass,
-                           'verbose': verbose}
+                           'type': ObsClass}
 
-        obs_list = read_file(fname, ObsClass, verbose)
+        obs_list = read_file(fname, ObsClass)
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, meta=menyanthes_meta)
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
-                     modelname='', nlay=None, exclude_layers=None, verbose=False):
+                     modelname='', nlay=None, exclude_layers=None):
         """Read modflow groundwater heads at points in obs_collection.
 
         Parameters
@@ -841,8 +833,7 @@ class ObsCollection(pd.DataFrame):
         mo_list = read_modflow_results(obs_collection, ml, hds_arr,
                                        mtime, modelname=modelname,
                                        nlay=nlay,
-                                       exclude_layers=exclude_layers,
-                                       verbose=verbose)
+                                       exclude_layers=exclude_layers)
         obs_df = util._obslist_to_frame(mo_list)
 
         return cls(obs_df)

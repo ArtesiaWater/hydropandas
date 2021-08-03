@@ -8,6 +8,9 @@ import pandas as pd
 from hydropandas.observation import GroundwaterObs, WaterlvlObs
 from lxml.etree import iterparse
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def read_xml_fname(fname, ObsClass,
                    translate_dic=None,
@@ -17,8 +20,7 @@ def read_xml_fname(fname, ObsClass,
                    return_events=True,
                    keep_flags=(0, 1), return_df=False,
                    tags=('series', 'header', 'event'),
-                   skip_errors=True, to_mnap=False, remove_nan=False,
-                   verbose=False):
+                   skip_errors=True, to_mnap=False, remove_nan=False):
     """Read an xml filename into a list of observations objects.
 
     Parameters
@@ -58,8 +60,6 @@ def read_xml_fname(fname, ObsClass,
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -79,8 +79,7 @@ def read_xml_fname(fname, ObsClass,
                                     keep_flags=keep_flags,
                                     return_df=return_df,
                                     tags=tags,
-                                    skip_errors=skip_errors,
-                                    verbose=verbose)
+                                    skip_errors=skip_errors)
     else:
         tree = etree.parse(fname)
         root = tree.getroot()
@@ -89,8 +88,7 @@ def read_xml_fname(fname, ObsClass,
                                  translate_dic=translate_dic,
                                  locationIds=locationIds,
                                  to_mnap=to_mnap,
-                                 remove_nan=remove_nan,
-                                 verbose=verbose)
+                                 remove_nan=remove_nan)
 
     return obs_list
 
@@ -100,7 +98,7 @@ def iterparse_pi_xml(fname, ObsClass,
                      locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
                      tags=('series', 'header', 'event'),
-                     skip_errors=False, verbose=False):
+                     skip_errors=False):
     """Read a FEWS XML-file with measurements, memory efficient.
 
     Parameters
@@ -161,17 +159,15 @@ def iterparse_pi_xml(fname, ObsClass,
                 tag = h_attr.tag.replace("{{{0}}}".format(
                     "http://www.wldelft.nl/fews/PI"), "")
 
-                if verbose and tag.startswith("locationId"):
-                    print("reading {}".format(h_attr.text), end="")
+                if tag.startswith("locationId"):
+                    logger.info(f"reading {h_attr.text}")
 
                 # if specific locations are provided only read those
                 if locationIds is not None and tag.startswith("locationId"):
                     loc = h_attr.text
                     if loc not in locationIds:
                         element.clear()
-                        if verbose:
-                            print(f" ... skipping '{loc}', not in locationIds",
-                                  end="")
+                        logger.info(f" ... skipping '{loc}', not in locationIds")
                         continue
 
                 if filterdict is not None:
@@ -180,10 +176,8 @@ def iterparse_pi_xml(fname, ObsClass,
                             attr = h_attr.text
                             if attr not in v:
                                 element.clear()
-                                if verbose:
-                                    print(f" ... skipping '{attr}' not "
-                                          f"in accepted values for '{k}'",
-                                          end="")
+                                logger.info(f" ... skipping '{attr}' not "
+                                            f"in accepted values for '{k}'")
                                 continue
 
                 if h_attr.text is not None:
@@ -192,8 +186,6 @@ def iterparse_pi_xml(fname, ObsClass,
                     header[tag] = {**h_attr.attrib}
                 else:
                     header[tag] = None
-            if verbose:
-                print()
             events = []
 
         elif element.tag.endswith("event"):
@@ -269,7 +261,7 @@ def iterparse_pi_xml(fname, ObsClass,
 def read_xmlstring(xmlstring, ObsClass,
                    translate_dic=None, filterdict=None,
                    locationIds=None, low_memory=True,
-                   to_mnap=False, remove_nan=False, verbose=False):
+                   to_mnap=False, remove_nan=False):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
     obtained using a fews api.
 
@@ -293,8 +285,6 @@ def read_xmlstring(xmlstring, ObsClass,
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -309,8 +299,7 @@ def read_xmlstring(xmlstring, ObsClass,
                                     ObsClass,
                                     translate_dic=translate_dic,
                                     filterdict=filterdict,
-                                    locationIds=locationIds,
-                                    verbose=verbose)
+                                    locationIds=locationIds)
     else:
         root = etree.fromstring(xmlstring)
         obs_list = read_xml_root(root,
@@ -318,15 +307,13 @@ def read_xmlstring(xmlstring, ObsClass,
                                  translate_dic=translate_dic,
                                  locationIds=locationIds,
                                  to_mnap=to_mnap,
-                                 remove_nan=remove_nan,
-                                 verbose=verbose)
+                                 remove_nan=remove_nan)
 
     return obs_list
 
 
 def read_xml_root(root, ObsClass, translate_dic=None,
-                  locationIds=None, to_mnap=False, remove_nan=False,
-                  verbose=False):
+                  locationIds=None, to_mnap=False, remove_nan=False):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
     Parameters
@@ -346,8 +333,6 @@ def read_xml_root(root, ObsClass, translate_dic=None,
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -372,9 +357,8 @@ def read_xml_root(root, ObsClass, translate_dic=None,
                         if prop == 'x' or prop == 'y' or prop == 'lat' or prop == 'lon':
                             val = float(val)
                         header[prop] = val
-                        if verbose:
-                            if prop == 'locationId':
-                                print('read {}'.format(val))
+                        if prop == 'locationId':
+                            logger.info(f'read {val}')
                 elif subitem.tag.endswith('event'):
                     date.append(subitem.attrib.pop('date'))
                     time.append(subitem.attrib.pop('time'))
@@ -561,9 +545,7 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
 def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
                       translate_dic=None, filterdict=None,
-                      to_mnap=False, remove_nan=False, low_memory=True,
-                      verbose=False,
-                      ):
+                      to_mnap=False, remove_nan=False, low_memory=True):
     """Read a list of xml files into a list of observation objects.
 
     Parameters
@@ -592,9 +574,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
-
+        
     Returns
     -------
     list of ObsClass objects
@@ -608,8 +588,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     for j, ixml in enumerate(fnames):
 
         # print message
-        if verbose:
-            print("{0}/{1} read {2}".format(j + 1, nfiles, ixml))
+        logger.info(f"{j+1}/{nfiles} read {ixml}")
 
         # join directory to filename if provided
         if directory is None:
@@ -623,7 +602,6 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
                                    translate_dic=translate_dic,
                                    filterdict=filterdict,
                                    low_memory=low_memory,
-                                   locationIds=locations,
-                                   verbose=verbose)
+                                   locationIds=locations)
 
     return obs_list

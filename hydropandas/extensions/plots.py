@@ -4,6 +4,8 @@ import numpy as np
 
 from . import accessor
 
+import logging
+logger = logging.getLogger(__name__)
 
 @accessor.register_obscollection_accessor("plots")
 class CollectionPlots:
@@ -20,8 +22,8 @@ class CollectionPlots:
 
     def interactive_plots(self, savedir,
                           tmin=None, tmax=None,
-                          per_location=True,
-                          verbose=True, **kwargs):
+                          per_location=True, 
+                          **kwargs):
         """Create interactive plots of the observations using bokeh.
 
         Parameters
@@ -34,8 +36,6 @@ class CollectionPlots:
             end date for timeseries plot
         per_location : bool, optional
             if True plot multiple filters on the same location in one figure
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
         **kwargs :
             will be passed to the Obs.to_interactive_plot method, options
             include:
@@ -86,13 +86,9 @@ class CollectionPlots:
                                                  colors=[_color_cycle[i + 1]],
                                                  return_filename=False,
                                                  **kwargs)
-                    if verbose:
-                        print('created iplot -> {}'.format(o.name))
-
+                    logger.info(f'created iplot -> {o.name}')
                 except ValueError:
-                    if verbose:
-                        print('{} has no data between {} and {}'.format(
-                            o.name, tmin, tmax))
+                    logger.error(f'{o.name} has no data between {tmin} and {tmax}')
                     o.iplot_fname = None
 
     def interactive_map(self, plot_dir, m=None,
@@ -108,7 +104,6 @@ class CollectionPlots:
                         col_name_lon='lon',
                         zoom_start=13,
                         create_interactive_plots=True,
-                        verbose=False,
                         **kwargs):
         """Create an interactive map with interactive plots using folium and
         bokeh.
@@ -156,8 +151,6 @@ class CollectionPlots:
         create_interactive_plots : boolean, optional
             if True interactive plots will be created, if False the iplot_fname
             attribute of the observations is used.
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
         **kwargs :
             will be passed to the to_interactive_plots method options are:
 
@@ -183,7 +176,6 @@ class CollectionPlots:
         # create interactive bokeh plots
         if create_interactive_plots:
             self._obj.plots.interactive_plots(savedir=plot_dir,
-                                              verbose=verbose,
                                               per_location=per_location,
                                               **kwargs)
             
@@ -241,8 +233,8 @@ class CollectionPlots:
                                 150, 36), icon_anchor=(
                                 0, 0), html='<div style="font-size: %ipt">%s</div>' %
                             (map_label_size, o.meta[map_label]))).add_to(group)
-            elif verbose:
-                print('no iplot available for {}'.format(o.name))
+            else:
+                logger.info(f'no iplot available for {o.name}')
 
         group.add_to(m)
 
