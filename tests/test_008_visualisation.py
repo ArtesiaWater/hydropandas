@@ -25,8 +25,7 @@ def test_obscollection_dino_to_imap():
                                   fname='imap.html',
                                   legend_name='grondwater DINO',
                                   add_filter_to_legend=True, hoover_names=['gws'],
-                                  zoom_start=9,
-                                  verbose=True)
+                                  zoom_start=9)
     return
 
 

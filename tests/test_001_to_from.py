@@ -29,13 +29,6 @@ def test_observation_gw():
     return gw
 
 
-def test_obscollection_fieldlogger():
-    # collection of observations
-    fl = oc.ObsCollection.from_fieldlogger(
-        './tests/data/2019-Dino-test/fieldlogger/locations.csv')
-    return fl
-
-
 def test_obscollection_from_list():
     dino_gw = oc.ObsCollection.from_dino(
         dirname=dinozip,
@@ -107,14 +100,6 @@ def test_obscollection_dino_download_bbox_empty():
     dino_gw_bbox = oc.ObsCollection.from_dino(
         bbox=bbox, ObsClass=obs.GroundwaterObs)
     return dino_gw_bbox
-
-
-# collection methods
-def test_obscollection_to_fieldlogger():
-    dino_gw = test_obscollection_dinozip_gw()
-    fdf = dino_gw.to_fieldlogger(
-        './tests/data/2019-Dino-test/fieldlogger/locations.csv')
-    return fdf
 
 
 # %% FEWS
