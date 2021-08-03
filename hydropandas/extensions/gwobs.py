@@ -3,9 +3,10 @@ import pandas as pd
 
 from . import accessor
 
+import logging
+logger = logging.getLogger(__name__)
 
-def get_model_layer_z(z, zvec, left=-999, right=999,
-                      verbose=False):
+def get_model_layer_z(z, zvec, left=-999, right=999):
     """Get index of model layer based on elevation.
 
     Assumptions:
@@ -70,8 +71,7 @@ def check_if_var_is_invalid(var):
     return False
 
 
-def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
-                               verbose=False):
+def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
     """
 
 
@@ -89,8 +89,6 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     right : int, optional
         value to return if filter is above the modellayers. 
         The default is-999.
-    verbose : bool, optional
-        DESCRIPTION. The default is False.
 
     Raises
     ------
@@ -111,31 +109,31 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     >>> get_modellayer_from_filter(-25, -27, zvec)
     2
 
-    >>> get_modellayer_from_filter(-15, -27, zvec, verbose=True)
+    >>> get_modellayer_from_filter(-15, -27, zvec)
     2
 
-    >>> get_modellayer_from_filter(-5, -27, zvec, verbose=True)
+    >>> get_modellayer_from_filter(-5, -27, zvec)
     1
 
-    >>> get_modellayer_from_filter(-5, -37, zvec, verbose=True)
+    >>> get_modellayer_from_filter(-5, -37, zvec)
     1
 
-    >>> get_modellayer_from_filter(15, -5, zvec, verbose=True)
+    >>> get_modellayer_from_filter(15, -5, zvec)
     0
 
-    >>> get_modellayer_from_filter(15, 5, zvec, verbose=True)
+    >>> get_modellayer_from_filter(15, 5, zvec)
     999
 
-    >>> get_modellayer_from_filter(-55, -65, zvec, verbose=True)
+    >>> get_modellayer_from_filter(-55, -65, zvec)
     -999
 
-    >>> get_modellayer_from_filter(15, -65, zvec, verbose=True)
+    >>> get_modellayer_from_filter(15, -65, zvec)
     nan
 
-    >>> get_modellayer_from_filter(None, -7, zvec, verbose=True)
+    >>> get_modellayer_from_filter(None, -7, zvec)
     0
 
-    >>> get_modellayer_from_filter(None, None, zvec, verbose=True)
+    >>> get_modellayer_from_filter(None, None, zvec)
     nan
 
     """
@@ -144,25 +142,21 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
     ftop_invalid = check_if_var_is_invalid(ftop)
     fbot_invalid = check_if_var_is_invalid(fbot)
     if ftop_invalid and fbot_invalid:
-        if verbose:
-            print("- values for ftop and fbot are invalid!")
+        logger.error("- values for ftop and fbot are invalid!")
         return np.nan
     elif fbot_invalid:
         lay_ftop = get_model_layer_z(ftop, zvec,
                                      left=left, right=right)
-        if verbose:
-            print(f"- fbot invalid. selected based on ftop: {lay_ftop}")
+        logger.error(f"- fbot invalid. selected based on ftop: {lay_ftop}")
         return lay_ftop
     elif ftop_invalid:
         lay_fbot = get_model_layer_z(fbot, zvec,
                                      left=left, right=right)
-        if verbose:
-            print(f"- ftop invalid. selected based on fbot: {lay_fbot}")
+        logger.error(f"- ftop invalid. selected based on fbot: {lay_fbot}")
         return lay_fbot
 
     if ftop < fbot:
-        if verbose:
-            print('- filter top below filter bot, switch top and bot')
+        logger.warning('- filter top below filter bot, switch top and bot')
         fbot, ftop = ftop, fbot
 
     lay_ftop = get_model_layer_z(ftop, zvec,
@@ -172,36 +166,30 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
 
     # Piezometer in layer in which majority of screen is located
     if lay_fbot == lay_ftop:
-        if verbose:
-            print(f"- selected layer {lay_fbot}")
+        logger.info(f"- selected layer {lay_fbot}")
         return lay_fbot
 
     else:
         if lay_fbot == left and lay_ftop == right:
-            if verbose:
-                print('- filter spans all layers. '
-                      'return nan')
+            logger.info('- filter spans all layers. '
+                        'return nan')
             return np.nan
         elif lay_ftop == right:
-            if verbose:
-                print('- filter top higher than top layer. '
-                      'selected layer {}'.format(lay_fbot))
+            logger.info('- filter top higher than top layer. '
+                        f'selected layer {lay_fbot}')
             return lay_fbot
 
         elif lay_fbot == left:
-            if verbose:
-                print('- filter bot lower than bottom layer. '
-                      'selected layer {}'.format(lay_ftop))
+            logger.info('- filter bot lower than bottom layer. '
+                        f'selected layer {lay_ftop}')
             return lay_ftop
+        
+        logger.info("- filter crosses layer boundary:\n"
+                    f"  - layers: {lay_ftop}, {lay_fbot}")
 
-        if verbose:
-            print("- filter crosses layer boundary:")
-            print("  - layers: {0}, {1}".format(lay_ftop, lay_fbot))
-
-        if verbose:
-            print(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
-                  " checking length per layer")
-            print("  - length per layer:")
+        logger.info(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+                    " checking length per layer\n"
+                    "  - length per layer:")
 
         # check which layer has the biggest length of the filter
         length_layers = np.zeros(lay_fbot - lay_ftop + 1)
@@ -213,14 +201,12 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999,
             else:
                 length_layers[i] = zvec[lay_ftop + i] - zvec[lay_ftop + 1 + i]
 
-            if verbose:
-                print(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
+            logger.info(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
 
         # choose layer with biggest length
         rel_layer = np.argmax(length_layers)
         lay_out = lay_ftop + rel_layer
-        if verbose:
-            print(f"  - selected layer: {lay_out}")
+        logger.info(f"  - selected layer: {lay_out}")
         return lay_out
 
     return np.nan
@@ -439,7 +425,7 @@ class GwObsAccessor:
                         self._obj._set_metadata_value(pb_dub, 'locatie', locatie,
                                                       add_to_meta=add_to_meta)
 
-    def get_modellayers(self, gwf, verbose=False):
+    def get_modellayers(self, gwf):
         """Get the modellayer per observation. The layers can be obtained from
         the modflow model or can be defined in zgr.
 
@@ -447,8 +433,6 @@ class GwObsAccessor:
         ----------
         gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
             modflow model
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -456,31 +440,28 @@ class GwObsAccessor:
         """
         modellayers = []
         for o in self._obj.obs.values:
-            if verbose:
-                print("-" * 10 + "\n " + o.name + ":")
+            logger.info("-" * 10 + f"\n {o.name}:")
 
-            modellayers.append(o.gwobs.get_modellayer_modflow(gwf,
-                                                              verbose=verbose))
+            modellayers.append(o.gwobs.get_modellayer_modflow(gwf))
 
         modellayers = pd.Series(index=self._obj.index, data=modellayers,
                                 name='modellayer')
 
         return modellayers
 
-    def get_regis_layers(self, verbose=False):
+    def get_regis_layers(self):
         """Get the regis layer per observation.
 
         Parameters
         ----------
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
+        
 
         Returns
         -------
         pd.Series with the names of the regis layer of each observation
         """
 
-        return self._obj.obs.apply(lambda o: o.gwobs.get_regis_layer(verbose))
+        return self._obj.obs.apply(lambda o: o.gwobs.get_regis_layer())
 
 
 @accessor.register_obs_accessor("gwobs")
@@ -488,15 +469,13 @@ class GeoAccessorObs:
     def __init__(self, obs):
         self._obj = obs
 
-    def get_modellayer_modflow(self, gwf, left=-999, right=999, verbose=False):
+    def get_modellayer_modflow(self, gwf, left=-999, right=999):
         """Add modellayer to meta dictionary.
 
         Parameters
         ----------
         gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
             modflow model
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -512,17 +491,15 @@ class GeoAccessorObs:
             modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter,
                                                     self._obj.onderkant_filter,
                                                     zvec,
-                                                    left=left, right=right,
-                                                    verbose=verbose)
+                                                    left=left, right=right)
             return modellayer
 
-    def get_regis_layer(self, verbose=False):
+    def get_regis_layer(self):
         """find the name of the REGIS layer based on the filter depth.
 
         Parameters
         ----------
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
+        
 
         Returns
         -------
@@ -554,8 +531,7 @@ class GeoAccessorObs:
         layer_i = get_modellayer_from_filter(self._obj.bovenkant_filter,
                                              self._obj.onderkant_filter,
                                              zvec,
-                                             left=-999, right=999,
-                                             verbose=verbose)
+                                             left=-999, right=999)
 
         if layer_i == 999:
             return 'above'

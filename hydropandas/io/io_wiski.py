@@ -5,6 +5,8 @@ import pandas as pd
 
 from ..util import get_files
 
+import logging
+logger = logging.getLogger(__name__)
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',
                        end_header_str=None):
@@ -29,10 +31,9 @@ def _read_wiski_header(f, header_sep=":", header_identifier='#',
 
 def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                     read_series=True, infer_datetime_format=True,
-                    translate_dic={}, verbose=False,
+                    translate_dic={},
                     tz_localize=True, to_mnap=True, **kwargs):
-    if verbose:
-        print('reading -> {}'.format(os.path.split(fname)[-1]))
+    logger.info('reading -> {}'.format(os.path.split(fname)[-1]))
 
     # manually break header parse at certain point
     if "end_header_str" in kwargs.keys():
@@ -109,7 +110,7 @@ def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
 
 def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
                    unpackdir=None, force_unpack=False, preserve_datetime=False,
-                   keep_all_obs=True, verbose=True, **kwargs):
+                   keep_all_obs=True, **kwargs):
 
     # get files
     dirname, unzip_fnames = get_files(dirname, ext=suffix,
@@ -123,18 +124,16 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
     # gather all obs in list
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
-        if verbose:
-            print("reading {0}/{1} -> {2}".format(i +
+        logger.info("reading {0}/{1} -> {2}".format(i +
                                                   1, len(unzip_fnames), csv))
         obs = ObsClass.from_wiski(os.path.join(
-            dirname, csv), verbose=False, **kwargs)
+            dirname, csv), **kwargs)
 
         if obs.metadata_available:
             obs_list.append(obs)
         elif keep_all_obs:
             obs_list.append(obs)
         else:
-            if verbose:
-                print('not added to collection -> {}'.format(csv))
+            logger.info(f'not added to collection -> {csv}')
 
     return obs_list
