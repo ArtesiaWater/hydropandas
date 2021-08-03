@@ -208,7 +208,6 @@ class ObsCollection(pd.DataFrame):
                   preserve_datetime=False,
                   keep_all_obs=True,
                   name=None,
-                  verbose=False,
                   **kwargs):
         """Read dino data within an extent from the server or from a directory
         with downloaded files.
@@ -243,8 +242,6 @@ class ObsCollection(pd.DataFrame):
             without measurements or metadata
         name : str, optional
             the name of the observation collection
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
         kwargs:
             kwargs are passed to the io_dino.download_dino_within_extent() or
             the io_dino.read_dino_dir() function
@@ -268,7 +265,6 @@ class ObsCollection(pd.DataFrame):
                     'unpackdir': unpackdir,
                     'force_unpack': force_unpack,
                     'preserve_datetime': preserve_datetime,
-                    'verbose': verbose,
                     'keep_all_obs': keep_all_obs
                     }
 
@@ -279,7 +275,6 @@ class ObsCollection(pd.DataFrame):
                                      unpackdir,
                                      force_unpack,
                                      preserve_datetime,
-                                     verbose,
                                      keep_all_obs,
                                      **kwargs)
 
@@ -295,27 +290,23 @@ class ObsCollection(pd.DataFrame):
                 name = '{} from DINO'.format(layer)
 
             meta = kwargs.copy()
-            meta.update({'verbose': verbose,
-                         'extent': extent,
+            meta.update({'extent': extent,
                          'bbox': bbox,
                          'layer': layer,
-                         'keep_all_obs': keep_all_obs,
-                         'verbose': verbose})
+                         'keep_all_obs': keep_all_obs})
 
             obs_list = download_dino_within_extent(
                 extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
-                keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+                keep_all_obs=keep_all_obs, **kwargs)
 
         elif locations is not None:
             name = "DINO"
 
             meta = {'dirname': dirname,
-                    'type': ObsClass,
-                    'verbose': verbose}
+                    'type': ObsClass}
 
             obs_list = download_dino_groundwater_bulk(locations,
                                                       ObsClass=ObsClass,
-                                                      verbose=verbose,
                                                       **kwargs)
         else:
             raise ValueError("No data source provided!")
@@ -327,7 +318,7 @@ class ObsCollection(pd.DataFrame):
     def from_dino_server(cls, extent=None, bbox=None,
                          ObsClass=obs.GroundwaterObs,
                          name=None, keep_all_obs=True,
-                         verbose=False, **kwargs
+                         **kwargs
                          ):
         """Read dino data from a server.
 
@@ -346,8 +337,6 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : boolean, optional
             add all observation points to the collection, even without data or
             metadata
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
         kwargs:
             kwargs are passed to the io_dino.download_dino_within_extent() function
 
@@ -373,11 +362,10 @@ class ObsCollection(pd.DataFrame):
             name = '{} from DINO'.format(layer)
 
         meta = kwargs.copy()
-        meta.update({'verbose': verbose})
 
         obs_list = download_dino_within_extent(
             extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
-            keep_all_obs=keep_all_obs, verbose=verbose, **kwargs)
+            keep_all_obs=keep_all_obs, **kwargs)
 
         obs_df = util._obslist_to_frame(obs_list)
 
@@ -397,7 +385,6 @@ class ObsCollection(pd.DataFrame):
                       preserve_datetime=False,
                       keep_all_obs=True,
                       name=None,
-                      verbose=False,
                       **kwargs):
         """Read a dino directory.
 
@@ -422,8 +409,6 @@ class ObsCollection(pd.DataFrame):
             metadata
         name : str, optional
             the name of the observation collection
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
         kwargs:
             kwargs are passed to the io_dino.read_dino_dir() function
 
@@ -448,7 +433,6 @@ class ObsCollection(pd.DataFrame):
                 'unpackdir': unpackdir,
                 'force_unpack': force_unpack,
                 'preserve_datetime': preserve_datetime,
-                'verbose': verbose,
                 'keep_all_obs': keep_all_obs
                 }
 
@@ -460,7 +444,6 @@ class ObsCollection(pd.DataFrame):
             unpackdir,
             force_unpack,
             preserve_datetime,
-            verbose,
             keep_all_obs,
             **kwargs)
 
@@ -480,7 +463,6 @@ class ObsCollection(pd.DataFrame):
             preserve_datetime=False,
             keep_all_obs=True,
             name=None,
-            verbose=False,
             **kwargs):
         """Read a dino directory.
 
@@ -507,8 +489,6 @@ class ObsCollection(pd.DataFrame):
             metadata
         name : str, optional
             the name of the observation collection
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
         kwargs:
             kwargs are passed to the io_dino.read_dino_dir() function
 
@@ -529,7 +509,6 @@ class ObsCollection(pd.DataFrame):
                 'unpackdir': unpackdir,
                 'force_unpack': force_unpack,
                 'preserve_datetime': preserve_datetime,
-                'verbose': verbose,
                 'keep_all_obs': keep_all_obs
                 }
 
@@ -541,7 +520,6 @@ class ObsCollection(pd.DataFrame):
             unpackdir,
             force_unpack,
             preserve_datetime,
-            verbose,
             keep_all_obs,
             **kwargs)
 

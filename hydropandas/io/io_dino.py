@@ -3,6 +3,7 @@ import os
 import re
 import tempfile
 import warnings
+import logging
 from timeit import default_timer
 
 import numpy as np
@@ -16,6 +17,7 @@ from zeep.wsa import WsAddressingPlugin
 
 from ..util import unzip_file
 
+logger = logging.getLogger(__name__)
 
 # %% DINO groundwater CSV methods
 def _read_dino_groundwater_header(f):
@@ -169,7 +171,7 @@ def _read_dino_groundwater_measurements(f, line):
     return line, measurements
 
 
-def read_dino_groundwater_quality_txt(fname, verbose=False):
+def read_dino_groundwater_quality_txt(fname):
     """Read dino groundwater quality (grondwatersamenstelling) from a dinoloket
     txt file.
 
@@ -181,8 +183,6 @@ def read_dino_groundwater_quality_txt(fname, verbose=False):
     ----------
     fname : str
         path to txt file
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -190,9 +190,7 @@ def read_dino_groundwater_quality_txt(fname, verbose=False):
     meta : dict
         dictionary with metadata
     """
-
-    if verbose:
-        print('reading -> {}'.format(os.path.split(fname)[-1]))
+    logger.info('reading -> {}'.format(os.path.split(fname)[-1]))
     with open(fname, 'r') as f:
 
         # LOCATIE gegevens
@@ -241,8 +239,7 @@ def read_dino_groundwater_quality_txt(fname, verbose=False):
 def read_dino_groundwater_csv(fname, to_mnap=True,
                               read_series=True,
                               remove_duplicates=False,
-                              keep_dup='last',
-                              verbose=False,):
+                              keep_dup='last'):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
     Parameters
@@ -258,8 +255,6 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
     keep_dup : str, optional
         indicate which duplicate indices should be kept, only used when 
         remove_duplicates is True. Default is 'last'
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -267,36 +262,35 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
     meta : dict
         dictionary with metadata
     """
-    if verbose:
-        print('reading -> {}'.format(os.path.split(fname)[-1]))
+    logger.info(f'reading -> {os.path.split(fname)[-1]}')
 
     with open(fname, 'r') as f:
         # read header
         line, header = _read_dino_groundwater_header(f)
         line = _read_empty(f, line)
-        if verbose and (header == dict()):
-            print('could not read header -> {}'.format(fname))
+        if not header:
+            logger.warning(f'could not read header -> {fname}')
 
         # read reference level
         line, ref = _read_dino_groundwater_referencelvl(f, line)
         line = _read_empty(f, line)
-        if verbose and (ref == dict()):
-            print('could not read reference level -> {}'.format(fname))
-
+        if not ref:
+            logger.warning(f'could not read reference level -> {fname}')
+       
         # read metadata
         line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
-        if verbose and (meta['metadata_available'] == False):
-            print('could not read metadata -> {}'.format(fname))
+        if not meta['metadata_available']:
+            logger.warning(f'could not read metadata -> {fname}')
         meta['filename'] = fname
 
         # read measurements
         if read_series:
             line, measurements = _read_dino_groundwater_measurements(f, line)
-            if verbose and (measurements is None):
-                print('could not read measurements -> {}'.format(fname))
-            elif verbose and measurements[~measurements.stand_cm_tov_nap.isna()].empty:
-                print('no NAP measurements available -> {}'.format(fname))
+            if measurements is None:
+                logger.warning(f'could not read measurements -> {fname}')
+            elif measurements[~measurements.stand_cm_tov_nap.isna()].empty:
+                logger.warning(f'no NAP measurements available -> {fname}')
             if to_mnap and measurements is not None:
                 measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
             if remove_duplicates:
@@ -410,7 +404,7 @@ def _read_artdino_groundwater_measurements(f, line):
 
 
 def read_artdino_groundwater_csv(fname, to_mnap=True,
-                                 read_series=True, verbose=False,):
+                                 read_series=True):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
     Parameters
@@ -421,8 +415,6 @@ def read_artdino_groundwater_csv(fname, to_mnap=True,
         if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
         if False only metadata is read, default is True
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -430,31 +422,32 @@ def read_artdino_groundwater_csv(fname, to_mnap=True,
     meta : dict
         dictionary with metadata
     """
-    if verbose:
-        print('reading -> {}'.format(os.path.split(fname)[-1]))
+    logger.info(f'reading -> {os.path.split(fname)[-1]}')
 
     with open(fname, 'r') as f:
         # read header
         line, header = _read_dino_groundwater_header(f)
         line = _read_empty(f, line)
-        if verbose and (header == dict()):
-            print('could not read header -> {}'.format(fname))
+        if not header:
+            logger.warning(f'could not read header -> {fname}')
 
         # read metadata
         line, meta = _read_artdino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
-        if verbose and (meta['metadata_available'] == False):
-            print('could not read metadata -> {}'.format(fname))
+        
+        if not meta['metadata_available']:
+            logger.warning(f'could not read metadata -> {fname}')
+        
         meta['filename'] = fname
 
         # read measurements
         if read_series:
             line, measurements = _read_artdino_groundwater_measurements(
                 f, line)
-            if verbose and (measurements is None):
-                print('could not read measurements -> {}'.format(fname))
-            elif verbose and measurements[~measurements["stand_cm_nap"].isna()].empty:
-                print('no NAP measurements available -> {}'.format(fname))
+            if measurements is None:
+                logger.warning(f'could not read measurements -> {fname}')
+            elif measurements[~measurements["stand_cm_nap"].isna()].empty:
+                logger.warning(f'no NAP measurements available -> {fname}')
             if to_mnap and measurements is not None:
                 measurements['stand_m_tov_nap'] = measurements['stand_cm_nap'] / 100.
         else:
@@ -466,7 +459,7 @@ def read_artdino_groundwater_csv(fname, to_mnap=True,
 def read_artdino_dir(dirname, ObsClass=None,
                      subdir='csv', suffix='.csv',
                      unpackdir=None, force_unpack=False, preserve_datetime=False,
-                     verbose=False, keep_all_obs=True, **kwargs
+                     keep_all_obs=True, **kwargs
                      ):
     """Read Dino directory with point observations.
 
@@ -491,8 +484,6 @@ def read_artdino_dir(dirname, ObsClass=None,
         force unpack if dst already exists
     preserve_datetime : boolean, optional
         use date of the zipfile for the destination file
-    verbose : boolean, optional
-        Print additional information to the screen (default is False)
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without data or
         metadata
@@ -529,14 +520,13 @@ def read_artdino_dir(dirname, ObsClass=None,
     for _, file in enumerate(files):
         fname = os.path.join(dirname, subdir, file)
         obs = ObsClass.from_artdino_file(
-            fname=fname, verbose=verbose, **kwargs)
+            fname=fname, **kwargs)
         if obs.metadata_available and (not obs.empty):
             obs_list.append(obs)
         elif keep_all_obs:
             obs_list.append(obs)
         else:
-            if verbose:
-                print('not added to collection -> {}'.format(fname))
+            logging.info(f'not added to collection -> {fname}')
 
     return obs_list
 
@@ -692,8 +682,7 @@ class DinoREST:
         response = self.post(self.gwo_url, locations)
         return response
 
-    def get_gwo_metadata(self, location, filternr, raw_response=False,
-                         verbose=False):
+    def get_gwo_metadata(self, location, filternr, raw_response=False):
         """Get metadata details for locations.
 
         Parameters
@@ -716,8 +705,7 @@ class DinoREST:
                 meta = {'metadata_available': False}
             else:
                 meta = self._parse_json_single_gwo_filter(data[0], location,
-                                                          filternr,
-                                                          verbose=verbose)
+                                                          filternr)
             return meta
 
     def get_locations_by_extent(self, extent, layer="grondwatermonitoring",
@@ -811,8 +799,7 @@ class DinoREST:
         return df
 
     @staticmethod
-    def _parse_json_single_gwo_filter(data, location, filternr,
-                                      verbose=False):
+    def _parse_json_single_gwo_filter(data, location, filternr):
         """parse metadata obtained with get_dino_piezometer_metadata.
 
         Parameters
@@ -852,25 +839,22 @@ class DinoREST:
                 meta.update(next(item for item in piezometers if
                                  item["piezometerNr"] == filternr))
             except StopIteration:
-                if verbose:
-                    print('no piezometer metadata in metadata json '
-                          f'{location} with filternr {filternr}')
+                logging.warning('no piezometer metadata in metadata json '
+                                f'{location} with filternr {filternr}')
         if levels:
             try:
                 meta.update(next(item for item in levels if
                                  item["piezometerNr"] == filternr))
             except StopIteration:
-                if verbose:
-                    print('no level metadata in metadata json '
-                          f'{location} with filternr {filternr}')
+                logger.warning('no level metadata in metadata json '
+                               f'{location} with filternr {filternr}')
         if samples:
             try:
                 meta.update(next(item for item in samples if
                                  item["piezometerNr"] == filternr))
             except StopIteration:
-                if verbose:
-                    print('no sample metadata in metadata json '
-                          f'{location} with filternr {filternr}')
+                logger.warning('no sample metadata in metadata json '
+                               f'{location} with filternr {filternr}')
 
         meta.update(data)
         meta.pop('dinoId')
@@ -893,8 +877,7 @@ class DinoREST:
 
         return meta
 
-    def _parse_json_gwo_details(self, json_details, field="levels",
-                                verbose=False):
+    def _parse_json_gwo_details(self, json_details, field="levels"):
         """convert json response to dataframe.
 
         TODO:
@@ -957,8 +940,7 @@ class DinoREST:
             # get metadata for every filter
             for filternr in filter_dic.keys():
                 meta = self._parse_json_single_gwo_filter(
-                    data.copy(), location, str(filternr).zfill(3),
-                    verbose=verbose)
+                    data.copy(), location, str(filternr).zfill(3))
                 idf = pd.DataFrame(meta, index=[meta.pop('name')])
                 dflist.append(idf)
 
@@ -1011,7 +993,7 @@ class DinoWSDL:
         self.client.set_ns_prefix("v11", "http://v11.ws.gws.dino.tno.nl/")
 
     def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
-                      raw_response=False, verbose=False):
+                      raw_response=False):
         """Get a timeseries for a piezometer. If the piezometer is part of a
         cluster this function returns the combined timeseries of all the
         piezometers in the cluster.
@@ -1031,8 +1013,6 @@ class DinoWSDL:
         raw_response : bool, optional
             if True, return the zeep parsed XML response, by default
             False which will return a DataFrame
-        verbose : bool, optional
-            print logging information to console
 
         Returns
         -------
@@ -1060,20 +1040,16 @@ class DinoWSDL:
 
         try:
             start = default_timer()
-            if verbose:
-                print(f"Downloading: {location}-{filternr}... ", end="",
-                      flush=True)
+            logging.info(f"Downloading: {location}-{filternr}... ")
             r = self.client.service.findMeetreeks(**data)
         except Exception as e:
-            if verbose:
-                print(e)
+            logging.error(e)
             raise e
         time = default_timer() - start
-        if verbose:
-            if r:
-                print(f"OK! {time:.3f}s", flush=True)
-            else:
-                print(f"ERROR {r.status_code}!", flush=True)
+        if r:
+            logging.info(f"OK! {time:.3f}s")
+        else:
+            logging.error(f"ERROR {r.status_code}!")
 
         if raw_response:
             return r
@@ -1190,8 +1166,7 @@ class DinoWSDL:
 
 
 def download_dino_groundwater(location, filternr, tmin, tmax,
-                              split_cluster=True,
-                              verbose=False, **kwargs):
+                              split_cluster=True, **kwargs):
     """Download measurements and metadata from a dino groundwater observation
     well.
 
@@ -1209,8 +1184,6 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
         if False and the piezometer belongs to a cluster, the combined
         time series of the cluster is used. if True the indvidual time
         series of each piezometer is used. Default is True
-    verbose : bool
-        print logging inforation to console, default is False
     kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
 
@@ -1227,16 +1200,15 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
 
     # measurements
     measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
-                                      verbose=verbose, **kwargs)
+                                      **kwargs)
 
     # new metadata method
     dinorest = DinoREST()
-    meta = dinorest.get_gwo_metadata(location, filternr, verbose=verbose)
+    meta = dinorest.get_gwo_metadata(location, filternr)
 
     if ('clusterList' in meta.keys()) and split_cluster and (not measurements.empty):
-        if verbose:
-            print(f'piezometer {location}-{filternr} is part of a cluster')
-            print('slicing time series to avoid using combined cluster series')
+        logging.info(f'piezometer {location}-{filternr} is part of a cluster'
+                     'slicing time series to avoid using combined cluster series')
 
         start_time = dt.timedelta(
             seconds=meta['startDate'] / 1000) + dt.datetime(1970, 1, 1, 1)
@@ -1248,8 +1220,7 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
 
 
 def download_dino_groundwater_bulk(locations, ObsClass=None,
-                                   filtersep="-", verbose=False,
-                                   stop_on_error=True,
+                                   filtersep="-", stop_on_error=True,
                                    **kwargs):
     """Download DINO groundwater level timeseries based on a list of locations.
 
@@ -1263,8 +1234,6 @@ def download_dino_groundwater_bulk(locations, ObsClass=None,
     filtersep : str, optional
         separation character(s) between location code and filter
         number, by default "-"
-    verbose : bool, optional
-        print logging information to console, by default False
     stop_on_error : bool, optional
         if download fails for some reason, raise the error, otherwise
         continue, by default True
@@ -1280,13 +1249,12 @@ def download_dino_groundwater_bulk(locations, ObsClass=None,
         iloc, filternr = loc.split(filtersep)
         try:
             obslist.append(ObsClass.from_dino(
-                location=iloc, filternr=filternr, verbose=verbose, **kwargs))
+                location=iloc, filternr=filternr, **kwargs))
         except Exception as e:
             if stop_on_error:
                 raise e
             else:
-                if verbose:
-                    print(loc, e)
+                logging.error(f'{loc}, {e}')
                 continue
 
     return obslist
@@ -1373,8 +1341,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
                                 tmin="1900-01-01", tmax="2040-01-01",
                                 zmin=None, zmax=None, unit="NAP",
                                 keep_all_obs=True,
-                                cache=False,
-                                verbose=False):
+                                cache=False):
     """Download DINO data within a certain extent (or a bounding box)
 
     Parameters
@@ -1406,8 +1373,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         if True each observation that has been downloaded is cached. Can be
         helpful because the dino server give errors frequently. default is
         False
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
 
     Returns
     -------
@@ -1418,13 +1383,13 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     # read locations
     gdf_loc = get_dino_locations(extent=extent, bbox=bbox, layer=layer)
 
-    if verbose:
-        if bbox is None:
-            print('\ndownload {layer} data from dino within:\n'
-                  f'- extent: {extent}')
-        elif extent is None:
-            print('\ndownload {layer} data from dino within:\n'
-                  f'- bbox: {bbox}')
+    
+    if bbox is None:
+        logging.info(f'\ndownload {layer} data from dino within:\n'
+                     f'- extent: {extent}')
+    elif extent is None:
+        logging.info(f'\ndownload {layer} data from dino within:\n'
+                     f'- bbox: {bbox}')
 
     if gdf_loc.empty:
         return pd.DataFrame()
@@ -1449,8 +1414,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         gdf_loc = gdf_loc.loc[mask]
 
     if gdf_loc.empty:
-        if verbose:
-            print("no data found!")
+        logging.warning("no data found!")
         return pd.DataFrame()
 
     # read measurements
@@ -1465,8 +1429,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         else:
             tmax_t = tmax
 
-        if verbose:
-            print('reading -> {}'.format(index))
+        logging.info(f'reading -> {index}')
 
         if cache:
             cache_dir = os.path.join(tempfile.gettempdir(), 'dino')
@@ -1495,8 +1458,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         elif keep_all_obs:
             obs_list.append(o)
         else:
-            if verbose:
-                print('not added to collection -> {}'.format(o.name))
+            logging.info(f'not added to collection -> {o.name}')
 
     # return list of obs
     return obs_list
@@ -1574,7 +1536,7 @@ def _read_dino_waterlvl_measurements(f, line):
     return measurements
 
 
-def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False):
+def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
     """Read dino waterlevel data from a dinoloket csv file.
 
     Parameters
@@ -1584,11 +1546,8 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
         if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
         if False only metadata is read, default is True
-    verbose : boolean, optional
-        print additional information to the screen (default is False).
     """
-    if verbose:
-        print('reading -> {}'.format(os.path.split(fname)[-1]))
+    logging.info(f'reading -> {os.path.split(fname)[-1]}')
 
     p_meta = re.compile(
         'Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum')
@@ -1620,7 +1579,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True, verbose=False)
 # %% General DINO methods
 def read_dino_dir(dirname, ObsClass=None,
                   subdir='Boormonsterprofiel_Geologisch booronderzoek', suffix='.txt',
-                  unpackdir=None, force_unpack=False, preserve_datetime=False, verbose=False,
+                  unpackdir=None, force_unpack=False, preserve_datetime=False,
                   keep_all_obs=True, **kwargs
                   ):
     """Read Dino directory with point observations.
@@ -1646,8 +1605,6 @@ def read_dino_dir(dirname, ObsClass=None,
         force unpack if dst already exists
     preserve_datetime : boolean, optional
         use date of the zipfile for the destination file
-    verbose : boolean, optional
-        Print additional information to the screen (default is False)
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without data or
         metadata
@@ -1683,13 +1640,12 @@ def read_dino_dir(dirname, ObsClass=None,
     obs_list = []
     for _, file in enumerate(files):
         fname = os.path.join(dirname, subdir, file)
-        obs = ObsClass.from_dino(fname=fname, verbose=verbose, **kwargs)
+        obs = ObsClass.from_dino(fname=fname, **kwargs)
         if obs.metadata_available and (not obs.empty):
             obs_list.append(obs)
         elif keep_all_obs:
             obs_list.append(obs)
         else:
-            if verbose:
-                print('not added to collection -> {}'.format(fname))
+            logging.info(f'not added to collection -> {fname}')
 
     return obs_list

@@ -13,19 +13,19 @@ dinozip = './tests/data/2019-Dino-test/dino.zip'
 def test_observation_gwq():
     # single observation
     fname = './tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt'
-    ogq = obs.GroundwaterQualityObs.from_dino(fname, verbose=True)
+    ogq = obs.GroundwaterQualityObs.from_dino(fname)
     return ogq
 
 
 def test_observation_wl():
     fname = './tests/data/2019-Dino-test/Peilschaal/P58A0001.csv'
-    wl = obs.WaterlvlObs.from_dino(fname, verbose=True)
+    wl = obs.WaterlvlObs.from_dino(fname)
     return wl
 
 
 def test_observation_gw():
     fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-    gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
+    gw = obs.GroundwaterObs.from_dino(fname=fname)
     return gw
 
 
@@ -42,8 +42,7 @@ def test_obscollection_from_list():
         ObsClass=obs.GroundwaterObs,
         subdir='Grondwaterstanden_Put',
         suffix='1.csv',
-        keep_all_obs=True,
-        verbose=False)
+        keep_all_obs=True)
     obs_list = [o for o in dino_gw.obs.values]
     oc_list = oc.ObsCollection.from_list(obs_list)
     return oc_list
@@ -66,8 +65,7 @@ def test_obscollection_dinozip_gw():
         ObsClass=obs.GroundwaterObs,
         subdir='Grondwaterstanden_Put',
         suffix='1.csv',
-        keep_all_obs=False,
-        verbose=False)
+        keep_all_obs=False)
     return dino_gw
 
 
@@ -78,8 +76,7 @@ def test_obscollection_dinozip_gw_keep_all_obs():
         ObsClass=obs.GroundwaterObs,
         subdir='Grondwaterstanden_Put',
         suffix='1.csv',
-        keep_all_obs=True,
-        verbose=False)
+        keep_all_obs=True)
     return dino_gw
 
 
@@ -89,8 +86,7 @@ def test_obscollection_dinozip_wl():
         dirname=dinozip,
         ObsClass=obs.WaterlvlObs,
         subdir='Peilschaal',
-        suffix='.csv',
-        verbose=True)
+        suffix='.csv')
     return dino_ps
 
 
@@ -100,8 +96,7 @@ def test_obscollection_dinozip_gwq():
         dirname=dinozip,
         ObsClass=obs.GroundwaterQualityObs,
         subdir='Grondwatersamenstellingen_Put',
-        suffix='.txt',
-        verbose=True)
+        suffix='.txt')
     return dino_gwq
 
 
@@ -110,7 +105,7 @@ def test_obscollection_dino_download_bbox_empty():
     bbox = [88596.63500000164, 407224.8449999988,
             89623.4149999991, 407804.27800000086]
     dino_gw_bbox = oc.ObsCollection.from_dino(
-        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
+        bbox=bbox, ObsClass=obs.GroundwaterObs)
     return dino_gw_bbox
 
 

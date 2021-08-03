@@ -8,12 +8,14 @@ import os
 import tempfile
 import time
 import zipfile
+import logging
 
 import numpy as np
 import pandas as pd
 import scipy.spatial.qhull as qhull
 from pandas import Timedelta, Timestamp
 
+logger = logging.getLogger(__name__)
 
 def _obslist_to_frame(obs_list):
     """convert a list of observations to a pandas DataFrame.
@@ -75,8 +77,7 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     return 1
 
 
-def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
-                        verbose=False):
+def unzip_changed_files(zipname, pathname, check_time=True, check_size=False):
     # Extract each file in a zip-file only when the properties are different
     # With the default arguments this method only checks the modification time
     with zipfile.ZipFile(zipname) as zf:
@@ -98,8 +99,7 @@ def unzip_changed_files(zipname, pathname, check_time=True, check_size=False,
             else:
                 extract = True
             if extract:
-                if verbose:
-                    print('extracting {}'.format(info.filename))
+                logging.info('extracting {}'.format(info.filename))
                 zf.extract(info.filename, pathname)
                 # set the correct modification time
                 # (which is the time of extraction by default)
