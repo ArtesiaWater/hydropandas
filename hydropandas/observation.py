@@ -156,6 +156,7 @@ class Obs(DataFrame):
                 obj_type = "hydropandas.{}".format(type(self).__name__)
                 header = f"<div class='xr-header'><div class='xr-obj-type'>{escape(obj_type)}</div></div><hr>"
                 meta_dic = {key: getattr(self, key) for key in self._metadata}
+                meta_dic.pop('meta')
                 meta_out = DataFrame(meta_dic, index=['metadata']).T
                 formatter2 = fmt.DataFrameFormatter(
                     meta_out,
@@ -602,7 +603,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  use_api=True, raise_exceptions=True, verbose=False):
+                  use_api=True, raise_exceptions=True):
         """Get a KnmiObs object.
 
         Parameters
@@ -630,8 +631,6 @@ class KnmiObs(Obs):
             Default is True since the api is back online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -684,9 +683,7 @@ class KnmiObs(Obs):
             stn, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
             use_api=use_api,
-            raise_exceptions=raise_exceptions,
-            verbose=verbose
-        )
+            raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
@@ -694,7 +691,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, raise_exceptions=False, verbose=False):
+                        inseason=False, raise_exceptions=False):
         """Get KnmiObs object with measurements from station closest to the
         given (x,y) coördinates.
 
@@ -719,8 +716,6 @@ class KnmiObs(Obs):
             flag to obtain inseason data. The default is False
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -731,9 +726,7 @@ class KnmiObs(Obs):
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions,
-            verbose=verbose
-        )
+            raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
@@ -741,7 +734,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_obs(cls, obs, variable, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
-                 raise_exceptions=False, verbose=False):
+                 raise_exceptions=False):
 
         from .io import io_knmi
 
@@ -756,9 +749,7 @@ class KnmiObs(Obs):
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions,
-            verbose=verbose
-        )
+            raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])

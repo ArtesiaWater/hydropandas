@@ -6,3 +6,6 @@ from .extensions import gwobs as _gwobs
 from .extensions import plots as _plots
 from .extensions import stats as _stats
 from .version import __version__
+
+import logging
+logging.getLogger('hydropandas').addHandler(logging.NullHandler())

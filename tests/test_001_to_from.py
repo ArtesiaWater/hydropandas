@@ -267,17 +267,16 @@ def test_obs_from_pystore_item():
 
 # %% KNMI
 def test_knmi_obs_from_stn():
-    return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
+    return obs.KnmiObs.from_knmi(233, "RD")
 
 def test_knmi_obs_from_stn_no_api():
-    return obs.KnmiObs.from_knmi(233, "RD", verbose=True,
+    return obs.KnmiObs.from_knmi(233, "RD",
                                  use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
     try:
-        obs.KnmiObs.from_knmi(210, "RD",
-                              verbose=True)
+        obs.KnmiObs.from_knmi(210, "RD")
     except (ValueError, KeyError):
         pass
 
@@ -285,8 +284,7 @@ def test_knmi_obs_from_stn_without_any_data():
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2',
-                                 verbose=True)
+    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2')
 
 
 def test_knmi_obs_from_xy():
@@ -304,7 +302,7 @@ def test_knmi_collection_from_locations():
                                          meteo_vars=["EV24", "RD"],
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
-                                         verbose=True, cache=False)
+                                         cache=False)
     return oc_knmi
 
 
@@ -313,8 +311,7 @@ def test_knmi_collection_from_stns():
     oc_knmi = oc.ObsCollection.from_knmi(stns=stns,
                                          meteo_vars=["EV24", "RH"],
                                          start=['2010', '2010'],
-                                         end=['2015', '2015'],
-                                         verbose=True)
+                                         end=['2015', '2015'])
     return oc_knmi
 
 
@@ -325,8 +322,7 @@ def test_knmi_collection_from_grid():
     oc_knmi = oc.ObsCollection.from_knmi(xmid=xmid, ymid=ymid,
                                          meteo_vars=["RD"],
                                          start=['2010', '2010'],
-                                         end=['2015', '2015'],
-                                         verbose=True)
+                                         end=['2015', '2015'])
     return oc_knmi
 
 # %% WATERINFO
