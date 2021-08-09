@@ -67,8 +67,8 @@ currently 5 specific Obs classes for different types of measurements:
 -   GroundwaterObs: for groundwater measurements
 -   GroundwaterQualityObs: for groundwater quality measurements
 -   WaterlvlObs: for surface water level measurements
--   ModelObs: for hydropandas from a MODFLOW model
--   KnmiObs: for (daily) KNMI hydropandas
+-   ModelObs: for "observations" from a MODFLOW model
+-   KnmiObs: for (daily) KNMI observations
 
 Each of these Obs classes is essentially a pandas DataFrame with additional 
 methods and attributes related to the type of measurement that it holds. 
@@ -96,7 +96,6 @@ Currently supported datasources that can be read:
 -   FEWS PI-XML
 -   [DINO](https://www.dinoloket.nl) csv
 -   WISKI csv
--   Artesia Fieldlogger for [Android](https://play.google.com/store/apps/details?id=nl.artesia.fieldlogger&hl=en) and [iOS](https://apps.apple.com/nl/app/fieldlogger/id924565721)
 -   [Pastas](https://github.com/pastas/pastas) projects (deprecated)
 -   [Pastastore](https://github.com/pastas/pastastore), for managing Pastas timeseries and models
 -   [PyStore](https://github.com/ranaroussi/pystore), a fast datastore for pandas timeseries
@@ -105,9 +104,8 @@ Currently supported datasources that can be read:
 -   MODFLOW groundwater models
 -   IMOD groundwater models
 
-ObsCollection can be exported to:
+An ObsCollection can be exported to:
 
--   Artesia Fieldlogger
 -   Shapefile
 -   Pastas projects (deprecated)
 -   Pastastore
