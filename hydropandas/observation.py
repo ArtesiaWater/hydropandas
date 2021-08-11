@@ -23,6 +23,7 @@ from pandas._config import get_option
 from pandas.io.formats import console, format as fmt
 from html import escape
 
+
 class Obs(DataFrame):
     """class for point observations.
 
@@ -66,25 +67,23 @@ class Obs(DataFrame):
         self.filename = kwargs.pop('filename', '')
 
         super(Obs, self).__init__(*args, **kwargs)
-        
-
 
     def __repr__(self) -> str:
         """
         Return a string representation for a particular Observation.
         """
         buf = StringIO("")
-        
+
         # write metadata properties
         buf.write('-----metadata------\n')
         for att in self._metadata:
             buf.write(f'{att} : {getattr(self, att)} \n')
         buf.write('\n')
-        
+
         if self._info_repr():
             self.info(buf=buf)
             return buf.getvalue()
-    
+
         max_rows = get_option("display.max_rows")
         min_rows = get_option("display.min_rows")
         max_cols = get_option("display.max_columns")
@@ -103,9 +102,9 @@ class Obs(DataFrame):
             max_colwidth=max_colwidth,
             show_dimensions=show_dimensions,
         )
-    
+
         return buf.getvalue()
-    
+
     def _repr_html_(self, metadata_out=True):
         """
         Return a html representation for a particular Observation.
@@ -120,8 +119,6 @@ class Obs(DataFrame):
             val = buf.getvalue().replace("<", r"&lt;", 1)
             val = val.replace(">", r"&gt;", 1)
             return "<pre>" + val + "</pre>"
-        
-  
 
         if get_option("display.notebook_repr_html"):
             max_rows = get_option("display.max_rows")
@@ -149,9 +146,9 @@ class Obs(DataFrame):
                 show_dimensions=show_dimensions,
                 decimal=".",
             )
-            
+
             df_out = fmt.DataFrameRenderer(formatter).to_html(notebook=True)
-            
+
             if metadata_out:
                 obj_type = "hydropandas.{}".format(type(self).__name__)
                 header = f"<div class='xr-header'><div class='xr-obj-type'>{escape(obj_type)}</div></div><hr>"
@@ -172,14 +169,14 @@ class Obs(DataFrame):
                     index=True,
                     bold_rows=True,
                     escape=True,
-                    max_rows=len(self._metadata)+1,
+                    max_rows=len(self._metadata) + 1,
                     min_rows=0,
                     max_cols=2,
                     show_dimensions=show_dimensions,
                     decimal=".",)
                 df_meta_out = fmt.DataFrameRenderer(formatter2).to_html(notebook=True)
-                return header+df_meta_out+df_out
-            
+                return header + df_meta_out + df_out
+
             else:
                 return df_out
         else:

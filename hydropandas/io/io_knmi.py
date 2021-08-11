@@ -30,7 +30,7 @@ def get_stations(meteo_var='RD'):
     -------
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
-    
+
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     if meteo_var == "RD":
@@ -265,11 +265,11 @@ def _check_latest_measurement_date_RD_debilt(use_api=True):
     start = dt.datetime.now() - pd.Timedelta(look_back_days, unit='D')
     end = dt.datetime.now() + pd.Timedelta(10, unit='D')
     if use_api:
-        knmi_df, _ = get_knmi_daily_rainfall_api(URL_DAILY_RD, 550, "RD", 
+        knmi_df, _ = get_knmi_daily_rainfall_api(URL_DAILY_RD, 550, "RD",
                                                  start=start,
                                                  end=end, inseason=False)
     else:
-        knmi_df, _ = get_knmi_daily_rainfall_url(550, 'DE-BILT', 'RD', start, 
+        knmi_df, _ = get_knmi_daily_rainfall_url(550, 'DE-BILT', 'RD', start,
                                                  end, inseason=False)
 
     knmi_df = knmi_df.dropna()
@@ -278,7 +278,7 @@ def _check_latest_measurement_date_RD_debilt(use_api=True):
             f'knmi station de Bilt has no RD measurements in the past {look_back_days} days.')
 
     last_measurement_date_debilt = knmi_df.index[-1]
-    
+
     logger.info(f'last RD measurement available at the Bilt is from'
                 f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}')
     logger.info('assuming no measurements are available at other stations before this date')
@@ -332,7 +332,7 @@ def download_knmi_data(stn, stn_name=None,
         information about the observerd variables
     stations : pd.DataFrame
         information about the measurement station.
-    """    
+    """
     # checks
     if interval.startswith('hour') and meteo_var == 'RD':
         message = 'Interval cannot be hourly for rainfall-stations'
@@ -348,7 +348,7 @@ def download_knmi_data(stn, stn_name=None,
 
     # convert possible integer to string
     stn = str(stn)
-    
+
     logger.info(f'download knmi {meteo_var} data from station {stn}-{stn_name} between {start} and {end}')
 
     # define variables
@@ -547,7 +547,6 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
         if df.index.duplicated().sum() > 0:
             df = df.loc[~df.index.duplicated(keep='first')]
             logger.info('duplicate indices removed from RD measurements')
-           
 
         # sometimes the last row is empty, check for that and remove it
         if not df.empty:
@@ -593,8 +592,6 @@ def _read_knmi_header(f):
 
     if iline > 498:
         raise ValueError('cannot read measurements from file')
-        
-    
 
     return f, variables, header
 
@@ -614,22 +611,22 @@ def _transform_variables(df, variables):
 
         if '0.1 ' in value:
             logger.debug(f'transform {key}, {value} from 0.1 to 1')
-           
+
             df[key] = df[key] * 0.1
             value = value.replace('0.1 ', '')
         if ' tiende ' in value:
             logger.debug(f'transform {key}, {value} from 0.1 to 1')
-            
+
             df[key] = df[key] * 0.1
             value = value.replace(' tiende ', ' ')
         if ' mm' in value:
             logger.debug(f'transform {key}, {value} from mm to m')
-            
+
             df[key] = df[key] * 0.001
             value = value.replace(' mm', ' m')
         if ' millimeters' in value:
             logger.debug(f'transform {key}, {value} from mm to m')
-            
+
             df[key] = df[key] * 0.001
             value = value.replace(' millimeters', ' m')
         # Store new variable
@@ -639,7 +636,6 @@ def _transform_variables(df, variables):
 
 
 def read_knmi_daily_rainfall(f, meteo_var):
-    
 
     f, variables, header = _read_knmi_header(f)
 
@@ -653,12 +649,12 @@ def read_knmi_daily_rainfall(f, meteo_var):
     if df.index.duplicated().sum() > 0:
         df = df.loc[~df.index.duplicated(keep='first')]
         logger.debug('duplicate indices removed from RD measurements')
-        
+
     # sometimes the last row is messed up, check for that and remove it
     if not df.empty:
         if df.iloc[-1].isna().any():
             logger.debug('last row contains no data, remove last row')
-       
+
             df = df.drop(index=df.index[-1])
             df.loc[:, meteo_var] = df[meteo_var].astype(float)
 
@@ -724,7 +720,7 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
         end time of observations.
     inseason : boolean
         flag to obtain inseason data.
-        
+
     Returns
     -------
     pd.DataFrame
@@ -749,9 +745,8 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
 
     f = StringIO(result.text)
     knmi_df, variables, stations = read_knmi_daily_meteo(f)
-    
+
     knmi_df.dropna(subset=[meteo_var], inplace=True)
-    
 
     return knmi_df[[meteo_var]], variables, stations
 
@@ -1256,9 +1251,8 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
                            inseason=False,
                            use_api=use_api,
                            raise_exceptions=raise_exceptions)
-    
-    
-    # if the first station cannot be read, read another station as the first        
+
+    # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
         logger.info(f'station {stn} has no measurements between {start} and {end}')
@@ -1274,18 +1268,17 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
                                raise_exceptions=raise_exceptions)
         ignore.append(stn)
 
-
     # find missing values
     knmi_df = add_missing_indices(knmi_df, stn, start, end)
 
     missing = knmi_df[meteo_var].isna()
     logger.info(f'station {stn} has {missing.sum()} missing measurements')
-    
+
     # fill missing values
     while np.any(missing) and not np.all(missing):
         stn_comp = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore)
-        
+
         logger.info(f'trying to fill {missing.sum()} '
                      f'measurements with station {stn_comp}')
 

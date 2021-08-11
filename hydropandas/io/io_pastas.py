@@ -10,6 +10,7 @@ import numbers
 import logging
 logger = logging.getLogger(__name__)
 
+
 def _get_metadata_from_obs(o):
     """internal method to get metadata in the right format for a pastas series.
     A pastas timeseries cannot handle the same metadata format as an
@@ -42,7 +43,7 @@ def _get_metadata_from_obs(o):
                     logger.info(f'did not add {k} to metadata because datatype is {type(v)}')
         else:
             logger.info(f'did not add {attr_key} to metadata because datatype is {type(val)}')
-            
+
     return meta
 
 

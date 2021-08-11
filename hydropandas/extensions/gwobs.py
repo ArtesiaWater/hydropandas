@@ -6,6 +6,7 @@ from . import accessor
 import logging
 logger = logging.getLogger(__name__)
 
+
 def get_model_layer_z(z, zvec, left=-999, right=999):
     """Get index of model layer based on elevation.
 
@@ -183,7 +184,7 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
             logger.info('- filter bot lower than bottom layer. '
                         f'selected layer {lay_ftop}')
             return lay_ftop
-        
+
         logger.info("- filter crosses layer boundary:\n"
                     f"  - layers: {lay_ftop}, {lay_fbot}")
 
@@ -454,7 +455,7 @@ class GwObsAccessor:
 
         Parameters
         ----------
-        
+
 
         Returns
         -------
@@ -499,7 +500,7 @@ class GeoAccessorObs:
 
         Parameters
         ----------
-        
+
 
         Returns
         -------

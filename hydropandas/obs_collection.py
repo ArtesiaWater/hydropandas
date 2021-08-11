@@ -986,7 +986,7 @@ class ObsCollection(pd.DataFrame):
                 imeta = o.meta.copy()
                 if 'datastore' in imeta.keys():
                     imeta['datastore'] = str(imeta['datastore'])
-                    
+
                 # add extra columns to item metadata
                 for icol in group.columns:
                     if icol != "obs" and icol != 'meta':

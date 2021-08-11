@@ -20,6 +20,8 @@ from ..util import unzip_file
 logger = logging.getLogger(__name__)
 
 # %% DINO groundwater CSV methods
+
+
 def _read_dino_groundwater_header(f):
     line = f.readline()
     header = dict()
@@ -276,7 +278,7 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
         line = _read_empty(f, line)
         if not ref:
             logger.warning(f'could not read reference level -> {fname}')
-       
+
         # read metadata
         line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
@@ -434,10 +436,10 @@ def read_artdino_groundwater_csv(fname, to_mnap=True,
         # read metadata
         line, meta = _read_artdino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
-        
+
         if not meta['metadata_available']:
             logger.warning(f'could not read metadata -> {fname}')
-        
+
         meta['filename'] = fname
 
         # read measurements
@@ -1383,7 +1385,6 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     # read locations
     gdf_loc = get_dino_locations(extent=extent, bbox=bbox, layer=layer)
 
-    
     if bbox is None:
         logging.info(f'\ndownload {layer} data from dino within:\n'
                      f'- extent: {extent}')

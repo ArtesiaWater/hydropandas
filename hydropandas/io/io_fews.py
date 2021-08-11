@@ -417,11 +417,11 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         y = np.float(header["y"])
     else:
         y = np.nan
-        
+
     if np.isnan(x) or np.isnan(y):
-        metadata_available=False
+        metadata_available = False
     else:
-        metadata_available=True
+        metadata_available = True
 
     if ObsClass in [GroundwaterObs, WaterlvlObs]:
         o = ObsClass(ts, x=x, y=y, meta=header,
@@ -520,18 +520,18 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
             )
             # set date and time attributes
             events = (
-                2 * "\t"
-                + '<event date="'
-                + dates.values
-                + '" time="'
-                + times.values
+                2 * "\t" +
+                '<event date="' +
+                dates.values +
+                '" time="' +
+                times.values
             )
             # loop through columns and add to event
             for icol in o.columns:
                 val = o[icol].astype(str)
                 events += (
-                    '" {}="'.format(icol)
-                    + val.values
+                    '" {}="'.format(icol) +
+                    val.values
                 )
             # close event
             events += '"/>\n'
@@ -574,7 +574,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
-        
+
     Returns
     -------
     list of ObsClass objects

@@ -72,7 +72,7 @@ class GeoAccessor:
         add_to_meta : bool, optional
             if True the lat and lon values are added to the observation meta
             dictionary. The default is True.
-            
+
         Returns
         -------
         None.
@@ -167,8 +167,7 @@ class GeoAccessor:
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
-    
-    
+
     def _get_nearest_geometry(self, gdf=None,
                               xcol_obs='x', ycol_obs='y',
                               geometry_type='polygon',
@@ -199,21 +198,21 @@ class GeoAccessor:
         pandas.DataFrame
             with columns 'nearest geometry' and 'distance nearest geometry'
         """
-        
+
         gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
         gdf = gdf.copy()
         for i, point in gdf_obs.geometry.items():
             distances = [point.distance(pol) for pol in gdf.geometry.values]
             if (np.array(distances) == np.min(distances)).sum() > 1:
-                if multiple_geometries=='error':
+                if multiple_geometries == 'error':
                     raise ValueError(f'multiple {geometry_type}s are nearest')
-                elif multiple_geometries=='keep_all':
+                elif multiple_geometries == 'keep_all':
                     ids = []
                     for i_min in np.where(np.array(distances) == np.min(distances))[0]:
                         ids.append(gdf.index[i_min])
                     gdf_obs.loc[i, f'nearest {geometry_type}'] = ', '.join(ids)
                     gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
-                elif multiple_geometries=='keep_first':
+                elif multiple_geometries == 'keep_first':
                     gdf_obs.loc[i, f'nearest {geometry_type}'] = gdf.iloc[np.argmin(
                     distances)].name
                     gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
@@ -254,19 +253,18 @@ class GeoAccessor:
         pandas.DataFrame
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
-        return self._get_nearest_geometry(gdf=gdf, 
-                                               xcol_obs=xcol_obs, 
+        return self._get_nearest_geometry(gdf=gdf,
+                                               xcol_obs=xcol_obs,
                                                ycol_obs=ycol_obs,
                                                multiple_geometries=multiple_lines,
                                                geometry_type='line')
-
 
     def get_nearest_polygon(self, gdf=None,
                             xcol_obs='x', ycol_obs='y',
                             multiple_polygons='error'):
         """get nearest polygon for each point in the obs collection. Function
         also works for lines instead of polygons
-        
+
 
         Parameters
         ----------
@@ -289,8 +287,8 @@ class GeoAccessor:
         pandas.DataFrame
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
-        return self._get_nearest_geometry(gdf=gdf, 
-                                          xcol_obs=xcol_obs, 
+        return self._get_nearest_geometry(gdf=gdf,
+                                          xcol_obs=xcol_obs,
                                           ycol_obs=ycol_obs,
                                           multiple_geometries=multiple_polygons,
                                           geometry_type='polygon')

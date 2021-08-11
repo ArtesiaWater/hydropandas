@@ -63,7 +63,7 @@ def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
                 runfile.data['OUTPUTDIRECTORY'],
                 'head',
                 head_idf)
-            
+
             logger.info(f'read {fname}')
             ihds, _attrs = imod.idf.read(fname)
             hm = util.interpolate(ihds, vtx, wts)
@@ -103,7 +103,7 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         number of layers if None the number of layers from ml is used.
     exclude_layers : list of int, optional
         exclude the observations in these modellayers
-    
+
     """
     if ml.modelgrid.grid_type == 'structured':
         if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
