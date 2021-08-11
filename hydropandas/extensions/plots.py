@@ -7,6 +7,7 @@ from . import accessor
 import logging
 logger = logging.getLogger(__name__)
 
+
 @accessor.register_obscollection_accessor("plots")
 class CollectionPlots:
 
@@ -22,7 +23,7 @@ class CollectionPlots:
 
     def interactive_plots(self, savedir,
                           tmin=None, tmax=None,
-                          per_location=True, 
+                          per_location=True,
                           **kwargs):
         """Create interactive plots of the observations using bokeh.
 
@@ -69,8 +70,8 @@ class CollectionPlots:
         for name in plot_names:
 
             if per_location:
-                oc = self._obj.loc[self._obj.locatie ==
-                                   name, 'obs'].sort_index()
+                oc = self._obj.loc[self._obj.locatie
+                                   == name, 'obs'].sort_index()
             else:
                 oc = self._obj.loc[[name], 'obs']
 
@@ -178,7 +179,7 @@ class CollectionPlots:
             self._obj.plots.interactive_plots(savedir=plot_dir,
                                               per_location=per_location,
                                               **kwargs)
-            
+
         # check if observation collection has lat and lon values
         if (not col_name_lat in self._obj.columns) and (not col_name_lon in self._obj.columns):
             self._obj.geo.set_lat_lon()
@@ -205,8 +206,8 @@ class CollectionPlots:
 
         for name in plot_names:
             if per_location:
-                oc = self._obj.loc[self._obj.locatie ==
-                                   name, 'obs'].sort_index()
+                oc = self._obj.loc[self._obj.locatie
+                                   == name, 'obs'].sort_index()
                 o = oc.iloc[-1]
                 name = o.name
             else:

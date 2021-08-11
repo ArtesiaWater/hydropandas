@@ -255,7 +255,7 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
     remove_duplicates : boolean, optional
         if True duplicate indices are removed. Default is False.
     keep_dup : str, optional
-        indicate which duplicate indices should be kept, only used when 
+        indicate which duplicate indices should be kept, only used when
         remove_duplicates is True. Default is 'last'
 
     Returns
