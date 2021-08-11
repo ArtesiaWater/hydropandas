@@ -70,7 +70,10 @@ Dependencies
 This module has several optional dependencies that have to be installed. 
 These include:
 
-- ... (to be added)
+- pastastore (create pastas models of an ObsCollection)
+- folium and bokeh (make an interactive map of an ObsCollection)
+- xarray and netCDF4 (get regis layers for groundwater observations)
+- flopy (interaction with modflow data)
 
 See the :ref:`examples` section for some quick examples on how to get started.
 
