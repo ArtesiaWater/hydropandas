@@ -20,13 +20,12 @@ def test_interactive_plot():
 
 def test_obscollection_dino_to_imap():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.geo.set_lat_lon(verbose=True)
+    dino_gw.geo.set_lat_lon()
     dino_gw.plots.interactive_map(plot_dir, plot_columns=['stand_m_tov_nap'],
                                   fname='imap.html',
                                   legend_name='grondwater DINO',
                                   add_filter_to_legend=True, hoover_names=['gws'],
-                                  zoom_start=9,
-                                  verbose=True)
+                                  zoom_start=9)
     return
 
 

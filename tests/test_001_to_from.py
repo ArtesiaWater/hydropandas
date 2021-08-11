@@ -13,27 +13,20 @@ dinozip = './tests/data/2019-Dino-test/dino.zip'
 def test_observation_gwq():
     # single observation
     fname = './tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt'
-    ogq = obs.GroundwaterQualityObs.from_dino(fname, verbose=True)
+    ogq = obs.GroundwaterQualityObs.from_dino(fname)
     return ogq
 
 
 def test_observation_wl():
     fname = './tests/data/2019-Dino-test/Peilschaal/P58A0001.csv'
-    wl = obs.WaterlvlObs.from_dino(fname, verbose=True)
+    wl = obs.WaterlvlObs.from_dino(fname)
     return wl
 
 
 def test_observation_gw():
     fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-    gw = obs.GroundwaterObs.from_dino(fname=fname, verbose=True)
+    gw = obs.GroundwaterObs.from_dino(fname=fname)
     return gw
-
-
-def test_obscollection_fieldlogger():
-    # collection of observations
-    fl = oc.ObsCollection.from_fieldlogger(
-        './tests/data/2019-Dino-test/fieldlogger/locations.csv')
-    return fl
 
 
 def test_obscollection_from_list():
@@ -42,8 +35,7 @@ def test_obscollection_from_list():
         ObsClass=obs.GroundwaterObs,
         subdir='Grondwaterstanden_Put',
         suffix='1.csv',
-        keep_all_obs=True,
-        verbose=False)
+        keep_all_obs=True)
     obs_list = [o for o in dino_gw.obs.values]
     oc_list = oc.ObsCollection.from_list(obs_list)
     return oc_list
@@ -66,8 +58,7 @@ def test_obscollection_dinozip_gw():
         ObsClass=obs.GroundwaterObs,
         subdir='Grondwaterstanden_Put',
         suffix='1.csv',
-        keep_all_obs=False,
-        verbose=False)
+        keep_all_obs=False)
     return dino_gw
 
 
@@ -78,8 +69,7 @@ def test_obscollection_dinozip_gw_keep_all_obs():
         ObsClass=obs.GroundwaterObs,
         subdir='Grondwaterstanden_Put',
         suffix='1.csv',
-        keep_all_obs=True,
-        verbose=False)
+        keep_all_obs=True)
     return dino_gw
 
 
@@ -89,8 +79,7 @@ def test_obscollection_dinozip_wl():
         dirname=dinozip,
         ObsClass=obs.WaterlvlObs,
         subdir='Peilschaal',
-        suffix='.csv',
-        verbose=True)
+        suffix='.csv')
     return dino_ps
 
 
@@ -100,8 +89,7 @@ def test_obscollection_dinozip_gwq():
         dirname=dinozip,
         ObsClass=obs.GroundwaterQualityObs,
         subdir='Grondwatersamenstellingen_Put',
-        suffix='.txt',
-        verbose=True)
+        suffix='.txt')
     return dino_gwq
 
 
@@ -110,16 +98,8 @@ def test_obscollection_dino_download_bbox_empty():
     bbox = [88596.63500000164, 407224.8449999988,
             89623.4149999991, 407804.27800000086]
     dino_gw_bbox = oc.ObsCollection.from_dino(
-        bbox=bbox, ObsClass=obs.GroundwaterObs, verbose=True)
+        bbox=bbox, ObsClass=obs.GroundwaterObs)
     return dino_gw_bbox
-
-
-# collection methods
-def test_obscollection_to_fieldlogger():
-    dino_gw = test_obscollection_dinozip_gw()
-    fdf = dino_gw.to_fieldlogger(
-        './tests/data/2019-Dino-test/fieldlogger/locations.csv', verbose=True)
-    return fdf
 
 
 # %% FEWS
@@ -127,7 +107,6 @@ def test_obscollection_fews_highmemory():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         './tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
         translate_dic={'locationId': 'locatie'},
-        verbose=True,
         to_mnap=False,
         remove_nan=False,
         low_memory=False)
@@ -137,7 +116,6 @@ def test_obscollection_fews_highmemory():
 def test_obscollection_fews_lowmemory():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         './tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
-        verbose=True,
         locations=None,
         low_memory=True)
     return fews_gw_prod
@@ -146,7 +124,6 @@ def test_obscollection_fews_lowmemory():
 def test_obscollection_fews_selection():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         './tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip',
-        verbose=True,
         locations=("MPN-N-2",)
     )
     return fews_gw_prod
@@ -165,8 +142,7 @@ def test_observation_wiskicsv_gw():
         translate_dic={
             'name': 'Station Number',
             'x': 'GlobalX',
-            'y': 'GlobalY'},
-        verbose=True)
+            'y': 'GlobalY'})
 
     return wiski_gw
 
@@ -184,8 +160,7 @@ def test_obscollection_wiskizip_gw():
         dayfirst=True,
         header_identifier=':',
         parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
-        verbose=True)
+        index_col=["datetime"])
 
     return wiski_col
 
@@ -195,7 +170,7 @@ def test_obscollection_wiskizip_gw():
 def test_to_pastas_project():
 
     dino_gw = test_obscollection_dinozip_gw()
-    pr = dino_gw.to_pastas_project(verbose=True)
+    pr = dino_gw.to_pastas_project()
 
     return pr
 
@@ -204,7 +179,7 @@ def test_to_pastas_project():
 def test_to_pastastore():
 
     dino_gw = test_obscollection_dinozip_gw()
-    pstore = dino_gw.to_pastastore(verbose=True)
+    pstore = dino_gw.to_pastastore()
 
     return pstore
 
@@ -267,17 +242,16 @@ def test_obs_from_pystore_item():
 
 # %% KNMI
 def test_knmi_obs_from_stn():
-    return obs.KnmiObs.from_knmi(233, "RD", verbose=True)
+    return obs.KnmiObs.from_knmi(233, "RD")
 
 def test_knmi_obs_from_stn_no_api():
-    return obs.KnmiObs.from_knmi(233, "RD", verbose=True,
+    return obs.KnmiObs.from_knmi(233, "RD",
                                  use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
     try:
-        obs.KnmiObs.from_knmi(210, "RD",
-                              verbose=True)
+        obs.KnmiObs.from_knmi(210, "RD")
     except (ValueError, KeyError):
         pass
 
@@ -285,8 +259,7 @@ def test_knmi_obs_from_stn_without_any_data():
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2',
-                                 verbose=True)
+    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2')
 
 
 def test_knmi_obs_from_xy():
@@ -304,7 +277,7 @@ def test_knmi_collection_from_locations():
                                          meteo_vars=["EV24", "RD"],
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
-                                         verbose=True, cache=False)
+                                         cache=False)
     return oc_knmi
 
 
@@ -313,8 +286,7 @@ def test_knmi_collection_from_stns():
     oc_knmi = oc.ObsCollection.from_knmi(stns=stns,
                                          meteo_vars=["EV24", "RH"],
                                          start=['2010', '2010'],
-                                         end=['2015', '2015'],
-                                         verbose=True)
+                                         end=['2015', '2015'])
     return oc_knmi
 
 
@@ -325,8 +297,7 @@ def test_knmi_collection_from_grid():
     oc_knmi = oc.ObsCollection.from_knmi(xmid=xmid, ymid=ymid,
                                          meteo_vars=["RD"],
                                          start=['2010', '2010'],
-                                         end=['2015', '2015'],
-                                         verbose=True)
+                                         end=['2015', '2015'])
     return oc_knmi
 
 # %% WATERINFO
@@ -343,6 +314,6 @@ def test_waterinfo_from_dir():
 # def test_obscollection_menyanthes():
 #
 #    fname = r'export_from_ADI.men'
-#    obsc = oc.ObsCollection.from_menyanthes(fname, verbose=True)
+#    obsc = oc.ObsCollection.from_menyanthes(fname)
 #
 #    return obsc

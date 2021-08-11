@@ -7,7 +7,8 @@ Created on Mon Jun 24 11:43:27 2019
 from hydropandas import observation as obs
 from hydropandas.io import io_dino
 
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 def test_dino_csv():
     fname = ('./tests/data/2019-Dino-test/Grondwaterstanden_Put/'
@@ -48,8 +49,7 @@ def test_dino_metadata2():
     # download metadata without sample metadata in json
     dinorest = io_dino.DinoREST()
     meta = dinorest.get_gwo_metadata(location='B57B0069',
-                                     filternr='002',
-                                     verbose=True)
+                                     filternr='002')
     assert meta['metadata_available']
     return meta
 
@@ -58,8 +58,7 @@ def test_dino_metadata3():
     # try to download metadata of a well that does not have metadata
     dinorest = io_dino.DinoREST()
     meta = dinorest.get_gwo_metadata(location='B45G1147',
-                                     filternr='001',
-                                     verbose=True)
+                                     filternr='001')
 
     assert not meta['metadata_available']
 

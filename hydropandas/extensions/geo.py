@@ -60,7 +60,7 @@ class GeoAccessor:
         return (xmin, xmax, ymin, ymax)
 
     def set_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326',
-                    add_to_meta=True, verbose=False):
+                    add_to_meta=True):
         """create columns with lat and lon values of the observation points.
 
         Parameters
@@ -72,8 +72,6 @@ class GeoAccessor:
         add_to_meta : bool, optional
             if True the lat and lon values are added to the observation meta
             dictionary. The default is True.
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -84,12 +82,10 @@ class GeoAccessor:
         for iname in df_lat_lon.index:
             self._obj._set_metadata_value(iname, 'lat',
                                           df_lat_lon.loc[iname,
-                                                         'lat'], add_to_meta,
-                                          verbose)
+                                                         'lat'], add_to_meta)
             self._obj._set_metadata_value(iname, 'lon',
                                           df_lat_lon.loc[iname,
-                                                         'lon'], add_to_meta,
-                                          verbose)
+                                                         'lon'], add_to_meta)
 
     def get_lat_lon(self, in_epsg='epsg:28992', out_epsg='epsg:4326'):
         """get lattitude and longitude from x and y attributes.
@@ -118,7 +114,7 @@ class GeoAccessor:
 
     def get_nearest_point(self, obs_collection2=None, gdf2=None,
                           xcol_obs1='x', ycol_obs1='y',
-                          xcol_obs2='x', ycol_obs2='y', verbose=False):
+                          xcol_obs2='x', ycol_obs2='y'):
         """get nearest point of another obs collection for each point in the
         current obs collection.
 
@@ -136,8 +132,6 @@ class GeoAccessor:
             x column in obs_collection2 used to get geometry
         ycol_obs2 : str, optional
             y column in self._obj used to get geometry
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -173,13 +167,11 @@ class GeoAccessor:
             lambda row: distance_nearest_point(row.geometry), axis=1)
 
         return gdf1[['nearest point', 'distance nearest point']]
-    
-    
+
     def _get_nearest_geometry(self, gdf=None,
                               xcol_obs='x', ycol_obs='y',
                               geometry_type='polygon',
-                              multiple_geometries='error',
-                              verbose=False):
+                              multiple_geometries='error'):
         """get nearest geometry for each point in the obs collection. Function
         works for line and polygon geometries.
 
@@ -200,29 +192,27 @@ class GeoAccessor:
                 'keep_all' -> return the indices of multiple geometries as a
                 string seperated by a comma
                 'keep_first' -> return the index of the first geometry
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
         pandas.DataFrame
             with columns 'nearest geometry' and 'distance nearest geometry'
         """
-        
+
         gdf_obs = self._obj.to_gdf(xcol=xcol_obs, ycol=ycol_obs)
         gdf = gdf.copy()
         for i, point in gdf_obs.geometry.items():
             distances = [point.distance(pol) for pol in gdf.geometry.values]
             if (np.array(distances) == np.min(distances)).sum() > 1:
-                if multiple_geometries=='error':
+                if multiple_geometries == 'error':
                     raise ValueError(f'multiple {geometry_type}s are nearest')
-                elif multiple_geometries=='keep_all':
+                elif multiple_geometries == 'keep_all':
                     ids = []
                     for i_min in np.where(np.array(distances) == np.min(distances))[0]:
                         ids.append(gdf.index[i_min])
                     gdf_obs.loc[i, f'nearest {geometry_type}'] = ', '.join(ids)
                     gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
-                elif multiple_geometries=='keep_first':
+                elif multiple_geometries == 'keep_first':
                     gdf_obs.loc[i, f'nearest {geometry_type}'] = gdf.iloc[np.argmin(
                     distances)].name
                     gdf_obs.loc[i, f'distance nearest {geometry_type}'] = np.min(distances)
@@ -237,8 +227,7 @@ class GeoAccessor:
 
     def get_nearest_line(self, gdf=None,
                          xcol_obs='x', ycol_obs='y',
-                         multiple_lines='error',
-                         verbose=False):
+                         multiple_lines='error'):
         """get nearest line for each point in the obs collection. Function
         calls the nearest_polygon function.
 
@@ -258,29 +247,24 @@ class GeoAccessor:
                 'keep_all' -> return the indices of multiple lines as a
                 string seperated by a comma
                 'keep_first' -> return the index of the first line
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
         pandas.DataFrame
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
-        return self._get_nearest_geometry(gdf=gdf, 
-                                               xcol_obs=xcol_obs, 
+        return self._get_nearest_geometry(gdf=gdf,
+                                               xcol_obs=xcol_obs,
                                                ycol_obs=ycol_obs,
                                                multiple_geometries=multiple_lines,
-                                               geometry_type='line',
-                                               verbose=verbose)
-
+                                               geometry_type='line')
 
     def get_nearest_polygon(self, gdf=None,
                             xcol_obs='x', ycol_obs='y',
-                            multiple_polygons='error',
-                            verbose=False):
+                            multiple_polygons='error'):
         """get nearest polygon for each point in the obs collection. Function
         also works for lines instead of polygons
-        
+
 
         Parameters
         ----------
@@ -297,20 +281,17 @@ class GeoAccessor:
                 'keep_all' -> return the indices of multiple polygons as a
                 string seperated by a comma
                 'keep_first' -> return the index of the first polygon
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
         pandas.DataFrame
             with columns 'nearest polygon' and 'distance nearest polygon'
         """
-        return self._get_nearest_geometry(gdf=gdf, 
-                                          xcol_obs=xcol_obs, 
+        return self._get_nearest_geometry(gdf=gdf,
+                                          xcol_obs=xcol_obs,
                                           ycol_obs=ycol_obs,
                                           multiple_geometries=multiple_polygons,
-                                          geometry_type='polygon',
-                                          verbose=verbose)
+                                          geometry_type='polygon')
 
     def get_distance_to_point(self, point, xcol='x', ycol='y'):
         """get distance of every observation to a point.

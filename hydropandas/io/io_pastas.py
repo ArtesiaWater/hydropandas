@@ -7,7 +7,11 @@ import pandas as pd
 import pastastore as pst
 import numbers
 
-def _get_metadata_from_obs(o, verbose=False):
+import logging
+logger = logging.getLogger(__name__)
+
+
+def _get_metadata_from_obs(o):
     """internal method to get metadata in the right format for a pastas series.
     A pastas timeseries cannot handle the same metadata format as an
     observation object.
@@ -16,8 +20,6 @@ def _get_metadata_from_obs(o, verbose=False):
     ----------
     o : observations.Obs
         observation time series with metadata
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
 
     Returns
     -------
@@ -38,13 +40,10 @@ def _get_metadata_from_obs(o, verbose=False):
                 elif isinstance(v, numbers.Number):
                     meta[k] = float(v)
                 else:
-                    if verbose:
-                        print(
-                            f'did not add {k} to metadata because datatype is {type(v)}')
+                    logger.info(f'did not add {k} to metadata because datatype is {type(v)}')
         else:
-            if verbose:
-                print(
-                    f'did not add {attr_key} to metadata because datatype is {type(val)}')
+            logger.info(f'did not add {attr_key} to metadata because datatype is {type(val)}')
+
     return meta
 
 
@@ -55,8 +54,7 @@ def create_pastastore(oc,
                       add_metadata=True,
                       obs_column='stand_m_tov_nap',
                       kind='oseries',
-                      overwrite=False,
-                      verbose=False):
+                      overwrite=False):
     """add observations to a new or existing pastastore.
 
     Parameters
@@ -77,8 +75,6 @@ def create_pastastore(oc,
         If True metadata from the observations added to the project.
     overwrite: bool, optional
         Whether to overwrite existing data in store.
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
 
     Returns
     -------
@@ -91,11 +87,10 @@ def create_pastastore(oc,
         pstore = pst.PastaStore(pstore_name, connector=conn)
 
     for o in oc.obs.values:
-        if verbose:
-            print('add to pastastore -> {}'.format(o.name))
+        logger.info('add to pastastore -> {}'.format(o.name))
 
         if add_metadata:
-            meta = _get_metadata_from_obs(o, verbose=verbose)
+            meta = _get_metadata_from_obs(o)
         else:
             meta = dict()
 
@@ -113,8 +108,7 @@ def create_pastastore(oc,
 
 def create_pastas_project(oc, pr=None, project_name='',
                           obs_column='stand_m_tov_nap',
-                          kind='oseries', add_metadata=True,
-                          verbose=False):
+                          kind='oseries', add_metadata=True):
     """add observations to a new or existing pastas project.
 
     Parameters
@@ -131,8 +125,6 @@ def create_pastas_project(oc, pr=None, project_name='',
         The kind of series that is added to the pastas project
     add_metadata : boolean, optional
         If True metadata from the observations added to the project.
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
 
     Returns
     -------
@@ -144,11 +136,10 @@ def create_pastas_project(oc, pr=None, project_name='',
         pr = ps.Project(project_name)
 
     for o in oc.obs.values:
-        if verbose:
-            print('add to pastas project -> {}'.format(o.name))
+        logger.info(f'add to pastas project -> {o.name}')
 
         if add_metadata:
-            meta = _get_metadata_from_obs(o, verbose=verbose)
+            meta = _get_metadata_from_obs(o)
         else:
             meta = dict()
 

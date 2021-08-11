@@ -53,7 +53,7 @@ def test_get_nearest_point():
     # check two of the same observation collections
     # every point must find itself as the nearest point
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    fl = ttf.test_obscollection_fieldlogger()
+    fl = ttf.test_obscollection_dinozip_wl()
     dino_gw[['nearest point', 'distance nearest point']
             ] = dino_gw.geo.get_nearest_point(fl)
     return dino_gw

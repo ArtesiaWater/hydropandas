@@ -7,10 +7,12 @@ from scipy.interpolate import griddata
 from .. import util
 from ..observation import ModelObs
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
-                      modelname='', nlay=None, exclude_layers=0,
-                      verbose=False):
+                      modelname='', nlay=None, exclude_layers=0):
     """Read imod model results at point locations.
 
     Parameters
@@ -31,8 +33,6 @@ def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
         modelname
     exclude_layers : int
         exclude modellayers from being read from imod
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
     """
     import imod
     if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
@@ -64,8 +64,8 @@ def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
                 runfile.data['OUTPUTDIRECTORY'],
                 'head',
                 head_idf)
-            if verbose:
-                print('read {}'.format(fname))
+
+            logger.info(f'read {fname}')
             ihds, _attrs = imod.idf.read(fname)
             hm = util.interpolate(ihds, vtx, wts)
             hm_ts[mask, t] = hm[mask]
@@ -86,7 +86,7 @@ def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
 
 def read_modflow_results(obs_collection, ml, hds_arr, mtime,
                          modelname='', nlay=None, exclude_layers=None,
-                         method="linear", verbose=False):
+                         method="linear"):
     """Read modflow groundwater heads at points in obs_collection.
 
     Parameters
@@ -108,8 +108,6 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
     method : str, optional
         interpolation method, either 'linear' or 'nearest', 
         default is linear. 
-    verbose : boolean, optional
-        Print additional information to the screen (default is False).
     """
     if ml.modelgrid.grid_type == 'structured':
         if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
