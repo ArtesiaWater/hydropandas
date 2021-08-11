@@ -2,6 +2,7 @@ import os
 import warnings
 
 import numpy as np
+from scipy.interpolate import griddata
 
 from .. import util
 from ..observation import ModelObs
@@ -85,7 +86,7 @@ def read_imod_results(obs_collection, ml, runfile, mtime, model_ws,
 
 def read_modflow_results(obs_collection, ml, hds_arr, mtime,
                          modelname='', nlay=None, exclude_layers=None,
-                         verbose=False):
+                         method="linear", verbose=False):
     """Read modflow groundwater heads at points in obs_collection.
 
     Parameters
@@ -104,6 +105,9 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         number of layers if None the number of layers from ml is used.
     exclude_layers : list of int, optional
         exclude the observations in these modellayers
+    method : str, optional
+        interpolation method, either 'linear' or 'nearest', 
+        default is linear. 
     verbose : boolean, optional
         Print additional information to the screen (default is False).
     """
@@ -126,7 +130,8 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         xy = np.array([xmid, ymid]).T
 
     uv = obs_collection.loc[:, ("x", "y")].dropna(how="any", axis=0).values
-    vtx, wts = util.interp_weights(xy, uv)
+    if method == "linear":
+        vtx, wts = util.interp_weights(xy, uv)
 
     # get interpolated timeseries from hds_arr
     hm_ts = np.nan * np.ones((obs_collection.shape[0], hds_arr.shape[0]))
@@ -143,8 +148,14 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
         for t in range(hds_arr.shape[0]):
             ihds = hds_arr[t, m]
             ihds[ihds <= -999.] = np.nan
-            hm = util.interpolate(ihds, vtx, wts)
-            hm_ts[mask, t] = hm[mask]
+            if method == "linear":
+                hm = util.interpolate(ihds, vtx, wts)
+                hm_ts[mask, t] = hm[mask]
+            elif method == "nearest":
+                hm_ts[mask, t] = griddata(
+                    xy, ihds.ravel(), uv, method=method)[mask]
+            else:
+                raise ValueError(f"Unknown method: '{method}'")
 
     mo_list = []
     for i, name in enumerate(obs_collection.index):
