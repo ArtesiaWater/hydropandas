@@ -8,7 +8,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 import os
 import warnings
-
+import numbers
 
 import numpy as np
 import pandas as pd
@@ -615,7 +615,7 @@ class ObsCollection(pd.DataFrame):
         else:
             raise ValueError(
                 'either specify variables file_or_dir or xmlstring')
-    
+
     @classmethod
     def from_imod(cls, obs_collection, ml, runfile, mtime, model_ws,
                   modelname='', nlay=None, exclude_layers=0):
@@ -757,7 +757,7 @@ class ObsCollection(pd.DataFrame):
             list of observations
         name : str, optional
             name of the observation collection
-            
+
         """
         obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, name=name)
@@ -986,15 +986,20 @@ class ObsCollection(pd.DataFrame):
                 imeta = o.meta.copy()
                 if 'datastore' in imeta.keys():
                     imeta['datastore'] = str(imeta['datastore'])
+                    
                 # add extra columns to item metadata
                 for icol in group.columns:
                     if icol != "obs" and icol != 'meta':
-                        # check if type is numpy integer
-                        # numpy integers are not json serializable
-                        if isinstance(group.iloc[i].loc[icol], np.integer):
-                            imeta[icol] = int(group.iloc[i].loc[icol])
+                        value = group.iloc[i].loc[icol]
+                        # convert non-json-serializable types
+                        if isinstance(value, np.integer):
+                            imeta[icol] = int(value)
+                        elif isinstance(value, numbers.Number):
+                            imeta[icol] = float(value)
+                        elif isinstance(value, np.bool_):
+                            imeta[icol] = bool(value)
                         else:
-                            imeta[icol] = group.iloc[i].loc[icol]
+                            imeta[icol] = value
                 if item_name is None:
                     name = o.name
                 else:
