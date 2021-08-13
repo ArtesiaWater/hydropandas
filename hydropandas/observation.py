@@ -18,6 +18,11 @@ import warnings
 import numpy as np
 from pandas import DataFrame
 
+from _io import StringIO
+from pandas._config import get_option
+from pandas.io.formats import console, format as fmt
+from html import escape
+
 
 class Obs(DataFrame):
     """class for point observations.
@@ -46,7 +51,7 @@ class Obs(DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ['x', 'y', 'name', 'meta', 'filename']
+    _metadata = ['name', 'x', 'y', 'meta', 'filename']
 
     def __init__(self, *args, **kwargs):
         """constructor of Obs class.
@@ -62,6 +67,120 @@ class Obs(DataFrame):
         self.filename = kwargs.pop('filename', '')
 
         super(Obs, self).__init__(*args, **kwargs)
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation for a particular Observation.
+        """
+        buf = StringIO("")
+
+        # write metadata properties
+        buf.write('-----metadata------\n')
+        for att in self._metadata:
+            buf.write(f'{att} : {getattr(self, att)} \n')
+        buf.write('\n')
+
+        if self._info_repr():
+            self.info(buf=buf)
+            return buf.getvalue()
+
+        max_rows = get_option("display.max_rows")
+        min_rows = get_option("display.min_rows")
+        max_cols = get_option("display.max_columns")
+        max_colwidth = get_option("display.max_colwidth")
+        show_dimensions = get_option("display.show_dimensions")
+        if get_option("display.expand_frame_repr"):
+            width, _ = console.get_console_size()
+        else:
+            width = None
+        self.to_string(
+            buf=buf,
+            max_rows=max_rows,
+            min_rows=min_rows,
+            max_cols=max_cols,
+            line_width=width,
+            max_colwidth=max_colwidth,
+            show_dimensions=show_dimensions,
+        )
+
+        return buf.getvalue()
+
+    def _repr_html_(self, metadata_out=True):
+        """
+        Return a html representation for a particular Observation.
+
+        Mainly for IPython notebook.
+        """
+
+        if self._info_repr():
+            buf = StringIO("")
+            self.info(buf=buf)
+            # need to escape the <class>, should be the first line.
+            val = buf.getvalue().replace("<", r"&lt;", 1)
+            val = val.replace(">", r"&gt;", 1)
+            return "<pre>" + val + "</pre>"
+
+        if get_option("display.notebook_repr_html"):
+            max_rows = get_option("display.max_rows")
+            min_rows = get_option("display.min_rows")
+            max_cols = get_option("display.max_columns")
+            show_dimensions = get_option("display.show_dimensions")
+
+            formatter = fmt.DataFrameFormatter(
+                self,
+                columns=None,
+                col_space=None,
+                na_rep="NaN",
+                formatters=None,
+                float_format=None,
+                sparsify=None,
+                justify=None,
+                index_names=True,
+                header=True,
+                index=True,
+                bold_rows=True,
+                escape=True,
+                max_rows=max_rows,
+                min_rows=min_rows,
+                max_cols=max_cols,
+                show_dimensions=show_dimensions,
+                decimal=".",
+            )
+
+            df_out = fmt.DataFrameRenderer(formatter).to_html(notebook=True)
+
+            if metadata_out:
+                obj_type = "hydropandas.{}".format(type(self).__name__)
+                header = f"<div class='xr-header'><div class='xr-obj-type'>{escape(obj_type)}</div></div><hr>"
+                meta_dic = {key: getattr(self, key) for key in self._metadata}
+                meta_dic.pop('meta')
+                meta_out = DataFrame(meta_dic, index=['metadata']).T
+                formatter2 = fmt.DataFrameFormatter(
+                    meta_out,
+                    columns=None,
+                    col_space=None,
+                    na_rep="NaN",
+                    formatters=None,
+                    float_format=None,
+                    sparsify=None,
+                    justify=None,
+                    index_names=True,
+                    header=True,
+                    index=True,
+                    bold_rows=True,
+                    escape=True,
+                    max_rows=len(self._metadata) + 1,
+                    min_rows=0,
+                    max_cols=2,
+                    show_dimensions=show_dimensions,
+                    decimal=".",)
+                df_meta_out = fmt.DataFrameRenderer(formatter2).to_html(notebook=True)
+                return header + df_meta_out + df_out
+
+            else:
+                return df_out
+        else:
+            return None
 
     @property
     def _constructor(self):
@@ -481,7 +600,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_knmi(cls, stn, variable, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  raise_exceptions=True, verbose=False):
+                  use_api=True, raise_exceptions=True):
         """Get a KnmiObs object.
 
         Parameters
@@ -502,10 +621,13 @@ class KnmiObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -557,9 +679,8 @@ class KnmiObs(Obs):
         ts, meta = io_knmi.get_knmi_timeseries_stn(
             stn, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions,
-            verbose=verbose
-        )
+            use_api=use_api,
+            raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
@@ -567,7 +688,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, raise_exceptions=False, verbose=False):
+                        inseason=False, raise_exceptions=False):
         """Get KnmiObs object with measurements from station closest to the
         given (x,y) coördinates.
 
@@ -592,8 +713,6 @@ class KnmiObs(Obs):
             flag to obtain inseason data. The default is False
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
-        verbose : boolean, optional
-            Print additional information to the screen (default is False).
 
         Returns
         -------
@@ -604,9 +723,7 @@ class KnmiObs(Obs):
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions,
-            verbose=verbose
-        )
+            raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])
@@ -614,7 +731,7 @@ class KnmiObs(Obs):
     @classmethod
     def from_obs(cls, obs, variable, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
-                 raise_exceptions=False, verbose=False):
+                 raise_exceptions=False):
 
         from .io import io_knmi
 
@@ -629,9 +746,7 @@ class KnmiObs(Obs):
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, variable, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions,
-            verbose=verbose
-        )
+            raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'])

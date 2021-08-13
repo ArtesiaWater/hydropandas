@@ -77,9 +77,9 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
         metadata = {}
         if transform_coords:
             x, y = transform(Proj('epsg:25831'),
-                            Proj('epsg:28992'),
-                            df[xcol].iloc[-1],
-                            df[ycol].iloc[-1])
+                             Proj('epsg:28992'),
+                             df[xcol].iloc[-1],
+                             df[ycol].iloc[-1])
         else:
             x = df[xcol].iloc[-1] / 100.
             y = df[ycol].iloc[-1] / 100.
@@ -92,7 +92,7 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
         return df
 
 
-def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False):
+def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
     """Read waterinfo file or directory and extract locations and observations.
 
     Parameters
@@ -120,18 +120,20 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False):
     else:
         raise NotImplementedError("Provide path to file or directory!")
 
+    location_col = kwargs.pop("location_col", "MEETPUNT_IDENTIFICATIE")
+
     # loop over files
     metadata = {}
     obs_collection = []
-    for filenm in tqdm(files):
+    for filenm in (tqdm(files) if progressbar else files):
         # read file or zip
-        df = read_waterinfo_file(filenm)
+        df = read_waterinfo_file(filenm, location_col=location_col, **kwargs)
 
         # get location and convert to m RD
-        for stn in df["MEETPUNT_IDENTIFICATIE"].unique():
-            mask = df['MEETPUNT_IDENTIFICATIE'] == stn
-            x, y = transform(Proj(init='epsg:25831'),
-                             Proj(init='epsg:28992'),
+        for stn in df[location_col].unique():
+            mask = df[location_col] == stn
+            x, y = transform(Proj('epsg:25831'),
+                             Proj('epsg:28992'),
                              df.loc[mask, 'X'][-1],
                              df.loc[mask, 'Y'][-1])
             metadata = {"name": stn, "x": x, "y": y}

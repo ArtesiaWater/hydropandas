@@ -5,6 +5,7 @@
 """
 
 import os
+import logging
 
 import numpy as np
 from hydropandas import observation
@@ -12,13 +13,12 @@ from pandas import DataFrame, Series
 from scipy.io import loadmat
 
 from ..util import matlab2datetime
+logger = logging.getLogger(__name__)
 
-
-def read_file(fname, ObsClass, verbose=False):
+def read_file(fname, ObsClass):
     """This method is used to read the file."""
 
-    if verbose:
-        print('reading menyanthes file {}'.format(fname))
+    logger.info(f'reading menyanthes file {fname}')
 
     if ObsClass == observation.GroundwaterObs:
         _rename_dic = {'xcoord': 'x',
@@ -54,8 +54,7 @@ def read_file(fname, ObsClass, verbose=False):
     locations = d_h.keys()
     obs_list = []
     for location in locations:
-        if verbose:
-            print('reading location -> {}'.format(location))
+        logger.info(f'reading location -> {location}')
         metadata = d_h[location]
         metadata['projection'] = 'epsg:28992'
         metadata['metadata_available'] = True

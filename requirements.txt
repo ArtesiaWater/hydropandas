@@ -1,7 +1,7 @@
 numpy>=1.15
 scipy>=1.2
 matplotlib>=3.0
-pandas>=1.0,<1.2.0
+pandas
 lxml
 requests
 zeep

@@ -28,14 +28,12 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     platforms='Windows, Mac OS-X',
-    install_requires=['numpy>=1.15',
-                      'scipy>=1.2',
-                      'matplotlib>=3.0',
-                      'pandas>=0.24',
-                      'tqdm >= 4.42.1'
-                      'zeep>=3.4.0',
-                      'requests >= 2.22.0',
-                      'geopandas >= 0.6.0'
+    install_requires=['scipy',
+                      "pandas>=1.0,<1.2.0",  # see PR #64
+                      'tqdm',
+                      'zeep',
+                      'requests',
+                      'geopandas'
                       ],
     packages=find_packages(exclude=[]),
     package_data={"hydropandas": ["data/*.json"]},
