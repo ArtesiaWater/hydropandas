@@ -954,27 +954,11 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
     stations = get_stations(meteo_var=meteo_var)
     stn = get_nearest_stations_xy(x, y, meteo_var, stations=stations)[0]
 
-    # download data
-    if fill_missing_obs:
-        knmi_df, variables, station_meta = \
-            fill_missing_measurements(stn, stn_name, meteo_var, start, end,
-                                      interval, raise_exceptions)
-    else:
-        knmi_df, variables, station_meta = \
-            download_knmi_data(stn, stn_name, meteo_var, start, end,
-                               interval, inseason, raise_exceptions)
-
-    if not station_meta is None:
-        meta = station_meta.to_dict()
-    else:
-        meta = {}
-    meta.update(variables)
-
-    # set metadata
-    name = meteo_var + ' ' + stations.loc[stn, 'naam']
-    x = stations.loc[stn, 'x']
-    y = stations.loc[stn, 'y']
-    meta.update({'x': x, 'y': y, 'station': stn, 'name': name})
+    knmi_df, meta = get_knmi_timeseries_stn(stn, meteo_var, start, end,
+                                            fill_missing_obs=fill_missing_obs,
+                                            interval=interval,
+                                            inseason=inseason,
+                                            raise_exceptions=raise_exceptions)
 
     return knmi_df, meta
 
