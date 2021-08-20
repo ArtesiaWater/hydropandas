@@ -275,14 +275,15 @@ def _check_latest_measurement_date_RD_debilt(use_api=True):
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
         raise ValueError(
-            f'knmi station de Bilt has no RD measurements in the past {look_back_days} days.')
+            'knmi station de Bilt has no RD measurements '
+            f'in the past {look_back_days} days.')
 
     last_measurement_date_debilt = knmi_df.index[-1]
 
     logger.info(f'last RD measurement available at the Bilt is from'
                 f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}')
-    logger.info(
-        'assuming no measurements are available at other stations before this date')
+    logger.info('assuming no measurements are available at '
+                'other stations before this date')
 
     return last_measurement_date_debilt
 
@@ -351,7 +352,8 @@ def download_knmi_data(stn, stn_name=None,
     stn = str(stn)
 
     logger.info(
-        f'download knmi {meteo_var} data from station {stn}-{stn_name} between {start} and {end}')
+        f'download knmi {meteo_var} data from station '
+        f'{stn}-{stn_name} between {start} and {end}')
 
     # define variables
     knmi_df = pd.DataFrame()
