@@ -281,7 +281,8 @@ def _check_latest_measurement_date_RD_debilt(use_api=True):
 
     logger.info(f'last RD measurement available at the Bilt is from'
                 f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}')
-    logger.info('assuming no measurements are available at other stations before this date')
+    logger.info(
+        'assuming no measurements are available at other stations before this date')
 
     return last_measurement_date_debilt
 
@@ -349,7 +350,8 @@ def download_knmi_data(stn, stn_name=None,
     # convert possible integer to string
     stn = str(stn)
 
-    logger.info(f'download knmi {meteo_var} data from station {stn}-{stn_name} between {start} and {end}')
+    logger.info(
+        f'download knmi {meteo_var} data from station {stn}-{stn_name} between {start} and {end}')
 
     # define variables
     knmi_df = pd.DataFrame()
@@ -361,7 +363,8 @@ def download_knmi_data(stn, stn_name=None,
         if use_api:
             if interval.startswith('hour'):
                 # hourly data from meteorological stations
-                knmi_df = get_knmi_hourly_api(URL_HOURLY_METEO, stn, meteo_var, start, end)
+                knmi_df = get_knmi_hourly_api(
+                    URL_HOURLY_METEO, stn, meteo_var, start, end)
 
             elif meteo_var == 'RD':
                 # daily data from rainfall-stations
@@ -1036,7 +1039,12 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     # set metadata
     x = stations.loc[stn, 'x']
     y = stations.loc[stn, 'y']
-    meta.update({'x': x, 'y': y, 'station': stn, 'name': stn_name})
+    meta.update({'x': x,
+                 'y': y,
+                 'station': stn,
+                 'name': f"{meteo_var}_{stn_name}",
+                 "variable": meteo_var
+                 })
 
     return knmi_df, meta
 
@@ -1176,7 +1184,8 @@ def add_missing_indices(knmi_df, stn, start, end):
                                  day=start.day, hour=knmi_df.index[0].hour,
                                  minute=knmi_df.index[0].minute,
                                  second=knmi_df.index[0].second)
-        logger.info(f'station {stn} has no measurements before {knmi_df.index[0]}')
+        logger.info(
+            f'station {stn} has no measurements before {knmi_df.index[0]}')
 
     if (end - knmi_df.index[-1]).days < 2:
         new_end = knmi_df.index[-1]
@@ -1185,7 +1194,8 @@ def add_missing_indices(knmi_df, stn, start, end):
                                hour=knmi_df.index[-1].hour,
                                minute=knmi_df.index[-1].minute,
                                second=knmi_df.index[-1].second)
-        logger.info(f'station {stn} has no measurements after {knmi_df.index[-1]}')
+        logger.info(
+            f'station {stn} has no measurements after {knmi_df.index[-1]}')
 
     # add missing indices
     new_index = pd.date_range(new_start, new_end, freq='D')
@@ -1255,7 +1265,8 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
-        logger.info(f'station {stn} has no measurements between {start} and {end}')
+        logger.info(
+            f'station {stn} has no measurements between {start} and {end}')
         logger.info('trying to get measurements from nearest station')
         stn = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore)[0]
@@ -1280,11 +1291,11 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RD',
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore)
 
         logger.info(f'trying to fill {missing.sum()} '
-                     f'measurements with station {stn_comp}')
+                    f'measurements with station {stn_comp}')
 
         if stn_comp is None:
             logger.info('could not fill all missing measurements there are '
-                         'no stations left to check')
+                        'no stations left to check')
 
             missing[:] = False
             break
