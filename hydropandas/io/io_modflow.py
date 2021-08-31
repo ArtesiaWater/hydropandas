@@ -106,8 +106,8 @@ def read_modflow_results(obs_collection, ml, hds_arr, mtime,
     exclude_layers : list of int, optional
         exclude the observations in these modellayers
     method : str, optional
-        interpolation method, either 'linear' or 'nearest', 
-        default is linear. 
+        interpolation method, either 'linear' or 'nearest',
+        default is linear.
     """
     if ml.modelgrid.grid_type == 'structured':
         if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
