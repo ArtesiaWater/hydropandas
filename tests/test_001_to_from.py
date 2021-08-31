@@ -165,30 +165,13 @@ def test_obscollection_wiskizip_gw():
     return wiski_col
 
 
-# %% PASTAS PROJECTS AND PASTASTORE
-def test_to_pastas_project():
-
-    dino_gw = test_obscollection_dinozip_gw()
-    pr = dino_gw.to_pastas_project()
-
-    return pr
-
-
+# %% PASTASTORE
 def test_to_pastastore():
 
     dino_gw = test_obscollection_dinozip_gw()
     pstore = dino_gw.to_pastastore()
 
     return pstore
-
-
-def test_from_pastas_project():
-
-    pr = test_to_pastas_project()
-    pr_oc = oc.ObsCollection.from_pastas_project(pr)
-
-    return pr_oc
-
 
 # %% PYSTORE
 
