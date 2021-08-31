@@ -16,3 +16,5 @@ bokeh
 pastas
 xarray
 netCDF4
+nbformat
+nbconvert
