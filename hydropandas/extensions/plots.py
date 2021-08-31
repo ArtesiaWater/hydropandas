@@ -352,7 +352,7 @@ class ObsPlots:
         # get color
         if len(plot_colors) < len(plot_columns):
             plot_colors = plot_colors * len(plot_columns)
-            
+
         # get base for hoover tooltips
         plots = []
         tooltips = []
@@ -376,7 +376,7 @@ class ObsPlots:
                     plot_df[[column, 'date']].resample(plot_freq[i]).first())
 
             # plot data
-            
+
             if markers[i] == 'line':
                 plots.append(p.line(xcol, column, source=source, color=plot_colors[i],
                                legend_label=lname,
