@@ -24,13 +24,13 @@ def _run_notebook(nbdir, fname):
 
 
 @pytest.mark.notebooks
-def test_run_notebook_01_basic_model():
+def test_run_notebook_01_groundwater_observations():
     _run_notebook(nbdir, '01_groundwater_observations.ipynb')
 
 @pytest.mark.notebooks
-def test_run_notebook_02_surface_water():
+def test_run_notebook_02_knmi_observations():
     _run_notebook(nbdir, '02_knmi_observations.ipynb')
 
 @pytest.mark.notebooks
-def test_run_notebook_03_local_grid_refinement():
+def test_run_notebook_03_pastastore_from_observations():
     _run_notebook(nbdir, '03_pastastore_from_observations.ipynb')

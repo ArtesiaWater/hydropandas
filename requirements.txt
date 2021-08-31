@@ -19,3 +19,5 @@ netCDF4
 nbformat
 nbconvert
 ipykernel
+pastas
+pastastore
