@@ -43,10 +43,12 @@ class CollectionPlots:
 
             - plot_columns : list of str
             - hoover_names : list of str
-            - plot_freq : str
-            - plot_legend_name : str
+            - plot_freq : list of str
+            - plot_legend_names : list of str
+            - markers : list of str
+            - hoover_names : list of str
+            - plot_colors : list of str
             - ylabel : str
-            - color : str
             - add_filter_to_legend : boolean
         """
         _color_cycle = (
@@ -84,7 +86,7 @@ class CollectionPlots:
                     p = o.plots.interactive_plot(savedir=savedir,
                                                  p=p,
                                                  tmin=tmin, tmax=tmax,
-                                                 colors=[_color_cycle[i + 1]],
+                                                 plot_colors=[_color_cycle[i + 1]],
                                                  return_filename=False,
                                                  **kwargs)
                     logger.info(f'created iplot -> {o.name}')
@@ -157,10 +159,13 @@ class CollectionPlots:
 
             - plot_columns : list of str
             - hoover_names : list of str
-            - plot_legend_name : str
+            - plot_legend_names : list of str
+            - plot_freq : list of str
+            - markers : list of str
+            - hoover_names : list of str
+            - plot_colors : list of str
             - ylabel : str
             - add_filter_to_legend : boolean
-            - plot_freq : str
             - tmin : dt.datetime
             - tmax : dt.datetime
 
@@ -272,7 +277,7 @@ class ObsPlots:
                          hoover_names=['Peil'],
                          hoover_date_format="%Y-%m-%d",
                          ylabel='m NAP',
-                         colors=['blue'],
+                         plot_colors=['blue'],
                          add_filter_to_legend=False,
                          return_filename=False):
         """Create an interactive plot of the observations using bokeh.
@@ -307,8 +312,8 @@ class ObsPlots:
             date format to use when hoovering over a plot
         ylabel : str, optional
             label on the y-axis
-        colors : list of str, optional
-            colors used for the plots
+        plot_colors : list of str, optional
+            plot_colors used for the plots
         add_filter_to_legend : boolean, optional
             if True the attributes bovenkant_filter and onderkant_filter
             are added to the legend name
@@ -345,8 +350,13 @@ class ObsPlots:
             xcol = 'index'
 
         # get color
-        if len(colors) < len(plot_columns):
-            colors = colors * len(plot_columns)
+        if len(plot_colors) < len(plot_columns):
+            plot_colors = plot_colors * len(plot_columns)
+
+        # get base for hoover tooltips
+        plots = []
+        tooltips = []
+        tooltips.append(('date', "@date"))
 
         # plot multiple columns
         for i, column in enumerate(plot_columns):
@@ -366,26 +376,24 @@ class ObsPlots:
                     plot_df[[column, 'date']].resample(plot_freq[i]).first())
 
             # plot data
+
             if markers[i] == 'line':
-                p.line(xcol, column, source=source, color=colors[i],
-                       legend_label=lname,
-                       alpha=0.8, muted_alpha=0.2)
+                plots.append(p.line(xcol, column, source=source, color=plot_colors[i],
+                               legend_label=lname,
+                               alpha=0.8, muted_alpha=0.2))
             elif markers[i] == 'circle':
-                p.circle(xcol, column, source=source, color=colors[i],
-                         legend_label=lname,
-                         alpha=0.8, muted_alpha=0.2)
+                plots.append(p.circle(xcol, column, source=source, color=plot_colors[i],
+                                 legend_label=lname,
+                                 alpha=0.8, muted_alpha=0.2))
             else:
                 raise NotImplementedError("marker '{}' invalid. Only line and"
                                           "circle are currently available".format(markers[i]))
 
-        # hoover options
-        tooltips = []
-        for i, column in enumerate(plot_columns):
-            tooltips.append((hoover_names[i], "@{}".format(column)))
-        tooltips.append(('date', "@date"))
-        hover = HoverTool(tooltips=tooltips)
-
-        p.add_tools(hover)
+            # add columns to hoover tooltips
+            tooltips_p = tooltips.copy()
+            tooltips_p.append((hoover_names[i], "@{}".format(column)))
+            hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode='vline')
+            p.add_tools(hover)
 
         p.legend.location = "top_left"
         p.legend.click_policy = "mute"

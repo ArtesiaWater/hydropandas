@@ -16,3 +16,8 @@ bokeh
 pastas
 xarray
 netCDF4
+nbformat
+nbconvert
+ipykernel
+pastas
+pastastore

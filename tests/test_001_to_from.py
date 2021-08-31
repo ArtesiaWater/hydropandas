@@ -165,33 +165,13 @@ def test_obscollection_wiskizip_gw():
     return wiski_col
 
 
-# %% PASTAS PROJECTS AND PASTASTORE
-@pytest.mark.skip(reason="needs installation pastastore")
-def test_to_pastas_project():
-
-    dino_gw = test_obscollection_dinozip_gw()
-    pr = dino_gw.to_pastas_project()
-
-    return pr
-
-
-@pytest.mark.skip(reason="needs installation pastastore")
+# %% PASTASTORE
 def test_to_pastastore():
 
     dino_gw = test_obscollection_dinozip_gw()
     pstore = dino_gw.to_pastastore()
 
     return pstore
-
-
-@pytest.mark.skip(reason="needs installation pastastore")
-def test_from_pastas_project():
-
-    pr = test_to_pastas_project()
-    pr_oc = oc.ObsCollection.from_pastas_project(pr)
-
-    return pr_oc
-
 
 # %% PYSTORE
 
@@ -243,6 +223,7 @@ def test_obs_from_pystore_item():
 # %% KNMI
 def test_knmi_obs_from_stn():
     return obs.KnmiObs.from_knmi(233, "RD")
+
 
 def test_knmi_obs_from_stn_no_api():
     return obs.KnmiObs.from_knmi(233, "RD",

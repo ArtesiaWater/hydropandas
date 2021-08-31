@@ -585,11 +585,12 @@ class KnmiObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ['station']
+    _metadata = Obs._metadata + ['station', 'meteo_var']
 
     def __init__(self, *args, **kwargs):
 
         self.station = kwargs.pop('station', np.nan)
+        self.meteo_var = kwargs.pop('meteo_var', '')
 
         super(KnmiObs, self).__init__(*args, **kwargs)
 
@@ -598,7 +599,7 @@ class KnmiObs(Obs):
         return KnmiObs
 
     @classmethod
-    def from_knmi(cls, stn, variable, startdate=None, enddate=None,
+    def from_knmi(cls, stn, meteo_var, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
                   use_api=True, raise_exceptions=True):
         """Get a KnmiObs object.
@@ -607,7 +608,7 @@ class KnmiObs(Obs):
         ----------
         stn : int or str
             measurement station e.g. 829.
-        variable : str, optional
+        meteo_var : str, optional
             observation type e.g. "RD" or "EV24". See list with all variables
             below.
         startdate : str, datetime or None, optional
@@ -677,16 +678,16 @@ class KnmiObs(Obs):
         from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
-            stn, variable, startdate, enddate, fill_missing_obs,
+            stn, meteo_var, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
             use_api=use_api,
             raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'])
+                   y=meta['y'], name=meta['name'], meteo_var=meteo_var)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, variable, startdate=None, enddate=None,
+    def from_nearest_xy(cls, x, y, meteo_var, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
                         inseason=False, raise_exceptions=False):
         """Get KnmiObs object with measurements from station closest to the
@@ -698,7 +699,7 @@ class KnmiObs(Obs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
-        variable : str
+        meteo_var : str
             e.g. 'EV24'.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
@@ -721,15 +722,16 @@ class KnmiObs(Obs):
         from .io import io_knmi
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, variable, startdate, enddate, fill_missing_obs,
+            x, y, meteo_var, startdate, enddate, stn_name=None,
+            fill_missing_obs=fill_missing_obs,
             interval=interval, inseason=inseason,
             raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'])
+                   y=meta['y'], name=meta['name'], meteo_var=meteo_var)
 
     @classmethod
-    def from_obs(cls, obs, variable, startdate=None, enddate=None,
+    def from_obs(cls, obs, meteo_var, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
                  raise_exceptions=False):
 
@@ -744,9 +746,9 @@ class KnmiObs(Obs):
             enddate = obs.index[-1]
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, variable, startdate, enddate, fill_missing_obs,
+            x, y, meteo_var, startdate, enddate, fill_missing_obs,
             interval=interval, inseason=inseason,
             raise_exceptions=raise_exceptions)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'])
+                   y=meta['y'], name=meta['name'], meteo_var=meteo_var)
