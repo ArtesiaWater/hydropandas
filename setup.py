@@ -29,7 +29,7 @@ setup(
     ],
     platforms='Windows, Mac OS-X',
     install_requires=['scipy',
-                      "pandas>=1.0,<1.2.0",  # see PR #64
+                      "pandas>=1.0",
                       'tqdm',
                       'zeep',
                       'requests',
