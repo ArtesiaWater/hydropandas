@@ -224,7 +224,7 @@ def interp_weights(xy, uv, d=2):
     return vertices, np.hstack((bary, 1 - bary.sum(axis=1, keepdims=True)))
 
 
-def interpolate(values, vtx, wts):
+def interpolate(values, vtx, wts, fill_value=np.nan):
     """Interpolate values at locations defined by vertices and points [2]_, as
     calculated by interp_weights function.
 
@@ -236,6 +236,9 @@ def interpolate(values, vtx, wts):
         array containing interpolation vertices, see interp_weights()
     wts : np.array
         array containing interpolation weights, see interp_weights()
+    fill_value : float
+        fill value for points that have to be extrapolated (e.g. at or 
+        beyond edges of the known points)
 
     Returns
     -------
@@ -247,8 +250,9 @@ def interpolate(values, vtx, wts):
     ----------
     .. [2] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
-
-    return np.einsum('nj,nj->n', np.take(values, vtx), wts)
+    ret = np.einsum('nj,nj->n', np.take(values, vtx), wts)
+    ret[np.any(wts < 0, axis=1)] = fill_value
+    return ret
 
 
 def df2gdf(df, xcol='x', ycol='y'):
