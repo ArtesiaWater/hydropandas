@@ -23,10 +23,10 @@ def get_model_layer_z(z, zvec, left=-999, right=999):
     zvec : list, np.array
         elevations of model layers. shape is nlay + 1
     left : int, optional
-        if z is below the lowest value in zvec, this value is returned. 
+        if z is below the lowest value in zvec, this value is returned.
         The default is -999.
     right : TYPE, optional
-        if z is above the highest value in zvec, this value is returned. 
+        if z is above the highest value in zvec, this value is returned.
         The default is 999.
 
     Returns
@@ -85,10 +85,10 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
     zvec : list or np.array
         elevations of the modellayers at the location of the filter.
     left : int, optional
-        value to return if filter is below the modellayers. 
+        value to return if filter is below the modellayers.
         The default is -999.
     right : int, optional
-        value to return if filter is above the modellayers. 
+        value to return if filter is above the modellayers.
         The default is-999.
 
     Raises
@@ -213,7 +213,7 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
     return np.nan
 
 
-def get_zvec(x, y, gwf=None):
+def get_zvec(x, y, gwf=None, ds=None):
     """get a list with the vertical layer boundaries at a point in the model.
 
     Parameters
@@ -224,6 +224,9 @@ def get_zvec(x, y, gwf=None):
         y coordinate.
     gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
         modflow model with top and bottoms
+    ds : xarray.Dataset
+        xarray Dataset with with top and bottoms, must have
+        dimensions 'x' and 'y' and variables 'top' and 'bot'
 
     Raises
     ------
@@ -236,12 +239,12 @@ def get_zvec(x, y, gwf=None):
         list of vertical layer boundaries. length is nlay + 1.
     """
 
-    if gwf is not None:
+    if gwf and not ds:
         if gwf.modelgrid.grid_type == 'structured':
             r, c = gwf.modelgrid.intersect(x, y, forgive=True)
             if np.isfinite(r) & np.isfinite(c):
-                zvec = [gwf.modelgrid.top[r, c]] + [gwf.modelgrid.botm[i, r, c]
-                                                    for i in range(gwf.modelgrid.nlay)]
+                zvec = np.array([gwf.modelgrid.top[r, c]] +
+                    [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)])
             else:
                 print("Point is not within model extent! Returning NaN.")
                 zvec = np.nan
@@ -256,18 +259,34 @@ def get_zvec(x, y, gwf=None):
         else:
             raise NotImplementedError(
                 f'gridtype {gwf.modelgrid.grid_type} not (yet) implemented')
+    elif ds and not gwf:
+        # assuming modflow type definition with 1 top and N botms
+        # check extent
+        xmin, xmax, ymin, ymax = ds.attrs["extent"]
+        if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
+            zvec = np.nan
+        else:
+            sel = ds.sel(x=x, y=y, method="nearest")
+            first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
+            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["bot"].data])
+            mask = np.isnan(zvec)
+            idx = np.where(~mask,np.arange(mask.size),0)
+            np.maximum.accumulate(idx,axis=0, out=idx)
+            zvec[mask] = zvec[idx[mask]]
+    else:
+        raise ValueError("Pass one of 'gwf' or 'ds'!")
 
     return zvec
 
 
-@accessor.register_obscollection_accessor("gwobs")
+@ accessor.register_obscollection_accessor("gwobs")
 class GwObsAccessor:
 
     def __init__(self, oc_obj):
-        self._obj = oc_obj
+        self._obj=oc_obj
 
-    def set_filter_num(self, radius=1, xcol='x', ycol='y', if_exists='error',
-                       add_to_meta=False):
+    def set_filter_num(self, radius = 1, xcol = 'x', ycol = 'y', if_exists = 'error',
+                       add_to_meta = False):
         """This method computes the filternumbers based on the location of the
         observations.
 
@@ -311,7 +330,7 @@ class GwObsAccessor:
         if 'filternr' in self._obj.columns:
             # set type to numeric
             if self._obj['filternr'].dtype != np.number:
-                self._obj['filternr'] = pd.to_numeric(
+                self._obj['filternr']=pd.to_numeric(
                     self._obj['filternr'], errors='coerce')
 
             # check if name should be replaced
@@ -426,7 +445,7 @@ class GwObsAccessor:
                         self._obj._set_metadata_value(pb_dub, 'locatie', locatie,
                                                       add_to_meta=add_to_meta)
 
-    def get_modellayers(self, gwf):
+    def get_modellayers(self, gwf=None, ds=None):
         """Get the modellayer per observation. The layers can be obtained from
         the modflow model or can be defined in zgr.
 
@@ -434,6 +453,9 @@ class GwObsAccessor:
         ----------
         gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
             modflow model
+        ds : xarray.Dataset
+            xarray Dataset with with top and bottoms, must have
+            dimensions 'x' and 'y' and variables 'top' and 'bot'
 
         Returns
         -------
@@ -443,7 +465,7 @@ class GwObsAccessor:
         for o in self._obj.obs.values:
             logger.info("-" * 10 + f"\n {o.name}:")
 
-            modellayers.append(o.gwobs.get_modellayer_modflow(gwf))
+            modellayers.append(o.gwobs.get_modellayer_modflow(gwf=gwf, ds=ds))
 
         modellayers = pd.Series(index=self._obj.index, data=modellayers,
                                 name='modellayer')
@@ -470,13 +492,16 @@ class GeoAccessorObs:
     def __init__(self, obs):
         self._obj = obs
 
-    def get_modellayer_modflow(self, gwf, left=-999, right=999):
+    def get_modellayer_modflow(self, gwf=None, ds=None, left=-999, right=999):
         """Add modellayer to meta dictionary.
 
         Parameters
         ----------
         gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
             modflow model
+        ds : xarray.Dataset
+            xarray Dataset with with top and bottoms, must have
+            dimensions 'x' and 'y' and variables 'top' and 'bot'
 
         Returns
         -------
@@ -484,7 +509,7 @@ class GeoAccessorObs:
             modellayer
         """
 
-        zvec = get_zvec(self._obj.x, self._obj.y, gwf)
+        zvec = get_zvec(self._obj.x, self._obj.y, gwf=gwf, ds=ds)
 
         if np.all(np.isnan(zvec)):
             return np.nan

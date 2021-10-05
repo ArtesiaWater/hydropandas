@@ -13,7 +13,7 @@ class StatsAccessor:
 
     @property
     def n_observations(self):
-        return self._obj.obs.apply(lambda o: o.shape[0])
+        return self._obj.obs.apply(lambda o: o.index.size)
 
     @property
     def dates_first_obs(self):
