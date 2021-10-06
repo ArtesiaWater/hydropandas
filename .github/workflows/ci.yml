@@ -36,6 +36,7 @@ jobs:
           pip install dask[dataframe] --upgrade
           pip install pystore
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pandas==1.1.5
           pip install codecov
           pip install pytest-cov
           pip install pytest-dependency

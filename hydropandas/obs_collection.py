@@ -124,7 +124,8 @@ class ObsCollection(pd.DataFrame):
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.info(f'add {att_name} of {iname} with value {value} to meta')
+            logger.info(
+                f'add {att_name} of {iname} with value {value} to meta')
 
     @classmethod
     def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
@@ -777,7 +778,8 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
-                     modelname='', nlay=None, exclude_layers=None):
+                     modelname='', nlay=None, exclude_layers=None,
+                     method="linear"):
         """Read modflow groundwater heads at points in obs_collection.
 
         Parameters
@@ -796,11 +798,14 @@ class ObsCollection(pd.DataFrame):
             number of layers if None the number of layers from ml is used.
         exclude_layers : list of int, optional
             exclude the observations in these model layers
+        method : str, optional
+            interpolation method, either 'linear' or 'nearest',
+            default is linear
         """
         from .io.io_modflow import read_modflow_results
         mo_list = read_modflow_results(obs_collection, ml, hds_arr,
                                        mtime, modelname=modelname,
-                                       nlay=nlay,
+                                       nlay=nlay, method=method,
                                        exclude_layers=exclude_layers)
         obs_df = util._obslist_to_frame(mo_list)
 

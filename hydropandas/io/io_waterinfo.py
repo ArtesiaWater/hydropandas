@@ -4,7 +4,7 @@ import zipfile
 
 import numpy as np
 import pandas as pd
-from pyproj import Proj, transform
+from pyproj import Transformer
 from tqdm import tqdm
 
 
@@ -75,11 +75,11 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
                              " Use ObsCollection.from_waterinfo()!")
 
         metadata = {}
+
         if transform_coords:
-            x, y = transform(Proj('epsg:25831'),
-                             Proj('epsg:28992'),
-                             df[xcol].iloc[-1],
-                             df[ycol].iloc[-1])
+            transformer = Transformer.from_crs('epsg:25831', 'epsg:28992')
+            x, y = transformer.transform(df[xcol].iloc[-1],
+                                         df[ycol].iloc[-1])
         else:
             x = df[xcol].iloc[-1] / 100.
             y = df[ycol].iloc[-1] / 100.
@@ -125,6 +125,9 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
     # loop over files
     metadata = {}
     obs_collection = []
+
+    transformer = Transformer.from_crs("epsg:25831", "epsg:28992")
+
     for filenm in (tqdm(files) if progressbar else files):
         # read file or zip
         df = read_waterinfo_file(filenm, location_col=location_col, **kwargs)
@@ -132,10 +135,8 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
         # get location and convert to m RD
         for stn in df[location_col].unique():
             mask = df[location_col] == stn
-            x, y = transform(Proj('epsg:25831'),
-                             Proj('epsg:28992'),
-                             df.loc[mask, 'X'][-1],
-                             df.loc[mask, 'Y'][-1])
+            x, y = transformer.transform(df.loc[mask, 'X'][-1],
+                                         df.loc[mask, 'Y'][-1])
             metadata = {"name": stn, "x": x, "y": y}
 
             # add to list
