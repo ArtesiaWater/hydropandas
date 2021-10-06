@@ -237,7 +237,7 @@ def interpolate(values, vtx, wts, fill_value=np.nan):
     wts : np.array
         array containing interpolation weights, see interp_weights()
     fill_value : float
-        fill value for points that have to be extrapolated (e.g. at or 
+        fill value for points that have to be extrapolated (e.g. at or
         beyond edges of the known points)
 
     Returns
