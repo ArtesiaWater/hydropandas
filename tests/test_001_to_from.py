@@ -219,37 +219,41 @@ def test_obs_from_pystore_item():
     o = obs.GroundwaterObs.from_pystore_item(item)
     return o
 
+#%% Evaporation
 
-# %% KNMI
-def test_knmi_obs_from_stn():
-    return obs.KnmiObs.from_knmi(233, "RD")
+def test_evap_obs_from_stn():
+    return obs.EvaporationObs.from_knmi(344)
+
+#%% Precipitation
+
+def test_precip_obs_from_stn():
+    return obs.PrecipitationObs.from_knmi(1233)
 
 
 def test_knmi_obs_from_stn_no_api():
-    return obs.KnmiObs.from_knmi(233, "RD",
-                                 use_api=False)
+    return obs.PrecipitationObs.from_knmi(1233, use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
-    try:
-        obs.KnmiObs.from_knmi(210, "RD")
-    except (ValueError, KeyError):
-        pass
+    
+    obs.EvaporationObs.from_knmi(210, startdate='19500101', 
+                                 enddate='19600101',
+                                 fill_missing_obs=False)
 
     return 1
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    return obs.KnmiObs.from_knmi(441, "RD", startdate='2010-1-2')
+    return obs.PrecipitationObs.from_knmi(1441, startdate='2010-1-2')
 
 
 def test_knmi_obs_from_xy():
-    return obs.KnmiObs.from_nearest_xy(100000, 350000, "RD")
+    return obs.PrecipitationObs.from_nearest_xy(100000, 350000)
 
 
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
-    return obs.KnmiObs.from_obs(pb, "EV24", fill_missing_obs=False)
+    return obs.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
 
 
 def test_knmi_collection_from_locations():
@@ -258,6 +262,8 @@ def test_knmi_collection_from_locations():
                                          meteo_vars=["EV24", "RD"],
                                          start=['2010', '2010'],
                                          end=['2015', '2015'],
+                                         ObsClass=[obs.EvaporationObs,
+                                                   obs.PrecipitationObs],
                                          cache=False)
     return oc_knmi
 
@@ -267,7 +273,9 @@ def test_knmi_collection_from_stns():
     oc_knmi = oc.ObsCollection.from_knmi(stns=stns,
                                          meteo_vars=["EV24", "RH"],
                                          start=['2010', '2010'],
-                                         end=['2015', '2015'])
+                                         end=['2015', '2015'],
+                                         ObsClass=[obs.EvaporationObs,
+                                                   obs.PrecipitationObs],)
     return oc_knmi
 
 
@@ -276,7 +284,7 @@ def test_knmi_collection_from_grid():
     xmid = np.array([104150., 104550.])
     ymid = np.array([510150., 510550.])
     oc_knmi = oc.ObsCollection.from_knmi(xmid=xmid, ymid=ymid,
-                                         meteo_vars=["RD"],
+                                         meteo_vars=["RH"],
                                          start=['2010', '2010'],
                                          end=['2015', '2015'])
     return oc_knmi

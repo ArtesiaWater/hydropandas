@@ -652,7 +652,8 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_knmi(cls, locations=None, stns=None, xmid=None, ymid=None,
                   meteo_vars=["RD"], name='', start=[None, None],
-                  end=[None, None], ObsClass=obs.KnmiObs, **kwargs):
+                  end=[None, None], ObsClass=[obs.PrecipitationObs], 
+                  **kwargs):
         """get knmi observations from a list of locations or a list of
         stations.
 
@@ -679,9 +680,9 @@ class ObsCollection(pd.DataFrame):
             end date of observations per meteo variable. The end date is
             not included in the time series. If end is None the last date
             with measurements is used. The default is [None, None]
-        ObsClass : type or None
-            class of the observations, only KnmiObs is supported for now. The
-            default is None
+        ObsClass : list of type or None
+            class of the observations, can be PrecipitationObs or EvaporationObs. The
+            default is [PrecipitationObs].
         **kwargs :
             kwargs are passed to the io_knmi.get_knmi_obslist function
 
