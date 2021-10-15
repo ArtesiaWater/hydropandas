@@ -69,9 +69,7 @@ class Obs(DataFrame):
         super(Obs, self).__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
-        """
-        Return a string representation for a particular Observation.
-        """
+        """Return a string representation for a particular Observation."""
         buf = StringIO("")
 
         # write metadata properties
@@ -599,21 +597,18 @@ class MeteoObs(Obs):
         Returns
         -------
         MeteoObs object with meteorological observations
-
-
-
         """
         from .io import io_knmi
-        
-        if interval=='hourly':
+
+        if interval == 'hourly':
             exclude_neerslag_stn = True
 
         settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions,
-                  'exclude_neerslag_stn':exclude_neerslag_stn}
+                    'interval': interval,
+                    'inseason': inseason,
+                    'use_api': use_api,
+                    'raise_exceptions': raise_exceptions,
+                    'exclude_neerslag_stn': exclude_neerslag_stn}
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
             stn, meteo_var, startdate, enddate, settings=settings)
@@ -624,11 +619,11 @@ class MeteoObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, meteo_var, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, exclude_neerslag_stn=False, 
+                        inseason=False, exclude_neerslag_stn=False,
                         use_api=True,
                         raise_exceptions=False):
-        """Get a MeteoObs object from the KNMI station closest to the 
-        given (x,y) coördinates.
+        """Get a MeteoObs object from the KNMI station closest to the given
+        (x,y) coördinates.
 
         Parameters
         ----------
@@ -708,11 +703,11 @@ class MeteoObs(Obs):
         from .io import io_knmi
 
         settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions,
-                  'exclude_neerslag_stn':exclude_neerslag_stn}
+                    'interval': interval,
+                    'inseason': inseason,
+                    'use_api': use_api,
+                    'raise_exceptions': raise_exceptions,
+                    'exclude_neerslag_stn': exclude_neerslag_stn}
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, meteo_var, startdate, enddate, settings=settings)
@@ -723,14 +718,13 @@ class MeteoObs(Obs):
     @classmethod
     def from_obs(cls, obs, meteo_var, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
-                 exclude_neerslag_stn=False, use_api=True, 
+                 exclude_neerslag_stn=False, use_api=True,
                  raise_exceptions=False):
-        """Get a MeteoObs object with measurements from the KNMI
-        station closest to the given observation. Uses the x and y coördinates
-        of the observation to obtain the nearest KNMI station.
-        Uses the start- and enddate of the observation as start- and enddate
-        of the meteo time series (unless startdate and enddatet are 
-        specified explicitly).       
+        """Get a MeteoObs object with measurements from the KNMI station
+        closest to the given observation. Uses the x and y coördinates of the
+        observation to obtain the nearest KNMI station. Uses the start- and
+        enddate of the observation as start- and enddate of the meteo time
+        series (unless startdate and enddatet are specified explicitly).
 
         Parameters
         ----------
@@ -804,7 +798,6 @@ class MeteoObs(Obs):
         Returns
         -------
         MeteoObs object with meteorological observations
-
         """
         from .io import io_knmi
 
@@ -813,7 +806,7 @@ class MeteoObs(Obs):
                     'inseason': inseason,
                     'use_api': use_api,
                     'raise_exceptions': raise_exceptions,
-                    'exclude_neerslag_stn':exclude_neerslag_stn}
+                    'exclude_neerslag_stn': exclude_neerslag_stn}
 
         x = obs.x
         y = obs.y
@@ -848,9 +841,8 @@ class EvaporationObs(MeteoObs):
     def from_knmi(cls, stn, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
                   use_api=True, raise_exceptions=True):
-        """Get an EvaporationObs timeseries from the KNMI evaporation.
-        The evaporation is the Potential evapotranspiration (Makkink) 
-        (in 0.1 mm)
+        """Get an EvaporationObs timeseries from the KNMI evaporation. The
+        evaporation is the Potential evapotranspiration (Makkink) (in 0.1 mm)
 
         Parameters
         ----------
@@ -878,9 +870,6 @@ class EvaporationObs(MeteoObs):
         Returns
         -------
         EvaporationObs object with an evaporation time series and attributes
-
-
-
         """
 
         return super().from_knmi(stn,
@@ -899,8 +888,8 @@ class EvaporationObs(MeteoObs):
                         fill_missing_obs=True, interval='daily',
                         inseason=False, use_api=True,
                         raise_exceptions=False):
-        """Get an EvaporationObs object with evaporation measurements from the KNMI
-        station closest to the given (x,y) coördinates.
+        """Get an EvaporationObs object with evaporation measurements from the
+        KNMI station closest to the given (x,y) coördinates.
 
         Parameters
         ----------
@@ -932,7 +921,7 @@ class EvaporationObs(MeteoObs):
         EvaporationObs object with an evaporation time series and attributes
         """
 
-        return super().from_nearest_xy(x, y, 
+        return super().from_nearest_xy(x, y,
                                        'EV24',
                                        startdate,
                                        enddate,
@@ -948,12 +937,12 @@ class EvaporationObs(MeteoObs):
                  fill_missing_obs=True, interval='daily', inseason=False,
                  use_api=True,
                  raise_exceptions=False):
-        """Get an EvaporationObs object with evaporation measurements from the KNMI
-        station closest to the given observation. Uses the x and y coördinates
-        of the observation to obtain the nearest KNMI evaporation time series.
-        Uses the start- and enddate of the observation as start- and enddate
-        of the evaporation time series (unless startdate and enddatet are 
-        specified explicitly).       
+        """Get an EvaporationObs object with evaporation measurements from the
+        KNMI station closest to the given observation. Uses the x and y
+        coördinates of the observation to obtain the nearest KNMI evaporation
+        time series. Uses the start- and enddate of the observation as start-
+        and enddate of the evaporation time series (unless startdate and
+        enddatet are specified explicitly).
 
         Parameters
         ----------
@@ -981,9 +970,8 @@ class EvaporationObs(MeteoObs):
         Returns
         -------
         EvaporationObs object with an evaporation time series and attributes
-
         """
-        return super().from_obs(obs, 
+        return super().from_obs(obs,
                                 'EV24',
                                 startdate,
                                 enddate,
@@ -993,7 +981,7 @@ class EvaporationObs(MeteoObs):
                                 True,
                                 use_api,
                                 raise_exceptions)
-    
+
 
 class PrecipitationObs(MeteoObs):
     """class for precipitation timeseries.
@@ -1012,11 +1000,11 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_knmi(cls, stn, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  exclude_neerslag_stn=False, use_api=True, 
+                  exclude_neerslag_stn=False, use_api=True,
                   raise_exceptions=True):
-        """Get a PrecipitationObs timeseries from the KNMI precipitation.
-        The precipitation is the Daily precipitation amount (in 0.1 mm) (-1 
-        for <0.05 mm).
+        """Get a PrecipitationObs timeseries from the KNMI precipitation. The
+        precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
+        <0.05 mm).
 
         Parameters
         ----------
@@ -1047,9 +1035,6 @@ class PrecipitationObs(MeteoObs):
         Returns
         -------
         PrecipitationObs object with an evaporation time series and attributes
-
-
-
         """
         return super().from_knmi(stn,
                                  'RH',
@@ -1065,10 +1050,10 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_nearest_xy(cls, x, y, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, 
+                        inseason=False,
                         exclude_neerslag_stn=False, use_api=True,
                         raise_exceptions=False):
-        """Get a PrecipitationObs object with precipitation measurements from 
+        """Get a PrecipitationObs object with precipitation measurements from
         the KNMI station closest to the given (x,y) coördinates.
 
         Parameters
@@ -1103,7 +1088,7 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with a precipitation time series and attributes
         """
-        return super().from_nearest_xy(x, y, 
+        return super().from_nearest_xy(x, y,
                                        'RH',
                                        startdate,
                                        enddate,
@@ -1119,12 +1104,12 @@ class PrecipitationObs(MeteoObs):
                  fill_missing_obs=True, interval='daily', inseason=False,
                  exclude_neerslag_stn=False, use_api=True,
                  raise_exceptions=False):
-        """Get a PrecipitationObs object with evaporation measurements from 
-        the KNMI station closest to the given observation. Uses the x and y 
-        coördinates of the observation to obtain the nearest KNMI evaporation 
-        time series. Uses the start- and enddate of the observation as start- 
-        and enddate of the time series (unless startdate and enddate are 
-        specified explicitly).       
+        """Get a PrecipitationObs object with evaporation measurements from the
+        KNMI station closest to the given observation. Uses the x and y
+        coördinates of the observation to obtain the nearest KNMI evaporation
+        time series. Uses the start- and enddate of the observation as start-
+        and enddate of the time series (unless startdate and enddate are
+        specified explicitly).
 
         Parameters
         ----------
@@ -1155,9 +1140,8 @@ class PrecipitationObs(MeteoObs):
         Returns
         -------
         PrecipitationObs object with a precipitation time series and attributes
-
         """
-        return super().from_obs(obs, 
+        return super().from_obs(obs,
                                 'RH',
                                 startdate,
                                 enddate,

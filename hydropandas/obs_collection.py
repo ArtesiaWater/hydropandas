@@ -652,7 +652,7 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_knmi(cls, locations=None, stns=None, xmid=None, ymid=None,
                   meteo_vars=["RD"], name='', start=[None, None],
-                  end=[None, None], ObsClass=[obs.PrecipitationObs], 
+                  end=[None, None], ObsClass=[obs.PrecipitationObs],
                   **kwargs):
         """get knmi observations from a list of locations or a list of
         stations.
@@ -759,7 +759,6 @@ class ObsCollection(pd.DataFrame):
             list of observations
         name : str, optional
             name of the observation collection
-
         """
         obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, name=name)

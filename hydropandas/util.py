@@ -17,6 +17,7 @@ from pandas import Timedelta, Timestamp
 
 logger = logging.getLogger(__name__)
 
+
 def _obslist_to_frame(obs_list):
     """convert a list of observations to a pandas DataFrame.
 
@@ -268,9 +269,7 @@ def df2gdf(df, xcol='x', ycol='y'):
 
 
 def show_versions():
-    """Method to print the version of dependencies.
-
-    """
+    """Method to print the version of dependencies."""
     from pandas import __version__ as pd_version
     from numpy import __version__ as np_version
     from scipy import __version__ as sc_version
