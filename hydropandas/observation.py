@@ -20,8 +20,6 @@ from pandas import DataFrame
 
 from _io import StringIO
 from pandas._config import get_option
-from pandas.io.formats import console, format as fmt
-from html import escape
 
 
 class Obs(DataFrame):
