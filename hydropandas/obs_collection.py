@@ -651,8 +651,8 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_knmi(cls, locations=None, stns=None, xmid=None, ymid=None,
-                  meteo_vars=["RD"], name='', start=[None, None],
-                  end=[None, None], ObsClass=[obs.PrecipitationObs],
+                  meteo_vars=["RH"], name='', start=None,
+                  end=None, ObsClass=None,
                   **kwargs):
         """get knmi observations from a list of locations or a list of
         stations.
@@ -668,21 +668,30 @@ class ObsCollection(pd.DataFrame):
         ymid : np.array, optional
             y coördinates of the cell centers of your grid shape(nrow)
         meteo_vars : list or tuple of str
-            meteo variables e.g. ["RD", "EV24"]. The default is ("RD").
+            meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
         name : str, optional
             name of the obscollection. The default is ''.
-        start : list of str, datetime or None]
+        start : None, str, datetime or list, optional
             start date of observations per meteo variable. The start date is
-            included in the time series. If start is None the start date will
-            be January 1st of the previous year. The default is [None, None]
+            included in the time series. 
+            If start is None the start date will be January 1st of the 
+            previous year. 
+            if start is str it will be converted to datetime
+            if start is a list it should be the same length as meteo_vars and
+            the start time for each variable. The default is None
         end : list of str, datetime or None]
             end date of observations per meteo variable. The end date is
-            not included in the time series. If end is None the last date
-            with measurements is used. The default is [None, None]
-        ObsClass : list of type or None
-            class of the observations, can be PrecipitationObs or EvaporationObs. The
-            default is [PrecipitationObs].
+            included in the time series. 
+            If end is None the start date will be January 1st of the 
+            previous year. 
+            if end is a str it will be converted to datetime
+            if end is a list it should be the same length as meteo_vars and
+            the end time for each meteo variable. The default is None
+        ObsClass : type, list of type or None
+            class of the observations, can be PrecipitationObs, EvaporationObs
+            or MeteoObs. If None the type of observations is derived from the
+            meteo_vars.
         **kwargs :
             kwargs are passed to the io_knmi.get_knmi_obslist function
 
@@ -729,14 +738,33 @@ class ObsCollection(pd.DataFrame):
         """
 
         from .io.io_knmi import get_knmi_obslist
-
+        
+        # obtain ObsClass
+        if ObsClass is None:
+            ObsClass = []
+            for meteovar in meteo_vars:
+                if meteovar == 'RH':
+                    ObsClass.append(obs.PrecipitationObs)
+                elif meteovar == 'EV24':
+                    ObsClass.append(obs.EvaporationObs)
+                else:
+                    ObsClass.append(obs.MeteoObs)
+                    
+        elif issubclass(ObsClass, [obs.PrecipitationObs, obs.EvaporationObs,
+                                   obs.MeteoObs]):
+            ObsClass = [ObsClass] * len(meteo_vars)
+        elif isinstance(ObsClass, [list, tuple]):
+            pass
+        else:
+            TypeError('must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple')
+                    
         meta = {}
         meta['start'] = start
         meta['end'] = end
         meta['name'] = name
         meta['ObsClass'] = ObsClass
         meta['meteo_vars'] = meteo_vars
-
+       
         obs_list = get_knmi_obslist(locations, stns,
                                     xmid, ymid,
                                     meteo_vars,

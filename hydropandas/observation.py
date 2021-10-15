@@ -521,7 +521,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_knmi(cls, stn, meteo_var='RH', startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  exclude_neerslag_stn=False, use_api=True, raise_exceptions=True):
+                  use_precipitation_stn=True, use_api=True, raise_exceptions=True):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
@@ -541,9 +541,10 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
+        use_precipitation_stn : bool, optional
+            if True a combination of neerslagstations and meteo stations are used.
+            If False only meteo stations are used to obtain precipitation data.
+            Default is True.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -600,14 +601,14 @@ class MeteoObs(Obs):
         from .io import io_knmi
 
         if interval == 'hourly':
-            exclude_neerslag_stn = True
+            use_precipitation_stn = False
 
         settings = {'fill_missing_obs': fill_missing_obs,
                     'interval': interval,
                     'inseason': inseason,
                     'use_api': use_api,
                     'raise_exceptions': raise_exceptions,
-                    'exclude_neerslag_stn': exclude_neerslag_stn}
+                    'use_precipitation_stn': use_precipitation_stn}
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
             stn, meteo_var, startdate, enddate, settings=settings)
@@ -618,7 +619,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, meteo_var, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, exclude_neerslag_stn=False,
+                        inseason=False, use_precipitation_stn=True,
                         use_api=True,
                         raise_exceptions=False):
         """Get a MeteoObs object from the KNMI station closest to the given
@@ -643,9 +644,10 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
+        use_precipitation_stn : bool, optional
+            if True a combination of neerslagstations and meteo stations are used.
+            If False only meteo stations are used to obtain precipitation data.
+            Default is True.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -706,7 +708,7 @@ class MeteoObs(Obs):
                     'inseason': inseason,
                     'use_api': use_api,
                     'raise_exceptions': raise_exceptions,
-                    'exclude_neerslag_stn': exclude_neerslag_stn}
+                    'use_precipitation_stn': use_precipitation_stn}
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, meteo_var, startdate, enddate, settings=settings)
@@ -717,7 +719,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_obs(cls, obs, meteo_var, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
-                 exclude_neerslag_stn=False, use_api=True,
+                 use_precipitation_stn=True, use_api=True,
                  raise_exceptions=False):
         """Get a MeteoObs object with measurements from the KNMI station
         closest to the given observation. Uses the x and y coördinates of the
@@ -742,9 +744,10 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
+        use_precipitation_stn : bool, optional
+            if True a combination of neerslagstations and meteo stations are used.
+            If False only meteo stations are used to obtain precipitation data.
+            Default is True.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -805,7 +808,7 @@ class MeteoObs(Obs):
                     'inseason': inseason,
                     'use_api': use_api,
                     'raise_exceptions': raise_exceptions,
-                    'exclude_neerslag_stn': exclude_neerslag_stn}
+                    'use_precipitation_stn': use_precipitation_stn}
 
         x = obs.x
         y = obs.y
@@ -1004,6 +1007,24 @@ class PrecipitationObs(MeteoObs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
         <0.05 mm).
+        
+        There are 3 different ways to obtain precipitation data from the knmi:
+            1. Daily data from precipitation (neerslag) stations
+            2. Daily data from meteo stations
+            3. Hourly data from meteo stations
+        
+        1. If you want to get data from a neerslagstation stn should be the 
+        station number with '_neerslag_station' at the end e.g. for De Bilt: 
+            stn = '550_neerslag_station'.
+        2. If you want to get daily data from a meteo station stn should be the 
+        number of the meteo station, can be string or integer
+        3. If you want to get hourly data from a meteo station, stn should be 
+        the number of the meteo station and interval should 'hourly'.
+        
+        More information about the differences between neerslag and meteo
+        stations can be found in the 02_knmi_observations notebook inside the
+        examples directory on github: 
+            https://github.com/ArtesiaWater/hydropandas
 
         Parameters
         ----------
@@ -1053,7 +1074,8 @@ class PrecipitationObs(MeteoObs):
                         exclude_neerslag_stn=False, use_api=True,
                         raise_exceptions=False):
         """Get a PrecipitationObs object with precipitation measurements from
-        the KNMI station closest to the given (x,y) coördinates.
+        the meteo or precipitation station closest to the given (x,y) 
+        coördinates.
 
         Parameters
         ----------
@@ -1104,11 +1126,11 @@ class PrecipitationObs(MeteoObs):
                  exclude_neerslag_stn=False, use_api=True,
                  raise_exceptions=False):
         """Get a PrecipitationObs object with evaporation measurements from the
-        KNMI station closest to the given observation. Uses the x and y
-        coördinates of the observation to obtain the nearest KNMI evaporation
-        time series. Uses the start- and enddate of the observation as start-
-        and enddate of the time series (unless startdate and enddate are
-        specified explicitly).
+        the meteo or precipitation station closest to the given observation. 
+        Uses the x and y coördinates of the observation to obtain the nearest 
+        KNMI precipitation time series. Uses the start- and enddate of the 
+        observation as start- and enddate of the time series (unless startdate 
+        and enddate are specified explicitly).
 
         Parameters
         ----------
