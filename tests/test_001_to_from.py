@@ -227,11 +227,11 @@ def test_evap_obs_from_stn():
 #%% Precipitation
 
 def test_precip_obs_from_stn():
-    return obs.PrecipitationObs.from_knmi(1233)
+    return obs.PrecipitationObs.from_knmi('233_neerslag_station')
 
 
 def test_knmi_obs_from_stn_no_api():
-    return obs.PrecipitationObs.from_knmi(1233, use_api=False)
+    return obs.PrecipitationObs.from_knmi('233_neerslag_station', use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
@@ -244,7 +244,8 @@ def test_knmi_obs_from_stn_without_any_data():
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    return obs.PrecipitationObs.from_knmi(1441, startdate='2010-1-2')
+    return obs.PrecipitationObs.from_knmi('441_neerslag_station', 
+                                          startdate='2010-1-2')
 
 
 def test_knmi_obs_from_xy():

@@ -38,7 +38,7 @@ def get_stations(meteo_var='RH', exclude_neerslag_stn=False):
     Parameters
     ----------
     meteo_var : str, optional
-        type of meteodata, by default 'RD'
+        type of meteodata, by default 'RH'
     exclude_neerslag_stn : bool, optional
         if True only meteo stations are used to obtain precipitation data. 
         If False a combination of neerslagstations and meteo stations are used. 
@@ -59,7 +59,7 @@ def get_stations(meteo_var='RH', exclude_neerslag_stn=False):
     if (meteo_var == "RH") and (not exclude_neerslag_stn):
         fname = "../data/knmi_neerslagstation.json"
         stations2 = pd.read_json(os.path.join(dir_path, fname))
-        stations2.index = stations2.index + 1000
+        stations2.index = stations2.index.astype(str) + '_neerslag_station'
         stations = pd.concat([stations, stations2], axis=0)
 
     if meteo_var == 'PG':
@@ -195,8 +195,6 @@ def get_nearest_station_df(locations, xcol='x', ycol='y', stations=None,
                              columns=stations.index)
 
     stns = distances.idxmin(axis=1).unique()
-    if np.any(np.isnan(stns)):
-        stns = stns[~np.isnan(stns)].astype(int)
 
     return stns
 
@@ -379,8 +377,8 @@ def download_knmi_data(stn, stn_name=None,
     start, end = _start_end_to_datetime(start, end)
 
     # change the meteo var if a station is a neerslagstation
-    if (meteo_var == 'RH') and (int(stn) > 1000):  # the station is a neerslagstation
-        stn = int(stn) - 1000
+    if (meteo_var == 'RH') and str(stn).endswith('_neerslag_station'):  # the station is a neerslagstation
+        stn_nst = stn.strip('_neerslag_station')
         meteo_var_neerslag = 'RD'
     else:
         meteo_var_neerslag = 'RH'
@@ -414,7 +412,7 @@ def download_knmi_data(stn, stn_name=None,
             elif meteo_var_neerslag == 'RD':
                 # daily data from rainfall-stations
                 knmi_df, variables = get_knmi_daily_rainfall_api(
-                    URL_DAILY_RD, stn, meteo_var_neerslag, start, end,
+                    URL_DAILY_RD, stn_nst, meteo_var_neerslag, start, end,
                     settings['inseason'])
                 # rename RD to RH
                 knmi_df.rename(columns={meteo_var_neerslag:meteo_var},
@@ -436,9 +434,9 @@ def download_knmi_data(stn, stn_name=None,
                 # daily data from rainfall-stations
                 if stn_name is None:
                     stations_df = get_stations(meteo_var=meteo_var)
-                    stn_name = get_station_name(int(stn)+1000, stations_df)
+                    stn_name = get_station_name(stn, stations_df)
                 knmi_df, variables = get_knmi_daily_rainfall_url(
-                    stn, stn_name, meteo_var_neerslag, start, end,
+                    stn_nst, stn_name, meteo_var_neerslag, start, end,
                     settings['inseason'])
                 # rename RD to RH
                 knmi_df.rename(columns={meteo_var_neerslag:meteo_var},
@@ -1113,9 +1111,11 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
     Parameters
     ----------
     stn : int or str
-        measurement station e.g. 829.
+        measurement station e.g. 829. If you want to use a neerslagstation add
+        _neerslag_station at the end of the stn number e.g. 
+        '550_neerslag_station'.
     meteo_var : str, optional
-        observation type e.g. "RD" or "EV24". See list with all options below.
+        observation type e.g. "RH" or "EV24". See list with all options below.
     start : str, datetime or None, optional
         start date of observations. The default is None.
     end : str, datetime or None, optional
@@ -1224,7 +1224,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
 
 def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
-                     meteo_vars=["RD"], start=[None], end=[None],
+                     meteo_vars=["RH"], start=[None], end=[None],
                      ObsClass=[None],
                      settings=None, cache=False, raise_exceptions=False):
     """Get a list of observations of knmi stations. Either specify a list of
@@ -1241,7 +1241,7 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
     ymid : np.array, optional
         y coördinates of the cell centers of your grid shape(nrow)
     meteo_vars : list or tuple of str
-        meteo variables e.g. ["RD", "EV24"]. The default is ("RD")
+        meteo variables e.g. ["RH", "EV24"]. The default is ("RH")
     start : list of str, datetime or None]
         start date of observations per meteo variable. The start date is
         included in the time series. If start is None the start date will

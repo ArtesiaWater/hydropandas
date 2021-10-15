@@ -34,6 +34,8 @@ def _obslist_to_frame(obs_list):
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
                               columns=obs_list[0].to_collection_dict().keys())
         obs_df.set_index('name', inplace=True)
+        if obs_df.index.duplicated().any():
+            logger.warning('multiple observations with the same name')
     else:
         obs_df = pd.DataFrame()
     return obs_df

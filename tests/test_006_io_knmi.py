@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 def test_get_knmi_precip_neerslagstation():
     # De Bilt neerslagstation
     ts, meta = io_knmi.get_knmi_timeseries_stn(
-        1550,
+        '550_neerslag_station',
         "RH",
         start='2010-1-1',
         end='2010-1-10',
@@ -51,7 +51,7 @@ def test_get_knmi_precip_meteostation_hourly():
 def test_get_knmi_precip_neerslagstation_no_api():
     # De Bilt neerslagstation
     ts4, meta4 = io_knmi.get_knmi_timeseries_stn(
-        1550,
+        '550_neerslag_station',
         "RH",
         start='2010-1-1',
         end='2010-1-10',
@@ -69,29 +69,11 @@ def test_get_knmi_precip_meteostation_no_api():
         settings={'use_api': False})
     return ts5, meta5
 
-# def test_plot_all_obs_in_one_figure():
-    
-#     ts, meta = test_get_knmi_precip_neerslagstation()
-#     ts2, meta2 = test_get_knmi_precip_meteostation()
-#     ts3, meta3 = test_get_knmi_precip_meteostation_hourly()
-#     ts4, meta4 = test_get_knmi_precip_neerslagstation_no_api()
-#     ts5, meta5 = test_get_knmi_precip_meteostation_no_api()
-       
-    
-#     import matplotlib.pyplot as plt
-#     fig, ax = plt.subplots()
-#     ax.step(ts.index, ts.values,  label=str(meta['station']) + '_' + meta['RH'])
-#     ax.step(ts2.index, ts2.values, label=str(meta2['station']) + '_' + meta2['RH'])
-#     ax.step(ts3.index, ts3.values, label=str(meta3['station']) + '_' + meta3['RH'])
-#     ax.step(ts4.index, ts4.values, lw=0.5, marker='o', label=str(meta4['station']) + '_' + meta4['RH'])
-#     ax.step(ts5.index, ts5.values, lw=0.5, marker='o', label=str(meta5['station']) + '_' + meta5['RH'])
-#     ax.legend()
-
 
 def test_get_knmi_precip_neerslagstation_fill_missing():
     settings = io_knmi._get_default_settings(None)
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        1550,
+        '550_neerslag_station',
         meteo_var='RH',
         start='1952',
         end=None,
@@ -103,7 +85,7 @@ def test_download_rd_550_no_api():
     settings = io_knmi._get_default_settings(None)
     settings['use_api'] = False
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        1550,
+        '550_neerslag_station',
         meteo_var='RH',
         start='1952',
         end=None,
@@ -114,7 +96,7 @@ def test_download_rd_550_no_api():
 def test_download_rd_12():
     settings = io_knmi._get_default_settings(None)
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        1012,
+        '12_neerslag_station',
         meteo_var='RH',
         start='2010',
         end=None,
@@ -126,7 +108,7 @@ def test_download_without_data():
     settings = io_knmi._get_default_settings(None)
     try:
         knmi_df, variables, stations = io_knmi.download_knmi_data(
-            1324,
+            '324_neerslag_station',
             meteo_var='RH',
             start='2018',
             end='2020',
@@ -141,7 +123,7 @@ def test_download_without_data_no_error():
     settings = io_knmi._get_default_settings(settings={'raise_exceptions':False})
     
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        1324,
+        '324_neerslag_station',
         meteo_var='RH',
         start='2018',
         end='2020',
@@ -194,7 +176,7 @@ def test_fill_missing_measurements_ev24_278():
     return knmi_df, variables, stations
 
 
-def test_fill_missing_measurements_rh_278():
+def test_fill_missing_measurements_rh_273():
     knmi_df, variables, stations = io_knmi.fill_missing_measurements(
         273,
         meteo_var='RH',
