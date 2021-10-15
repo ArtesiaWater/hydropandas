@@ -22,13 +22,13 @@ def _obslist_to_frame(obs_list):
 
     Parameters
     ----------
-    obs_list : TYPE
-        DESCRIPTION.
+    obs_list : list of hydropandas.*Obs
+        list containing *Obs objects that will be stored in DataFrame.
 
     Returns
     -------
-    obs_df : TYPE
-        DESCRIPTION.
+    obs_df : pandas.DataFrame
+        DataFrame containing all data
     """
     if len(obs_list) > 0:
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
