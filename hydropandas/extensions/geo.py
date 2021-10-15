@@ -231,7 +231,6 @@ class GeoAccessor:
         """get nearest line for each point in the obs collection. Function
         calls the nearest_polygon function.
 
-
         Parameters
         ----------
         gdf : GeoDataFrame
@@ -263,8 +262,7 @@ class GeoAccessor:
                             xcol_obs='x', ycol_obs='y',
                             multiple_polygons='error'):
         """get nearest polygon for each point in the obs collection. Function
-        also works for lines instead of polygons
-
+        also works for lines instead of polygons.
 
         Parameters
         ----------
