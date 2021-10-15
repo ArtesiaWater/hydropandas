@@ -750,10 +750,13 @@ class ObsCollection(pd.DataFrame):
                 else:
                     ObsClass.append(obs.MeteoObs)
                     
-        elif issubclass(ObsClass, [obs.PrecipitationObs, obs.EvaporationObs,
-                                   obs.MeteoObs]):
-            ObsClass = [ObsClass] * len(meteo_vars)
-        elif isinstance(ObsClass, [list, tuple]):
+        elif isinstance(ObsClass, type):
+            if issubclass(ObsClass, (obs.PrecipitationObs, obs.EvaporationObs,
+                                     obs.MeteoObs)):
+                ObsClass = [ObsClass] * len(meteo_vars)
+            else:
+                TypeError('must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple')
+        elif isinstance(ObsClass, (list, tuple)):
             pass
         else:
             TypeError('must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple')

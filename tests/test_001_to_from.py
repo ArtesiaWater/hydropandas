@@ -261,10 +261,8 @@ def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
     oc_knmi = oc.ObsCollection.from_knmi(locations=obsc,
                                          meteo_vars=["EV24", "RD"],
-                                         start=['2010', '2010'],
-                                         end=['2015', '2015'],
-                                         ObsClass=[obs.EvaporationObs,
-                                                   obs.PrecipitationObs],
+                                         start='2010',
+                                         end='2015',
                                          cache=False)
     return oc_knmi
 

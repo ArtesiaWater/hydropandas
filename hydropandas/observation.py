@@ -840,9 +840,7 @@ class EvaporationObs(MeteoObs):
         return EvaporationObs
 
     @classmethod
-    def from_knmi(cls, stn, startdate=None, enddate=None,
-                  fill_missing_obs=True, interval='daily', inseason=False,
-                  use_api=True, raise_exceptions=True):
+    def from_knmi(cls, stn, **kwargs):
         """Get an EvaporationObs timeseries from the KNMI evaporation. The
         evaporation is the Potential evapotranspiration (Makkink) (in 0.1 mm)
 
@@ -850,24 +848,25 @@ class EvaporationObs(MeteoObs):
         ----------
         stn : int or str
             measurement station e.g. 829.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool, optional
-            if True nan values in time series are filled with nearby time series.
-            The default is True.
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool, optional
+                if True nan values in time series are filled with nearby time series.
+                The default is True.
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
@@ -876,20 +875,10 @@ class EvaporationObs(MeteoObs):
 
         return super().from_knmi(stn,
                                  'EV24',
-                                 startdate,
-                                 enddate,
-                                 fill_missing_obs,
-                                 interval,
-                                 inseason,
-                                 True,
-                                 use_api,
-                                 raise_exceptions)
+                                 **kwargs)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, startdate=None, enddate=None,
-                        fill_missing_obs=True, interval='daily',
-                        inseason=False, use_api=True,
-                        raise_exceptions=False):
+    def from_nearest_xy(cls, x, y, **kwargs):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given (x,y) coördinates.
 
@@ -899,24 +888,25 @@ class EvaporationObs(MeteoObs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
@@ -925,20 +915,10 @@ class EvaporationObs(MeteoObs):
 
         return super().from_nearest_xy(x, y,
                                        'EV24',
-                                       startdate,
-                                       enddate,
-                                       fill_missing_obs,
-                                       interval,
-                                       inseason,
-                                       True,
-                                       use_api,
-                                       raise_exceptions)
+                                       **kwargs)
 
     @classmethod
-    def from_obs(cls, obs, startdate=None, enddate=None,
-                 fill_missing_obs=True, interval='daily', inseason=False,
-                 use_api=True,
-                 raise_exceptions=False):
+    def from_obs(cls, obs, **kwargs):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
         coördinates of the observation to obtain the nearest KNMI evaporation
@@ -950,24 +930,25 @@ class EvaporationObs(MeteoObs):
         ----------
         obs : hydropandas.Obs
             Observation object.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
@@ -975,14 +956,7 @@ class EvaporationObs(MeteoObs):
         """
         return super().from_obs(obs,
                                 'EV24',
-                                startdate,
-                                enddate,
-                                fill_missing_obs,
-                                interval,
-                                inseason,
-                                True,
-                                use_api,
-                                raise_exceptions)
+                                **kwargs)
 
 
 class PrecipitationObs(MeteoObs):
@@ -1000,10 +974,7 @@ class PrecipitationObs(MeteoObs):
         return PrecipitationObs
 
     @classmethod
-    def from_knmi(cls, stn, startdate=None, enddate=None,
-                  fill_missing_obs=True, interval='daily', inseason=False,
-                  exclude_neerslag_stn=False, use_api=True,
-                  raise_exceptions=True):
+    def from_knmi(cls, stn, **kwargs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
         <0.05 mm).
@@ -1030,27 +1001,28 @@ class PrecipitationObs(MeteoObs):
         ----------
         stn : int or str
             measurement station e.g. 829.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool, optional
-            if True nan values in time series are filled with nearby time series.
-            The default is True.
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool, optional
+                if True nan values in time series are filled with nearby time series.
+                The default is True.
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            exclude_neerslag_stn : boolean, optional
+                if True only meteostations are used to obtain precipitation data.
+                No neerslag stations are used.
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
@@ -1058,21 +1030,10 @@ class PrecipitationObs(MeteoObs):
         """
         return super().from_knmi(stn,
                                  'RH',
-                                 startdate,
-                                 enddate,
-                                 fill_missing_obs,
-                                 interval,
-                                 inseason,
-                                 exclude_neerslag_stn,
-                                 use_api,
-                                 raise_exceptions)
+                                 **kwargs)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, startdate=None, enddate=None,
-                        fill_missing_obs=True, interval='daily',
-                        inseason=False,
-                        exclude_neerslag_stn=False, use_api=True,
-                        raise_exceptions=False):
+    def from_nearest_xy(cls, x, y, **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y) 
         coördinates.
@@ -1083,27 +1044,28 @@ class PrecipitationObs(MeteoObs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            exclude_neerslag_stn : boolean, optional
+                if True only meteostations are used to obtain precipitation data.
+                No neerslag stations are used.
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
@@ -1111,20 +1073,10 @@ class PrecipitationObs(MeteoObs):
         """
         return super().from_nearest_xy(x, y,
                                        'RH',
-                                       startdate,
-                                       enddate,
-                                       fill_missing_obs,
-                                       interval,
-                                       inseason,
-                                       exclude_neerslag_stn,
-                                       use_api,
-                                       raise_exceptions)
+                                       **kwargs)
 
     @classmethod
-    def from_obs(cls, obs, startdate=None, enddate=None,
-                 fill_missing_obs=True, interval='daily', inseason=False,
-                 exclude_neerslag_stn=False, use_api=True,
-                 raise_exceptions=False):
+    def from_obs(cls, obs, **kwargs):
         """Get a PrecipitationObs object with evaporation measurements from the
         the meteo or precipitation station closest to the given observation. 
         Uses the x and y coördinates of the observation to obtain the nearest 
@@ -1136,27 +1088,28 @@ class PrecipitationObs(MeteoObs):
         ----------
         obs : hydropandas.Obs
             Observation object.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        **kwargs
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            exclude_neerslag_stn : boolean, optional
+                if True only meteostations are used to obtain precipitation data.
+                No neerslag stations are used.
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
@@ -1164,11 +1117,4 @@ class PrecipitationObs(MeteoObs):
         """
         return super().from_obs(obs,
                                 'RH',
-                                startdate,
-                                enddate,
-                                fill_missing_obs,
-                                interval,
-                                inseason,
-                                exclude_neerslag_stn,
-                                use_api,
-                                raise_exceptions)
+                                **kwargs)

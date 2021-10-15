@@ -227,3 +227,13 @@ def test_obslist_from_stns():
                                                   obs.EvaporationObs])
 
     return obs_list
+
+def test_obslist_from_stns_single_startdate():
+    stns = [344, 260]  # Rotterdam en de Bilt
+    obs_list = io_knmi.get_knmi_obslist(stns=stns, meteo_vars=['RH', 'EV24'],
+                                        start='2010',
+                                        end='2015',
+                                        ObsClass=[obs.PrecipitationObs, 
+                                                  obs.EvaporationObs])
+
+    return obs_list

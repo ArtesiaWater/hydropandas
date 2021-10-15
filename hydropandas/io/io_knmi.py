@@ -28,6 +28,7 @@ URL_DAILY_NEERSLAG = 'https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen'
 URL_DAILY_METEO = 'https://www.daggegevens.knmi.nl/klimatologie/daggegevens'
 URL_HOURLY_METEO = 'https://www.daggegevens.knmi.nl/klimatologie/uurgegevens'
 
+
 def get_stations(meteo_var='RH', use_precipitation_stn=True):
     """get knmi stations from json files according to variable.
 
@@ -1057,7 +1058,7 @@ def _get_default_settings(settings):
     """adds the default settings to a dictinary with settings. If settings
     is None all the settings are default. If there are already settings given
     only the non-existing settings are added with their default value.
-    
+
     The default settings are:    
     fill_missing_obs = True
         nan values in time series are filled with nearby time series.
@@ -1293,19 +1294,19 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
 
     settings = _get_default_settings(settings)
     settings['raise_exceptions'] = raise_exceptions
-    
+
     if start is None:
         start = [None] * len(meteo_vars)
-    elif isinstance(start,[str, dt.datetime]):
+    elif isinstance(start, (str, dt.datetime)):
         start = [start] * len(meteo_vars)
     elif isinstance(start, list):
         pass
     else:
         raise TypeError('must be None, str, dt.datetime or list')
-    
+
     if end is None:
         end = [None] * len(meteo_vars)
-    elif isinstance(end,[str, dt.datetime]):
+    elif isinstance(end, (str, dt.datetime)):
         end = [end] * len(meteo_vars)
     elif isinstance(end, list):
         pass
@@ -1349,14 +1350,16 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
                     logger.info(f'reading {fname} from cache')
                     o = pd.read_pickle(pklz_path)
                 else:
-                    o = ObsClass[i].from_knmi(stn, start[i], end[i],
+                    o = ObsClass[i].from_knmi(stn, startdate=start[i],
+                                              enddate=end[i],
                                               fill_missing_obs=settings['fill_missing_obs'],
                                               interval=settings['interval'],
                                               inseason=settings['inseason'],
                                               raise_exceptions=raise_exceptions)
                     o.to_pickle(pklz_path)
             else:
-                o = ObsClass[i].from_knmi(stn, start[i], end[i],
+                o = ObsClass[i].from_knmi(stn, startdate=start[i],
+                                          enddate=end[i],
                                           fill_missing_obs=settings['fill_missing_obs'],
                                           interval=settings['interval'],
                                           inseason=settings['inseason'],
