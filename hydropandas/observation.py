@@ -524,7 +524,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_knmi(cls, stn, meteo_var='RH', startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  use_api=True, raise_exceptions=True):
+                  exclude_neerslag_stn=False, use_api=True, raise_exceptions=True):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
@@ -544,6 +544,9 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        exclude_neerslag_stn : boolean, optional
+            if True only meteostations are used to obtain precipitation data.
+            No neerslag stations are used.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -601,12 +604,16 @@ class MeteoObs(Obs):
 
         """
         from .io import io_knmi
+        
+        if interval=='hourly':
+            exclude_neerslag_stn = True
 
         settings = {'fill_missing_obs': fill_missing_obs,
                   'interval': interval,
                   'inseason': inseason,
                   'use_api': use_api,
-                  'raise_exceptions': raise_exceptions}
+                  'raise_exceptions': raise_exceptions,
+                  'exclude_neerslag_stn':exclude_neerslag_stn}
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
             stn, meteo_var, startdate, enddate, settings=settings)
@@ -617,7 +624,8 @@ class MeteoObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, meteo_var, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, use_api=True,
+                        inseason=False, exclude_neerslag_stn=False, 
+                        use_api=True,
                         raise_exceptions=False):
         """Get a MeteoObs object from the KNMI station closest to the 
         given (x,y) coördinates.
@@ -641,6 +649,9 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        exclude_neerslag_stn : boolean, optional
+            if True only meteostations are used to obtain precipitation data.
+            No neerslag stations are used.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -700,7 +711,8 @@ class MeteoObs(Obs):
                   'interval': interval,
                   'inseason': inseason,
                   'use_api': use_api,
-                  'raise_exceptions': raise_exceptions}
+                  'raise_exceptions': raise_exceptions,
+                  'exclude_neerslag_stn':exclude_neerslag_stn}
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
             x, y, meteo_var, startdate, enddate, settings=settings)
@@ -711,7 +723,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_obs(cls, obs, meteo_var, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
-                 use_api=True,
+                 exclude_neerslag_stn=False, use_api=True, 
                  raise_exceptions=False):
         """Get a MeteoObs object with measurements from the KNMI
         station closest to the given observation. Uses the x and y coördinates
@@ -737,6 +749,9 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        exclude_neerslag_stn : boolean, optional
+            if True only meteostations are used to obtain precipitation data.
+            No neerslag stations are used.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -794,10 +809,11 @@ class MeteoObs(Obs):
         from .io import io_knmi
 
         settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions}
+                    'interval': interval,
+                    'inseason': inseason,
+                    'use_api': use_api,
+                    'raise_exceptions': raise_exceptions,
+                    'exclude_neerslag_stn':exclude_neerslag_stn}
 
         x = obs.x
         y = obs.y
@@ -866,19 +882,17 @@ class EvaporationObs(MeteoObs):
 
 
         """
-        from .io import io_knmi
 
-        settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions}
-
-        ts, meta = io_knmi.get_knmi_timeseries_stn(
-            stn, 'EV24', startdate, enddate, settings=settings)
-
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var='EV24')
+        return super().from_knmi(stn,
+                                 'EV24',
+                                 startdate,
+                                 enddate,
+                                 fill_missing_obs,
+                                 interval,
+                                 inseason,
+                                 True,
+                                 use_api,
+                                 raise_exceptions)
 
     @classmethod
     def from_nearest_xy(cls, x, y, startdate=None, enddate=None,
@@ -917,19 +931,17 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
 
-        settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions}
-
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, 'EV24', startdate, enddate, settings=settings)
-
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var='EV24')
+        return super().from_nearest_xy(x, y, 
+                                       'EV24',
+                                       startdate,
+                                       enddate,
+                                       fill_missing_obs,
+                                       interval,
+                                       inseason,
+                                       True,
+                                       use_api,
+                                       raise_exceptions)
 
     @classmethod
     def from_obs(cls, obs, startdate=None, enddate=None,
@@ -971,28 +983,17 @@ class EvaporationObs(MeteoObs):
         EvaporationObs object with an evaporation time series and attributes
 
         """
-        from .io import io_knmi
-
-        settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions}
-
-        x = obs.x
-        y = obs.y
-
-        if startdate is None:
-            startdate = obs.index[0]
-        if enddate is None:
-            enddate = obs.index[-1]
-
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, 'EV24', startdate, enddate, settings=settings)
-
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var='EV24')
-
+        return super().from_obs(obs, 
+                                'EV24',
+                                startdate,
+                                enddate,
+                                fill_missing_obs,
+                                interval,
+                                inseason,
+                                True,
+                                use_api,
+                                raise_exceptions)
+    
 
 class PrecipitationObs(MeteoObs):
     """class for precipitation timeseries.
@@ -1011,7 +1012,7 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_knmi(cls, stn, startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  use_api=True, exclude_neerslag_stn=False,
+                  exclude_neerslag_stn=False, use_api=True, 
                   raise_exceptions=True):
         """Get a PrecipitationObs timeseries from the KNMI precipitation.
         The precipitation is the Daily precipitation amount (in 0.1 mm) (-1 
@@ -1050,29 +1051,22 @@ class PrecipitationObs(MeteoObs):
 
 
         """
-        from .io import io_knmi
-
-        if interval == 'hourly':
-            exclude_neerslag_stn = True
-
-        settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions,
-                  'exclude_neerslag_stn': exclude_neerslag_stn}
-
-        ts, meta = io_knmi.get_knmi_timeseries_stn(
-            stn, 'RH', startdate, enddate, settings=settings)
-
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var='RH')
+        return super().from_knmi(stn,
+                                 'RH',
+                                 startdate,
+                                 enddate,
+                                 fill_missing_obs,
+                                 interval,
+                                 inseason,
+                                 exclude_neerslag_stn,
+                                 use_api,
+                                 raise_exceptions)
 
     @classmethod
     def from_nearest_xy(cls, x, y, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, use_api=True,
-                        exclude_neerslag_stn=False,
+                        inseason=False, 
+                        exclude_neerslag_stn=False, use_api=True,
                         raise_exceptions=False):
         """Get a PrecipitationObs object with precipitation measurements from 
         the KNMI station closest to the given (x,y) coördinates.
@@ -1109,27 +1103,21 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with a precipitation time series and attributes
         """
-        from .io import io_knmi
-
-        settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions,
-                  'exclude_neerslagstation': exclude_neerslag_stn}
-
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, 'RH', startdate, enddate, stn_name=None,
-            settings=settings)
-
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var='RH')
+        return super().from_nearest_xy(x, y, 
+                                       'RH',
+                                       startdate,
+                                       enddate,
+                                       fill_missing_obs,
+                                       interval,
+                                       inseason,
+                                       exclude_neerslag_stn,
+                                       use_api,
+                                       raise_exceptions)
 
     @classmethod
     def from_obs(cls, obs, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
-                 use_api=True,
-                 exclude_neerslag_stn=False,
+                 exclude_neerslag_stn=False, use_api=True,
                  raise_exceptions=False):
         """Get a PrecipitationObs object with evaporation measurements from 
         the KNMI station closest to the given observation. Uses the x and y 
@@ -1153,14 +1141,14 @@ class PrecipitationObs(MeteoObs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        exclude_neerslag_stn : boolean, optional
+            if True only meteostations are used to obtain precipitation data.
+            No neerslag stations are used.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
             if False a text file is downloaded into a temporary folder and the data is read from there.
             Default is True since the api is back online (July 2021).
-        exclude_neerslag_stn : boolean, optional
-            if True only meteostations are used to obtain precipitation data.
-            No neerslag stations are used.
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1169,25 +1157,13 @@ class PrecipitationObs(MeteoObs):
         PrecipitationObs object with a precipitation time series and attributes
 
         """
-        from .io import io_knmi
-
-        settings = {'fill_missing_obs': fill_missing_obs,
-                  'interval': interval,
-                  'inseason': inseason,
-                  'use_api': use_api,
-                  'raise_exceptions': raise_exceptions,
-                  'exclude_neerslagstation': exclude_neerslag_stn}
-
-        x = obs.x
-        y = obs.y
-
-        if startdate is None:
-            startdate = obs.index[0]
-        if enddate is None:
-            enddate = obs.index[-1]
-
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, 'RH', startdate, enddate, settings=settings)
-
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var='RH')
+        return super().from_obs(obs, 
+                                'RH',
+                                startdate,
+                                enddate,
+                                fill_missing_obs,
+                                interval,
+                                inseason,
+                                exclude_neerslag_stn,
+                                use_api,
+                                raise_exceptions)
