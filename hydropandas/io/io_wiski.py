@@ -1,3 +1,4 @@
+import logging
 import os
 
 import numpy as np
@@ -5,8 +6,8 @@ import pandas as pd
 
 from ..util import get_files
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 def _read_wiski_header(f, header_sep=":", header_identifier='#',
                        end_header_str=None):
@@ -125,7 +126,7 @@ def read_wiski_dir(dirname, ObsClass=None, suffix=".csv",
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
         logger.info("reading {0}/{1} -> {2}".format(i +
-                                                  1, len(unzip_fnames), csv))
+                                                    1, len(unzip_fnames), csv))
         obs = ObsClass.from_wiski(os.path.join(
             dirname, csv), **kwargs)
 

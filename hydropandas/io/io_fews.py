@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import xml.etree.ElementTree as etree
 from io import StringIO
@@ -8,7 +9,6 @@ import pandas as pd
 from hydropandas.observation import GroundwaterObs, WaterlvlObs
 from lxml.etree import iterparse
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -167,7 +167,8 @@ def iterparse_pi_xml(fname, ObsClass,
                     loc = h_attr.text
                     if loc not in locationIds:
                         element.clear()
-                        logger.info(f" ... skipping '{loc}', not in locationIds")
+                        logger.info(
+                            f" ... skipping '{loc}', not in locationIds")
                         continue
 
                 if filterdict is not None:

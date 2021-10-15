@@ -1,3 +1,4 @@
+import logging
 import os
 import warnings
 
@@ -7,7 +8,6 @@ from scipy.interpolate import griddata
 from .. import util
 from ..observation import ModelObs
 
-import logging
 logger = logging.getLogger(__name__)
 
 

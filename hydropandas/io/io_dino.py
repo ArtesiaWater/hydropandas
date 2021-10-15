@@ -1,9 +1,9 @@
 import datetime as dt
+import logging
 import os
 import re
 import tempfile
 import warnings
-import logging
 from timeit import default_timer
 
 import numpy as np
