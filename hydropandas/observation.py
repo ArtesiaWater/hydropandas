@@ -20,6 +20,7 @@ from pandas import DataFrame
 
 from _io import StringIO
 from pandas._config import get_option
+from pandas.io.formats import console
 
 
 class Obs(DataFrame):
