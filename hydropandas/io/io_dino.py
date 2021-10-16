@@ -95,7 +95,7 @@ def _read_dino_groundwater_metadata(f, line):
         for i, meta in enumerate(metalist):
             meta_tsi = {}
             start_date = pd.to_datetime(meta.pop('startdatum'), dayfirst=True)
-            end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
+            #end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
             meta_tsi['locatie'] = meta['locatie']
             for key in _translate_dic_float.keys():
                 if meta[key] == '':

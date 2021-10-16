@@ -267,17 +267,17 @@ class ObsPlots:
 
     def interactive_plot(self,
                          savedir=None,
-                         plot_columns=['stand_m_tov_nap'],
-                         markers=['line'],
+                         plot_columns=('stand_m_tov_nap'),
+                         markers=('line'),
                          p=None,
                          plot_legend_names=[''],
                          plot_freq=[None],
                          tmin=None,
                          tmax=None,
-                         hoover_names=['Peil'],
+                         hoover_names=('Peil'),
                          hoover_date_format="%Y-%m-%d",
                          ylabel='m NAP',
-                         plot_colors=['blue'],
+                         plot_colors=('blue'),
                          add_filter_to_legend=False,
                          return_filename=False):
         """Create an interactive plot of the observations using bokeh.

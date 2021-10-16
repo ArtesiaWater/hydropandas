@@ -651,7 +651,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_knmi(cls, locations=None, stns=None, xmid=None, ymid=None,
-                  meteo_vars=["RH"], name='', start=None,
+                  meteo_vars=("RH"), name='', start=None,
                   end=None, ObsClass=None,
                   **kwargs):
         """get knmi observations from a list of locations or a list of
@@ -896,8 +896,11 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_pastas_project(cls, pr, ObsClass=obs.GroundwaterObs,
-                            name=None, pr_meta=None, rename_dic={}):
-
+                            name=None, pr_meta=None, rename_dic=None):
+        
+        if rename_dic is None:
+            rename_dic = {}
+            
         from .io.io_pastas import read_project
 
         if pr_meta is None:
@@ -1141,8 +1144,8 @@ class ObsCollection(pd.DataFrame):
         """
         return util.df2gdf(self, xcol, ycol)
 
-    def to_report_table(self, columns=['locatie', 'filternr',
-                                       'Van', 'Tot', '# metingen']):
+    def to_report_table(self, columns=('locatie', 'filternr',
+                                       'Van', 'Tot', '# metingen')):
 
         if 'Van' in columns:
             self['Van'] = self.obs.apply(lambda x: x.index[0])
