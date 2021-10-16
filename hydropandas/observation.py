@@ -1036,17 +1036,17 @@ class PrecipitationObs(MeteoObs):
             2. Daily data from meteo stations
             3. Hourly data from meteo stations
 
-        1. If you want to get data from a neerslagstation stn should be the 
-        station number with '_neerslag_station' at the end e.g. for De Bilt: 
+        1. If you want to get data from a neerslagstation stn should be the
+        station number with '_neerslag_station' at the end e.g. for De Bilt:
             stn = '550_neerslag_station'.
-        2. If you want to get daily data from a meteo station stn should be the 
+        2. If you want to get daily data from a meteo station stn should be the
         number of the meteo station, can be string or integer
-        3. If you want to get hourly data from a meteo station, stn should be 
+        3. If you want to get hourly data from a meteo station, stn should be
         the number of the meteo station and interval should 'hourly'.
         
         More information about the differences between neerslag and meteo
         stations can be found in the 02_knmi_observations notebook inside the
-        examples directory on github: 
+        examples directory on github:
             https://github.com/ArtesiaWater/hydropandas
 
         Parameters
@@ -1087,7 +1087,7 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_nearest_xy(cls, x, y, **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
-        the meteo or precipitation station closest to the given (x,y) 
+        the meteo or precipitation station closest to the given (x,y)
         coördinates.
 
         Parameters
@@ -1130,10 +1130,10 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_obs(cls, obs, **kwargs):
         """Get a PrecipitationObs object with evaporation measurements from the
-        the meteo or precipitation station closest to the given observation. 
-        Uses the x and y coördinates of the observation to obtain the nearest 
-        KNMI precipitation time series. Uses the start- and enddate of the 
-        observation as start- and enddate of the time series (unless startdate 
+        the meteo or precipitation station closest to the given observation.
+        Uses the x and y coördinates of the observation to obtain the nearest
+        KNMI precipitation time series. Uses the start- and enddate of the
+        observation as start- and enddate of the time series (unless startdate
         and enddate are specified explicitly).
 
         Parameters

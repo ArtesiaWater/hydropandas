@@ -1281,7 +1281,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
 
 def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
-                     meteo_vars=["RH"], start=None, end=None,
+                     meteo_vars=("RH"), start=None, end=None,
                      ObsClass=None,
                      settings=None, cache=False, raise_exceptions=False):
     """Get a list of observations of knmi stations. Either specify a list of
