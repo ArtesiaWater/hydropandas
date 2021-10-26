@@ -745,7 +745,7 @@ class ObsCollection(pd.DataFrame):
             RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
             Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
             RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
-            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for 
+            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
             <0.05 mm)
             RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
             RHX was measured
@@ -897,10 +897,10 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_pastas_project(cls, pr, ObsClass=obs.GroundwaterObs,
                             name=None, pr_meta=None, rename_dic=None):
-        
+
         if rename_dic is None:
             rename_dic = {}
-            
+
         from .io.io_pastas import read_project
 
         if pr_meta is None:

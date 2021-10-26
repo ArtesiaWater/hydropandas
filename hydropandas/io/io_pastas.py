@@ -171,7 +171,7 @@ def read_project(pr, ObsClass, rename_dic=None):
     """
     if rename_dic is None:
         rename_dic = {}
-        
+
     obs_list = []
     for index, row in pr.oseries.iterrows():
         metadata = row.to_dict()

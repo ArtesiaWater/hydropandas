@@ -1190,7 +1190,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
             RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
             Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
             RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
-            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for 
+            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
             <0.05 mm)
             RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
             RHX was measured
