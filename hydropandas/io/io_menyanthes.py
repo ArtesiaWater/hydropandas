@@ -4,8 +4,8 @@
 @author: oebbe
 """
 
-import os
 import logging
+import os
 
 import numpy as np
 from hydropandas import observation
@@ -13,7 +13,9 @@ from pandas import DataFrame, Series
 from scipy.io import loadmat
 
 from ..util import matlab2datetime
+
 logger = logging.getLogger(__name__)
+
 
 def read_file(fname, ObsClass):
     """This method is used to read the file."""

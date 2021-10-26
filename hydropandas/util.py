@@ -17,23 +17,26 @@ from pandas import Timedelta, Timestamp
 
 logger = logging.getLogger(__name__)
 
+
 def _obslist_to_frame(obs_list):
     """convert a list of observations to a pandas DataFrame.
 
     Parameters
     ----------
-    obs_list : TYPE
-        DESCRIPTION.
+    obs_list : list of hydropandas.*Obs
+        list containing *Obs objects that will be stored in DataFrame.
 
     Returns
     -------
-    obs_df : TYPE
-        DESCRIPTION.
+    obs_df : pandas.DataFrame
+        DataFrame containing all data
     """
     if len(obs_list) > 0:
         obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
                               columns=obs_list[0].to_collection_dict().keys())
         obs_df.set_index('name', inplace=True)
+        if obs_df.index.duplicated().any():
+            logger.warning('multiple observations with the same name')
     else:
         obs_df = pd.DataFrame()
     return obs_df
@@ -266,9 +269,7 @@ def df2gdf(df, xcol='x', ycol='y'):
 
 
 def show_versions():
-    """Method to print the version of dependencies.
-
-    """
+    """Method to print the version of dependencies."""
     from pandas import __version__ as pd_version
     from numpy import __version__ as np_version
     from scipy import __version__ as sc_version

@@ -1,10 +1,11 @@
+import logging
 from timeit import default_timer
 
 import arctic
 from tqdm import tqdm
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 def read_arctic(connstr, libname, ObsClass, progressbar=False):
     """Read all timeseries from Arctic database.
@@ -43,8 +44,8 @@ def read_arctic(connstr, libname, ObsClass, progressbar=False):
                  "Rows: {1:,.0f}  "
                  "Time: {2:.2f}s  "
                  "Rows/s: {3:,.1f}".format(len(lib.list_symbols()),
-                                        rows_read,
-                                        (end - start),
-                                        rows_read / (end - start)))
+                                           rows_read,
+                                           (end - start),
+                                           rows_read / (end - start)))
 
     return obs_list

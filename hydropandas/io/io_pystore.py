@@ -282,7 +282,7 @@ def read_pystore(storename, pystore_path,
         meta_list = read_store_metadata(storename,
                                         items=item_names,
                                         verbose=verbose)
-        meta = {}
+
         obs_df = pd.DataFrame(meta_list)
         if nameby == "collection":
             obs_df.set_index('collection_name', inplace=True)

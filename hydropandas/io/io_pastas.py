@@ -3,11 +3,12 @@
 
 @author: Artesia
 """
-import pandas as pd
-import pastastore as pst
+import logging
 import numbers
 
-import logging
+import pandas as pd
+import pastastore as pst
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,9 +41,11 @@ def _get_metadata_from_obs(o):
                 elif isinstance(v, numbers.Number):
                     meta[k] = float(v)
                 else:
-                    logger.info(f'did not add {k} to metadata because datatype is {type(v)}')
+                    logger.info(
+                        f'did not add {k} to metadata because datatype is {type(v)}')
         else:
-            logger.info(f'did not add {attr_key} to metadata because datatype is {type(val)}')
+            logger.info(
+                f'did not add {attr_key} to metadata because datatype is {type(val)}')
 
     return meta
 
@@ -149,7 +152,7 @@ def create_pastas_project(oc, pr=None, project_name='',
     return pr
 
 
-def read_project(pr, ObsClass, rename_dic={}):
+def read_project(pr, ObsClass, rename_dic=None):
     """Read pastas.Project into ObsCollection.
 
     Parameters
@@ -166,6 +169,9 @@ def read_project(pr, ObsClass, rename_dic={}):
     list : list of Obs
         list of Obs containing oseries data
     """
+    if rename_dic is None:
+        rename_dic = {}
+
     obs_list = []
     for index, row in pr.oseries.iterrows():
         metadata = row.to_dict()

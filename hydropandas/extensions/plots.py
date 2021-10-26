@@ -267,17 +267,17 @@ class ObsPlots:
 
     def interactive_plot(self,
                          savedir=None,
-                         plot_columns=['stand_m_tov_nap'],
-                         markers=['line'],
+                         plot_columns=('stand_m_tov_nap',),
+                         markers=('line',),
                          p=None,
-                         plot_legend_names=[''],
-                         plot_freq=[None],
+                         plot_legend_names=('',),
+                         plot_freq=(None,),
                          tmin=None,
                          tmax=None,
-                         hoover_names=['Peil'],
+                         hoover_names=('Peil',),
                          hoover_date_format="%Y-%m-%d",
                          ylabel='m NAP',
-                         plot_colors=['blue'],
+                         plot_colors=('blue',),
                          add_filter_to_legend=False,
                          return_filename=False):
         """Create an interactive plot of the observations using bokeh.
@@ -334,7 +334,7 @@ class ObsPlots:
         # create plot dataframe
         plot_df = self._obj[tmin:tmax].copy()
         plot_df['date'] = plot_df.index.strftime(hoover_date_format)
-        if plot_df.empty or plot_df[plot_columns].isna().all().all():
+        if plot_df.empty or plot_df[list(plot_columns)].isna().all().all():
             raise ValueError(
                 '{} has no data between {} and {}'.format(self._obj.name, tmin, tmax))
 
@@ -351,7 +351,7 @@ class ObsPlots:
 
         # get color
         if len(plot_colors) < len(plot_columns):
-            plot_colors = plot_colors * len(plot_columns)
+            plot_colors = list(plot_colors) * len(plot_columns)
 
         # get base for hoover tooltips
         plots = []
@@ -377,11 +377,11 @@ class ObsPlots:
 
             # plot data
 
-            if markers[i] == 'line':
+            if markers[i] in ['line', 'l']:
                 plots.append(p.line(xcol, column, source=source, color=plot_colors[i],
                                legend_label=lname,
                                alpha=0.8, muted_alpha=0.2))
-            elif markers[i] == 'circle':
+            elif markers[i] in ['circle','c']:
                 plots.append(p.circle(xcol, column, source=source, color=plot_colors[i],
                                  legend_label=lname,
                                  alpha=0.8, muted_alpha=0.2))

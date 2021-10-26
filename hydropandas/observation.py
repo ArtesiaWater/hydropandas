@@ -20,8 +20,7 @@ from pandas import DataFrame
 
 from _io import StringIO
 from pandas._config import get_option
-from pandas.io.formats import console, format as fmt
-from html import escape
+from pandas.io.formats import console
 
 
 class Obs(DataFrame):
@@ -69,9 +68,7 @@ class Obs(DataFrame):
         super(Obs, self).__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
-        """
-        Return a string representation for a particular Observation.
-        """
+        """Return a string representation for a particular Observation."""
         buf = StringIO("")
 
         # write metadata properties
@@ -104,83 +101,6 @@ class Obs(DataFrame):
         )
 
         return buf.getvalue()
-
-    def _repr_html_(self, metadata_out=True):
-        """
-        Return a html representation for a particular Observation.
-
-        Mainly for IPython notebook.
-        """
-
-        if self._info_repr():
-            buf = StringIO("")
-            self.info(buf=buf)
-            # need to escape the <class>, should be the first line.
-            val = buf.getvalue().replace("<", r"&lt;", 1)
-            val = val.replace(">", r"&gt;", 1)
-            return "<pre>" + val + "</pre>"
-
-        if get_option("display.notebook_repr_html"):
-            max_rows = get_option("display.max_rows")
-            min_rows = get_option("display.min_rows")
-            max_cols = get_option("display.max_columns")
-            show_dimensions = get_option("display.show_dimensions")
-
-            formatter = fmt.DataFrameFormatter(
-                self,
-                columns=None,
-                col_space=None,
-                na_rep="NaN",
-                formatters=None,
-                float_format=None,
-                sparsify=None,
-                justify=None,
-                index_names=True,
-                header=True,
-                index=True,
-                bold_rows=True,
-                escape=True,
-                max_rows=max_rows,
-                min_rows=min_rows,
-                max_cols=max_cols,
-                show_dimensions=show_dimensions,
-                decimal=".",
-            )
-
-            df_out = fmt.DataFrameRenderer(formatter).to_html(notebook=True)
-
-            if metadata_out:
-                obj_type = "hydropandas.{}".format(type(self).__name__)
-                header = f"<div class='xr-header'><div class='xr-obj-type'>{escape(obj_type)}</div></div><hr>"
-                meta_dic = {key: getattr(self, key) for key in self._metadata}
-                meta_dic.pop('meta')
-                meta_out = DataFrame(meta_dic, index=['metadata']).T
-                formatter2 = fmt.DataFrameFormatter(
-                    meta_out,
-                    columns=None,
-                    col_space=None,
-                    na_rep="NaN",
-                    formatters=None,
-                    float_format=None,
-                    sparsify=None,
-                    justify=None,
-                    index_names=True,
-                    header=True,
-                    index=True,
-                    bold_rows=True,
-                    escape=True,
-                    max_rows=len(self._metadata) + 1,
-                    min_rows=0,
-                    max_cols=2,
-                    show_dimensions=show_dimensions,
-                    decimal=".",)
-                df_meta_out = fmt.DataFrameRenderer(formatter2).to_html(notebook=True)
-                return header + df_meta_out + df_out
-
-            else:
-                return df_out
-        else:
-            return None
 
     @property
     def _constructor(self):
@@ -579,8 +499,8 @@ class ModelObs(Obs):
         return ModelObs
 
 
-class KnmiObs(Obs):
-    """class for KNMI timeseries.
+class MeteoObs(Obs):
+    """class for meteorological timeseries.
 
     Subclass of the Obs class
     """
@@ -592,25 +512,25 @@ class KnmiObs(Obs):
         self.station = kwargs.pop('station', np.nan)
         self.meteo_var = kwargs.pop('meteo_var', '')
 
-        super(KnmiObs, self).__init__(*args, **kwargs)
+        super(MeteoObs, self).__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
-        return KnmiObs
+        return MeteoObs
 
     @classmethod
-    def from_knmi(cls, stn, meteo_var, startdate=None, enddate=None,
+    def from_knmi(cls, stn, meteo_var='RH', startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  use_api=True, raise_exceptions=True):
-        """Get a KnmiObs object.
+                  use_precipitation_stn=True, use_api=False,
+                  raise_exceptions=True):
+        """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
         ----------
         stn : int or str
             measurement station e.g. 829.
-        meteo_var : str, optional
-            observation type e.g. "RD" or "EV24". See list with all variables
-            below.
+        meteo_var : str,
+            meteo variable e.g. "RH" or "EV24". See list with al options below.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -622,6 +542,10 @@ class KnmiObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        use_precipitation_stn : bool, optional
+            if True a combination of neerslagstations and meteo stations are used.
+            If False only meteo stations are used to obtain precipitation data.
+            Default is True.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -630,58 +554,117 @@ class KnmiObs(Obs):
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
+        List of possible variables:
+            DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
+            90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
+            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
+            / Vector mean wind direction in degrees (360=north, 90=east,
+            180=south, 270=west, 0=calm/variable)
+            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie
+            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
+            / Vector mean windspeed (in 0.1 m/s)
+            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean
+            windspeed (in 0.1 m/s)
+            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum
+            hourly mean windspeed (in 0.1 m/s)
+            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which
+            FHX was measured
+            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum
+            hourly mean windspeed (in 0.1 m/s)
+            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which
+            FHN was measured
+            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in
+            0.1 m/s)
+            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which
+            FXX was measured
+            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) /
+            Daily mean temperature in (0.1 degrees Celsius)
+            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum
+            temperature (in 0.1 degrees Celsius)
+            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN
+            was measured
+            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum
+            temperature (in 0.1 degrees Celsius)
+            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX
+            was measured
+            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden
+            Celsius) / Minimum temperature at 10 cm above surface (in 0.1
+            degrees Celsius)
+            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division
+            in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT,
+            24=18-24 UT
+            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale
+            straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour)
+            calculated from global radiation (-1 for <0.05 hour)
+            SP    = Percentage van de langst mogelijke zonneschijnduur /
+            Percentage of maximum potential sunshine duration
+            Q     = Globale straling (in J/cm2) / Global radiation (in J/cm2)
+            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration
+            (in 0.1 hour)
+            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
+            Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
+            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
+            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
+            <0.05 mm)
+            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
+            RHX was measured
+            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1
+            hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure
+            (in 0.1 hPa) calculated from 24 hourly values
+            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau
+            (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
+            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX
+            was measured
+            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau
+            (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
+            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
+            was measured
+            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
+            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
+            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
+            ..., 89: >70 km)
+            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which
+            VVN was measured
+            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m,
+            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
+            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
+            ..., 89: >70 km)
+            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which
+            VVX was measured
+            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de
+            bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily
+            cloud cover (in octants, 9=sky invisible)
+            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) /
+            Daily mean relative atmospheric humidity (in percents)
+            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum
+            relative atmospheric humidity (in percents)
+            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX
+            was measured
+            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum
+            relative atmospheric humidity (in percents)
+            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN
+            was measured
+            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
+            Potential evapotranspiration (Makkink) (in 0.1 mm)
+
         Returns
         -------
-        KnmiObs object with time series and attributes
-
-        List of possible variables:
-            DDVEC     = Vectorgemiddelde windrichting in graden (360=noord, 90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean wind direction in degrees (360=north, 90=east, 180=south, 270=west, 0=calm/variable)
-            FHVEC     = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean windspeed (in 0.1 m/s)
-            FG        = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean windspeed (in 0.1 m/s)
-            FHX       = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum hourly mean windspeed (in 0.1 m/s)
-            FHXH      = Uurvak waarin FHX is gemeten / Hourly division in which FHX was measured
-            FHN       = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum hourly mean windspeed (in 0.1 m/s)
-            FHNH      = Uurvak waarin FHN is gemeten / Hourly division in which FHN was measured
-            FXX       = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in 0.1 m/s)
-            FXXH      = Uurvak waarin FXX is gemeten / Hourly division in which FXX was measured
-            TG        = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) / Daily mean temperature in (0.1 degrees Celsius)
-            TN        = Minimum temperatuur (in 0.1 graden Celsius) / Minimum temperature (in 0.1 degrees Celsius)
-            TNH       = Uurvak waarin TN is gemeten / Hourly division in which TN was measured
-            TX        = Maximum temperatuur (in 0.1 graden Celsius) / Maximum temperature (in 0.1 degrees Celsius)
-            TXH       = Uurvak waarin TX is gemeten / Hourly division in which TX was measured
-            T10N      = Minimum temperatuur op 10 cm hoogte (in 0.1 graden Celsius) / Minimum temperature at 10 cm above surface (in 0.1 degrees Celsius)
-            T10NH     = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT, 24=18-24 UT
-            SQ        = Zonneschijnduur (in 0.1 uur) berekend uit de globale straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour) calculated from global radiation (-1 for <0.05 hour)
-            SP        = Percentage van de langst mogelijke zonneschijnduur / Percentage of maximum potential sunshine duration
-            Q         = Globale straling (in J/cm2) / Global radiation (in J/cm2)
-            DR        = Duur van de neerslag (in 0.1 uur) / Precipitation duration (in 0.1 hour)
-            RH        = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) / Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHX       = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHXH      = Uurvak waarin RHX is gemeten / Hourly division in which RHX was measured
-            PG        = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1 hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure (in 0.1 hPa) calculated from 24 hourly values
-            PX        = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
-            PXH       = Uurvak waarin PX is gemeten / Hourly division in which PX was measured
-            PN        = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
-            PNH       = Uurvak waarin PN is gemeten / Hourly division in which PN was measured
-            VVN       = Minimum opgetreden zicht / Minimum visibility; 0: <100 m, 1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km, 56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,..., 89: >70 km)
-            VVNH      = Uurvak waarin VVN is gemeten / Hourly division in which VVN was measured
-            VVX       = Maximum opgetreden zicht / Maximum visibility; 0: <100 m, 1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km, 56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,..., 89: >70 km)
-            VVXH      = Uurvak waarin VVX is gemeten / Hourly division in which VVX was measured
-            NG        = Etmaalgemiddelde bewolking (bedekkingsgraad van de bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily cloud cover (in octants, 9=sky invisible)
-            UG        = Etmaalgemiddelde relatieve vochtigheid (in procenten) / Daily mean relative atmospheric humidity (in percents)
-            UX        = Maximale relatieve vochtigheid (in procenten) / Maximum relative atmospheric humidity (in percents)
-            UXH       = Uurvak waarin UX is gemeten / Hourly division in which UX was measured
-            UN        = Minimale relatieve vochtigheid (in procenten) / Minimum relative atmospheric humidity (in percents)
-            UNH       = Uurvak waarin UN is gemeten / Hourly division in which UN was measured
-            EV24      = Referentiegewasverdamping (Makkink) (in 0.1 mm) / Potential evapotranspiration (Makkink) (in 0.1 mm)
+        MeteoObs object with meteorological observations
         """
         from .io import io_knmi
 
+        if interval == 'hourly':
+            use_precipitation_stn = False
+
+        settings = {'fill_missing_obs': fill_missing_obs,
+                    'interval': interval,
+                    'inseason': inseason,
+                    'use_api': use_api,
+                    'raise_exceptions': raise_exceptions,
+                    'use_precipitation_stn': use_precipitation_stn}
+
         ts, meta = io_knmi.get_knmi_timeseries_stn(
-            stn, meteo_var, startdate, enddate, fill_missing_obs,
-            interval=interval, inseason=inseason,
-            use_api=use_api,
-            raise_exceptions=raise_exceptions)
+            stn, meteo_var, startdate, enddate, settings=settings)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'], meteo_var=meteo_var)
@@ -689,18 +672,20 @@ class KnmiObs(Obs):
     @classmethod
     def from_nearest_xy(cls, x, y, meteo_var, startdate=None, enddate=None,
                         fill_missing_obs=True, interval='daily',
-                        inseason=False, raise_exceptions=False):
-        """Get KnmiObs object with measurements from station closest to the
-        given (x,y) coördinates.
+                        inseason=False, use_precipitation_stn=True,
+                        use_api=True,
+                        raise_exceptions=False):
+        """Get a MeteoObs object from the KNMI station closest to the given
+        (x,y) coördinates.
 
         Parameters
         ----------
         x : int or float
-            x coördinate in m RD.
+            x coordinate in m RD.
         y : int or float
-            y coördinate in m RD.
-        meteo_var : str
-            e.g. 'EV24'.
+            y coordinate in m RD.
+        meteo_var : str,
+            meteo variable e.g. "RH" or "EV24". See list with al options below.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -712,20 +697,33 @@ class KnmiObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
+        use_precipitation_stn : bool, optional
+            if True a combination of neerslagstations and meteo stations are used.
+            If False only meteo stations are used to obtain precipitation data.
+            Default is True.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
-        KnmiObs object with time series and attributes
+        MeteoObs object with meteorological observations
         """
         from .io import io_knmi
 
+        settings = {'fill_missing_obs': fill_missing_obs,
+                    'interval': interval,
+                    'inseason': inseason,
+                    'use_api': use_api,
+                    'raise_exceptions': raise_exceptions,
+                    'use_precipitation_stn': use_precipitation_stn}
+
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, meteo_var, startdate, enddate, stn_name=None,
-            fill_missing_obs=fill_missing_obs,
-            interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions)
+            x, y, meteo_var, startdate, enddate, settings=settings)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'], meteo_var=meteo_var)
@@ -733,9 +731,148 @@ class KnmiObs(Obs):
     @classmethod
     def from_obs(cls, obs, meteo_var, startdate=None, enddate=None,
                  fill_missing_obs=True, interval='daily', inseason=False,
+                 use_precipitation_stn=True, use_api=True,
                  raise_exceptions=False):
+        """Get a MeteoObs object with measurements from the KNMI station
+        closest to the given observation. Uses the x and y coördinates of the
+        observation to obtain the nearest KNMI station. Uses the start- and
+        enddate of the observation as start- and enddate of the meteo time
+        series (unless startdate and enddatet are specified explicitly).
 
+        Parameters
+        ----------
+        obs : hydropandas.Obs
+            Observation object.
+        meteo_var : str,
+            meteo variable e.g. "RH" or "EV24". See list with al options below.
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        fill_missing_obs : bool
+            if True missing observations are filled with values of next closest
+            KNMI station
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        use_precipitation_stn : bool, optional
+            if True a combination of neerslagstations and meteo stations are used.
+            If False only meteo stations are used to obtain precipitation data.
+            Default is True.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+
+        List of possible variables:
+            DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
+            90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
+            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
+            / Vector mean wind direction in degrees (360=north, 90=east,
+            180=south, 270=west, 0=calm/variable)
+            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie
+            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
+            / Vector mean windspeed (in 0.1 m/s)
+            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean
+            windspeed (in 0.1 m/s)
+            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum
+            hourly mean windspeed (in 0.1 m/s)
+            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which
+            FHX was measured
+            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum
+            hourly mean windspeed (in 0.1 m/s)
+            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which
+            FHN was measured
+            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in
+            0.1 m/s)
+            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which
+            FXX was measured
+            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) /
+            Daily mean temperature in (0.1 degrees Celsius)
+            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum
+            temperature (in 0.1 degrees Celsius)
+            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN
+            was measured
+            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum
+            temperature (in 0.1 degrees Celsius)
+            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX
+            was measured
+            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden
+            Celsius) / Minimum temperature at 10 cm above surface (in 0.1
+            degrees Celsius)
+            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division
+            in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT,
+            24=18-24 UT
+            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale
+            straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour)
+            calculated from global radiation (-1 for <0.05 hour)
+            SP    = Percentage van de langst mogelijke zonneschijnduur /
+            Percentage of maximum potential sunshine duration
+            Q     = Globale straling (in J/cm2) / Global radiation (in J/cm2)
+            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration
+            (in 0.1 hour)
+            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
+            Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
+            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
+            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for 
+            <0.05 mm)
+            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
+            RHX was measured
+            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1
+            hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure
+            (in 0.1 hPa) calculated from 24 hourly values
+            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau
+            (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
+            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX
+            was measured
+            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau
+            (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
+            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
+            was measured
+            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
+            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
+            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
+            ..., 89: >70 km)
+            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which
+            VVN was measured
+            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m,
+            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
+            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
+            ..., 89: >70 km)
+            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which
+            VVX was measured
+            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de
+            bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily
+            cloud cover (in octants, 9=sky invisible)
+            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) /
+            Daily mean relative atmospheric humidity (in percents)
+            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum
+            relative atmospheric humidity (in percents)
+            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX
+            was measured
+            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum
+            relative atmospheric humidity (in percents)
+            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN
+            was measured
+            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
+            Potential evapotranspiration (Makkink) (in 0.1 mm)
+
+        Returns
+        -------
+        MeteoObs object with meteorological observations
+        """
         from .io import io_knmi
+
+        settings = {'fill_missing_obs': fill_missing_obs,
+                    'interval': interval,
+                    'inseason': inseason,
+                    'use_api': use_api,
+                    'raise_exceptions': raise_exceptions,
+                    'use_precipitation_stn': use_precipitation_stn}
 
         x = obs.x
         y = obs.y
@@ -746,9 +883,294 @@ class KnmiObs(Obs):
             enddate = obs.index[-1]
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, meteo_var, startdate, enddate, fill_missing_obs,
-            interval=interval, inseason=inseason,
-            raise_exceptions=raise_exceptions)
+            x, y, meteo_var, startdate, enddate, settings=settings)
 
         return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
                    y=meta['y'], name=meta['name'], meteo_var=meteo_var)
+
+
+class EvaporationObs(MeteoObs):
+    """class for evaporation timeseries.
+
+    Subclass of the MeteoObs class
+    """
+
+    @property
+    def _constructor(self):
+        return EvaporationObs
+
+    @classmethod
+    def from_knmi(cls, stn, **kwargs):
+        """Get an EvaporationObs timeseries from the KNMI evaporation. The
+        evaporation is the Potential evapotranspiration (Makkink) (in 0.1 mm)
+
+        Parameters
+        ----------
+        stn : int or str
+            measurement station e.g. 829.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool, optional
+                if True nan values in time series are filled with nearby time series.
+                The default is True.
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
+
+        Returns
+        -------
+        EvaporationObs object with an evaporation time series and attributes
+        """
+
+        return super().from_knmi(stn,
+                                 meteo_var='EV24',
+                                 **kwargs)
+
+    @classmethod
+    def from_nearest_xy(cls, x, y, **kwargs):
+        """Get an EvaporationObs object with evaporation measurements from the
+        KNMI station closest to the given (x,y) coördinates.
+
+        Parameters
+        ----------
+        x : int or float
+            x coördinate in m RD.
+        y : int or float
+            y coördinate in m RD.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
+
+        Returns
+        -------
+        EvaporationObs object with an evaporation time series and attributes
+        """
+
+        return super().from_nearest_xy(x, y,
+                                       meteo_var='EV24',
+                                       **kwargs)
+
+    @classmethod
+    def from_obs(cls, obs, **kwargs):
+        """Get an EvaporationObs object with evaporation measurements from the
+        KNMI station closest to the given observation. Uses the x and y
+        coördinates of the observation to obtain the nearest KNMI evaporation
+        time series. Uses the start- and enddate of the observation as start-
+        and enddate of the evaporation time series (unless startdate and
+        enddatet are specified explicitly).
+
+        Parameters
+        ----------
+        obs : hydropandas.Obs
+            Observation object.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
+
+        Returns
+        -------
+        EvaporationObs object with an evaporation time series and attributes
+        """
+        return super().from_obs(obs,
+                                meteo_var='EV24',
+                                **kwargs)
+
+
+class PrecipitationObs(MeteoObs):
+    """class for precipitation timeseries.
+
+    Subclass of the MeteoObs class
+    """
+
+    @property
+    def _constructor(self):
+        return PrecipitationObs
+
+    @classmethod
+    def from_knmi(cls, stn, **kwargs):
+        """Get a PrecipitationObs timeseries from the KNMI precipitation. The
+        precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
+        <0.05 mm).
+
+        There are 3 different ways to obtain precipitation data from the knmi:
+            1. Daily data from precipitation (neerslag) stations
+            2. Daily data from meteo stations
+            3. Hourly data from meteo stations
+
+        1. If you want to get data from a neerslagstation stn should be the
+        station number with '_neerslag_station' at the end e.g. for De Bilt:
+            stn = '550_neerslag_station'.
+        2. If you want to get daily data from a meteo station stn should be the
+        number of the meteo station, can be string or integer
+        3. If you want to get hourly data from a meteo station, stn should be
+        the number of the meteo station and interval should 'hourly'.
+
+        More information about the differences between neerslag and meteo
+        stations can be found in the 02_knmi_observations notebook inside the
+        examples directory on github:
+            https://github.com/ArtesiaWater/hydropandas
+
+        Parameters
+        ----------
+        stn : int or str
+            measurement station e.g. 829.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool, optional
+                if True nan values in time series are filled with nearby time series.
+                The default is True.
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            exclude_neerslag_stn : boolean, optional
+                if True only meteostations are used to obtain precipitation data.
+                No neerslag stations are used.
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
+
+        Returns
+        -------
+        PrecipitationObs object with an evaporation time series and attributes
+        """
+        return super().from_knmi(stn,
+                                 meteo_var='RH',
+                                 **kwargs)
+
+    @classmethod
+    def from_nearest_xy(cls, x, y, **kwargs):
+        """Get a PrecipitationObs object with precipitation measurements from
+        the meteo or precipitation station closest to the given (x,y)
+        coördinates.
+
+        Parameters
+        ----------
+        x : int or float
+            x coördinate in m RD.
+        y : int or float
+            y coördinate in m RD.
+        **kwargs:
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            exclude_neerslag_stn : boolean, optional
+                if True only meteostations are used to obtain precipitation data.
+                No neerslag stations are used.
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
+
+        Returns
+        -------
+        PrecipitationObs object with a precipitation time series and attributes
+        """
+        return super().from_nearest_xy(x, y,
+                                       meteo_var='RH',
+                                       **kwargs)
+
+    @classmethod
+    def from_obs(cls, obs, **kwargs):
+        """Get a PrecipitationObs object with evaporation measurements from the
+        the meteo or precipitation station closest to the given observation.
+        Uses the x and y coördinates of the observation to obtain the nearest
+        KNMI precipitation time series. Uses the start- and enddate of the
+        observation as start- and enddate of the time series (unless startdate
+        and enddate are specified explicitly).
+
+        Parameters
+        ----------
+        obs : hydropandas.Obs
+            Observation object.
+        **kwargs
+            startdate : str, datetime or None, optional
+                start date of observations. The default is None.
+            enddate : str, datetime or None, optional
+                end date of observations. The default is None.
+            fill_missing_obs : bool
+                if True missing observations are filled with values of next closest
+                KNMI station
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            exclude_neerslag_stn : boolean, optional
+                if True only meteostations are used to obtain precipitation data.
+                No neerslag stations are used.
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                if False a text file is downloaded into a temporary folder and the data is read from there.
+                Default is True since the api is back online (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is False.
+
+        Returns
+        -------
+        PrecipitationObs object with a precipitation time series and attributes
+        """
+        return super().from_obs(obs,
+                                meteo_var='RH',
+                                **kwargs)
