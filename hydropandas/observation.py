@@ -895,10 +895,6 @@ class EvaporationObs(MeteoObs):
     Subclass of the MeteoObs class
     """
 
-    def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
     @property
     def _constructor(self):
         return EvaporationObs
@@ -1028,10 +1024,6 @@ class PrecipitationObs(MeteoObs):
 
     Subclass of the MeteoObs class
     """
-
-    def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
