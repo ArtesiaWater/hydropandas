@@ -410,7 +410,7 @@ def download_knmi_data(stn, stn_name=None,
                     end = end - dt.timedelta(days=1)
                     knmi_df, variables = get_knmi_hourly_api(
                         URL_HOURLY_METEO, stn, meteo_var, start, end)
-    
+
                 elif meteo_var_neerslag == 'RD':
                     # daily data from rainfall-stations
                     knmi_df, variables = get_knmi_daily_rainfall_api(
@@ -430,7 +430,7 @@ def download_knmi_data(stn, stn_name=None,
         except(RuntimeError, requests.ConnectionError):
             settings['use_api'] = False
             logger.info('KNMI API failed, switching to non-API method')
-                
+
         if not settings['use_api']:
             end = end + dt.timedelta(days=1)
             if settings['interval'].startswith('hour'):
@@ -457,13 +457,8 @@ def download_knmi_data(stn, stn_name=None,
         logger.error(e)
         if settings['raise_exceptions']:
             raise ValueError(e)
-    
-        
-        
 
     return knmi_df, variables, stations
-
-   
 
 
 def get_knmi_daily_rainfall_api(url, stn, meteo_var,
@@ -515,7 +510,7 @@ def get_knmi_daily_rainfall_api(url, stn, meteo_var,
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
     result_str = result.text
-    
+
     if result_str.startswith('<!DOCTYPE html>'):
         raise RuntimeError('KNMI API down')
 
@@ -851,9 +846,9 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
 
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
-    
+
     result_str = result.text
-    
+
     if result_str.startswith('<!DOCTYPE html>'):
         raise RuntimeError('KNMI API down')
 
@@ -1009,7 +1004,7 @@ def get_knmi_hourly_api(url, stn, meteo_var, start, end):
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
     result_str = result.text
-    
+
     if result_str.startswith('<!DOCTYPE html>'):
         raise RuntimeError('KNMI API down')
 
