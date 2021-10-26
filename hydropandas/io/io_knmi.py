@@ -303,10 +303,14 @@ def _check_latest_measurement_date_RD_debilt(use_api=True):
     start = dt.datetime.now() - pd.Timedelta(look_back_days, unit='D')
     end = dt.datetime.now() + pd.Timedelta(10, unit='D')
     if use_api:
-        knmi_df, _ = get_knmi_daily_rainfall_api(URL_DAILY_NEERSLAG, 550, "RD",
-                                                 start=start,
-                                                 end=end, inseason=False)
-    else:
+        try:
+            knmi_df, _ = get_knmi_daily_rainfall_api(URL_DAILY_NEERSLAG, 550, "RD",
+                                                     start=start,
+                                                     end=end, inseason=False)
+        except(RuntimeError, requests.ConnectionError):
+            use_api = False
+            logger.info('KNMI API failed, switching to non-API method')
+    if not use_api:
         knmi_df, _ = get_knmi_daily_rainfall_url(550, 'DE-BILT', 'RD', start,
                                                  end, inseason=False)
 
@@ -399,30 +403,35 @@ def download_knmi_data(stn, stn_name=None,
 
     # download and read data
     try:
-        if settings['use_api']:
-            if settings['interval'].startswith('hour'):
-                # hourly data from meteorological stations
-                end = end - dt.timedelta(days=1)
-                knmi_df, variables = get_knmi_hourly_api(
-                    URL_HOURLY_METEO, stn, meteo_var, start, end)
-
-            elif meteo_var_neerslag == 'RD':
-                # daily data from rainfall-stations
-                knmi_df, variables = get_knmi_daily_rainfall_api(
-                    URL_DAILY_NEERSLAG, stn_nst, meteo_var_neerslag, start, end,
-                    settings['inseason'])
-                # rename RD to RH
-                knmi_df.rename(columns={meteo_var_neerslag: meteo_var},
-                               inplace=True)
-                variables[meteo_var] = variables.pop(meteo_var_neerslag)
-            else:
-                start = start - dt.timedelta(days=1)
-                end = end - dt.timedelta(days=1)
-                # daily data from meteorological stations
-                knmi_df, variables, stations = get_knmi_daily_meteo_api(
-                    URL_DAILY_METEO, stn, meteo_var, start, end,
-                    settings['inseason'])
-        else:
+        try:
+            if settings['use_api']:
+                if settings['interval'].startswith('hour'):
+                    # hourly data from meteorological stations
+                    end = end - dt.timedelta(days=1)
+                    knmi_df, variables = get_knmi_hourly_api(
+                        URL_HOURLY_METEO, stn, meteo_var, start, end)
+    
+                elif meteo_var_neerslag == 'RD':
+                    # daily data from rainfall-stations
+                    knmi_df, variables = get_knmi_daily_rainfall_api(
+                        URL_DAILY_NEERSLAG, stn_nst, meteo_var_neerslag, start, end,
+                        settings['inseason'])
+                    # rename RD to RH
+                    knmi_df.rename(columns={meteo_var_neerslag: meteo_var},
+                                   inplace=True)
+                    variables[meteo_var] = variables.pop(meteo_var_neerslag)
+                else:
+                    start = start - dt.timedelta(days=1)
+                    end = end - dt.timedelta(days=1)
+                    # daily data from meteorological stations
+                    knmi_df, variables, stations = get_knmi_daily_meteo_api(
+                        URL_DAILY_METEO, stn, meteo_var, start, end,
+                        settings['inseason'])
+        except(RuntimeError, requests.ConnectionError):
+            settings['use_api'] = False
+            logger.info('KNMI API failed, switching to non-API method')
+                
+        if not settings['use_api']:
             end = end + dt.timedelta(days=1)
             if settings['interval'].startswith('hour'):
                 # hourly data from meteorological stations
@@ -448,8 +457,13 @@ def download_knmi_data(stn, stn_name=None,
         logger.error(e)
         if settings['raise_exceptions']:
             raise ValueError(e)
+    
+        
+        
 
     return knmi_df, variables, stations
+
+   
 
 
 def get_knmi_daily_rainfall_api(url, stn, meteo_var,
@@ -500,7 +514,12 @@ def get_knmi_daily_rainfall_api(url, stn, meteo_var,
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
-    f = StringIO(result.text)
+    result_str = result.text
+    
+    if result_str.startswith('<!DOCTYPE html>'):
+        raise RuntimeError('KNMI API down')
+
+    f = StringIO(result_str)
     knmi_df, variables = read_knmi_daily_rainfall(
         f, meteo_var)
     if int(stn) not in knmi_df.STN.unique():
@@ -832,8 +851,13 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
 
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
+    
+    result_str = result.text
+    
+    if result_str.startswith('<!DOCTYPE html>'):
+        raise RuntimeError('KNMI API down')
 
-    f = StringIO(result.text)
+    f = StringIO(result_str)
     knmi_df, variables, stations = read_knmi_daily_meteo(f)
 
     knmi_df.dropna(subset=[meteo_var], inplace=True)
@@ -984,7 +1008,12 @@ def get_knmi_hourly_api(url, stn, meteo_var, start, end):
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
-    f = StringIO(result.text)
+    result_str = result.text
+    
+    if result_str.startswith('<!DOCTYPE html>'):
+        raise RuntimeError('KNMI API down')
+
+    f = StringIO(result_str)
     df, variables = read_knmi_hourly(f)
 
     return df[[meteo_var]], variables
@@ -1517,7 +1546,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RH',
     start, end = _start_end_to_datetime(start, end)
     if (meteo_var == 'RH') and (end > (dt.datetime.now() - pd.Timedelta(90, unit='D'))):
         end = min(end, _check_latest_measurement_date_RD_debilt(
-            use_api=settings['use_api']))
+                  use_api=settings['use_api']))
         logger.info(f'changing end_date to {end.strftime("%Y-%m-%d")}')
 
     # download data from station
