@@ -24,22 +24,22 @@ from .. import util
 
 logger = logging.getLogger(__name__)
 
-URL_DAILY_RD = 'https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen'
+URL_DAILY_NEERSLAG = 'https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen'
 URL_DAILY_METEO = 'https://www.daggegevens.knmi.nl/klimatologie/daggegevens'
 URL_HOURLY_METEO = 'https://www.daggegevens.knmi.nl/klimatologie/uurgegevens'
 
 
-def get_stations(meteo_var='RH', exclude_neerslag_stn=False):
+def get_stations(meteo_var='RH', use_precipitation_stn=True):
     """get knmi stations from json files according to variable.
 
     Parameters
     ----------
     meteo_var : str, optional
         type of meteodata, by default 'RH'
-    exclude_neerslag_stn : bool, optional
-        if True only meteo stations are used to obtain precipitation data.
-        If False a combination of neerslagstations and meteo stations are used.
-        Default is False.
+    use_precipitation_stn : bool, optional
+        if True a combination of neerslagstations and meteo stations are used.
+        If False only meteo stations are used to obtain precipitation data.
+        Default is True.
 
     Returns
     -------
@@ -53,7 +53,7 @@ def get_stations(meteo_var='RH', exclude_neerslag_stn=False):
     stations = pd.read_json(os.path.join(dir_path, fname))
 
     # in case we want precipitation we use both meteo and neerslagstations
-    if (meteo_var == "RH") and (not exclude_neerslag_stn):
+    if (meteo_var == "RH") and use_precipitation_stn:
         fname = "../data/knmi_neerslagstation.json"
         stations2 = pd.read_json(os.path.join(dir_path, fname))
         stations2.index = stations2.index.astype(str) + '_neerslag_station'
@@ -95,7 +95,7 @@ def get_station_name(stn, stations):
     return stn_name
 
 
-def get_nearest_stations_xy(x, y, meteo_var, exclude_neerslag_stn=False,
+def get_nearest_stations_xy(x, y, meteo_var, use_precipitation_stn=True,
                             n=1, stations=None, ignore=None):
     """find the KNMI stations that measure 'variable' closest to the x, y
     coordinates.
@@ -108,10 +108,10 @@ def get_nearest_stations_xy(x, y, meteo_var, exclude_neerslag_stn=False,
         x coordinate in RD
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
-    exclude_neerslag_stn : bool, optional
-        if True only meteo stations are used to obtain precipitation data.
-        If False a combination of neerslagstations and meteo stations are used.
-        Default is False.
+    use_precipitation_stn : bool, optional
+        if True a combination of neerslagstations and meteo stations are used.
+        If False only meteo stations are used to obtain precipitation data.
+        Default is True.
     n : int, optional
         number of stations you want to return. The default is 1.
     stations : pd.DataFrame, optional
@@ -128,7 +128,7 @@ def get_nearest_stations_xy(x, y, meteo_var, exclude_neerslag_stn=False,
 
     if stations is None:
         stations = get_stations(meteo_var=meteo_var,
-                                exclude_neerslag_stn=exclude_neerslag_stn)
+                                use_precipitation_stn=use_precipitation_stn)
     if ignore is not None:
         stations.drop(ignore, inplace=True)
         if stations.empty:
@@ -141,7 +141,7 @@ def get_nearest_stations_xy(x, y, meteo_var, exclude_neerslag_stn=False,
 
 
 def get_nearest_station_df(locations, xcol='x', ycol='y', stations=None,
-                           exclude_neerslag_stn=False,
+                           use_precipitation_stn=True,
                            meteo_var="RH", ignore=None):
     """find the KNMI stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
@@ -157,10 +157,10 @@ def get_nearest_station_df(locations, xcol='x', ycol='y', stations=None,
     stations : pd.DataFrame, optional
         if None stations will be obtained using the get_stations function.
         The default is None.
-    exclude_neerslag_stn : bool, optional
-        if True only meteo stations are used to obtain precipitation data.
-        If False a combination of neerslagstations and meteo stations are used.
-        Default is False.
+    use_precipitation_stn : bool, optional
+        if True a combination of neerslagstations and meteo stations are used.
+        If False only meteo stations are used to obtain precipitation data.
+        Default is True.
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
     ignore : list, optional
@@ -173,7 +173,7 @@ def get_nearest_station_df(locations, xcol='x', ycol='y', stations=None,
     """
     if stations is None:
         stations = get_stations(meteo_var=meteo_var,
-                                exclude_neerslag_stn=exclude_neerslag_stn)
+                                use_precipitation_stn=use_precipitation_stn)
     if ignore is not None:
         stations.drop(ignore, inplace=True)
         if stations.empty:
@@ -197,7 +197,7 @@ def get_nearest_station_df(locations, xcol='x', ycol='y', stations=None,
 
 
 def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RH",
-                             exclude_neerslag_stn=False,
+                             use_precipitation_stn=True,
                              ignore=None):
     """find the KNMI stations that measure 'meteo_var' closest to all cells in
     a grid.
@@ -213,10 +213,10 @@ def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RH",
         The default is None.
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
-    exclude_neerslag_stn : bool, optional
-        if True only meteo stations are used to obtain precipitation data.
-        If False a combination of neerslagstations and meteo stations are used.
-        Default is False.
+    use_precipitation_stn : bool, optional
+        if True a combination of neerslagstations and meteo stations are used.
+        If False only meteo stations are used to obtain precipitation data.
+        Default is True.
     ignore : list, optional
         list of stations to ignore. The default is None.
 
@@ -236,7 +236,7 @@ def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RH",
 
     stns = get_nearest_station_df(locations, xcol='x', ycol='y',
                                   stations=stations,
-                                  exclude_neerslag_stn=exclude_neerslag_stn,
+                                  use_precipitation_stn=use_precipitation_stn,
                                   meteo_var=meteo_var,
                                   ignore=ignore)
 
@@ -303,10 +303,14 @@ def _check_latest_measurement_date_RD_debilt(use_api=True):
     start = dt.datetime.now() - pd.Timedelta(look_back_days, unit='D')
     end = dt.datetime.now() + pd.Timedelta(10, unit='D')
     if use_api:
-        knmi_df, _ = get_knmi_daily_rainfall_api(URL_DAILY_RD, 550, "RD",
-                                                 start=start,
-                                                 end=end, inseason=False)
-    else:
+        try:
+            knmi_df, _ = get_knmi_daily_rainfall_api(URL_DAILY_NEERSLAG, 550, "RD",
+                                                     start=start,
+                                                     end=end, inseason=False)
+        except(RuntimeError, requests.ConnectionError):
+            use_api = False
+            logger.info('KNMI API failed, switching to non-API method')
+    if not use_api:
         knmi_df, _ = get_knmi_daily_rainfall_url(550, 'DE-BILT', 'RD', start,
                                                  end, inseason=False)
 
@@ -381,8 +385,8 @@ def download_knmi_data(stn, stn_name=None,
         meteo_var_neerslag = 'RH'
 
     # raise error if hourly neerslag station data is requested
-    if (meteo_var_neerslag == 'RD') and settings['interval'].startswith('hour') and (not settings['exclude_neerslag_stn']):
-        message = 'Interval cannot be hourly for neerslag stations, use exclude_neerslag_stn is True or change interval to daily'
+    if (meteo_var_neerslag == 'RD') and settings['interval'].startswith('hour') and settings['use_precipitation_stn']:
+        message = 'Interval cannot be hourly for precipitation stations, use use_precipitation_stn is False or change interval to daily'
         raise (ValueError(message))
 
     # convert stn to string
@@ -399,30 +403,35 @@ def download_knmi_data(stn, stn_name=None,
 
     # download and read data
     try:
-        if settings['use_api']:
-            if settings['interval'].startswith('hour'):
-                # hourly data from meteorological stations
-                end = end - dt.timedelta(days=1)
-                knmi_df, variables = get_knmi_hourly_api(
-                    URL_HOURLY_METEO, stn, meteo_var, start, end)
+        try:
+            if settings['use_api']:
+                if settings['interval'].startswith('hour'):
+                    # hourly data from meteorological stations
+                    end = end - dt.timedelta(days=1)
+                    knmi_df, variables = get_knmi_hourly_api(
+                        URL_HOURLY_METEO, stn, meteo_var, start, end)
 
-            elif meteo_var_neerslag == 'RD':
-                # daily data from rainfall-stations
-                knmi_df, variables = get_knmi_daily_rainfall_api(
-                    URL_DAILY_RD, stn_nst, meteo_var_neerslag, start, end,
-                    settings['inseason'])
-                # rename RD to RH
-                knmi_df.rename(columns={meteo_var_neerslag: meteo_var},
-                               inplace=True)
-                variables[meteo_var] = variables.pop(meteo_var_neerslag)
-            else:
-                start = start - dt.timedelta(days=1)
-                end = end - dt.timedelta(days=1)
-                # daily data from meteorological stations
-                knmi_df, variables, stations = get_knmi_daily_meteo_api(
-                    URL_DAILY_METEO, stn, meteo_var, start, end,
-                    settings['inseason'])
-        else:
+                elif meteo_var_neerslag == 'RD':
+                    # daily data from rainfall-stations
+                    knmi_df, variables = get_knmi_daily_rainfall_api(
+                        URL_DAILY_NEERSLAG, stn_nst, meteo_var_neerslag, start, end,
+                        settings['inseason'])
+                    # rename RD to RH
+                    knmi_df.rename(columns={meteo_var_neerslag: meteo_var},
+                                   inplace=True)
+                    variables[meteo_var] = variables.pop(meteo_var_neerslag)
+                else:
+                    start = start - dt.timedelta(days=1)
+                    end = end - dt.timedelta(days=1)
+                    # daily data from meteorological stations
+                    knmi_df, variables, stations = get_knmi_daily_meteo_api(
+                        URL_DAILY_METEO, stn, meteo_var, start, end,
+                        settings['inseason'])
+        except(RuntimeError, requests.ConnectionError):
+            settings['use_api'] = False
+            logger.info('KNMI API failed, switching to non-API method')
+
+        if not settings['use_api']:
             end = end + dt.timedelta(days=1)
             if settings['interval'].startswith('hour'):
                 # hourly data from meteorological stations
@@ -500,7 +509,12 @@ def get_knmi_daily_rainfall_api(url, stn, meteo_var,
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
-    f = StringIO(result.text)
+    result_str = result.text
+
+    if result_str.startswith('<!DOCTYPE html>'):
+        raise RuntimeError('KNMI API down')
+
+    f = StringIO(result_str)
     knmi_df, variables = read_knmi_daily_rainfall(
         f, meteo_var)
     if int(stn) not in knmi_df.STN.unique():
@@ -833,7 +847,12 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
-    f = StringIO(result.text)
+    result_str = result.text
+
+    if result_str.startswith('<!DOCTYPE html>'):
+        raise RuntimeError('KNMI API down')
+
+    f = StringIO(result_str)
     knmi_df, variables, stations = read_knmi_daily_meteo(f)
 
     knmi_df.dropna(subset=[meteo_var], inplace=True)
@@ -984,7 +1003,12 @@ def get_knmi_hourly_api(url, stn, meteo_var, start, end):
     if result.status_code != 200:
         raise requests.ConnectionError(f"Cannot connect to {url}")
 
-    f = StringIO(result.text)
+    result_str = result.text
+
+    if result_str.startswith('<!DOCTYPE html>'):
+        raise RuntimeError('KNMI API down')
+
+    f = StringIO(result_str)
     df, variables = read_knmi_hourly(f)
 
     return df[[meteo_var]], variables
@@ -1031,19 +1055,8 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
         end time of observations.
     stn_name : str
         name of the KNMI station
-    exclude_neerslag_stn : bool, optional
-        if True only meteo stations are used to obtain precipitation data.
-        If False a combination of neerslagstations and meteo stations are used.
-        Default is False.
-    fill_missing_obs : bool
-        if True missing observations are filled with values of next closest
-        KNMI station
-    interval : str, optional
-        desired time interval for observations. The default is 'daily'.
-    inseason : boolean, optional
-        flag to obtain inseason data. The default is False
-    raise_exceptions : bool, optional
-        if True you get errors when no data is returned. The default is False.
+    settings : dict or None
+        settings to obtain data
 
     Returns
     -------
@@ -1056,7 +1069,7 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
 
     # get station
     stations = get_stations(meteo_var=meteo_var,
-                            exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+                            use_precipitation_stn=settings['use_precipitation_stn'])
     stn = get_nearest_stations_xy(x, y, meteo_var, stations=stations)[0]
 
     knmi_df, meta = get_knmi_timeseries_stn(stn, meteo_var, start, end,
@@ -1066,7 +1079,28 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end,
 
 
 def _get_default_settings(settings):
-    """adds the default settings to a dictinary with settings.
+    """adds the default settings to a dictinary with settings. If settings
+    is None all the settings are default. If there are already settings given
+    only the non-existing settings are added with their default value.
+
+    The default settings are:
+    fill_missing_obs = True
+        nan values in time series are filled with nearby time series.
+    interval = 'daily'
+        desired time interval for observations. Can be 'daily' or 'hourly'.
+        'hourly' is only for precipitation ('RH') data from meteo stations.
+    inseason = False
+        flag to obtain inseason data. Not implemented very well yet.
+    use_precipitation_stn = True
+        Both meteostations and precipitation stations are used to obtain
+        precipitation data.
+    use_api : bool, optional
+        if True the api is used to obtain the data, API documentation is here:
+            https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+        if False a text file is downloaded into a temporary folder and the data is read from there.
+        Default is True since the api is back online (July 2021).
+    raise_exceptions : bool, optional
+        if True you get errors when no data is returned. The default is False.
 
     Parameters
     ----------
@@ -1085,14 +1119,14 @@ def _get_default_settings(settings):
                         'inseason': False,
                         'use_api': True,
                         'raise_exceptions': True,
-                        'exclude_neerslag_stn': False,
+                        'use_precipitation_stn': True,
                         'normalize_index': True}
 
     if settings is None:
         settings = {}
 
     for key, value in default_settings.items():
-        if not key in settings.keys():
+        if key not in settings.keys():
             settings[key] = value
 
     return settings
@@ -1131,45 +1165,97 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
                 if True you get errors when no data is returned. The default is True.
 
     List of possible variables:
-            DDVEC = Vectorgemiddelde windrichting in graden (360=noord, 90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean wind direction in degrees (360=north, 90=east, 180=south, 270=west, 0=calm/variable)
-            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken / Vector mean windspeed (in 0.1 m/s)
-            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean windspeed (in 0.1 m/s)
-            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum hourly mean windspeed (in 0.1 m/s)
-            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which FHX was measured
-            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum hourly mean windspeed (in 0.1 m/s)
-            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which FHN was measured
-            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in 0.1 m/s)
-            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which FXX was measured
-            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) / Daily mean temperature in (0.1 degrees Celsius)
-            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum temperature (in 0.1 degrees Celsius)
-            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN was measured
-            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum temperature (in 0.1 degrees Celsius)
-            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX was measured
-            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden Celsius) / Minimum temperature at 10 cm above surface (in 0.1 degrees Celsius)
-            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT, 24=18-24 UT
-            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour) calculated from global radiation (-1 for <0.05 hour)
-            SP    = Percentage van de langst mogelijke zonneschijnduur / Percentage of maximum potential sunshine duration
+            DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
+            90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
+            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
+            / Vector mean wind direction in degrees (360=north, 90=east,
+            180=south, 270=west, 0=calm/variable)
+            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie
+            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
+            / Vector mean windspeed (in 0.1 m/s)
+            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean
+            windspeed (in 0.1 m/s)
+            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum
+            hourly mean windspeed (in 0.1 m/s)
+            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which
+            FHX was measured
+            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum
+            hourly mean windspeed (in 0.1 m/s)
+            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which
+            FHN was measured
+            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in
+            0.1 m/s)
+            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which
+            FXX was measured
+            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) /
+            Daily mean temperature in (0.1 degrees Celsius)
+            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum
+            temperature (in 0.1 degrees Celsius)
+            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN
+            was measured
+            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum
+            temperature (in 0.1 degrees Celsius)
+            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX
+            was measured
+            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden
+            Celsius) / Minimum temperature at 10 cm above surface (in 0.1
+            degrees Celsius)
+            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division
+            in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT,
+            24=18-24 UT
+            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale
+            straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour)
+            calculated from global radiation (-1 for <0.05 hour)
+            SP    = Percentage van de langst mogelijke zonneschijnduur /
+            Percentage of maximum potential sunshine duration
             Q     = Globale straling (in J/cm2) / Global radiation (in J/cm2)
-            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration (in 0.1 hour)
-            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) / Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which RHX was measured
-            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1 hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure (in 0.1 hPa) calculated from 24 hourly values
-            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
-            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX was measured
-            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
-            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN was measured
-            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m, 1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km, 56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,..., 89: >70 km)
-            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which VVN was measured
-            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m, 1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km, 56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,..., 89: >70 km)
-            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which VVX was measured
-            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily cloud cover (in octants, 9=sky invisible)
-            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) / Daily mean relative atmospheric humidity (in percents)
-            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum relative atmospheric humidity (in percents)
-            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX was measured
-            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum relative atmospheric humidity (in percents)
-            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN was measured
-            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) / Potential evapotranspiration (Makkink) (in 0.1 mm)
+            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration
+            (in 0.1 hour)
+            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
+            Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
+            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
+            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
+            <0.05 mm)
+            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
+            RHX was measured
+            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1
+            hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure
+            (in 0.1 hPa) calculated from 24 hourly values
+            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau
+            (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
+            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX
+            was measured
+            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau
+            (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
+            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
+            was measured
+            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
+            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
+            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
+            ..., 89: >70 km)
+            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which
+            VVN was measured
+            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m,
+            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
+            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
+            ..., 89: >70 km)
+            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which
+            VVX was measured
+            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de
+            bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily
+            cloud cover (in octants, 9=sky invisible)
+            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) /
+            Daily mean relative atmospheric humidity (in percents)
+            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum
+            relative atmospheric humidity (in percents)
+            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX
+            was measured
+            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum
+            relative atmospheric humidity (in percents)
+            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN
+            was measured
+            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
+            Potential evapotranspiration (Makkink) (in 0.1 mm)
 
     Returns
     -------
@@ -1183,7 +1269,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
     # get station
     stations = get_stations(meteo_var=meteo_var,
-                            exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+                            use_precipitation_stn=settings['use_precipitation_stn'])
     stn_name = get_station_name(stn, stations)
 
     # download data
@@ -1219,8 +1305,8 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end,
 
 
 def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
-                     meteo_vars=["RH"], start=[None], end=[None],
-                     ObsClass=[None],
+                     meteo_vars=("RH"), start=None, end=None,
+                     ObsClass=None,
                      settings=None, cache=False, raise_exceptions=False):
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
@@ -1237,14 +1323,22 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
         y coördinates of the cell centers of your grid shape(nrow)
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RH", "EV24"]. The default is ("RH")
-    start : list of str, datetime or None]
+    start : None, str, datetime or list, optional
         start date of observations per meteo variable. The start date is
-        included in the time series. If start is None the start date will
-        be January 1st of the previous year. The default is [None]
+        included in the time series.
+        If start is None the start date will be January 1st of the
+        previous year.
+        if start is str it will be converted to datetime
+        if start is a list it should be the same length as meteo_vars and
+        the start time for each variable. The default is None
     end : list of str, datetime or None]
-        end date of observations per meteo variable. The end date is not
-        included in the time series. If end is None the last date with
-        measurements is used. The default is [None]
+        end date of observations per meteo variable. The end date is
+        included in the time series.
+        If end is None the start date will be January 1st of the
+        previous year.
+        if end is a str it will be converted to datetime
+        if end is a list it should be the same length as meteo_vars and
+        the end time for each meteo variable. The default is None
     ObsClass : list of type or None
         class of the observations, can be PrecipitationObs or EvapObs. The
         default is [None].
@@ -1277,22 +1371,40 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
     settings = _get_default_settings(settings)
     settings['raise_exceptions'] = raise_exceptions
 
+    if start is None:
+        start = [None] * len(meteo_vars)
+    elif isinstance(start, (str, dt.datetime)):
+        start = [start] * len(meteo_vars)
+    elif isinstance(start, list):
+        pass
+    else:
+        raise TypeError('must be None, str, dt.datetime or list')
+
+    if end is None:
+        end = [None] * len(meteo_vars)
+    elif isinstance(end, (str, dt.datetime)):
+        end = [end] * len(meteo_vars)
+    elif isinstance(end, list):
+        pass
+    else:
+        raise TypeError('must be None, str, dt.datetime or list')
+
     obs_list = []
     for i, meteo_var in enumerate(meteo_vars):
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
         if stns is None:
             stations = get_stations(meteo_var=meteo_var,
-                                    exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+                                    use_precipitation_stn=settings['use_precipitation_stn'])
             if (locations is None) and (xmid is not None):
                 _stns = get_nearest_station_grid(xmid, ymid,
                                                  stations=stations,
                                                  meteo_var=meteo_var,
-                                                 exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+                                                 use_precipitation_stn=settings['use_precipitation_stn'])
             elif locations is not None:
                 _stns = get_nearest_station_df(locations,
                                                stations=stations,
                                                meteo_var=meteo_var,
-                                               exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+                                               use_precipitation_stn=settings['use_precipitation_stn'])
             else:
                 raise ValueError('stns, location and xmid are all None'
                                  'please specify one of these')
@@ -1314,14 +1426,16 @@ def get_knmi_obslist(locations=None, stns=None, xmid=None, ymid=None,
                     logger.info(f'reading {fname} from cache')
                     o = pd.read_pickle(pklz_path)
                 else:
-                    o = ObsClass[i].from_knmi(stn, start[i], end[i],
+                    o = ObsClass[i].from_knmi(stn, startdate=start[i],
+                                              enddate=end[i],
                                               fill_missing_obs=settings['fill_missing_obs'],
                                               interval=settings['interval'],
                                               inseason=settings['inseason'],
                                               raise_exceptions=raise_exceptions)
                     o.to_pickle(pklz_path)
             else:
-                o = ObsClass[i].from_knmi(stn, start[i], end[i],
+                o = ObsClass[i].from_knmi(stn, startdate=start[i],
+                                          enddate=end[i],
                                           fill_missing_obs=settings['fill_missing_obs'],
                                           interval=settings['interval'],
                                           inseason=settings['inseason'],
@@ -1419,7 +1533,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RH',
         raise (TypeError(f'meteo var should be string not {type(meteo_var)}'))
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var,
-                            exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+                            use_precipitation_stn=settings['use_precipitation_stn'])
     if stn_name is None:
         stn_name = get_station_name(stn, stations)
 
@@ -1427,7 +1541,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RH',
     start, end = _start_end_to_datetime(start, end)
     if (meteo_var == 'RH') and (end > (dt.datetime.now() - pd.Timedelta(90, unit='D'))):
         end = min(end, _check_latest_measurement_date_RD_debilt(
-            use_api=settings['use_api']))
+                  use_api=settings['use_api']))
         logger.info(f'changing end_date to {end.strftime("%Y-%m-%d")}')
 
     # download data from station
@@ -1444,7 +1558,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RH',
         logger.info('trying to get measurements from nearest station')
         stn = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore,
-            exclude_neerslag_stn=settings['exclude_neerslag_stn'])[0]
+            use_precipitation_stn=settings['use_precipitation_stn'])[0]
         stn_name = get_station_name(stn, stations)
         knmi_df, variables, station_meta = \
             download_knmi_data(stn, stn_name, meteo_var, start=start,
@@ -1463,7 +1577,7 @@ def fill_missing_measurements(stn, stn_name=None, meteo_var='RH',
     while np.any(missing) and not np.all(missing):
         stn_comp = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore,
-            exclude_neerslag_stn=settings['exclude_neerslag_stn'])
+            use_precipitation_stn=settings['use_precipitation_stn'])
 
         logger.info(f'trying to fill {missing.sum()} '
                     f'measurements with station {stn_comp}')

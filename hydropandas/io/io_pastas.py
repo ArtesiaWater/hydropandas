@@ -152,7 +152,7 @@ def create_pastas_project(oc, pr=None, project_name='',
     return pr
 
 
-def read_project(pr, ObsClass, rename_dic={}):
+def read_project(pr, ObsClass, rename_dic=None):
     """Read pastas.Project into ObsCollection.
 
     Parameters
@@ -169,6 +169,9 @@ def read_project(pr, ObsClass, rename_dic={}):
     list : list of Obs
         list of Obs containing oseries data
     """
+    if rename_dic is None:
+        rename_dic = {}
+
     obs_list = []
     for index, row in pr.oseries.iterrows():
         metadata = row.to_dict()

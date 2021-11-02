@@ -32,9 +32,12 @@ def _read_wiski_header(f, header_sep=":", header_identifier='#',
 
 def read_wiski_file(fname, sep=";", header_sep=None, header_identifier='#',
                     read_series=True, infer_datetime_format=True,
-                    translate_dic={},
+                    translate_dic=None,
                     tz_localize=True, to_mnap=True, **kwargs):
     logger.info('reading -> {}'.format(os.path.split(fname)[-1]))
+
+    if translate_dic is None:
+        translate_dic = {}
 
     # manually break header parse at certain point
     if "end_header_str" in kwargs.keys():

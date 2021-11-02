@@ -68,7 +68,9 @@ currently 5 specific Obs classes for different types of measurements:
 -   GroundwaterQualityObs: for groundwater quality measurements
 -   WaterlvlObs: for surface water level measurements
 -   ModelObs: for "observations" from a MODFLOW model
--   KnmiObs: for (daily) KNMI observations
+-   MeteoObs: for meteorological observations
+-   PrecipitationObs: for precipitation observations, subclass of MeteoObs
+-   EvaporationObs: for evaporation observations, subclass of MeteoObs
 
 Each of these Obs classes is essentially a pandas DataFrame with additional 
 methods and attributes related to the type of measurement that it holds. 
@@ -83,7 +85,7 @@ in a different row. Each row contains metadata (e.g. latitude and longitude
 of the observation point) and the Obs object (DataFrame) that holds the 
 measurements. It is recommended to let an ObsCollection contain only one Obs 
 type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate 
-ObsCollection for 5 KnmiObs.
+ObsCollection for 5 PrecipitationObs.
 
 Like the Obs class, the ObsCollection class contains a bunch of methods for 
 reading data from different sources. See the next section for supported data 
@@ -107,7 +109,6 @@ Currently supported datasources that can be read:
 An ObsCollection can be exported to:
 
 -   Shapefile
--   Pastas projects (deprecated)
 -   Pastastore
 -   Arctic
 -   Pystore
