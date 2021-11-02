@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  8 11:46:51 2019
+"""Created on Fri Nov  8 11:46:51 2019
 
 @author: oebbe
 """
