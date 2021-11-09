@@ -86,6 +86,7 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
         metadata["name"] = df[location_col].iloc[-1]
         metadata["x"] = x
         metadata["y"] = y
+        metadata["filename"] = f
 
         return df, metadata
     else:
@@ -137,7 +138,7 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
             mask = df[location_col] == stn
             x, y = transformer.transform(df.loc[mask, 'X'][-1],
                                          df.loc[mask, 'Y'][-1])
-            metadata = {"name": stn, "x": x, "y": y}
+            metadata = {"name": stn, "x": x, "y": y, "filename": filenm}
 
             # add to list
             o = ObsClass(df.loc[mask, :], meta=metadata, **metadata)

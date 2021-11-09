@@ -411,11 +411,11 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         header[item] = header.pop(key)
 
     if "x" in header.keys():
-        x = np.float(header["x"])
+        x = float(header["x"])
     else:
         x = np.nan
     if "y" in header.keys():
-        y = np.float(header["y"])
+        y = float(header["y"])
     else:
         y = np.nan
 

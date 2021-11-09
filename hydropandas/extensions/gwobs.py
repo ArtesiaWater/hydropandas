@@ -1,9 +1,11 @@
+import logging
+
+import flopy
 import numpy as np
 import pandas as pd
 
 from . import accessor
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -240,19 +242,23 @@ def get_zvec(x, y, gwf=None, ds=None):
     """
 
     if gwf and not ds:
+        ix = flopy.utils.GridIntersect(gwf.modelgrid)
         if gwf.modelgrid.grid_type == 'structured':
-            r, c = gwf.modelgrid.intersect(x, y, forgive=True)
-            if np.isfinite(r) & np.isfinite(c):
+            res = ix.intersect([(x, y)], shapetype="point")
+            if len(res) > 0:
+                r, c = res["cellids"]
                 zvec = np.array([gwf.modelgrid.top[r, c]] +
-                    [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)])
+                                [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)])
             else:
                 print("Point is not within model extent! Returning NaN.")
                 zvec = np.nan
         elif gwf.modelgrid.grid_type == 'vertex':
-            idx = gwf.modelgrid.intersect(x, y, forgive=True)
-            if np.isfinite(idx):
-                zvec = [gwf.modelgrid.top[idx]] + [gwf.modelgrid.botm[i, idx]
-                                                   for i in range(gwf.modelgrid.nlay)]
+            res = ix.intersect([(x, y)], shapetype="point")
+            idx = res["cellids"].astype(int)[0]
+            if len(res) > 0:
+                zvec = ([gwf.modelgrid.top[idx]] +
+                        [gwf.modelgrid.botm[i, idx]
+                         for i in range(gwf.modelgrid.nlay)])
             else:
                 print("Point is not within model extent! Returning NaN.")
                 zvec = np.nan
@@ -268,10 +274,11 @@ def get_zvec(x, y, gwf=None, ds=None):
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
             first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
-            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["bot"].data])
+            zvec = np.concatenate(
+                [sel["top"].data[[first_notna]], sel["bot"].data])
             mask = np.isnan(zvec)
-            idx = np.where(~mask,np.arange(mask.size),0)
-            np.maximum.accumulate(idx,axis=0, out=idx)
+            idx = np.where(~mask, np.arange(mask.size), 0)
+            np.maximum.accumulate(idx, axis=0, out=idx)
             zvec[mask] = zvec[idx[mask]]
     else:
         raise ValueError("Pass one of 'gwf' or 'ds'!")
@@ -283,10 +290,10 @@ def get_zvec(x, y, gwf=None, ds=None):
 class GwObsAccessor:
 
     def __init__(self, oc_obj):
-        self._obj=oc_obj
+        self._obj = oc_obj
 
-    def set_filter_num(self, radius = 1, xcol = 'x', ycol = 'y', if_exists = 'error',
-                       add_to_meta = False):
+    def set_filter_num(self, radius=1, xcol='x', ycol='y', if_exists='error',
+                       add_to_meta=False):
         """This method computes the filternumbers based on the location of the
         observations.
 
@@ -330,7 +337,7 @@ class GwObsAccessor:
         if 'filternr' in self._obj.columns:
             # set type to numeric
             if self._obj['filternr'].dtype != np.number:
-                self._obj['filternr']=pd.to_numeric(
+                self._obj['filternr'] = pd.to_numeric(
                     self._obj['filternr'], errors='coerce')
 
             # check if name should be replaced
