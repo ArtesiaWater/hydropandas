@@ -10,7 +10,7 @@
 # hydropandas
 
 The Hydropandas package allows users to manipulate data using 
-all of the wonderful features included in pandas extented with custom methods and attributes related to the timeseries. The hydropandas 
+all of the wonderful features included in pandas extented with custom methods and attributes related to hydrological timeseries. The hydropandas 
 module extends pandas.DataFrame with extra functionality and stores metadata 
 related to the type of measurements.
 
