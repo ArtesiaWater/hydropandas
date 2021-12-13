@@ -521,7 +521,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_knmi(cls, stn, meteo_var='RH', startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  use_precipitation_stn=True, use_api=False,
+                  use_precipitation_stn=True, use_api=True,
                   raise_exceptions=True):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
