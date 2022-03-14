@@ -352,31 +352,6 @@ class GroundwaterObs(Obs):
 
         return cls(data, meta=metadata, **metadata)
 
-    @classmethod
-    def from_pystore_item(cls, item):
-        """Create GroundwaterObs DataFrame from Pystore item.
-
-        Parameters
-        ----------
-        item : pystore.item.Item
-            Pystore item
-
-        Returns
-        -------
-        GroundwaterObs
-            GroundwaterObs DataFrame
-        """
-
-        df = item.to_pandas()
-        try:
-            x = item.metadata["x"]
-            y = item.metadata["y"]
-        except KeyError:
-            x = np.nan
-            y = np.nan
-        item.metadata["datastore"] = item.datastore
-        return cls(df, x=x, y=y, meta=item.metadata)
-
 
 class GroundwaterQualityObs(Obs):
     """class for groundwater quality (grondwatersamenstelling) point
@@ -542,10 +517,6 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
-        use_precipitation_stn : bool, optional
-            if True a combination of neerslagstations and meteo stations are used.
-            If False only meteo stations are used to obtain precipitation data.
-            Default is True.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -555,6 +526,11 @@ class MeteoObs(Obs):
             if True you get errors when no data is returned. The default is False.
 
         List of possible variables:
+            neerslagstations:
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de 
+            voorafgaande dag tot 0800 utc op de vermelde datum
+
+            meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
@@ -653,15 +629,14 @@ class MeteoObs(Obs):
         """
         from .io import io_knmi
 
-        if interval == 'hourly':
-            use_precipitation_stn = False
+        if interval == 'hourly' and meteo_var=='RD':
+            raise NotImplementedError('hourly values not (yet) available for precipitation stations')
 
         settings = {'fill_missing_obs': fill_missing_obs,
                     'interval': interval,
                     'inseason': inseason,
                     'use_api': use_api,
-                    'raise_exceptions': raise_exceptions,
-                    'use_precipitation_stn': use_precipitation_stn}
+                    'raise_exceptions': raise_exceptions}
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
             stn, meteo_var, startdate, enddate, settings=settings)
@@ -769,6 +744,11 @@ class MeteoObs(Obs):
             if True you get errors when no data is returned. The default is False.
 
         List of possible variables:
+            neerslagstations:
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de 
+            voorafgaande dag tot 0800 utc op de vermelde datum
+
+            meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
@@ -1030,7 +1010,7 @@ class PrecipitationObs(MeteoObs):
         return PrecipitationObs
 
     @classmethod
-    def from_knmi(cls, stn, **kwargs):
+    def from_knmi(cls, stn, stn_type='meteo', **kwargs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
         <0.05 mm).
@@ -1057,6 +1037,9 @@ class PrecipitationObs(MeteoObs):
         ----------
         stn : int or str
             measurement station e.g. 829.
+        stn_type : str, optional
+            type of measurements station. Can be 'meteo' or 'precipitation'.
+            Default is 'meteo'.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1069,9 +1052,6 @@ class PrecipitationObs(MeteoObs):
                 desired time interval for observations. The default is 'daily'.
             inseason : boolean, optional
                 flag to obtain inseason data. The default is False
-            exclude_neerslag_stn : boolean, optional
-                if True only meteostations are used to obtain precipitation data.
-                No neerslag stations are used.
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -1084,12 +1064,19 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with an evaporation time series and attributes
         """
+        if stn_type == 'meteo':
+            meteo_var = 'RH'
+        elif stn_type == 'precipitation':
+            meteo_var = 'RD'
+        else:
+            raise ValueError(f"invalid measurement station type -> {stn_type}")
+
         return super().from_knmi(stn,
-                                 meteo_var='RH',
+                                 meteo_var=meteo_var,
                                  **kwargs)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, **kwargs):
+    def from_nearest_xy(cls, x, y, stn_type='meteo', **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y)
         coördinates.
@@ -1100,6 +1087,9 @@ class PrecipitationObs(MeteoObs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
+        stn_type : str, optional
+            type of measurements station. Can be 'meteo' or 'precipitation'.
+            Default is 'meteo'.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1112,9 +1102,6 @@ class PrecipitationObs(MeteoObs):
                 desired time interval for observations. The default is 'daily'.
             inseason : boolean, optional
                 flag to obtain inseason data. The default is False
-            exclude_neerslag_stn : boolean, optional
-                if True only meteostations are used to obtain precipitation data.
-                No neerslag stations are used.
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -1127,12 +1114,19 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with a precipitation time series and attributes
         """
+        if stn_type == 'meteo':
+            meteo_var = 'RH'
+        elif stn_type == 'precipitation':
+            meteo_var = 'RD'
+        else:
+            raise ValueError(f"invalid measurement station type -> {stn_type}")
+
         return super().from_nearest_xy(x, y,
-                                       meteo_var='RH',
+                                       meteo_var=meteo_var,
                                        **kwargs)
 
     @classmethod
-    def from_obs(cls, obs, **kwargs):
+    def from_obs(cls, obs, stn_type='meteo', **kwargs):
         """Get a PrecipitationObs object with evaporation measurements from the
         the meteo or precipitation station closest to the given observation.
         Uses the x and y coördinates of the observation to obtain the nearest
@@ -1144,6 +1138,9 @@ class PrecipitationObs(MeteoObs):
         ----------
         obs : hydropandas.Obs
             Observation object.
+        stn_type : str, optional
+            type of measurements station. Can be 'meteo' or 'precipitation'.
+            Default is 'meteo'.
         **kwargs
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1156,9 +1153,6 @@ class PrecipitationObs(MeteoObs):
                 desired time interval for observations. The default is 'daily'.
             inseason : boolean, optional
                 flag to obtain inseason data. The default is False
-            exclude_neerslag_stn : boolean, optional
-                if True only meteostations are used to obtain precipitation data.
-                No neerslag stations are used.
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -1171,6 +1165,14 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with a precipitation time series and attributes
         """
+
+        if stn_type == 'meteo':
+            meteo_var = 'RH'
+        elif stn_type == 'precipitation':
+            meteo_var = 'RD'
+        else:
+            raise ValueError(f"invalid measurement station type -> {stn_type}")
+
         return super().from_obs(obs,
-                                meteo_var='RH',
+                                meteo_var=meteo_var,
                                 **kwargs)

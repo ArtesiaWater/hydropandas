@@ -17,8 +17,8 @@ logging.basicConfig(level=logging.DEBUG)
 def test_get_knmi_precip_neerslagstation():
     # De Bilt neerslagstation
     ts, meta = io_knmi.get_knmi_timeseries_stn(
-        '550_neerslag_station',
-        "RH",
+        '550',
+        "RD",
         start='2010-1-1',
         end='2010-1-10',
         settings=None)
@@ -51,8 +51,8 @@ def test_get_knmi_precip_meteostation_hourly():
 def test_get_knmi_precip_neerslagstation_no_api():
     # De Bilt neerslagstation
     ts4, meta4 = io_knmi.get_knmi_timeseries_stn(
-        '550_neerslag_station',
-        "RH",
+        '550',
+        "RD",
         start='2010-1-1',
         end='2010-1-10',
         settings={'use_api': False})
@@ -73,8 +73,8 @@ def test_get_knmi_precip_meteostation_no_api():
 def test_get_knmi_precip_neerslagstation_fill_missing():
     settings = io_knmi._get_default_settings(None)
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        '550_neerslag_station',
-        meteo_var='RH',
+        '550',
+        meteo_var='RD',
         start='1952',
         end=None,
         settings=settings)
@@ -85,8 +85,9 @@ def test_download_rd_550_no_api():
     settings = io_knmi._get_default_settings(None)
     settings['use_api'] = False
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        '550_neerslag_station',
-        meteo_var='RH',
+        '550',
+        stn_name='DE-BILT',
+        meteo_var='RD',
         start='1952',
         end=None,
         settings=settings)
@@ -96,8 +97,8 @@ def test_download_rd_550_no_api():
 def test_download_rd_12():
     settings = io_knmi._get_default_settings(None)
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        '12_neerslag_station',
-        meteo_var='RH',
+        '12',
+        meteo_var='RD',
         start='2010',
         end=None,
         settings=settings)
@@ -108,8 +109,8 @@ def test_download_without_data():
     settings = io_knmi._get_default_settings(None)
     try:
         knmi_df, variables, stations = io_knmi.download_knmi_data(
-            '324_neerslag_station',
-            meteo_var='RH',
+            '324',
+            meteo_var='RD',
             start='2018',
             end='2020',
             settings=settings)
@@ -123,8 +124,8 @@ def test_download_without_data_no_error():
     settings = io_knmi._get_default_settings(settings={'raise_exceptions':False})
     
     knmi_df, variables, stations = io_knmi.download_knmi_data(
-        '324_neerslag_station',
-        meteo_var='RH',
+        '324',
+        meteo_var='RD',
         start='2018',
         end='2020',
         settings=settings)

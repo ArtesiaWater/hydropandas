@@ -173,52 +173,6 @@ def test_to_pastastore():
 
     return pstore
 
-# %% PYSTORE
-
-def test_obscollection_to_pystore():
-    obsc = test_obscollection_fews_lowmemory()
-    obsc.to_pystore("test_pystore", "./tests/data/2019-Pystore-test",
-                    groupby="locatie", overwrite=True)
-
-
-def test_obscollection_from_pystore():
-    obsc = oc.ObsCollection.from_pystore(
-        "test_pystore", "./tests/data/2019-Pystore-test")
-    return obsc
-
-
-def test_obscollection_pystore_only_metadata():
-    obsc = oc.ObsCollection.from_pystore("test_pystore",
-                                         "./tests/data/2019-Pystore-test",
-                                         read_series=False)
-    return obsc
-
-
-def test_obscollection_pystore_extent():
-    obsc = oc.ObsCollection.from_pystore("test_pystore",
-                                         "./tests/data/2019-Pystore-test",
-                                         extent=[115534, 115539, 0, 10000000]
-                                         )
-    return obsc
-
-
-def test_obscollection_pystore_item_names():
-    obsc = oc.ObsCollection.from_pystore("test_pystore",
-                                         "./tests/data/2019-Pystore-test",
-                                         item_names=['MPN-N-2']
-                                         )
-    return obsc
-
-
-def test_obs_from_pystore_item():
-    import pystore
-    pystore.set_path("./tests/data/2019-Pystore-test")
-    store = pystore.store("test_pystore")
-    coll = store.collection(store.collections[0])
-    item = coll.item(list(coll.list_items())[0])
-    o = obs.GroundwaterObs.from_pystore_item(item)
-    return o
-
 #%% Evaporation
 
 def test_evap_obs_from_stn():
@@ -227,11 +181,11 @@ def test_evap_obs_from_stn():
 #%% Precipitation
 
 def test_precip_obs_from_stn():
-    return obs.PrecipitationObs.from_knmi('233_neerslag_station')
+    return obs.PrecipitationObs.from_knmi(233, 'precipitation')
 
 
 def test_knmi_obs_from_stn_no_api():
-    return obs.PrecipitationObs.from_knmi('233_neerslag_station', use_api=False)
+    return obs.PrecipitationObs.from_knmi(233, 'precipitation', use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
@@ -244,7 +198,7 @@ def test_knmi_obs_from_stn_without_any_data():
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    return obs.PrecipitationObs.from_knmi('441_neerslag_station', 
+    return obs.PrecipitationObs.from_knmi('441', 'precipitation',
                                           startdate='2010-1-2')
 
 

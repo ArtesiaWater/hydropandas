@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from . import accessor
+from shapely.geometry import Point
 
 logger = logging.getLogger(__name__)
 
@@ -244,9 +245,9 @@ def get_zvec(x, y, gwf=None, ds=None):
     if gwf and not ds:
         ix = flopy.utils.GridIntersect(gwf.modelgrid)
         if gwf.modelgrid.grid_type == 'structured':
-            res = ix.intersect([(x, y)], shapetype="point")
+            res = ix.intersect(Point(x, y))
             if len(res) > 0:
-                r, c = res["cellids"]
+                r, c = res["cellids"][0]
                 zvec = np.array([gwf.modelgrid.top[r, c]] +
                                 [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)])
             else:

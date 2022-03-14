@@ -98,20 +98,15 @@ Currently supported datasources that can be read:
 -   FEWS PI-XML
 -   [DINO](https://www.dinoloket.nl) csv
 -   WISKI csv
--   [Pastas](https://github.com/pastas/pastas) projects (deprecated)
 -   [Pastastore](https://github.com/pastas/pastastore), for managing Pastas timeseries and models
--   [PyStore](https://github.com/ranaroussi/pystore), a fast datastore for pandas timeseries
--   [Arctic](https://github.com/man-group/arctic), a timeseries / dataframe database that sits atop MongoDB
 -   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script) data
 -   MODFLOW groundwater models
 -   IMOD groundwater models
 
-An ObsCollection can be exported to:
+An ObsCollection can be written to:
 
--   Shapefile
--   Pastastore
--   Arctic
--   Pystore
+-   a shapefile
+-   a PastaStore
 
 ## Dependencies
 
@@ -121,8 +116,6 @@ automatically with `pip` on Windows. These packages are:
 -   GDAL
 -   Fiona
 -   Shapely
--   Python-snappy
--   Fastparquet
 
 If you do not have these packages already it is recommended to first try 
 installing them with `conda install <pkg>`. Otherwise, read the instructions 
@@ -146,8 +139,6 @@ important):
 1.  `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
 2.  `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
 3.  `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
-4.  `pip install python_snappy-0.5.4-cp38-cp38-win_amd64.whl`
-5.  `pip install fastparquet-0.4.1-cp38-cp38-win_amd64.whl`
 
 After you've done this you can install hydropandas using 
 `pip install hydropandas`.

@@ -16,13 +16,6 @@ def test_set_filter_num():
     dino_gw.gwobs.set_filter_num(if_exists='replace')
     return dino_gw
 
-
-def test_set_filter_num_pystore():
-    obsc = ttf.test_obscollection_from_pystore()
-    obsc.gwobs.set_filter_num(if_exists='replace')
-    return obsc
-
-
 def test_set_filter_num_location():
     fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
     fews_gw_prod.gwobs.set_filter_num_location('locatie',

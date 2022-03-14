@@ -128,37 +128,6 @@ class ObsCollection(pd.DataFrame):
                 f'add {att_name} of {iname} with value {value} to meta')
 
     @classmethod
-    def from_arctic(cls, connstr, libname, ObsClass=obs.GroundwaterObs,
-                    progressbar=False):
-        """Load ObsCollection from MongoDB using arctic.
-
-        Parameters
-        ----------
-        connstr : str
-            database connection string
-        libname : str
-            library name
-        ObsClass : class, optional
-            observation class to store single timeseries, by
-            default obs.GroundwaterObs
-        progressbar : bool, optional
-            progressbar, by default False
-
-        Returns
-        -------
-        ObsCollection
-            ObsCollection DataFrame containing all the obs
-        """
-        from .io.io_arctic import read_arctic
-
-        meta = {'type': obs.GroundwaterObs}
-        obs_list = read_arctic(connstr, libname, ObsClass,
-                               progressbar=progressbar)
-        obs_df = util._obslist_to_frame(obs_list)
-
-        return cls(obs_df, meta=meta)
-
-    @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
         """Create an observation collection from a DataFrame by adding a column
         with empty observations.
@@ -696,6 +665,11 @@ class ObsCollection(pd.DataFrame):
             kwargs are passed to the io_knmi.get_knmi_obslist function
 
         List of possible variables:
+            neerslagstations:
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de 
+            voorafgaande dag tot 0800 utc op de vermelde datum
+    
+            meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
@@ -795,7 +769,7 @@ class ObsCollection(pd.DataFrame):
         if ObsClass is None:
             ObsClass = []
             for meteovar in meteo_vars:
-                if meteovar == 'RH':
+                if meteovar in ('RH', 'RD'):
                     ObsClass.append(obs.PrecipitationObs)
                 elif meteovar == 'EV24':
                     ObsClass.append(obs.EvaporationObs)
@@ -893,89 +867,7 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(mo_list)
 
         return cls(obs_df)
-
-    @classmethod
-    def from_pastas_project(cls, pr, ObsClass=obs.GroundwaterObs,
-                            name=None, pr_meta=None, rename_dic=None):
-
-        if rename_dic is None:
-            rename_dic = {}
-
-        from .io.io_pastas import read_project
-
-        if pr_meta is None:
-            pr_meta = pr.file_info
-
-        if name is None:
-            name = pr.name
-
-        obs_list = read_project(pr, obs.GroundwaterObs,
-                                rename_dic=rename_dic)
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, meta=pr_meta, name=name)
-
-    @classmethod
-    def from_pystore(cls, storename, pystore_path,
-                     ObsClass=obs.GroundwaterObs,
-                     extent=None, collection_names=None,
-                     item_names=None, nameby="item",
-                     read_series=True, progressbar=False):
-        """Create ObsCollection from pystore store.
-
-        Parameters
-        ----------
-        storename : str
-            name of the store
-        pystore_path : str
-            path in which stores are stored
-        ObsClass : type of Obs, optional
-            the Observation type used for reading in the individual series,
-            by default obs.GroundwaterObs
-        extent : list or tuple, optional
-            if not None only Observations within this extent are read
-            [xmin, xmax, ymin, ymax]
-        collection_names : list of str
-            collection names that will be extracted from the store. Default is
-            None which reads all collections.
-        item_names : list of str
-            item (Observation) names that will be extracted from the store.
-            The other items (Observations) will be ignored. if None all items
-            are read.
-        read_series : bool, optional
-            if False, read only metadata, default is True which
-            loads the full dataset
-        nameby : str
-            pick whether Obs are named by 'item' or 'collection'
-        progressbar : bool, optional
-            whether to show progress bar, default is False, for
-            best result set verbose to False!
-
-        Returns
-        -------
-        ObsCollection
-            Collection of observations
-        """
-
-        from .io.io_pystore import read_pystore
-
-        meta = {'fname': os.path.join(pystore_path, storename)}
-
-        obs_list = read_pystore(storename, pystore_path,
-                                obs.GroundwaterObs,
-                                extent=extent,
-                                collection_names=collection_names,
-                                item_names=item_names, nameby=nameby,
-                                read_series=read_series,
-                                progressbar=progressbar)
-        # if read series is False, returns dataframe with only metadata
-        if isinstance(obs_list, list):
-            obs_df = util._obslist_to_frame(obs_list)
-            meta['type'] = obs.GroundwaterObs
-        else:
-            # only metadata in df
-            obs_df = obs_list
-
-        return cls(obs_df, name=storename, meta=meta)
+   
 
     @classmethod
     def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
@@ -1045,88 +937,6 @@ class ObsCollection(pd.DataFrame):
         from .io import io_fews
         io_fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_pystore(self, store_name, pystore_path, groupby, item_name=None,
-                   overwrite=False):
-        """Write timeseries and metadata to Pystore format. Series are grouped
-        by 'groupby'. Each group is a Collection, each series within that group
-        an Item.
-
-        Parameters
-        ----------
-        store_name : str
-            name of the store
-        pystore_path : str
-            path where store should be saved
-        groupby : str
-            column name to groupby, (for example, group by location,
-            which would create a collection per location, and write
-            all timeseries at that location as Items into that Collection).
-        item_name : str, optional
-            name of column to use as item name, default is None, Item then
-            takes name from obs.name
-        overwrite : bool, optional
-            if True overwrite current data in store, by default False
-        """
-        import pystore
-        pystore.set_path(pystore_path)
-        store = pystore.store(store_name)
-        for name, group in self.groupby(by=groupby):
-            # Access a collection (create it if not exist)
-            collection = store.collection(name, overwrite=overwrite)
-            for i, o in enumerate(group.obs):
-                imeta = o.meta.copy()
-                if 'datastore' in imeta.keys():
-                    imeta['datastore'] = str(imeta['datastore'])
-
-                # add extra columns to item metadata
-                for icol in group.columns:
-                    if icol != "obs" and icol != 'meta':
-                        value = group.iloc[i].loc[icol]
-                        # convert non-json-serializable types
-                        if isinstance(value, np.integer):
-                            imeta[icol] = int(value)
-                        elif isinstance(value, numbers.Number):
-                            imeta[icol] = float(value)
-                        elif isinstance(value, np.bool_):
-                            imeta[icol] = bool(value)
-                        else:
-                            imeta[icol] = value
-                if item_name is None:
-                    name = o.name
-                else:
-                    name = o.meta[item_name]
-                collection.write(name, o, metadata=imeta,
-                                 overwrite=overwrite)
-
-    def to_arctic(self, connstr, libname, progressbar=False):
-        """Write ObsCollection to MongoDB using Arctic.
-
-        Parameters
-        ----------
-        connstr : str
-            database connection string
-        libname : str
-            name of the library to store data
-        progressbar : bool, optional
-            show progress bar, by default False
-        """
-        import arctic
-        from tqdm import tqdm
-        arc = arctic.Arctic(connstr)
-
-        # get library
-        try:
-            lib = arc.get_library(libname)
-        except arctic.exceptions.LibraryNotFoundException:
-            print("Library '{}' not found, initializing library...".format(
-                libname))
-            arc.initialize_library(libname)
-            lib = arc[libname]
-
-        # write data
-        for o in (tqdm(self.obs) if progressbar else self.obs):
-            metadata = o.meta
-            lib.write(o.name, o, metadata=metadata)
 
     def to_gdf(self, xcol='x', ycol='y'):
         """convert ObsCollection to GeoDataFrame.
@@ -1165,16 +975,16 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        pstore : pastastore.PastasProject, optional
-            Existing pastastore, if None a new project is created
+        pstore : pastastore.PastaStore, optional
+            Existing pastastore, if None a new pastastore is created
         pstore_name : str, optional
             Name of the pastastore only used if pstore is None
         obs_column : str, optional
             Name of the column in the Obs dataframe to be used
         kind : str, optional
-            The kind of series that is added to the pastas project
+            The kind of series that is added to the pastastore
         add_metadata : boolean, optional
-            If True metadata from the observations added to the project
+            If True metadata from the observations added to the pastastore
         conn : pastastore.connectors or None, optional
             type of connector, if None the DictConnector is used. Default is
             None.
@@ -1183,8 +993,8 @@ class ObsCollection(pd.DataFrame):
 
         Returns
         -------
-        project : pastastore.PastasProject
-            the pastas project with the series from the ObsCollection
+        pstore : pastastore.PastaStore
+            the pastastore with the series from the ObsCollection
         """
         from .io.io_pastas import create_pastastore
 
@@ -1195,44 +1005,6 @@ class ObsCollection(pd.DataFrame):
                                    conn=conn, overwrite=overwrite)
 
         return pstore
-
-    def to_pastas_project(self, pr=None, project_name='',
-                          obs_column='stand_m_tov_nap',
-                          kind='oseries', add_metadata=True, **kwargs):
-        """add observations to a new or existing pastas project.
-
-        Parameters
-        ----------
-        pr : pastas.project, optional
-            Existing pastas project, if None a new project is created
-        project_name : str, optional
-            Name of the pastas project only used if pr is None
-        obs_column : str, optional
-            Name of the column in the Obs dataframe to be used
-        kind : str, optional
-            The kind of series that is added to the pastas project
-        add_metadata : boolean, optional
-            If True metadata from the observations added to the project.
-        kwargs
-            arguments are passed to the create_pastas_project funtion
-
-        Returns
-        -------
-        pr : pastas.project
-            the pastas project with the series from the ObsCollection
-        """
-        warnings.warn(
-            "this method will be removed in future versions, use to_pastastore instead", DeprecationWarning)
-
-        from .io.io_pastas import create_pastas_project
-
-        project = create_pastas_project(self, pr=pr,
-                                        project_name=project_name,
-                                        obs_column=obs_column,
-                                        kind=kind, add_metadata=add_metadata,
-                                        **kwargs)
-
-        return project
 
     def to_shapefile(self, fname, xcol='x', ycol='y'):
         """save ObsCollection as shapefile.
