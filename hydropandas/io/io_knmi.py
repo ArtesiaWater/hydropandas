@@ -302,10 +302,10 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
             except(RuntimeError, requests.ConnectionError):
                 logger.info('KNMI API failed, switching to non-API method')
                 knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start,
-                                                      end, inseason=False)
+                                                      end)
         else:
             knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start,
-                                                      end, inseason=False)
+                                                      end)
 
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:

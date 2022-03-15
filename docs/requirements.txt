@@ -7,3 +7,4 @@ tqdm
 pastastore
 xarray
 netCDF4
+flopy

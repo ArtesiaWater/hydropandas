@@ -666,9 +666,9 @@ class ObsCollection(pd.DataFrame):
 
         List of possible variables:
             neerslagstations:
-            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de 
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
             voorafgaande dag tot 0800 utc op de vermelde datum
-    
+
             meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie

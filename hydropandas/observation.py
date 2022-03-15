@@ -496,8 +496,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_knmi(cls, stn, meteo_var='RH', startdate=None, enddate=None,
                   fill_missing_obs=True, interval='daily', inseason=False,
-                  use_precipitation_stn=True, use_api=True,
-                  raise_exceptions=True):
+                  use_api=True, raise_exceptions=True):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
@@ -527,7 +526,7 @@ class MeteoObs(Obs):
 
         List of possible variables:
             neerslagstations:
-            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de 
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
             voorafgaande dag tot 0800 utc op de vermelde datum
 
             meteostations:
@@ -629,7 +628,7 @@ class MeteoObs(Obs):
         """
         from .io import io_knmi
 
-        if interval == 'hourly' and meteo_var=='RD':
+        if interval == 'hourly' and meteo_var == 'RD':
             raise NotImplementedError('hourly values not (yet) available for precipitation stations')
 
         settings = {'fill_missing_obs': fill_missing_obs,
