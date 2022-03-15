@@ -1346,7 +1346,7 @@ def get_dino_locations(
         extent = extent.tolist()
 
     # use dino REST api
-    if not layer in ["grondwatermonitoring", "boring"]:
+    if layer not in ["grondwatermonitoring", "boring"]:
         raise (Exception("Unknown layer: {}".format(layer)))
     dinorest = DinoREST()
     if layer == "boring":
@@ -1380,6 +1380,8 @@ def split_extent(method, extent0, dx=1000, dy=None, **kwargs):
                 gdf = gdft
             else:
                 gdf = pd.concat((gdf, gdft))
+    
+    return gdf
 
 
 def download_dino_within_extent(

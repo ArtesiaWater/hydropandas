@@ -128,8 +128,8 @@ class StatsAccessor:
         self,
         column_name="stand_m_tov_nap",
         stat="mean",
-        winter_months=[1, 2, 3, 4, 11, 12],
-        summer_months=[5, 6, 7, 8, 9, 10],
+        winter_months=(1, 2, 3, 4, 11, 12),
+        summer_months=(5, 6, 7, 8, 9, 10),
     ):
         """get statistics per season.
 
@@ -139,9 +139,9 @@ class StatsAccessor:
             column name of the  observation data you want stats for
         stat : str, optional
             type of statistics, all statisics from df.describe() are available
-        winter_months : list of int, optional
+        winter_months : tuple of int, optional
             month number of winter months
-        summer_months : list of int, optional
+        summer_months : tuple of int, optional
             month number of summer months
 
 
@@ -248,8 +248,8 @@ class StatsAccessorObs:
         self,
         column_name="stand_m_tov_nap",
         stat="mean",
-        winter_months=[1, 2, 3, 4, 11, 12],
-        summer_months=[5, 6, 7, 8, 9, 10],
+        winter_months=(1, 2, 3, 4, 11, 12),
+        summer_months=(5, 6, 7, 8, 9, 10),
     ):
         """get statistics per season.
 
@@ -259,9 +259,9 @@ class StatsAccessorObs:
             column name of the  observation data you want stats for
         stat : str, optional
             type of statistics, all statisics from df.describe() are available
-        winter_months : list of int, optional
+        winter_months : tuple of int, optional
             month number of winter months
-        summer_months : list of int, optional
+        summer_months : tuple of int, optional
             month number of summer months
 
 

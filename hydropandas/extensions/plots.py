@@ -193,8 +193,8 @@ class CollectionPlots:
             )
 
         # check if observation collection has lat and lon values
-        if (not col_name_lat in self._obj.columns) and (
-            not col_name_lon in self._obj.columns
+        if (col_name_lat not in self._obj.columns) and (
+            col_name_lon not in self._obj.columns
         ):
             self._obj.geo.set_lat_lon()
 
