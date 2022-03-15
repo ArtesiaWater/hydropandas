@@ -5,12 +5,12 @@ import numpy as np
 from . import accessor
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 @accessor.register_obscollection_accessor("plots")
 class CollectionPlots:
-
     def __init__(self, oc_obj):
         """Object containing plotting methods for ObsCollections.
 
@@ -21,10 +21,9 @@ class CollectionPlots:
         """
         self._obj = oc_obj
 
-    def interactive_plots(self, savedir,
-                          tmin=None, tmax=None,
-                          per_location=True,
-                          **kwargs):
+    def interactive_plots(
+        self, savedir, tmin=None, tmax=None, per_location=True, **kwargs
+    ):
         """Create interactive plots of the observations using bokeh.
 
         Parameters
@@ -52,62 +51,70 @@ class CollectionPlots:
             - add_filter_to_legend : boolean
         """
         _color_cycle = (
-            'blue',
-            'olive',
-            'lime',
-            'red',
-            'orange',
-            'yellow',
-            'purple',
-            'silver',
-            'powderblue',
-            'salmon',
-            'tan')
+            "blue",
+            "olive",
+            "lime",
+            "red",
+            "orange",
+            "yellow",
+            "purple",
+            "silver",
+            "powderblue",
+            "salmon",
+            "tan",
+        )
 
         if per_location:
-            plot_names = self._obj.groupby('locatie').count().index
+            plot_names = self._obj.groupby("locatie").count().index
         else:
             plot_names = self._obj.index
 
         for name in plot_names:
 
             if per_location:
-                oc = self._obj.loc[self._obj.locatie
-                                   == name, 'obs'].sort_index()
+                oc = self._obj.loc[self._obj.locatie == name, "obs"].sort_index()
             else:
-                oc = self._obj.loc[[name], 'obs']
+                oc = self._obj.loc[[name], "obs"]
 
             p = None
             for i, o in enumerate(oc.values):
                 if i == 10:
                     raise NotImplementedError(
-                        'cannot add more than 10 lines to a single plot')
+                        "cannot add more than 10 lines to a single plot"
+                    )
                 try:
-                    p = o.plots.interactive_plot(savedir=savedir,
-                                                 p=p,
-                                                 tmin=tmin, tmax=tmax,
-                                                 plot_colors=[_color_cycle[i + 1]],
-                                                 return_filename=False,
-                                                 **kwargs)
-                    logger.info(f'created iplot -> {o.name}')
+                    p = o.plots.interactive_plot(
+                        savedir=savedir,
+                        p=p,
+                        tmin=tmin,
+                        tmax=tmax,
+                        plot_colors=[_color_cycle[i + 1]],
+                        return_filename=False,
+                        **kwargs,
+                    )
+                    logger.info(f"created iplot -> {o.name}")
                 except ValueError:
-                    logger.error(f'{o.name} has no data between {tmin} and {tmax}')
+                    logger.error(f"{o.name} has no data between {tmin} and {tmax}")
                     o.iplot_fname = None
 
-    def interactive_map(self, plot_dir, m=None,
-                        tiles='OpenStreetMap',
-                        fname=None,
-                        per_location=True,
-                        color='blue',
-                        legend_name=None,
-                        add_legend=True,
-                        map_label='',
-                        map_label_size=20,
-                        col_name_lat='lat',
-                        col_name_lon='lon',
-                        zoom_start=13,
-                        create_interactive_plots=True,
-                        **kwargs):
+    def interactive_map(
+        self,
+        plot_dir,
+        m=None,
+        tiles="OpenStreetMap",
+        fname=None,
+        per_location=True,
+        color="blue",
+        legend_name=None,
+        add_legend=True,
+        map_label="",
+        map_label_size=20,
+        col_name_lat="lat",
+        col_name_lon="lon",
+        zoom_start=13,
+        create_interactive_plots=True,
+        **kwargs,
+    ):
         """Create an interactive map with interactive plots using folium and
         bokeh.
 
@@ -181,78 +188,90 @@ class CollectionPlots:
 
         # create interactive bokeh plots
         if create_interactive_plots:
-            self._obj.plots.interactive_plots(savedir=plot_dir,
-                                              per_location=per_location,
-                                              **kwargs)
+            self._obj.plots.interactive_plots(
+                savedir=plot_dir, per_location=per_location, **kwargs
+            )
 
         # check if observation collection has lat and lon values
-        if (not col_name_lat in self._obj.columns) and (not col_name_lon in self._obj.columns):
+        if (not col_name_lat in self._obj.columns) and (
+            not col_name_lon in self._obj.columns
+        ):
             self._obj.geo.set_lat_lon()
 
         # determine start location of map
         northing = np.mean(
-            (self._obj[col_name_lat].min(), self._obj[col_name_lat].max()))
+            (self._obj[col_name_lat].min(), self._obj[col_name_lat].max())
+        )
         easting = np.mean(
-            (self._obj[col_name_lon].min(), self._obj[col_name_lon].max()))
+            (self._obj[col_name_lon].min(), self._obj[col_name_lon].max())
+        )
 
         # create map if no map is given
         if m is None:
             m = folium.Map([northing, easting], zoom_start=zoom_start)
 
         # add the point observations with plots to the map
-        group_name = '<span style=\\"color: {};\\">{}</span>'.format(
-            color, legend_name)
+        group_name = '<span style=\\"color: {};\\">{}</span>'.format(color, legend_name)
         group = folium.FeatureGroup(name=group_name)
 
         if per_location:
-            plot_names = self._obj.groupby('locatie').count().index
+            plot_names = self._obj.groupby("locatie").count().index
         else:
             plot_names = self._obj.index
 
         for name in plot_names:
             if per_location:
-                oc = self._obj.loc[self._obj.locatie
-                                   == name, 'obs'].sort_index()
+                oc = self._obj.loc[self._obj.locatie == name, "obs"].sort_index()
                 o = oc.iloc[-1]
                 name = o.name
             else:
-                o = self._obj.loc[name, 'obs']
+                o = self._obj.loc[name, "obs"]
 
             if o.iplot_fname is not None:
-                with open(o.iplot_fname, 'r') as f:
+                with open(o.iplot_fname, "r") as f:
                     bokeh_html = f.read()
 
-                iframe = branca.element.IFrame(
-                    html=bokeh_html, width=620, height=420)
+                iframe = branca.element.IFrame(html=bokeh_html, width=620, height=420)
                 popup = folium.Popup(iframe, max_width=620)
 
-                folium.CircleMarker([self._obj.loc[o.name, col_name_lat],
-                                     self._obj.loc[o.name, col_name_lon]],
-                                    icon=folium.Icon(icon='signal'), fill=True,
-                                    color=color,
-                                    popup=popup).add_to(group)
+                folium.CircleMarker(
+                    [
+                        self._obj.loc[o.name, col_name_lat],
+                        self._obj.loc[o.name, col_name_lon],
+                    ],
+                    icon=folium.Icon(icon="signal"),
+                    fill=True,
+                    color=color,
+                    popup=popup,
+                ).add_to(group)
 
-                if map_label != '':
+                if map_label != "":
                     folium.map.Marker(
-                        [self._obj.loc[name, col_name_lat], self._obj.loc[name, col_name_lon]], icon=DivIcon(
-                            icon_size=(
-                                150, 36), icon_anchor=(
-                                0, 0), html='<div style="font-size: %ipt">%s</div>' %
-                            (map_label_size, o.meta[map_label]))).add_to(group)
+                        [
+                            self._obj.loc[name, col_name_lat],
+                            self._obj.loc[name, col_name_lon],
+                        ],
+                        icon=DivIcon(
+                            icon_size=(150, 36),
+                            icon_anchor=(0, 0),
+                            html='<div style="font-size: %ipt">%s</div>'
+                            % (map_label_size, o.meta[map_label]),
+                        ),
+                    ).add_to(group)
             else:
-                logger.info(f'no iplot available for {o.name}')
+                logger.info(f"no iplot available for {o.name}")
 
         group.add_to(m)
 
         # add legend
         if add_legend:
-            folium.map.LayerControl('topright', collapsed=False).add_to(m)
+            folium.map.LayerControl("topright", collapsed=False).add_to(m)
 
         # save map
-        #filename and path
+        # filename and path
         if fname is not None:
-            if not fname.endswith('.html'):
-                fname = fname + '.html'
+            if not fname.endswith(".html"):
+                fname = fname + ".html"
             if not os.path.exists(plot_dir):
                 os.mkdir(plot_dir)
             m.save(os.path.join(plot_dir, fname))
@@ -265,21 +284,23 @@ class ObsPlots:
     def __init__(self, obs):
         self._obj = obs
 
-    def interactive_plot(self,
-                         savedir=None,
-                         plot_columns=('stand_m_tov_nap',),
-                         markers=('line',),
-                         p=None,
-                         plot_legend_names=('',),
-                         plot_freq=(None,),
-                         tmin=None,
-                         tmax=None,
-                         hoover_names=('Peil',),
-                         hoover_date_format="%Y-%m-%d",
-                         ylabel='m NAP',
-                         plot_colors=('blue',),
-                         add_filter_to_legend=False,
-                         return_filename=False):
+    def interactive_plot(
+        self,
+        savedir=None,
+        plot_columns=("stand_m_tov_nap",),
+        markers=("line",),
+        p=None,
+        plot_legend_names=("",),
+        plot_freq=(None,),
+        tmin=None,
+        tmax=None,
+        hoover_names=("Peil",),
+        hoover_date_format="%Y-%m-%d",
+        ylabel="m NAP",
+        plot_colors=("blue",),
+        add_filter_to_legend=False,
+        return_filename=False,
+    ):
         """Create an interactive plot of the observations using bokeh.
 
         Todo:
@@ -333,21 +354,23 @@ class ObsPlots:
 
         # create plot dataframe
         plot_df = self._obj[tmin:tmax].copy()
-        plot_df['date'] = plot_df.index.strftime(hoover_date_format)
+        plot_df["date"] = plot_df.index.strftime(hoover_date_format)
         if plot_df.empty or plot_df[list(plot_columns)].isna().all().all():
             raise ValueError(
-                '{} has no data between {} and {}'.format(self._obj.name, tmin, tmax))
+                "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
+            )
 
         # create plot
         if p is None:
-            p = figure(plot_width=600, plot_height=400, x_axis_type='datetime',
-                       title='')
+            p = figure(
+                plot_width=600, plot_height=400, x_axis_type="datetime", title=""
+            )
             p.yaxis.axis_label = ylabel
 
         # get x axis
         xcol = self._obj.index.name
         if xcol is None:
-            xcol = 'index'
+            xcol = "index"
 
         # get color
         if len(plot_colors) < len(plot_columns):
@@ -356,43 +379,65 @@ class ObsPlots:
         # get base for hoover tooltips
         plots = []
         tooltips = []
-        tooltips.append(('date', "@date"))
+        tooltips.append(("date", "@date"))
 
         # plot multiple columns
         for i, column in enumerate(plot_columns):
             # legend name
             if add_filter_to_legend:
-                lname = '{} {} (NAP {:.2f} - {:.2f})'.format(plot_legend_names[i], self._obj.name,
-                                                             self._obj.onderkant_filter,
-                                                             self._obj.bovenkant_filter)
+                lname = "{} {} (NAP {:.2f} - {:.2f})".format(
+                    plot_legend_names[i],
+                    self._obj.name,
+                    self._obj.onderkant_filter,
+                    self._obj.bovenkant_filter,
+                )
             else:
-                lname = '{} {}'.format(plot_legend_names[i], self._obj.name)
+                lname = "{} {}".format(plot_legend_names[i], self._obj.name)
 
             # resample data
             if plot_freq[i] is None:
-                source = ColumnDataSource(plot_df[[column, 'date']])
+                source = ColumnDataSource(plot_df[[column, "date"]])
             else:
                 source = ColumnDataSource(
-                    plot_df[[column, 'date']].resample(plot_freq[i]).first())
+                    plot_df[[column, "date"]].resample(plot_freq[i]).first()
+                )
 
             # plot data
 
-            if markers[i] in ['line', 'l']:
-                plots.append(p.line(xcol, column, source=source, color=plot_colors[i],
-                               legend_label=lname,
-                               alpha=0.8, muted_alpha=0.2))
-            elif markers[i] in ['circle','c']:
-                plots.append(p.circle(xcol, column, source=source, color=plot_colors[i],
-                                 legend_label=lname,
-                                 alpha=0.8, muted_alpha=0.2))
+            if markers[i] in ["line", "l"]:
+                plots.append(
+                    p.line(
+                        xcol,
+                        column,
+                        source=source,
+                        color=plot_colors[i],
+                        legend_label=lname,
+                        alpha=0.8,
+                        muted_alpha=0.2,
+                    )
+                )
+            elif markers[i] in ["circle", "c"]:
+                plots.append(
+                    p.circle(
+                        xcol,
+                        column,
+                        source=source,
+                        color=plot_colors[i],
+                        legend_label=lname,
+                        alpha=0.8,
+                        muted_alpha=0.2,
+                    )
+                )
             else:
-                raise NotImplementedError("marker '{}' invalid. Only line and"
-                                          "circle are currently available".format(markers[i]))
+                raise NotImplementedError(
+                    "marker '{}' invalid. Only line and"
+                    "circle are currently available".format(markers[i])
+                )
 
             # add columns to hoover tooltips
             tooltips_p = tooltips.copy()
             tooltips_p.append((hoover_names[i], "@{}".format(column)))
-            hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode='vline')
+            hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode="vline")
             p.add_tools(hover)
 
         p.legend.location = "top_left"
@@ -402,8 +447,7 @@ class ObsPlots:
         if savedir is not None:
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
-            self._obj.iplot_fname = os.path.join(
-                savedir, self._obj.name + '.html')
+            self._obj.iplot_fname = os.path.join(savedir, self._obj.name + ".html")
             save(p, self._obj.iplot_fname, resources=CDN, title=self._obj.name)
 
         if return_filename:

@@ -42,22 +42,26 @@ def _get_metadata_from_obs(o):
                     meta[k] = float(v)
                 else:
                     logger.info(
-                        f'did not add {k} to metadata because datatype is {type(v)}')
+                        f"did not add {k} to metadata because datatype is {type(v)}"
+                    )
         else:
             logger.info(
-                f'did not add {attr_key} to metadata because datatype is {type(val)}')
+                f"did not add {attr_key} to metadata because datatype is {type(val)}"
+            )
 
     return meta
 
 
-def create_pastastore(oc,
-                      pstore,
-                      pstore_name='',
-                      conn=None,
-                      add_metadata=True,
-                      obs_column='stand_m_tov_nap',
-                      kind='oseries',
-                      overwrite=False):
+def create_pastastore(
+    oc,
+    pstore,
+    pstore_name="",
+    conn=None,
+    add_metadata=True,
+    obs_column="stand_m_tov_nap",
+    kind="oseries",
+    overwrite=False,
+):
     """add observations to a new or existing pastastore.
 
     Parameters
@@ -91,20 +95,20 @@ def create_pastastore(oc,
         pstore = pst.PastaStore(pstore_name, connector=conn)
 
     for o in oc.obs.values:
-        logger.info('add to pastastore -> {}'.format(o.name))
+        logger.info("add to pastastore -> {}".format(o.name))
 
         if add_metadata:
             meta = _get_metadata_from_obs(o)
         else:
             meta = dict()
 
-        if kind == 'oseries':
-            pstore.conn.add_oseries(o[obs_column], o.name,
-                                    metadata=meta,
-                                    overwrite=overwrite)
+        if kind == "oseries":
+            pstore.conn.add_oseries(
+                o[obs_column], o.name, metadata=meta, overwrite=overwrite
+            )
         else:
-            pstore.conn.add_stress(o[obs_column], o.name,
-                                   kind, metadata=meta,
-                                   overwrite=overwrite)
+            pstore.conn.add_stress(
+                o[obs_column], o.name, kind, metadata=meta, overwrite=overwrite
+            )
 
     return pstore

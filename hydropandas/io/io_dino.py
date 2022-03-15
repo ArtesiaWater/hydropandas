@@ -25,16 +25,15 @@ logger = logging.getLogger(__name__)
 def _read_dino_groundwater_header(f):
     line = f.readline()
     header = dict()
-    while line not in ['\n', '', '\r\n']:
+    while line not in ["\n", "", "\r\n"]:
         if "," in line:  # for csv from dinoloket
-            propval = line.split(',')
+            propval = line.split(",")
             prop = propval[0]
-            prop = prop.replace(':', '')
+            prop = prop.replace(":", "")
             prop = prop.strip()
             val = propval[1]
-            if propval[2] != '':
-                val = val + ' ' + propval[2].replace(':', '') + ' ' + \
-                    propval[3]
+            if propval[2] != "":
+                val = val + " " + propval[2].replace(":", "") + " " + propval[3]
             header[prop] = val
         else:  # for artdiver dino-csv
             propval = line.split(":")
@@ -47,17 +46,17 @@ def _read_dino_groundwater_header(f):
 
 
 def _read_empty(f, line):
-    while (line == '\n') or (line == '\r\n'):
+    while (line == "\n") or (line == "\r\n"):
         line = f.readline()
     return line
 
 
 def _read_dino_groundwater_referencelvl(f, line):
     ref = {}
-    while line not in ['\n', '', '\r\n']:
-        propval = line.split(',')
+    while line not in ["\n", "", "\r\n"]:
+        propval = line.split(",")
         prop = propval[0]
-        prop = prop.replace(':', '')
+        prop = prop.replace(":", "")
         prop = prop.strip()
         if len(propval) > 1:
             val = propval[1]
@@ -68,22 +67,26 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 def _read_dino_groundwater_metadata(f, line):
 
-    _translate_dic_float = {'x-coordinaat': 'x',
-                            'y-coordinaat': 'y',
-                            'filternummer': 'filternr'}
-    _translate_dic_div_100 = {'meetpunt (cm t.o.v. nap)': 'meetpunt',
-                              'bovenkant filter (cm t.o.v. nap)': 'bovenkant_filter',
-                              'onderkant filter (cm t.o.v. nap)': 'onderkant_filter',
-                              'maaiveld (cm t.o.v. nap)': 'maaiveld'}
+    _translate_dic_float = {
+        "x-coordinaat": "x",
+        "y-coordinaat": "y",
+        "filternummer": "filternr",
+    }
+    _translate_dic_div_100 = {
+        "meetpunt (cm t.o.v. nap)": "meetpunt",
+        "bovenkant filter (cm t.o.v. nap)": "bovenkant_filter",
+        "onderkant filter (cm t.o.v. nap)": "onderkant_filter",
+        "maaiveld (cm t.o.v. nap)": "maaiveld",
+    }
     metalist = list()
     line = line.strip()
-    properties = line.split(',')
+    properties = line.split(",")
     line = f.readline()
 
-    while line not in ['\n', '', '\r\n']:
+    while line not in ["\n", "", "\r\n"]:
         meta = dict()
         line = line.strip()
-        values = line.split(',')
+        values = line.split(",")
         for i in range(0, len(values)):
             meta[properties[i].lower()] = values[i]
         metalist.append(meta)
@@ -94,32 +97,33 @@ def _read_dino_groundwater_metadata(f, line):
         # add time dependent metadata to meta_ts
         for i, meta in enumerate(metalist):
             meta_tsi = {}
-            start_date = pd.to_datetime(meta.pop('startdatum'), dayfirst=True)
-            #end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
-            meta_tsi['locatie'] = meta['locatie']
+            start_date = pd.to_datetime(meta.pop("startdatum"), dayfirst=True)
+            # end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
+            meta_tsi["locatie"] = meta["locatie"]
             for key in _translate_dic_float.keys():
-                if meta[key] == '':
+                if meta[key] == "":
                     meta_tsi[_translate_dic_float[key]] = np.nan
                 else:
                     meta_tsi[_translate_dic_float[key]] = float(meta[key])
 
             for key in _translate_dic_div_100.keys():
-                if meta[key] == '':
+                if meta[key] == "":
                     meta_tsi[_translate_dic_div_100[key]] = np.nan
                 else:
-                    meta_tsi[_translate_dic_div_100[key]
-                             ] = float(meta[key]) / 100.
+                    meta_tsi[_translate_dic_div_100[key]] = float(meta[key]) / 100.0
             if i == 0:
                 for key in meta_tsi.keys():
-                    meta_ts[key] = pd.Series(name=key,
-                                             dtype=type(meta_tsi[key]))
+                    meta_ts[key] = pd.Series(name=key, dtype=type(meta_tsi[key]))
 
             for key in meta_tsi.keys():
                 meta_ts[key].loc[start_date] = meta_tsi[key]
 
         # remove series with non time variant metadata from meta_ts
-        ts_keys = ['locatie'] + list(_translate_dic_float.values()) + \
-            list(_translate_dic_div_100.values())
+        ts_keys = (
+            ["locatie"]
+            + list(_translate_dic_float.values())
+            + list(_translate_dic_div_100.values())
+        )
         for key in ts_keys:
             unique_values = meta_ts[key].unique()
             if len(unique_values) == 1:
@@ -131,9 +135,9 @@ def _read_dino_groundwater_metadata(f, line):
     else:
         # de metadata is leeg
         obs_att = {}
-        obs_att["locatie"] = ''
+        obs_att["locatie"] = ""
         obs_att["filternr"] = np.nan
-        obs_att["name"] = 'unknown'
+        obs_att["name"] = "unknown"
         obs_att["x"] = np.nan
         obs_att["y"] = np.nan
         obs_att["meetpunt"] = np.nan
@@ -147,22 +151,26 @@ def _read_dino_groundwater_metadata(f, line):
 
 def _read_dino_groundwater_measurements(f, line):
     line = line.strip()
-    titel = line.split(',')
-    while '' in titel:
-        titel.remove('')
+    titel = line.split(",")
+    while "" in titel:
+        titel.remove("")
 
-    if line != '':
+    if line != "":
         # Validate if titles are valid names
         validator = np.lib._iotools.NameValidator()
         titel = [s.lower() for s in validator(titel)]
         usecols = range(0, len(titel))
 
         try:
-            measurements = pd.read_csv(f, header=None, names=titel,
-                                       parse_dates=['peildatum'],
-                                       index_col='peildatum',
-                                       dayfirst=True,
-                                       usecols=usecols)
+            measurements = pd.read_csv(
+                f,
+                header=None,
+                names=titel,
+                parse_dates=["peildatum"],
+                index_col="peildatum",
+                dayfirst=True,
+                usecols=usecols,
+            )
         except pd.errors.ParserError:
             # for now the workflow is to remove the files that cannot be read
             # manually.
@@ -192,25 +200,25 @@ def read_dino_groundwater_quality_txt(fname):
     meta : dict
         dictionary with metadata
     """
-    logger.info('reading -> {}'.format(os.path.split(fname)[-1]))
-    with open(fname, 'r') as f:
+    logger.info("reading -> {}".format(os.path.split(fname)[-1]))
+    with open(fname, "r") as f:
 
         # LOCATIE gegevens
-        line = f.readline().rstrip('\n')
-        assert line == 'LOCATIE gegevens'
+        line = f.readline().rstrip("\n")
+        assert line == "LOCATIE gegevens"
 
         strt_locatie = f.tell()
         # determine the number of rows
         nrows = -1  # the header does not count
         line = f.readline()
-        while line not in ['\n', '']:
+        while line not in ["\n", ""]:
             nrows += 1
             line = f.readline()
         eind_locatie = f.tell()
         # go back to where we were before
         f.seek(strt_locatie)
         # read the location-information
-        locatie = pd.read_csv(f, sep='\t', nrows=nrows)
+        locatie = pd.read_csv(f, sep="\t", nrows=nrows)
         # there is always only one location (change if this is not the case)
         assert nrows == 1
 
@@ -218,30 +226,34 @@ def read_dino_groundwater_quality_txt(fname):
 
         # KWALITEIT gegevens VLOEIBAAR
         f.seek(eind_locatie)
-        line = f.readline().rstrip('\n')
-        assert line == 'KWALITEIT gegevens VLOEIBAAR'
+        line = f.readline().rstrip("\n")
+        assert line == "KWALITEIT gegevens VLOEIBAAR"
 
-        measurements = pd.read_csv(f, sep='\t', parse_dates=['Monster datum', 'Analyse datum'],
-                                   dayfirst=True, index_col='Monster datum')
+        measurements = pd.read_csv(
+            f,
+            sep="\t",
+            parse_dates=["Monster datum", "Analyse datum"],
+            dayfirst=True,
+            index_col="Monster datum",
+        )
 
     meta = {}
-    meta['filename'] = fname
-    meta['locatie'] = locatie['NITG-nr']
-    meta['name'] = locatie['NITG-nr']
-    meta['x'] = locatie['X-coord']
-    meta['y'] = locatie['Y-coord']
+    meta["filename"] = fname
+    meta["locatie"] = locatie["NITG-nr"]
+    meta["name"] = locatie["NITG-nr"]
+    meta["x"] = locatie["X-coord"]
+    meta["y"] = locatie["Y-coord"]
     try:
-        meta['maaiveld'] = locatie['Maaiveldhoogte (m tov NAP)']
+        meta["maaiveld"] = locatie["Maaiveldhoogte (m tov NAP)"]
     except KeyError:
-        meta['maaiveld'] = np.nan
+        meta["maaiveld"] = np.nan
 
     return measurements, meta
 
 
-def read_dino_groundwater_csv(fname, to_mnap=True,
-                              read_series=True,
-                              remove_duplicates=False,
-                              keep_dup='last'):
+def read_dino_groundwater_csv(
+    fname, to_mnap=True, read_series=True, remove_duplicates=False, keep_dup="last"
+):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
     Parameters
@@ -264,50 +276,51 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
     meta : dict
         dictionary with metadata
     """
-    logger.info(f'reading -> {os.path.split(fname)[-1]}')
+    logger.info(f"reading -> {os.path.split(fname)[-1]}")
 
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         # read header
         line, header = _read_dino_groundwater_header(f)
         line = _read_empty(f, line)
         if not header:
-            logger.warning(f'could not read header -> {fname}')
+            logger.warning(f"could not read header -> {fname}")
 
         # read reference level
         line, ref = _read_dino_groundwater_referencelvl(f, line)
         line = _read_empty(f, line)
         if not ref:
-            logger.warning(f'could not read reference level -> {fname}')
+            logger.warning(f"could not read reference level -> {fname}")
 
         # read metadata
         line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
-        if not meta['metadata_available']:
-            logger.warning(f'could not read metadata -> {fname}')
-        meta['filename'] = fname
+        if not meta["metadata_available"]:
+            logger.warning(f"could not read metadata -> {fname}")
+        meta["filename"] = fname
 
         # read measurements
         if read_series:
             line, measurements = _read_dino_groundwater_measurements(f, line)
             if measurements is None:
-                logger.warning(f'could not read measurements -> {fname}')
+                logger.warning(f"could not read measurements -> {fname}")
             elif measurements[~measurements.stand_cm_tov_nap.isna()].empty:
-                logger.warning(f'no NAP measurements available -> {fname}')
+                logger.warning(f"no NAP measurements available -> {fname}")
             if to_mnap and measurements is not None:
-                measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
+                measurements["stand_m_tov_nap"] = (
+                    measurements["stand_cm_tov_nap"] / 100.0
+                )
             if remove_duplicates:
-                measurements = measurements[~measurements.index.duplicated(
-                    keep=keep_dup)]
+                measurements = measurements[
+                    ~measurements.index.duplicated(keep=keep_dup)
+                ]
 
             # add time variant metadata to measurements
             for s in meta_ts.values():
                 if measurements is None:
-                    measurements = pd.DataFrame(
-                        data=s.copy(), columns=[s.name])
+                    measurements = pd.DataFrame(data=s.copy(), columns=[s.name])
                 else:
-                    measurements = measurements.join(s, how='outer')
-                measurements.loc[:,
-                                 s.name] = measurements.loc[:, s.name].ffill()
+                    measurements = measurements.join(s, how="outer")
+                measurements.loc[:, s.name] = measurements.loc[:, s.name].ffill()
 
         else:
             measurements = None
@@ -317,15 +330,16 @@ def read_dino_groundwater_csv(fname, to_mnap=True,
 
 # %% DINO CSV as exported by ArtDiver methods
 
+
 def _read_artdino_groundwater_metadata(f, line):
     metalist = list()
     line = line.strip()
-    properties = line.split(',')
+    properties = line.split(",")
     line = f.readline()
-    while line not in ['\n', '', '\r\n']:
+    while line not in ["\n", "", "\r\n"]:
         meta = dict()
         line = line.strip()
-        values = line.split(',')
+        values = line.split(",")
         for i in range(0, len(values)):
             meta[properties[i].lower()] = values[i]
         metalist.append(meta)
@@ -333,39 +347,37 @@ def _read_artdino_groundwater_metadata(f, line):
 
     meta = {}
     if metalist:
-        meta["locatie"] = metalist[-1]['locatie']
-        meta["filternr"] = int(float(metalist[-1]['filternummer']))
-        meta["name"] = '-'.join([meta["locatie"],
-                                 metalist[-1]['filternummer']])
-        meta["x"] = float(metalist[-1]['x-coordinaat'])
-        meta["y"] = float(metalist[-1]['y-coordinaat'])
-        meetpunt = metalist[-1]['meetpunt nap']
-        if meetpunt == '':
+        meta["locatie"] = metalist[-1]["locatie"]
+        meta["filternr"] = int(float(metalist[-1]["filternummer"]))
+        meta["name"] = "-".join([meta["locatie"], metalist[-1]["filternummer"]])
+        meta["x"] = float(metalist[-1]["x-coordinaat"])
+        meta["y"] = float(metalist[-1]["y-coordinaat"])
+        meetpunt = metalist[-1]["meetpunt nap"]
+        if meetpunt == "":
             meta["meetpunt"] = np.nan
         else:
-            meta["meetpunt"] = float(meetpunt) / 100.
-        maaiveld = metalist[-1]['maaiveld nap']
-        if maaiveld == '':
+            meta["meetpunt"] = float(meetpunt) / 100.0
+        maaiveld = metalist[-1]["maaiveld nap"]
+        if maaiveld == "":
             meta["maaiveld"] = np.nan
         else:
             meta["maaiveld"] = float(maaiveld) / 100
-        bovenkant_filter = metalist[-1]['bovenkant filter']
-        if bovenkant_filter == '':
+        bovenkant_filter = metalist[-1]["bovenkant filter"]
+        if bovenkant_filter == "":
             meta["bovenkant_filter"] = np.nan
         else:
             meta["bovenkant_filter"] = float(bovenkant_filter) / 100
-        onderkant_filter = metalist[-1][
-            'onderkant filter']
-        if onderkant_filter == '':
+        onderkant_filter = metalist[-1]["onderkant filter"]
+        if onderkant_filter == "":
             meta["onderkant_filter"] = np.nan
         else:
             meta["onderkant_filter"] = float(onderkant_filter) / 100
         meta["metadata_available"] = True
     else:
         # de metadata is leeg
-        meta["locatie"] = ''
+        meta["locatie"] = ""
         meta["filternr"] = np.nan
-        meta["name"] = 'unknown'
+        meta["name"] = "unknown"
         meta["x"] = np.nan
         meta["y"] = np.nan
         meta["meetpunt"] = np.nan
@@ -379,22 +391,26 @@ def _read_artdino_groundwater_metadata(f, line):
 
 def _read_artdino_groundwater_measurements(f, line):
     line = line.strip()
-    titel = line.split(',')
-    while '' in titel:
-        titel.remove('')
+    titel = line.split(",")
+    while "" in titel:
+        titel.remove("")
 
-    if line != '':
+    if line != "":
         # Validate if titles are valid names
         validator = np.lib._iotools.NameValidator()
         titel = [s.lower() for s in validator(titel)]
         usecols = range(0, len(titel))
 
         try:
-            measurements = pd.read_csv(f, header=None, names=titel,
-                                       parse_dates=['peil_datum_tijd'],
-                                       index_col='peil_datum_tijd',
-                                       dayfirst=True,
-                                       usecols=usecols)
+            measurements = pd.read_csv(
+                f,
+                header=None,
+                names=titel,
+                parse_dates=["peil_datum_tijd"],
+                index_col="peil_datum_tijd",
+                dayfirst=True,
+                usecols=usecols,
+            )
         except pd.errors.ParserError:
             # for now the workflow is to remove the files that cannot be read
             # manually.
@@ -405,8 +421,7 @@ def _read_artdino_groundwater_measurements(f, line):
     return line, measurements
 
 
-def read_artdino_groundwater_csv(fname, to_mnap=True,
-                                 read_series=True):
+def read_artdino_groundwater_csv(fname, to_mnap=True, read_series=True):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
     Parameters
@@ -424,45 +439,50 @@ def read_artdino_groundwater_csv(fname, to_mnap=True,
     meta : dict
         dictionary with metadata
     """
-    logger.info(f'reading -> {os.path.split(fname)[-1]}')
+    logger.info(f"reading -> {os.path.split(fname)[-1]}")
 
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         # read header
         line, header = _read_dino_groundwater_header(f)
         line = _read_empty(f, line)
         if not header:
-            logger.warning(f'could not read header -> {fname}')
+            logger.warning(f"could not read header -> {fname}")
 
         # read metadata
         line, meta = _read_artdino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
 
-        if not meta['metadata_available']:
-            logger.warning(f'could not read metadata -> {fname}')
+        if not meta["metadata_available"]:
+            logger.warning(f"could not read metadata -> {fname}")
 
-        meta['filename'] = fname
+        meta["filename"] = fname
 
         # read measurements
         if read_series:
-            line, measurements = _read_artdino_groundwater_measurements(
-                f, line)
+            line, measurements = _read_artdino_groundwater_measurements(f, line)
             if measurements is None:
-                logger.warning(f'could not read measurements -> {fname}')
+                logger.warning(f"could not read measurements -> {fname}")
             elif measurements[~measurements["stand_cm_nap"].isna()].empty:
-                logger.warning(f'no NAP measurements available -> {fname}')
+                logger.warning(f"no NAP measurements available -> {fname}")
             if to_mnap and measurements is not None:
-                measurements['stand_m_tov_nap'] = measurements['stand_cm_nap'] / 100.
+                measurements["stand_m_tov_nap"] = measurements["stand_cm_nap"] / 100.0
         else:
             measurements = None
 
     return measurements, meta
 
 
-def read_artdino_dir(dirname, ObsClass=None,
-                     subdir='csv', suffix='.csv',
-                     unpackdir=None, force_unpack=False, preserve_datetime=False,
-                     keep_all_obs=True, **kwargs
-                     ):
+def read_artdino_dir(
+    dirname,
+    ObsClass=None,
+    subdir="csv",
+    suffix=".csv",
+    unpackdir=None,
+    force_unpack=False,
+    preserve_datetime=False,
+    keep_all_obs=True,
+    **kwargs,
+):
     """Read Dino directory with point observations.
 
     to do:
@@ -499,14 +519,15 @@ def read_artdino_dir(dirname, ObsClass=None,
     """
 
     # unzip dir
-    if dirname.endswith('.zip'):
+    if dirname.endswith(".zip"):
         zipf = dirname
         if unpackdir is None:
             dirname = tempfile.TemporaryDirectory().name
         else:
             dirname = unpackdir
-        unzip_file(zipf, dirname, force=force_unpack,
-                   preserve_datetime=preserve_datetime)
+        unzip_file(
+            zipf, dirname, force=force_unpack, preserve_datetime=preserve_datetime
+        )
 
     # read filenames
     files = os.listdir(os.path.join(dirname, subdir))
@@ -514,26 +535,29 @@ def read_artdino_dir(dirname, ObsClass=None,
         files = [file for file in files if file.endswith(suffix)]
 
     if not files:
-        raise FileNotFoundError('no files were found in {} that end with {}'.format(
-            os.path.join(dirname, subdir), suffix))
+        raise FileNotFoundError(
+            "no files were found in {} that end with {}".format(
+                os.path.join(dirname, subdir), suffix
+            )
+        )
 
     # read individual files
     obs_list = []
     for _, file in enumerate(files):
         fname = os.path.join(dirname, subdir, file)
-        obs = ObsClass.from_artdino_file(
-            fname=fname, **kwargs)
+        obs = ObsClass.from_artdino_file(fname=fname, **kwargs)
         if obs.metadata_available and (not obs.empty):
             obs_list.append(obs)
         elif keep_all_obs:
             obs_list.append(obs)
         else:
-            logging.info(f'not added to collection -> {fname}')
+            logging.info(f"not added to collection -> {fname}")
 
     return obs_list
 
 
 # %% DINO download methods
+
 
 class RemoveWSA(Plugin):
     """Helper class to remove wsa tags from header in zeep XML post.
@@ -543,8 +567,7 @@ class RemoveWSA(Plugin):
     """
 
     def egress(self, envelope, http_headers, operation, binding_options):
-        envelope.find(
-            '{http://schemas.xmlsoap.org/soap/envelope/}Header').clear()
+        envelope.find("{http://schemas.xmlsoap.org/soap/envelope/}Header").clear()
         return envelope, http_headers
 
 
@@ -559,7 +582,7 @@ class DinoREST:
         "grondwatermonitoring": "lks_gwo_rd",
         "sondering": "lks_gso_rd",
         "boring": "lks_gbo_rd",
-        "peilschaal": "lks_owo_rd"
+        "peilschaal": "lks_owo_rd",
     }
 
     def __init__(self, query_url=None, gwo_url=None):
@@ -575,14 +598,16 @@ class DinoREST:
         if query_url is None:
             self.query_url = (
                 "https://www.dinoloket.nl/arcgis/rest/services/dinoloket/"
-                "{layer}/MapServer/0/query")
+                "{layer}/MapServer/0/query"
+            )
         else:
             self.query_url = query_url
 
         if gwo_url is None:
             self.gwo_url = (
                 "https://www.dinoloket.nl/javascriptmapviewer-web/"
-                "rest/gws/gwo/details")
+                "rest/gws/gwo/details"
+            )
         else:
             self.gwo_url = gwo_url
 
@@ -661,7 +686,7 @@ class DinoREST:
             "geometryType": "esriGeometryEnvelope",
             "geometry": f"{xmin},{ymin},{xmax},{ymax}",
             "inSR": 28992,
-            "outSR": 28992
+            "outSR": 28992,
         }
 
         url = self.query_url.format(layer=self.aliases[layer])
@@ -704,14 +729,12 @@ class DinoREST:
         else:
             data = response.json()
             if data == []:
-                meta = {'metadata_available': False}
+                meta = {"metadata_available": False}
             else:
-                meta = self._parse_json_single_gwo_filter(data[0], location,
-                                                          filternr)
+                meta = self._parse_json_single_gwo_filter(data[0], location, filternr)
             return meta
 
-    def get_locations_by_extent(self, extent, layer="grondwatermonitoring",
-                                raw=False):
+    def get_locations_by_extent(self, extent, layer="grondwatermonitoring", raw=False):
         """get locations within an extent.
 
         Parameters
@@ -737,8 +760,7 @@ class DinoREST:
         else:
             return self._parse_json_features(r.json())
 
-    def get_metadata_by_extent(self, extent, layer="grondwatermonitoring",
-                               raw=False):
+    def get_metadata_by_extent(self, extent, layer="grondwatermonitoring", raw=False):
         """Get metadata details for all objects in extent.
 
         Parameters
@@ -781,8 +803,7 @@ class DinoREST:
             if layer == "grondwatermonitoring":
                 return self._parse_json_gwo_details(json_details)
             else:
-                raise NotImplementedError(
-                    "Not yet implemented for '{}'!".format(layer))
+                raise NotImplementedError("Not yet implemented for '{}'!".format(layer))
 
     @staticmethod
     def _parse_json_features(js, field="features"):
@@ -818,59 +839,74 @@ class DinoREST:
         meta : dictionary
             parsed dictionary
         """
-        _translate_dic_location = {'xcoord': 'x',
-                                   'ycoord': 'y',
-                                   'surfaceElevation': 'maaiveld'}
+        _translate_dic_location = {
+            "xcoord": "x",
+            "ycoord": "y",
+            "surfaceElevation": "maaiveld",
+        }
 
-        _translate_dic_filter = {'bottomHeightNap': 'onderkant_filter',
-                                 'topHeightNap': 'bovenkant_filter'}
+        _translate_dic_filter = {
+            "bottomHeightNap": "onderkant_filter",
+            "topHeightNap": "bovenkant_filter",
+        }
 
         meta = {
             "locatie": location,
-            "name": '-'.join([location, filternr]),
+            "name": "-".join([location, filternr]),
             "filternr": int(filternr),
-            "metadata_available": True
+            "metadata_available": True,
         }
 
-        piezometers = data.pop('piezoMeters')
-        levels = data.pop('levels')
-        samples = data.pop('samples')
+        piezometers = data.pop("piezoMeters")
+        levels = data.pop("levels")
+        samples = data.pop("samples")
 
         if piezometers:
             try:
-                meta.update(next(item for item in piezometers if
-                                 item["piezometerNr"] == filternr))
+                meta.update(
+                    next(
+                        item for item in piezometers if item["piezometerNr"] == filternr
+                    )
+                )
             except StopIteration:
-                logging.warning('no piezometer metadata in metadata json '
-                                f'{location} with filternr {filternr}')
+                logging.warning(
+                    "no piezometer metadata in metadata json "
+                    f"{location} with filternr {filternr}"
+                )
         if levels:
             try:
-                meta.update(next(item for item in levels if
-                                 item["piezometerNr"] == filternr))
+                meta.update(
+                    next(item for item in levels if item["piezometerNr"] == filternr)
+                )
             except StopIteration:
-                logger.warning('no level metadata in metadata json '
-                               f'{location} with filternr {filternr}')
+                logger.warning(
+                    "no level metadata in metadata json "
+                    f"{location} with filternr {filternr}"
+                )
         if samples:
             try:
-                meta.update(next(item for item in samples if
-                                 item["piezometerNr"] == filternr))
+                meta.update(
+                    next(item for item in samples if item["piezometerNr"] == filternr)
+                )
             except StopIteration:
-                logger.warning('no sample metadata in metadata json '
-                               f'{location} with filternr {filternr}')
+                logger.warning(
+                    "no sample metadata in metadata json "
+                    f"{location} with filternr {filternr}"
+                )
 
         meta.update(data)
-        meta.pop('dinoId')
+        meta.pop("dinoId")
         for key, item in _translate_dic_location.items():
             meta[item] = meta.pop(key)
 
-        if 'clusterList' in meta.keys():
-            if isinstance(meta['clusterList'], list):
-                meta['clusterList'] = ";".join(meta['clusterList'])
+        if "clusterList" in meta.keys():
+            if isinstance(meta["clusterList"], list):
+                meta["clusterList"] = ";".join(meta["clusterList"])
 
-        if 'piezometerNr' not in meta.keys():
+        if "piezometerNr" not in meta.keys():
             return meta
 
-        meta.pop('piezometerNr')
+        meta.pop("piezometerNr")
 
         for key, item in _translate_dic_filter.items():
             meta[item] = meta.pop(key)
@@ -910,16 +946,16 @@ class DinoREST:
         location_list = []
         for i in range(len(json_details)):
             data = json_details[i]
-            location = data['dinoId']
+            location = data["dinoId"]
 
             if location in location_list:
                 raise ValueError
             else:
                 location_list.append(location)
 
-            piezometers = data['piezoMeters']
-            levels = data['levels']
-            samples = data['samples']
+            piezometers = data["piezoMeters"]
+            levels = data["levels"]
+            samples = data["samples"]
 
             # check number of filters
             if piezometers is None:
@@ -933,17 +969,18 @@ class DinoREST:
             filter_dic = {}
             for l in [piezometers, levels, samples]:
                 for d in l:
-                    if 'piezometerNr' in d.keys():
-                        if d['piezometerNr'] not in filter_dic.keys():
-                            filter_dic[d['piezometerNr']] = d
+                    if "piezometerNr" in d.keys():
+                        if d["piezometerNr"] not in filter_dic.keys():
+                            filter_dic[d["piezometerNr"]] = d
                         else:
-                            filter_dic[d['piezometerNr']].update(d)
+                            filter_dic[d["piezometerNr"]].update(d)
 
             # get metadata for every filter
             for filternr in filter_dic.keys():
                 meta = self._parse_json_single_gwo_filter(
-                    data.copy(), location, str(filternr).zfill(3))
-                idf = pd.DataFrame(meta, index=[meta.pop('name')])
+                    data.copy(), location, str(filternr).zfill(3)
+                )
+                idf = pd.DataFrame(meta, index=[meta.pop("name")])
                 dflist.append(idf)
 
         df = pd.concat(dflist, axis=0, sort=True)
@@ -979,7 +1016,8 @@ class DinoWSDL:
         """
 
         raise RuntimeError(
-            'Dino WSDL API is down since January 2021, hopefully something new will arrive soon!')
+            "Dino WSDL API is down since January 2021, hopefully something new will arrive soon!"
+        )
 
         # Create some plugins, some currently unused but left here as a reminder.
         history = HistoryPlugin()
@@ -987,15 +1025,14 @@ class DinoWSDL:
         rwsa = RemoveWSA()
 
         # Configure the client
-        self.client = zeep.Client(
-            wsdl=wsdl,
-            plugins=[history, wsa, rwsa])
+        self.client = zeep.Client(wsdl=wsdl, plugins=[history, wsa, rwsa])
 
         # Set prefix
         self.client.set_ns_prefix("v11", "http://v11.ws.gws.dino.tno.nl/")
 
-    def findMeetreeks(self, location, filternr, tmin, tmax, unit="NAP",
-                      raw_response=False):
+    def findMeetreeks(
+        self, location, filternr, tmin, tmax, unit="NAP", raw_response=False
+    ):
         """Get a timeseries for a piezometer. If the piezometer is part of a
         cluster this function returns the combined timeseries of all the
         piezometers in the cluster.
@@ -1026,19 +1063,21 @@ class DinoWSDL:
         - method sometimes returns data
         """
         if isinstance(tmin, pd.Timestamp):
-            tmin = tmin.strftime('%Y-%m-%d')
+            tmin = tmin.strftime("%Y-%m-%d")
 
         if isinstance(tmax, pd.Timestamp):
-            tmax = tmax.strftime('%Y-%m-%d')
+            tmax = tmax.strftime("%Y-%m-%d")
 
         if unit not in ["NAP", "SFL", "MP"]:
             raise ValueError("'unit' must be one of 'NAP', 'SFL', 'MP'!")
 
-        data = {"WELL_NITG_NR": location,
-                "WELL_TUBE_NR": filternr,
-                "START_DATE": tmin,
-                "END_DATE": tmax,
-                "UNIT": unit}
+        data = {
+            "WELL_NITG_NR": location,
+            "WELL_TUBE_NR": filternr,
+            "START_DATE": tmin,
+            "END_DATE": tmax,
+            "UNIT": unit,
+        }
 
         try:
             start = default_timer()
@@ -1056,7 +1095,7 @@ class DinoWSDL:
         if raw_response:
             return r
         else:
-            df = self._parse_grondwaterstand(r, f'stand_m_tov_{unit.lower()}')
+            df = self._parse_grondwaterstand(r, f"stand_m_tov_{unit.lower()}")
 
             return df
 
@@ -1081,8 +1120,7 @@ class DinoWSDL:
 
         filter_nr = "{0:03g}".format(int(filter_nr))
 
-        data = {"WELL_NITG_NR": location,
-                "WELL_TUBE_NR": filter_nr}
+        data = {"WELL_NITG_NR": location, "WELL_TUBE_NR": filter_nr}
 
         try:
             r = self.client.service.findTechnischeGegevens(**data)
@@ -1096,7 +1134,7 @@ class DinoWSDL:
             return meta
 
     @staticmethod
-    def _parse_grondwaterstand(r, column_name='stand_m_tov_nap'):
+    def _parse_grondwaterstand(r, column_name="stand_m_tov_nap"):
         """Parse the response from findMeetreeks.
 
         Parameters
@@ -1115,8 +1153,7 @@ class DinoWSDL:
         index = [i["DATE"] for i in gws.LEVELS]
         values = [i["LEVEL"] for i in gws.LEVELS]
         remarks = [i["REMARK"] for i in gws.LEVELS]
-        df = pd.DataFrame(index=index, data={column_name: values,
-                                             'remarks': remarks})
+        df = pd.DataFrame(index=index, data={column_name: values, "remarks": remarks})
         # convert from cm to m
         df.loc[:, column_name] = df.loc[:, column_name] / 100
 
@@ -1143,22 +1180,22 @@ class DinoWSDL:
         filternr = response.WELL_TUBE_NR
         meta = {
             "locatie": locatie,
-            "name": '-'.join([locatie, filternr]),
-            "filternr": int(filternr)
+            "name": "-".join([locatie, filternr]),
+            "filternr": int(filternr),
         }
 
         if response.SFL_HEIGHT is not None:
-            meta["maaiveld"] = response.SFL_HEIGHT / 100.
+            meta["maaiveld"] = response.SFL_HEIGHT / 100.0
         else:
             meta["maaiveld"] = np.nan
 
         if response.BOTTOM_FILTER is not None:
-            meta["onderkant_filter"] = response.BOTTOM_FILTER / 100.
+            meta["onderkant_filter"] = response.BOTTOM_FILTER / 100.0
         else:
             meta["onderkant_filter"] = np.nan
 
         if response.FILTER_LENGTH is not None:
-            meta["filterlengte"] = response.FILTER_LENGTH / 100.
+            meta["filterlengte"] = response.FILTER_LENGTH / 100.0
         else:
             meta["filterlengte"] = np.nan
 
@@ -1167,8 +1204,9 @@ class DinoWSDL:
         return meta
 
 
-def download_dino_groundwater(location, filternr, tmin, tmax,
-                              split_cluster=True, **kwargs):
+def download_dino_groundwater(
+    location, filternr, tmin, tmax, split_cluster=True, **kwargs
+):
     """Download measurements and metadata from a dino groundwater observation
     well.
 
@@ -1201,29 +1239,32 @@ def download_dino_groundwater(location, filternr, tmin, tmax,
     dino = DinoWSDL()
 
     # measurements
-    measurements = dino.findMeetreeks(location, filternr, tmin, tmax,
-                                      **kwargs)
+    measurements = dino.findMeetreeks(location, filternr, tmin, tmax, **kwargs)
 
     # new metadata method
     dinorest = DinoREST()
     meta = dinorest.get_gwo_metadata(location, filternr)
 
-    if ('clusterList' in meta.keys()) and split_cluster and (not measurements.empty):
-        logging.info(f'piezometer {location}-{filternr} is part of a cluster'
-                     'slicing time series to avoid using combined cluster series')
+    if ("clusterList" in meta.keys()) and split_cluster and (not measurements.empty):
+        logging.info(
+            f"piezometer {location}-{filternr} is part of a cluster"
+            "slicing time series to avoid using combined cluster series"
+        )
 
-        start_time = dt.timedelta(
-            seconds=meta['startDate'] / 1000) + dt.datetime(1970, 1, 1, 1)
-        end_time = dt.timedelta(
-            seconds=meta['endDate'] / 1000) + dt.datetime(1970, 1, 1, 1)
+        start_time = dt.timedelta(seconds=meta["startDate"] / 1000) + dt.datetime(
+            1970, 1, 1, 1
+        )
+        end_time = dt.timedelta(seconds=meta["endDate"] / 1000) + dt.datetime(
+            1970, 1, 1, 1
+        )
         measurements = measurements[start_time:end_time]
 
     return measurements, meta
 
 
-def download_dino_groundwater_bulk(locations, ObsClass=None,
-                                   filtersep="-", stop_on_error=True,
-                                   **kwargs):
+def download_dino_groundwater_bulk(
+    locations, ObsClass=None, filtersep="-", stop_on_error=True, **kwargs
+):
     """Download DINO groundwater level timeseries based on a list of locations.
 
     Parameters
@@ -1250,20 +1291,26 @@ def download_dino_groundwater_bulk(locations, ObsClass=None,
     for loc in locations:
         iloc, filternr = loc.split(filtersep)
         try:
-            obslist.append(ObsClass.from_dino(
-                location=iloc, filternr=filternr, **kwargs))
+            obslist.append(
+                ObsClass.from_dino(location=iloc, filternr=filternr, **kwargs)
+            )
         except Exception as e:
             if stop_on_error:
                 raise e
             else:
-                logging.error(f'{loc}, {e}')
+                logging.error(f"{loc}, {e}")
                 continue
 
     return obslist
 
 
-def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
-                       response_fname=None, split_dx=None):
+def get_dino_locations(
+    extent=None,
+    bbox=None,
+    layer="grondwatermonitoring",
+    response_fname=None,
+    split_dx=None,
+):
     """Get a GeoDataFrame with dinoloket-locations from a wfs.
 
     Parameters
@@ -1287,33 +1334,31 @@ def get_dino_locations(extent=None, bbox=None, layer='grondwatermonitoring',
 
     # get extent
     if extent is None and bbox is None:
-        raise (Exception('Either bbox or extent needs to be specified'))
+        raise (Exception("Either bbox or extent needs to be specified"))
     if extent is not None and bbox is not None:
-        raise (Exception('bbox and extent cannot both be specified'))
+        raise (Exception("bbox and extent cannot both be specified"))
     if bbox is not None:
         extent = [bbox[0], bbox[2], bbox[1], bbox[3]]
         if split_dx is not None:
-            gdf = split_extent(get_dino_locations, extent,
-                               split_dx, layer=layer)
+            gdf = split_extent(get_dino_locations, extent, split_dx, layer=layer)
             return gdf
     if isinstance(extent, np.ndarray):
         extent = extent.tolist()
 
     # use dino REST api
-    if not layer in ['grondwatermonitoring', 'boring']:
-        raise(Exception('Unknown layer: {}'.format(layer)))
+    if not layer in ["grondwatermonitoring", "boring"]:
+        raise (Exception("Unknown layer: {}".format(layer)))
     dinorest = DinoREST()
-    if layer == 'boring':
+    if layer == "boring":
         df = dinorest.get_locations_by_extent(extent, layer=layer)
-    elif layer == 'grondwatermonitoring':
+    elif layer == "grondwatermonitoring":
         df = dinorest.get_metadata_by_extent(extent, layer=layer)
     else:
-        raise NotImplementedError(
-            "Not yet implemented for '{}'!".format(layer))
+        raise NotImplementedError("Not yet implemented for '{}'!".format(layer))
 
     # check if there are any measurements
     if df.empty:
-        warnings.warn('no observation points were found')
+        warnings.warn("no observation points were found")
         return df
 
     return df
@@ -1328,8 +1373,7 @@ def split_extent(method, extent0, dx=1000, dy=None, **kwargs):
     y = np.linspace(extent0[2], extent0[3], nrow)
     for ix in range(len(x) - 1):
         for iy in range(len(y) - 1):
-            print('Downloading part {} of {}'.format(
-                ix * iy + iy + 1, len(x) * len(y)))
+            print("Downloading part {} of {}".format(ix * iy + iy + 1, len(x) * len(y)))
             extent = [x[ix], x[ix + 1], y[iy], y[iy + 1]]
             gdft = method(extent=extent, **kwargs)
             if ix == 0 and iy == 0:
@@ -1338,12 +1382,19 @@ def split_extent(method, extent0, dx=1000, dy=None, **kwargs):
                 gdf = pd.concat((gdf, gdft))
 
 
-def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
-                                layer='grondwatermonitoring',
-                                tmin="1900-01-01", tmax="2040-01-01",
-                                zmin=None, zmax=None, unit="NAP",
-                                keep_all_obs=True,
-                                cache=False):
+def download_dino_within_extent(
+    extent=None,
+    bbox=None,
+    ObsClass=None,
+    layer="grondwatermonitoring",
+    tmin="1900-01-01",
+    tmax="2040-01-01",
+    zmin=None,
+    zmax=None,
+    unit="NAP",
+    keep_all_obs=True,
+    cache=False,
+):
     """Download DINO data within a certain extent (or a bounding box)
 
     Parameters
@@ -1386,17 +1437,17 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
     gdf_loc = get_dino_locations(extent=extent, bbox=bbox, layer=layer)
 
     if bbox is None:
-        logging.info(f'\ndownload {layer} data from dino within:\n'
-                     f'- extent: {extent}')
+        logging.info(
+            f"\ndownload {layer} data from dino within:\n" f"- extent: {extent}"
+        )
     elif extent is None:
-        logging.info(f'\ndownload {layer} data from dino within:\n'
-                     f'- bbox: {bbox}')
+        logging.info(f"\ndownload {layer} data from dino within:\n" f"- bbox: {bbox}")
 
     if gdf_loc.empty:
         return pd.DataFrame()
 
-    gdf_loc["startDate"] = gdf_loc.startDate.astype('datetime64[ms]')
-    gdf_loc["endDate"] = gdf_loc.endDate.astype('datetime64[ms]')
+    gdf_loc["startDate"] = gdf_loc.startDate.astype("datetime64[ms]")
+    gdf_loc["endDate"] = gdf_loc.endDate.astype("datetime64[ms]")
 
     # slice by properties
     if tmin is not None:
@@ -1430,36 +1481,41 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
         else:
             tmax_t = tmax
 
-        logging.info(f'reading -> {index}')
+        logging.info(f"reading -> {index}")
 
         if cache:
-            cache_dir = os.path.join(tempfile.gettempdir(), 'dino')
+            cache_dir = os.path.join(tempfile.gettempdir(), "dino")
             if not os.path.isdir(cache_dir):
                 os.mkdir(cache_dir)
             fname = os.path.join(
-                cache_dir, f'{loc.locatie}-{loc.filternr:03d}' + '.pklz')
+                cache_dir, f"{loc.locatie}-{loc.filternr:03d}" + ".pklz"
+            )
             if os.path.isfile(fname):
                 o = pd.read_pickle(fname)
             else:
-                o = ObsClass.from_dino(location=loc.locatie,
-                                       filternr=float(loc.filternr),
-                                       tmin=tmin_t,
-                                       tmax=tmax_t,
-                                       unit=unit)
+                o = ObsClass.from_dino(
+                    location=loc.locatie,
+                    filternr=float(loc.filternr),
+                    tmin=tmin_t,
+                    tmax=tmax_t,
+                    unit=unit,
+                )
                 o.to_pickle(fname)
         else:
-            o = ObsClass.from_dino(location=loc.locatie,
-                                   filternr=float(loc.filternr),
-                                   tmin=tmin_t,
-                                   tmax=tmax_t,
-                                   unit=unit)
+            o = ObsClass.from_dino(
+                location=loc.locatie,
+                filternr=float(loc.filternr),
+                tmin=tmin_t,
+                tmax=tmax_t,
+                unit=unit,
+            )
 
         if o.metadata_available and (not o.empty):
             obs_list.append(o)
         elif keep_all_obs:
             obs_list.append(o)
         else:
-            logging.info(f'not added to collection -> {o.name}')
+            logging.info(f"not added to collection -> {o.name}")
 
     # return list of obs
     return obs_list
@@ -1469,7 +1525,7 @@ def download_dino_within_extent(extent=None, bbox=None, ObsClass=None,
 
 
 def _read_dino_waterlvl_metadata(f, line):
-    '''
+    """
 
     Parameters
     ----------
@@ -1484,26 +1540,26 @@ def _read_dino_waterlvl_metadata(f, line):
     meta : dict
         dictionary with metadata
 
-    '''
-    meta_keys = line.strip().split(',')
-    meta_values = f.readline().strip().split(',')
+    """
+    meta_keys = line.strip().split(",")
+    meta_values = f.readline().strip().split(",")
     meta = {}
     for key, value in zip(meta_keys, meta_values):
         key = key.strip()
-        if key in ['X-coordinaat', 'Y-coordinaat']:
-            if key == 'X-coordinaat':
-                meta['x'] = float(value)
-            elif key == 'Y-coordinaat':
-                meta['y'] = float(value)
-        elif key == 'Locatie':
-            meta['locatie'] = value
-            meta['name'] = value
+        if key in ["X-coordinaat", "Y-coordinaat"]:
+            if key == "X-coordinaat":
+                meta["x"] = float(value)
+            elif key == "Y-coordinaat":
+                meta["y"] = float(value)
+        elif key == "Locatie":
+            meta["locatie"] = value
+            meta["name"] = value
 
     return meta
 
 
 def _read_dino_waterlvl_measurements(f, line):
-    '''
+    """
 
     Parameters
     ----------
@@ -1514,21 +1570,25 @@ def _read_dino_waterlvl_measurements(f, line):
     Returns
     -------
     measurements : pd.DataFrame
-    '''
+    """
 
-    titel = line.strip().split(',')
-    while '' in titel:
-        titel.remove('')
+    titel = line.strip().split(",")
+    while "" in titel:
+        titel.remove("")
 
     validator = np.lib._iotools.NameValidator()
     titel = [i.lower() for i in validator(titel)]
     usecols = range(0, len(titel))
 
-    measurements = pd.read_csv(f, header=None, names=titel,
-                               parse_dates=['peildatum'],
-                               index_col='peildatum',
-                               dayfirst=True,
-                               usecols=usecols)
+    measurements = pd.read_csv(
+        f,
+        header=None,
+        names=titel,
+        parse_dates=["peildatum"],
+        index_col="peildatum",
+        dayfirst=True,
+        usecols=usecols,
+    )
 
     # measurements['Stand (m t.o.v. NAP)'] = measurements['Stand (cm t.o.v. NAP)'] /100.
 
@@ -1548,29 +1608,31 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
     read_series : boolean, optional
         if False only metadata is read, default is True
     """
-    logging.info(f'reading -> {os.path.split(fname)[-1]}')
+    logging.info(f"reading -> {os.path.split(fname)[-1]}")
 
     p_meta = re.compile(
-        'Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum')
-    p_data = re.compile(
-        r'Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid')
+        "Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum"
+    )
+    p_data = re.compile(r"Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid")
 
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         line = f.readline()
-        while line != '':
+        while line != "":
             line = f.readline()
             if p_meta.match(line):
                 meta = _read_dino_waterlvl_metadata(f, line)
                 if meta:
-                    meta['metadata_available'] = True
+                    meta["metadata_available"] = True
                 else:
-                    meta['metadata_available'] = False
-                meta['filename'] = fname
+                    meta["metadata_available"] = False
+                meta["filename"] = fname
             elif p_data.match(line):
                 if read_series:
                     measurements = _read_dino_waterlvl_measurements(f, line)
                     if to_mnap and measurements is not None:
-                        measurements['stand_m_tov_nap'] = measurements['stand_cm_tov_nap'] / 100.
+                        measurements["stand_m_tov_nap"] = (
+                            measurements["stand_cm_tov_nap"] / 100.0
+                        )
                 else:
                     measurements = None
 
@@ -1578,11 +1640,17 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
 
 
 # %% General DINO methods
-def read_dino_dir(dirname, ObsClass=None,
-                  subdir='Boormonsterprofiel_Geologisch booronderzoek', suffix='.txt',
-                  unpackdir=None, force_unpack=False, preserve_datetime=False,
-                  keep_all_obs=True, **kwargs
-                  ):
+def read_dino_dir(
+    dirname,
+    ObsClass=None,
+    subdir="Boormonsterprofiel_Geologisch booronderzoek",
+    suffix=".txt",
+    unpackdir=None,
+    force_unpack=False,
+    preserve_datetime=False,
+    keep_all_obs=True,
+    **kwargs,
+):
     """Read Dino directory with point observations.
 
     to do:
@@ -1619,14 +1687,15 @@ def read_dino_dir(dirname, ObsClass=None,
     """
 
     # unzip dir
-    if dirname.endswith('.zip'):
+    if dirname.endswith(".zip"):
         zipf = dirname
         if unpackdir is None:
             dirname = tempfile.TemporaryDirectory().name
         else:
             dirname = unpackdir
-        unzip_file(zipf, dirname, force=force_unpack,
-                   preserve_datetime=preserve_datetime)
+        unzip_file(
+            zipf, dirname, force=force_unpack, preserve_datetime=preserve_datetime
+        )
 
     # read filenames
     files = os.listdir(os.path.join(dirname, subdir))
@@ -1634,8 +1703,11 @@ def read_dino_dir(dirname, ObsClass=None,
         files = [file for file in files if file.endswith(suffix)]
 
     if not files:
-        raise FileNotFoundError('no files were found in {} that end with {}'.format(
-            os.path.join(dirname, subdir), suffix))
+        raise FileNotFoundError(
+            "no files were found in {} that end with {}".format(
+                os.path.join(dirname, subdir), suffix
+            )
+        )
 
     # read individual files
     obs_list = []
@@ -1647,6 +1719,6 @@ def read_dino_dir(dirname, ObsClass=None,
         elif keep_all_obs:
             obs_list.append(obs)
         else:
-            logging.info(f'not added to collection -> {fname}')
+            logging.info(f"not added to collection -> {fname}")
 
     return obs_list

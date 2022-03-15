@@ -18,6 +18,7 @@ from . import observation as obs
 from . import util
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,14 +36,16 @@ class ObsCollection(pd.DataFrame):
     meta : dic
         metadata of the observation collection
     """
+
     # temporary properties
-    _internal_names = pd.DataFrame._internal_names + ['none']
+    _internal_names = pd.DataFrame._internal_names + ["none"]
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ['name',
-                 'meta',
-                 ]
+    _metadata = [
+        "name",
+        "meta",
+    ]
 
     def __init__(self, *args, **kwargs):
         """constructor of the ObsCollection.
@@ -51,8 +54,8 @@ class ObsCollection(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        self.name = kwargs.pop('name', '')
-        self.meta = kwargs.pop('meta', {})
+        self.name = kwargs.pop("name", "")
+        self.meta = kwargs.pop("meta", {})
 
         super(ObsCollection, self).__init__(*args, **kwargs)
 
@@ -73,13 +76,13 @@ class ObsCollection(pd.DataFrame):
         """
         otypes = self.obs.apply(lambda x: type(x)).unique()
         if otypes.shape[0] == 1:
-            logger.info('inferred observation type: {}'.format(otypes[0]))
+            logger.info("inferred observation type: {}".format(otypes[0]))
             return otypes[0]
         elif otypes.shape[0] > 1:
-            logger.info('inferred multiple otypes, types: {}'.format(otypes))
+            logger.info("inferred multiple otypes, types: {}".format(otypes))
             return otypes
         else:
-            raise TypeError('could not infer observation type')
+            raise TypeError("could not infer observation type")
 
     def _set_metadata_value(self, iname, att_name, value, add_to_meta=False):
         """ Set a value on three different levels at once:
@@ -115,17 +118,16 @@ class ObsCollection(pd.DataFrame):
             raise ValueError(f"{iname}  not in index")
 
         self.loc[iname, att_name] = value
-        logger.info(f'set {iname}, {att_name} to {value}')
+        logger.info(f"set {iname}, {att_name} to {value}")
 
-        o = self.loc[iname, 'obs']
+        o = self.loc[iname, "obs"]
         if att_name in o._metadata:
             setattr(o, att_name, value)
-            logger.info(f'set attribute {att_name} of {iname} to {value}')
+            logger.info(f"set attribute {att_name} of {iname} to {value}")
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.info(
-                f'add {att_name} of {iname} with value {value} to meta')
+            logger.info(f"add {att_name} of {iname} with value {value} to meta")
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -148,32 +150,33 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             ObsCollection DataFrame with the 'obs' column
         """
-        meta = {'type': obs.GroundwaterObs}
+        meta = {"type": obs.GroundwaterObs}
         if isinstance(df, pd.DataFrame):
             if obs_list is None:
                 obs_list = [ObsClass() for i in range(len(df))]
-            df['obs'] = obs_list
+            df["obs"] = obs_list
         else:
-            raise TypeError(
-                f'df should be type pandas.DataFrame not {type(df)}')
+            raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
 
         return cls(df, meta=meta)
 
     @classmethod
-    def from_dino(cls,
-                  dirname=None,
-                  extent=None,
-                  bbox=None,
-                  locations=None,
-                  ObsClass=obs.GroundwaterObs,
-                  subdir='Grondwaterstanden_Put',
-                  suffix='1.csv',
-                  unpackdir=None,
-                  force_unpack=False,
-                  preserve_datetime=False,
-                  keep_all_obs=True,
-                  name=None,
-                  **kwargs):
+    def from_dino(
+        cls,
+        dirname=None,
+        extent=None,
+        bbox=None,
+        locations=None,
+        ObsClass=obs.GroundwaterObs,
+        subdir="Grondwaterstanden_Put",
+        suffix="1.csv",
+        unpackdir=None,
+        force_unpack=False,
+        preserve_datetime=False,
+        keep_all_obs=True,
+        name=None,
+        **kwargs,
+    ):
         """Read dino data within an extent from the server or from a directory
         with downloaded files.
 
@@ -216,63 +219,78 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_dino import (read_dino_dir, download_dino_within_extent,
-                                 download_dino_groundwater_bulk)
+        from .io.io_dino import (
+            read_dino_dir,
+            download_dino_within_extent,
+            download_dino_groundwater_bulk,
+        )
 
         if dirname is not None:
             # read dino directory
             if name is None:
                 name = subdir
 
-            meta = {'dirname': dirname,
-                    'type': ObsClass,
-                    'suffix': suffix,
-                    'unpackdir': unpackdir,
-                    'force_unpack': force_unpack,
-                    'preserve_datetime': preserve_datetime,
-                    'keep_all_obs': keep_all_obs
-                    }
+            meta = {
+                "dirname": dirname,
+                "type": ObsClass,
+                "suffix": suffix,
+                "unpackdir": unpackdir,
+                "force_unpack": force_unpack,
+                "preserve_datetime": preserve_datetime,
+                "keep_all_obs": keep_all_obs,
+            }
 
-            obs_list = read_dino_dir(dirname,
-                                     ObsClass,
-                                     subdir,
-                                     suffix,
-                                     unpackdir,
-                                     force_unpack,
-                                     preserve_datetime,
-                                     keep_all_obs,
-                                     **kwargs)
+            obs_list = read_dino_dir(
+                dirname,
+                ObsClass,
+                subdir,
+                suffix,
+                unpackdir,
+                force_unpack,
+                preserve_datetime,
+                keep_all_obs,
+                **kwargs,
+            )
 
         elif extent is not None or bbox is not None:
             # read dino data within extent
             if ObsClass == obs.GroundwaterObs:
-                layer = 'grondwatermonitoring'
+                layer = "grondwatermonitoring"
             else:
                 raise NotImplementedError(
-                    'cannot download {} from Dino'.format(ObsClass))
+                    "cannot download {} from Dino".format(ObsClass)
+                )
 
             if name is None:
-                name = '{} from DINO'.format(layer)
+                name = "{} from DINO".format(layer)
 
             meta = kwargs.copy()
-            meta.update({'extent': extent,
-                         'bbox': bbox,
-                         'layer': layer,
-                         'keep_all_obs': keep_all_obs})
+            meta.update(
+                {
+                    "extent": extent,
+                    "bbox": bbox,
+                    "layer": layer,
+                    "keep_all_obs": keep_all_obs,
+                }
+            )
 
             obs_list = download_dino_within_extent(
-                extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
-                keep_all_obs=keep_all_obs, **kwargs)
+                extent=extent,
+                bbox=bbox,
+                ObsClass=ObsClass,
+                layer=layer,
+                keep_all_obs=keep_all_obs,
+                **kwargs,
+            )
 
         elif locations is not None:
             name = "DINO"
 
-            meta = {'dirname': dirname,
-                    'type': ObsClass}
+            meta = {"dirname": dirname, "type": ObsClass}
 
-            obs_list = download_dino_groundwater_bulk(locations,
-                                                      ObsClass=ObsClass,
-                                                      **kwargs)
+            obs_list = download_dino_groundwater_bulk(
+                locations, ObsClass=ObsClass, **kwargs
+            )
         else:
             raise ValueError("No data source provided!")
 
@@ -280,11 +298,15 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_dino_server(cls, extent=None, bbox=None,
-                         ObsClass=obs.GroundwaterObs,
-                         name=None, keep_all_obs=True,
-                         **kwargs
-                         ):
+    def from_dino_server(
+        cls,
+        extent=None,
+        bbox=None,
+        ObsClass=obs.GroundwaterObs,
+        name=None,
+        keep_all_obs=True,
+        **kwargs,
+    ):
         """Read dino data from a server.
 
         Parameters
@@ -312,25 +334,30 @@ class ObsCollection(pd.DataFrame):
         """
 
         warnings.warn(
-            "this method will be removed in future versions,"
-            " use from_dino instead", DeprecationWarning)
+            "this method will be removed in future versions," " use from_dino instead",
+            DeprecationWarning,
+        )
 
         from .io.io_dino import download_dino_within_extent
 
         if ObsClass == obs.GroundwaterObs:
-            layer = 'grondwatermonitoring'
+            layer = "grondwatermonitoring"
         else:
-            raise NotImplementedError(
-                'cannot download {} from Dino'.format(ObsClass))
+            raise NotImplementedError("cannot download {} from Dino".format(ObsClass))
 
         if name is None:
-            name = '{} from DINO'.format(layer)
+            name = "{} from DINO".format(layer)
 
         meta = kwargs.copy()
 
         obs_list = download_dino_within_extent(
-            extent=extent, bbox=bbox, ObsClass=ObsClass, layer=layer,
-            keep_all_obs=keep_all_obs, **kwargs)
+            extent=extent,
+            bbox=bbox,
+            ObsClass=ObsClass,
+            layer=layer,
+            keep_all_obs=keep_all_obs,
+            **kwargs,
+        )
 
         obs_df = util._obslist_to_frame(obs_list)
 
@@ -340,17 +367,19 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_dino_dir(cls,
-                      dirname=None,
-                      ObsClass=obs.GroundwaterObs,
-                      subdir='Grondwaterstanden_Put',
-                      suffix='1.csv',
-                      unpackdir=None,
-                      force_unpack=False,
-                      preserve_datetime=False,
-                      keep_all_obs=True,
-                      name=None,
-                      **kwargs):
+    def from_dino_dir(
+        cls,
+        dirname=None,
+        ObsClass=obs.GroundwaterObs,
+        subdir="Grondwaterstanden_Put",
+        suffix="1.csv",
+        unpackdir=None,
+        force_unpack=False,
+        preserve_datetime=False,
+        keep_all_obs=True,
+        name=None,
+        **kwargs,
+    ):
         """Read a dino directory.
 
         Parameters
@@ -384,22 +413,24 @@ class ObsCollection(pd.DataFrame):
         """
 
         warnings.warn(
-            "this method will be removed in future "
-            "versions, use from_dino instead", DeprecationWarning)
+            "this method will be removed in future " "versions, use from_dino instead",
+            DeprecationWarning,
+        )
 
         from .io.io_dino import read_dino_dir
 
         if name is None:
             name = subdir
 
-        meta = {'dirname': dirname,
-                'type': ObsClass,
-                'suffix': suffix,
-                'unpackdir': unpackdir,
-                'force_unpack': force_unpack,
-                'preserve_datetime': preserve_datetime,
-                'keep_all_obs': keep_all_obs
-                }
+        meta = {
+            "dirname": dirname,
+            "type": ObsClass,
+            "suffix": suffix,
+            "unpackdir": unpackdir,
+            "force_unpack": force_unpack,
+            "preserve_datetime": preserve_datetime,
+            "keep_all_obs": keep_all_obs,
+        }
 
         obs_list = read_dino_dir(
             dirname,
@@ -410,7 +441,8 @@ class ObsCollection(pd.DataFrame):
             force_unpack,
             preserve_datetime,
             keep_all_obs,
-            **kwargs)
+            **kwargs,
+        )
 
         obs_df = util._obslist_to_frame(obs_list)
 
@@ -418,17 +450,18 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_artdino_dir(
-            cls,
-            dirname=None,
-            ObsClass=obs.GroundwaterObs,
-            subdir='csv',
-            suffix='.csv',
-            unpackdir=None,
-            force_unpack=False,
-            preserve_datetime=False,
-            keep_all_obs=True,
-            name=None,
-            **kwargs):
+        cls,
+        dirname=None,
+        ObsClass=obs.GroundwaterObs,
+        subdir="csv",
+        suffix=".csv",
+        unpackdir=None,
+        force_unpack=False,
+        preserve_datetime=False,
+        keep_all_obs=True,
+        name=None,
+        **kwargs,
+    ):
         """Read a dino directory.
 
         Parameters
@@ -468,14 +501,15 @@ class ObsCollection(pd.DataFrame):
         if name is None:
             name = subdir
 
-        meta = {'dirname': dirname,
-                'type': ObsClass,
-                'suffix': suffix,
-                'unpackdir': unpackdir,
-                'force_unpack': force_unpack,
-                'preserve_datetime': preserve_datetime,
-                'keep_all_obs': keep_all_obs
-                }
+        meta = {
+            "dirname": dirname,
+            "type": ObsClass,
+            "suffix": suffix,
+            "unpackdir": unpackdir,
+            "force_unpack": force_unpack,
+            "preserve_datetime": preserve_datetime,
+            "keep_all_obs": keep_all_obs,
+        }
 
         obs_list = read_artdino_dir(
             dirname,
@@ -486,19 +520,30 @@ class ObsCollection(pd.DataFrame):
             force_unpack,
             preserve_datetime,
             keep_all_obs,
-            **kwargs)
+            **kwargs,
+        )
 
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_fews_xml(cls, file_or_dir=None,
-                      xmlstring=None, ObsClass=obs.GroundwaterObs,
-                      name='fews', translate_dic=None, filterdict=None,
-                      locations=None, to_mnap=True, remove_nan=True,
-                      low_memory=True, unpackdir=None, force_unpack=False,
-                      preserve_datetime=False):
+    def from_fews_xml(
+        cls,
+        file_or_dir=None,
+        xmlstring=None,
+        ObsClass=obs.GroundwaterObs,
+        name="fews",
+        translate_dic=None,
+        filterdict=None,
+        locations=None,
+        to_mnap=True,
+        remove_nan=True,
+        low_memory=True,
+        unpackdir=None,
+        force_unpack=False,
+        preserve_datetime=False,
+    ):
         """Read one or several FEWS PI-XML files.
 
         Parameters
@@ -546,49 +591,65 @@ class ObsCollection(pd.DataFrame):
         from .io.io_fews import read_xml_filelist, read_xmlstring
 
         if translate_dic is None:
-            translate_dic = {'locationId': 'locatie'}
+            translate_dic = {"locationId": "locatie"}
 
-        meta = {'type': ObsClass}
+        meta = {"type": ObsClass}
 
-        if (file_or_dir is not None):
+        if file_or_dir is not None:
             # get files
             dirname, unzip_fnames = util.get_files(
-                file_or_dir, ext=".xml", unpackdir=unpackdir,
-                force_unpack=force_unpack, preserve_datetime=preserve_datetime)
-            meta.update({'filename': dirname})
+                file_or_dir,
+                ext=".xml",
+                unpackdir=unpackdir,
+                force_unpack=force_unpack,
+                preserve_datetime=preserve_datetime,
+            )
+            meta.update({"filename": dirname})
 
-            obs_list = read_xml_filelist(unzip_fnames,
-                                         ObsClass,
-                                         directory=dirname,
-                                         translate_dic=translate_dic,
-                                         filterdict=filterdict,
-                                         locations=locations,
-                                         to_mnap=to_mnap,
-                                         remove_nan=remove_nan,
-                                         low_memory=low_memory)
+            obs_list = read_xml_filelist(
+                unzip_fnames,
+                ObsClass,
+                directory=dirname,
+                translate_dic=translate_dic,
+                filterdict=filterdict,
+                locations=locations,
+                to_mnap=to_mnap,
+                remove_nan=remove_nan,
+                low_memory=low_memory,
+            )
 
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
 
         elif (file_or_dir is None) and (xmlstring is not None):
-            obs_list = read_xmlstring(xmlstring,
-                                      ObsClass,
-                                      translate_dic=translate_dic,
-                                      filterdict=filterdict,
-                                      locationIds=locations,
-                                      low_memory=low_memory,
-                                      to_mnap=to_mnap,
-                                      remove_nan=remove_nan)
+            obs_list = read_xmlstring(
+                xmlstring,
+                ObsClass,
+                translate_dic=translate_dic,
+                filterdict=filterdict,
+                locationIds=locations,
+                low_memory=low_memory,
+                to_mnap=to_mnap,
+                remove_nan=remove_nan,
+            )
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError(
-                'either specify variables file_or_dir or xmlstring')
+            raise ValueError("either specify variables file_or_dir or xmlstring")
 
     @classmethod
-    def from_imod(cls, obs_collection, ml, runfile, mtime, model_ws,
-                  modelname='', nlay=None, exclude_layers=0):
+    def from_imod(
+        cls,
+        obs_collection,
+        ml,
+        runfile,
+        mtime,
+        model_ws,
+        modelname="",
+        nlay=None,
+        exclude_layers=0,
+    ):
         """Read imod model results at point locations.
 
         Parameters
@@ -611,18 +672,34 @@ class ObsCollection(pd.DataFrame):
             exclude modellayers from being read from imod
         """
         from .io.io_modflow import read_imod_results
-        mo_list = read_imod_results(obs_collection, ml, runfile,
-                                    mtime, model_ws,
-                                    modelname=modelname, nlay=nlay,
-                                    exclude_layers=exclude_layers)
+
+        mo_list = read_imod_results(
+            obs_collection,
+            ml,
+            runfile,
+            mtime,
+            model_ws,
+            modelname=modelname,
+            nlay=nlay,
+            exclude_layers=exclude_layers,
+        )
         obs_df = util._obslist_to_frame(mo_list)
         return cls(obs_df, name=modelname)
 
     @classmethod
-    def from_knmi(cls, locations=None, stns=None, xmid=None, ymid=None,
-                  meteo_vars=("RH"), name='', start=None,
-                  end=None, ObsClass=None,
-                  **kwargs):
+    def from_knmi(
+        cls,
+        locations=None,
+        stns=None,
+        xmid=None,
+        ymid=None,
+        meteo_vars=("RH"),
+        name="",
+        start=None,
+        end=None,
+        ObsClass=None,
+        **kwargs,
+    ):
         """get knmi observations from a list of locations or a list of
         stations.
 
@@ -769,45 +846,54 @@ class ObsCollection(pd.DataFrame):
         if ObsClass is None:
             ObsClass = []
             for meteovar in meteo_vars:
-                if meteovar in ('RH', 'RD'):
+                if meteovar in ("RH", "RD"):
                     ObsClass.append(obs.PrecipitationObs)
-                elif meteovar == 'EV24':
+                elif meteovar == "EV24":
                     ObsClass.append(obs.EvaporationObs)
                 else:
                     ObsClass.append(obs.MeteoObs)
 
         elif isinstance(ObsClass, type):
-            if issubclass(ObsClass, (obs.PrecipitationObs, obs.EvaporationObs,
-                                     obs.MeteoObs)):
+            if issubclass(
+                ObsClass, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
+            ):
                 ObsClass = [ObsClass] * len(meteo_vars)
             else:
-                TypeError('must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple')
+                TypeError(
+                    "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
+                )
         elif isinstance(ObsClass, (list, tuple)):
             pass
         else:
-            TypeError('must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple')
+            TypeError(
+                "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
+            )
 
         meta = {}
-        meta['start'] = start
-        meta['end'] = end
-        meta['name'] = name
-        meta['ObsClass'] = ObsClass
-        meta['meteo_vars'] = meteo_vars
+        meta["start"] = start
+        meta["end"] = end
+        meta["name"] = name
+        meta["ObsClass"] = ObsClass
+        meta["meteo_vars"] = meteo_vars
 
-        obs_list = get_knmi_obslist(locations, stns,
-                                    xmid, ymid,
-                                    meteo_vars,
-                                    ObsClass=ObsClass,
-                                    start=start,
-                                    end=end,
-                                    **kwargs)
+        obs_list = get_knmi_obslist(
+            locations,
+            stns,
+            xmid,
+            ymid,
+            meteo_vars,
+            ObsClass=ObsClass,
+            start=start,
+            end=end,
+            **kwargs,
+        )
 
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_list(cls, obs_list, name=''):
+    def from_list(cls, obs_list, name=""):
         """read observations from a list of obs objects.
 
         Parameters
@@ -821,12 +907,11 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name)
 
     @classmethod
-    def from_menyanthes(cls, fname, name='', ObsClass=obs.GroundwaterObs):
+    def from_menyanthes(cls, fname, name="", ObsClass=obs.GroundwaterObs):
 
         from .io.io_menyanthes import read_file
 
-        menyanthes_meta = {'filename': fname,
-                           'type': ObsClass}
+        menyanthes_meta = {"filename": fname, "type": ObsClass}
 
         obs_list = read_file(fname, ObsClass)
         obs_df = util._obslist_to_frame(obs_list)
@@ -834,9 +919,17 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, meta=menyanthes_meta)
 
     @classmethod
-    def from_modflow(cls, obs_collection, ml, hds_arr, mtime,
-                     modelname='', nlay=None, exclude_layers=None,
-                     method="linear"):
+    def from_modflow(
+        cls,
+        obs_collection,
+        ml,
+        hds_arr,
+        mtime,
+        modelname="",
+        nlay=None,
+        exclude_layers=None,
+        method="linear",
+    ):
         """Read modflow groundwater heads at points in obs_collection.
 
         Parameters
@@ -860,18 +953,25 @@ class ObsCollection(pd.DataFrame):
             default is linear
         """
         from .io.io_modflow import read_modflow_results
-        mo_list = read_modflow_results(obs_collection, ml, hds_arr,
-                                       mtime, modelname=modelname,
-                                       nlay=nlay, method=method,
-                                       exclude_layers=exclude_layers)
+
+        mo_list = read_modflow_results(
+            obs_collection,
+            ml,
+            hds_arr,
+            mtime,
+            modelname=modelname,
+            nlay=nlay,
+            method=method,
+            exclude_layers=exclude_layers,
+        )
         obs_df = util._obslist_to_frame(mo_list)
 
         return cls(obs_df)
-   
 
     @classmethod
-    def from_waterinfo(cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs,
-                       progressbar=True, **kwargs):
+    def from_waterinfo(
+        cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs, progressbar=True, **kwargs
+    ):
         """Read waterinfo file or directory.
 
         Parameters
@@ -892,53 +992,61 @@ class ObsCollection(pd.DataFrame):
         """
         from .io import io_waterinfo
 
-        meta = {
-            'name': name,
-            'type': ObsClass,
-            'filename': file_or_dir
-        }
+        meta = {"name": name, "type": ObsClass, "filename": file_or_dir}
 
         obs_list = io_waterinfo.read_waterinfo_obs(
-            file_or_dir, ObsClass, progressbar=progressbar, **kwargs)
+            file_or_dir, ObsClass, progressbar=progressbar, **kwargs
+        )
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
-    def from_wiski(cls, dirname, ObsClass=obs.GroundwaterObs, suffix='.csv',
-                   unpackdir=None, force_unpack=False, preserve_datetime=False,
-                   keep_all_obs=True, **kwargs):
+    def from_wiski(
+        cls,
+        dirname,
+        ObsClass=obs.GroundwaterObs,
+        suffix=".csv",
+        unpackdir=None,
+        force_unpack=False,
+        preserve_datetime=False,
+        keep_all_obs=True,
+        **kwargs,
+    ):
 
         from .io.io_wiski import read_wiski_dir
 
-        meta = {'dirname': dirname,
-                'type': ObsClass,
-                'suffix': suffix,
-                'unpackdir': unpackdir,
-                'force_unpack': force_unpack,
-                'preserver_datetime': preserve_datetime,
-                'keep_all_obs': keep_all_obs
-                }
+        meta = {
+            "dirname": dirname,
+            "type": ObsClass,
+            "suffix": suffix,
+            "unpackdir": unpackdir,
+            "force_unpack": force_unpack,
+            "preserver_datetime": preserve_datetime,
+            "keep_all_obs": keep_all_obs,
+        }
 
         name = "wiski_import"
-        obs_list = read_wiski_dir(dirname,
-                                  ObsClass=ObsClass,
-                                  suffix=suffix,
-                                  unpackdir=unpackdir,
-                                  force_unpack=force_unpack,
-                                  preserve_datetime=preserve_datetime,
-                                  keep_all_obs=keep_all_obs,
-                                  **kwargs)
+        obs_list = read_wiski_dir(
+            dirname,
+            ObsClass=ObsClass,
+            suffix=suffix,
+            unpackdir=unpackdir,
+            force_unpack=force_unpack,
+            preserve_datetime=preserve_datetime,
+            keep_all_obs=keep_all_obs,
+            **kwargs,
+        )
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import io_fews
+
         io_fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-
-    def to_gdf(self, xcol='x', ycol='y'):
+    def to_gdf(self, xcol="x", ycol="y"):
         """convert ObsCollection to GeoDataFrame.
 
         Parameters
@@ -954,23 +1062,29 @@ class ObsCollection(pd.DataFrame):
         """
         return util.df2gdf(self, xcol, ycol)
 
-    def to_report_table(self, columns=('locatie', 'filternr',
-                                       'Van', 'Tot', '# metingen')):
+    def to_report_table(
+        self, columns=("locatie", "filternr", "Van", "Tot", "# metingen")
+    ):
 
-        if 'Van' in columns:
-            self['Van'] = self.obs.apply(lambda x: x.index[0])
-        if 'Tot' in columns:
-            self['Tot'] = self.obs.apply(lambda x: x.index[-1])
-        if '# metingen' in columns:
-            self['# metingen'] = self.obs.apply(lambda x: x.shape[0])
+        if "Van" in columns:
+            self["Van"] = self.obs.apply(lambda x: x.index[0])
+        if "Tot" in columns:
+            self["Tot"] = self.obs.apply(lambda x: x.index[-1])
+        if "# metingen" in columns:
+            self["# metingen"] = self.obs.apply(lambda x: x.shape[0])
 
         return self[columns]
 
-    def to_pastastore(self, pstore=None, pstore_name='',
-                      obs_column='stand_m_tov_nap',
-                      kind='oseries', add_metadata=True,
-                      conn=None,
-                      overwrite=False):
+    def to_pastastore(
+        self,
+        pstore=None,
+        pstore_name="",
+        obs_column="stand_m_tov_nap",
+        kind="oseries",
+        add_metadata=True,
+        conn=None,
+        overwrite=False,
+    ):
         """add observations to a new or existing pastastore.
 
         Parameters
@@ -998,15 +1112,20 @@ class ObsCollection(pd.DataFrame):
         """
         from .io.io_pastas import create_pastastore
 
-        pstore = create_pastastore(self, pstore, pstore_name,
-                                   add_metadata=add_metadata,
-                                   kind=kind,
-                                   obs_column=obs_column,
-                                   conn=conn, overwrite=overwrite)
+        pstore = create_pastastore(
+            self,
+            pstore,
+            pstore_name,
+            add_metadata=add_metadata,
+            kind=kind,
+            obs_column=obs_column,
+            conn=conn,
+            overwrite=overwrite,
+        )
 
         return pstore
 
-    def to_shapefile(self, fname, xcol='x', ycol='y'):
+    def to_shapefile(self, fname, xcol="x", ycol="y"):
         """save ObsCollection as shapefile.
 
         Parameters
@@ -1021,8 +1140,8 @@ class ObsCollection(pd.DataFrame):
         gdf = util.df2gdf(self, xcol, ycol)
 
         # remove obs column
-        if 'obs' in gdf.columns:
-            gdf.drop(columns='obs', inplace=True)
+        if "obs" in gdf.columns:
+            gdf.drop(columns="obs", inplace=True)
 
         # change dtypes that are not accepted for shapefiles
         for colname, coltype in gdf.dtypes.items():
