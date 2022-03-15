@@ -900,7 +900,7 @@ class EvaporationObs(MeteoObs):
         return EvaporationObs
 
     @classmethod
-    def from_knmi(cls, stn, **kwargs):
+    def from_knmi(cls, stn, penman=False, **kwargs):
         """Get an EvaporationObs timeseries from the KNMI evaporation. The
         evaporation is the Potential evapotranspiration (Makkink) (in 0.1 mm)
 
@@ -932,7 +932,31 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-
+        if penman:
+            from pyet import pm_fao56
+            tmean = super().from_knmi(stn, meteo_var='TG', **kwargs).squeeze() # [C]
+            tmin = super().from_knmi(stn, meteo_var='TN', **kwargs).squeeze()  # [C]
+            tmax = super().from_knmi(stn, meteo_var='TX', **kwargs).squeeze()  # [C]
+            wind = super().from_knmi(stn, meteo_var='FG',
+                                     **kwargs).multiply(0.1).squeeze()  # [m/s]
+            rn = super().from_knmi(stn, meteo_var='Q', **kwargs).multiply(0.01).squeeze()  # [MJ/m2]
+            n = super().from_knmi(stn, meteo_var='SQ',
+                                  **kwargs).multiply(0.1).squeeze()  # [H]
+            nn = super().from_knmi(stn, meteo_var='SP', **kwargs).squeeze()  # [H/H]
+            rhmean = super().from_knmi(stn, meteo_var='UG', **kwargs).squeeze()  # [%]
+            rhmin = super().from_knmi(stn, meteo_var='UN', **kwargs).squeeze()  # [%]
+            rhmax = super().from_knmi(stn, meteo_var='UX', **kwargs).squeeze()  # [%]
+            pressure = super().from_knmi(
+                stn, meteo_var='PG', **kwargs).squeeze()  # [kPa]
+            lat = super().from_knmi(
+                stn).meta['LAT_north'][f'{stn}'] * np.pi / 180  # [radians]
+            elevation = super().from_knmi(stn).meta['ALT_m'][f'{stn}']  # [m]
+            pet = pm_fao56(tmean, wind, rn=rn, g=0, tmax=tmax, tmin=tmin,
+                           rhmax=rhmax, rhmin=rhmin, rh=rhmean,
+                           pressure=pressure, elevation=elevation,
+                           lat=lat, n=n, nn=nn, a=1.35, b=-0.35)
+            return pet
+        
         return super().from_knmi(stn,
                                  meteo_var='EV24',
                                  **kwargs)
