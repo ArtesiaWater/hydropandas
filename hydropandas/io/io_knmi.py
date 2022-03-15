@@ -973,9 +973,6 @@ def read_knmi_daily_meteo(f):
     return df, variables, stations
 
 
-# return knmi_series
-
-
 def get_knmi_hourly_api(url, stn, meteo_var, start, end):
 
     data = {
@@ -1147,7 +1144,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 
     List of possible variables:
         neerslagstations:
-        RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de 
+        RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
         voorafgaande dag tot 0800 utc op de vermelde datum
 
         meteostations:
