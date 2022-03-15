@@ -1380,7 +1380,7 @@ def split_extent(method, extent0, dx=1000, dy=None, **kwargs):
                 gdf = gdft
             else:
                 gdf = pd.concat((gdf, gdft))
-    
+
     return gdf
 
 
@@ -1523,11 +1523,8 @@ def download_dino_within_extent(
     return obs_list
 
 
-# %% DINO waterlevel observations
-
-
 def _read_dino_waterlvl_metadata(f, line):
-    """
+    """ read dino waterlevel metadata
 
     Parameters
     ----------

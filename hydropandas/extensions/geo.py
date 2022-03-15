@@ -282,8 +282,8 @@ class GeoAccessor:
     def get_nearest_polygon(
         self, gdf=None, xcol_obs="x", ycol_obs="y", multiple_polygons="error"
     ):
-        """get nearest polygon for each point in the obs collection.
-        Function also works for lines instead of polygons.
+        """get nearest polygon for each point in the obs collection. Function
+        also works for lines instead of polygons.
 
         Parameters
         ----------
