@@ -394,6 +394,7 @@ class GeoAccessor:
 
         if inplace:
             self._obj._update_inplace(new_oc)
+            return 
         else:
             return new_oc
 
