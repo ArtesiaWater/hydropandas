@@ -6,10 +6,8 @@ additional attributes and methods.
 More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
-import os
-import warnings
-import numbers
 
+import warnings
 import numpy as np
 import pandas as pd
 import geopandas as gpd

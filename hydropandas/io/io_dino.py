@@ -1524,7 +1524,7 @@ def download_dino_within_extent(
 
 
 def _read_dino_waterlvl_metadata(f, line):
-    """ read dino waterlevel metadata
+    """read dino waterlevel metadata
 
     Parameters
     ----------

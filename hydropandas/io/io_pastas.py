@@ -5,8 +5,6 @@
 """
 import logging
 import numbers
-
-import pandas as pd
 import pastastore as pst
 
 logger = logging.getLogger(__name__)
