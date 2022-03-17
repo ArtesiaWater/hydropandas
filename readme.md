@@ -10,7 +10,7 @@
 # hydropandas
 
 The Hydropandas package allows users to manipulate data using 
-all of the wonderful features included in pandas extented with custom methods and attributes related to the timeseries. The hydropandas 
+all of the wonderful features included in pandas extented with custom methods and attributes related to hydrological timeseries. The hydropandas 
 module extends pandas.DataFrame with extra functionality and stores metadata 
 related to the type of measurements.
 
@@ -68,7 +68,9 @@ currently 5 specific Obs classes for different types of measurements:
 -   GroundwaterQualityObs: for groundwater quality measurements
 -   WaterlvlObs: for surface water level measurements
 -   ModelObs: for "observations" from a MODFLOW model
--   KnmiObs: for (daily) KNMI observations
+-   MeteoObs: for meteorological observations
+-   PrecipitationObs: for precipitation observations, subclass of MeteoObs
+-   EvaporationObs: for evaporation observations, subclass of MeteoObs
 
 Each of these Obs classes is essentially a pandas DataFrame with additional 
 methods and attributes related to the type of measurement that it holds. 
@@ -83,7 +85,7 @@ in a different row. Each row contains metadata (e.g. latitude and longitude
 of the observation point) and the Obs object (DataFrame) that holds the 
 measurements. It is recommended to let an ObsCollection contain only one Obs 
 type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate 
-ObsCollection for 5 KnmiObs.
+ObsCollection for 5 PrecipitationObs.
 
 Like the Obs class, the ObsCollection class contains a bunch of methods for 
 reading data from different sources. See the next section for supported data 
@@ -96,21 +98,15 @@ Currently supported datasources that can be read:
 -   FEWS PI-XML
 -   [DINO](https://www.dinoloket.nl) csv
 -   WISKI csv
--   [Pastas](https://github.com/pastas/pastas) projects (deprecated)
 -   [Pastastore](https://github.com/pastas/pastastore), for managing Pastas timeseries and models
--   [PyStore](https://github.com/ranaroussi/pystore), a fast datastore for pandas timeseries
--   [Arctic](https://github.com/man-group/arctic), a timeseries / dataframe database that sits atop MongoDB
 -   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script) data
 -   MODFLOW groundwater models
 -   IMOD groundwater models
 
-An ObsCollection can be exported to:
+An ObsCollection can be written to:
 
--   Shapefile
--   Pastas projects (deprecated)
--   Pastastore
--   Arctic
--   Pystore
+-   a shapefile
+-   a PastaStore
 
 ## Dependencies
 
@@ -120,8 +116,6 @@ automatically with `pip` on Windows. These packages are:
 -   GDAL
 -   Fiona
 -   Shapely
--   Python-snappy
--   Fastparquet
 
 If you do not have these packages already it is recommended to first try 
 installing them with `conda install <pkg>`. Otherwise, read the instructions 
@@ -145,8 +139,6 @@ important):
 1.  `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
 2.  `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
 3.  `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
-4.  `pip install python_snappy-0.5.4-cp38-cp38-win_amd64.whl`
-5.  `pip install fastparquet-0.4.1-cp38-cp38-win_amd64.whl`
 
 After you've done this you can install hydropandas using 
 `pip install hydropandas`.

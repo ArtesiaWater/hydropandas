@@ -1,4 +1,3 @@
-
 import os
 import zipfile
 
@@ -8,9 +7,16 @@ from pyproj import Transformer
 from tqdm import tqdm
 
 
-def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
-                        value_col=None, location_col=None,
-                        xcol=None, ycol=None, transform_coords=True):
+def read_waterinfo_file(
+    path_to_file,
+    index_cols=None,
+    return_metadata=False,
+    value_col=None,
+    location_col=None,
+    xcol=None,
+    ycol=None,
+    transform_coords=True,
+):
     """Read waterinfo file (CSV or zip)
 
     Parameters
@@ -33,16 +39,17 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
         f = path_to_file
     elif path_to_file.endswith(".zip"):
         zf = zipfile.ZipFile(path_to_file)
-        f = zf.open('{}.csv'.format(name))
+        f = zf.open("{}.csv".format(name))
     else:
-        raise NotImplementedError("File type '{}' not supported!".format(
-            os.path.splitext(path_to_file)[-1]))
+        raise NotImplementedError(
+            "File type '{}' not supported!".format(os.path.splitext(path_to_file)[-1])
+        )
 
     if index_cols is None:
-        index_cols = ['WAARNEMINGDATUM', 'WAARNEMINGTIJD']
+        index_cols = ["WAARNEMINGDATUM", "WAARNEMINGTIJD"]
 
     if value_col is None:
-        value_col = 'NUMERIEKEWAARDE'
+        value_col = "NUMERIEKEWAARDE"
 
     if location_col is None:
         location_col = "MEETPUNT_IDENTIFICATIE"
@@ -54,38 +61,41 @@ def read_waterinfo_file(path_to_file, index_cols=None, return_metadata=False,
         ycol = "Y"
 
     # read data
-    df = pd.read_csv(f,
-                     sep=';',
-                     decimal=',',
-                     encoding="ISO-8859-1",
-                     parse_dates=[index_cols],
-                     dayfirst=True,
-                     infer_datetime_format=True,
-                     index_col="_".join(index_cols))
+    df = pd.read_csv(
+        f,
+        sep=";",
+        decimal=",",
+        encoding="ISO-8859-1",
+        parse_dates=[index_cols],
+        dayfirst=True,
+        infer_datetime_format=True,
+        index_col="_".join(index_cols),
+    )
 
     # do some conversions
-    df.loc[df[value_col]
-           == 999999999, value_col] = np.NaN
-    df[value_col] = df[value_col] / 100.
+    df.loc[df[value_col] == 999999999, value_col] = np.NaN
+    df[value_col] = df[value_col] / 100.0
 
     # parse metadata into dict
     if return_metadata:
         if len(df[location_col].unique()) > 1:
-            raise ValueError("File contains data for more than one location!"
-                             " Use ObsCollection.from_waterinfo()!")
+            raise ValueError(
+                "File contains data for more than one location!"
+                " Use ObsCollection.from_waterinfo()!"
+            )
 
         metadata = {}
 
         if transform_coords:
-            transformer = Transformer.from_crs('epsg:25831', 'epsg:28992')
-            x, y = transformer.transform(df[xcol].iloc[-1],
-                                         df[ycol].iloc[-1])
+            transformer = Transformer.from_crs("epsg:25831", "epsg:28992")
+            x, y = transformer.transform(df[xcol].iloc[-1], df[ycol].iloc[-1])
         else:
-            x = df[xcol].iloc[-1] / 100.
-            y = df[ycol].iloc[-1] / 100.
+            x = df[xcol].iloc[-1] / 100.0
+            y = df[ycol].iloc[-1] / 100.0
         metadata["name"] = df[location_col].iloc[-1]
         metadata["x"] = x
         metadata["y"] = y
+        metadata["filename"] = f
 
         return df, metadata
     else:
@@ -115,8 +125,7 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
         files = [file_or_dir]
     # directory with waterinfo files (zips or csvs)
     elif os.path.isdir(file_or_dir):
-        files = [os.path.join(file_or_dir, f)
-                 for f in sorted(os.listdir(file_or_dir))]
+        files = [os.path.join(file_or_dir, f) for f in sorted(os.listdir(file_or_dir))]
     else:
         raise NotImplementedError("Provide path to file or directory!")
 
@@ -128,16 +137,15 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
 
     transformer = Transformer.from_crs("epsg:25831", "epsg:28992")
 
-    for filenm in (tqdm(files) if progressbar else files):
+    for filenm in tqdm(files) if progressbar else files:
         # read file or zip
         df = read_waterinfo_file(filenm, location_col=location_col, **kwargs)
 
         # get location and convert to m RD
         for stn in df[location_col].unique():
             mask = df[location_col] == stn
-            x, y = transformer.transform(df.loc[mask, 'X'][-1],
-                                         df.loc[mask, 'Y'][-1])
-            metadata = {"name": stn, "x": x, "y": y}
+            x, y = transformer.transform(df.loc[mask, "X"][-1], df.loc[mask, "Y"][-1])
+            metadata = {"name": stn, "x": x, "y": y, "filename": filenm}
 
             # add to list
             o = ObsClass(df.loc[mask, :], meta=metadata, **metadata)
