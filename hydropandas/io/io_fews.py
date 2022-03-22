@@ -12,18 +12,22 @@ from lxml.etree import iterparse
 logger = logging.getLogger(__name__)
 
 
-def read_xml_fname(fname, ObsClass,
-                   translate_dic=None,
-                   low_memory=True,
-                   locationIds=None,
-                   filterdict=None,
-                   return_events=True,
-                   keep_flags=(0, 1),
-                   return_df=False,
-                   tags=('series', 'header', 'event'),
-                   to_mnap=False,
-                   remove_nan=False
-                   ):
+def read_xml_fname(
+    fname,
+    ObsClass,
+    translate_dic=None,
+    low_memory=True,
+    locationIds=None,
+    filterdict=None,
+    return_events=True,
+    keep_flags=(0, 1),
+    return_df=False,
+    tags=("series", "header", "event"),
+    skip_errors=True,
+    to_mnap=False,
+    remove_nan=False,
+    **kwargs
+):
     """Read an xml filename into a list of observations objects.
 
     Parameters
@@ -69,39 +73,48 @@ def read_xml_fname(fname, ObsClass,
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {'locationId': 'locatie'}
+        translate_dic = {"locationId": "locatie"}
 
     if low_memory is True:
-        obs_list = iterparse_pi_xml(fname,
-                                    ObsClass,
-                                    translate_dic=translate_dic,
-                                    locationIds=locationIds,
-                                    filterdict=filterdict,
-                                    return_events=return_events,
-                                    keep_flags=keep_flags,
-                                    return_df=return_df,
-                                    tags=tags
-                                    )
+        obs_list = iterparse_pi_xml(
+            fname,
+            ObsClass,
+            translate_dic=translate_dic,
+            locationIds=locationIds,
+            filterdict=filterdict,
+            return_events=return_events,
+            keep_flags=keep_flags,
+            return_df=return_df,
+            tags=tags,
+            skip_errors=skip_errors,
+        )
     else:
         tree = etree.parse(fname)
         root = tree.getroot()
-        obs_list = read_xml_root(root,
-                                 ObsClass,
-                                 translate_dic=translate_dic,
-                                 locationIds=locationIds,
-                                 to_mnap=to_mnap,
-                                 remove_nan=remove_nan
-                                 )
+        obs_list = read_xml_root(
+            root,
+            ObsClass,
+            translate_dic=translate_dic,
+            locationIds=locationIds,
+            to_mnap=to_mnap,
+            remove_nan=remove_nan,
+        )
 
     return obs_list
 
 
-def iterparse_pi_xml(fname, ObsClass,
-                     translate_dic=None, filterdict=None,
-                     locationIds=None, return_events=True,
-                     keep_flags=(0, 1), return_df=False,
-                     tags=('series', 'header', 'event')
-                     ):
+def iterparse_pi_xml(
+    fname,
+    ObsClass,
+    translate_dic=None,
+    filterdict=None,
+    locationIds=None,
+    return_events=True,
+    keep_flags=(0, 1),
+    return_df=False,
+    tags=("series", "header", "event"),
+    skip_errors=False,
+):
     """Read a FEWS XML-file with measurements, memory efficient.
 
     Parameters
@@ -141,9 +154,9 @@ def iterparse_pi_xml(fname, ObsClass,
         list of timeseries if 'return_df' is False
     """
     if translate_dic is None:
-        translate_dic = {'locationId': 'locatie'}
+        translate_dic = {"locationId": "locatie"}
 
-    tags = ['{{http://www.wldelft.nl/fews/PI}}{}'.format(tag) for tag in tags]
+    tags = ["{{http://www.wldelft.nl/fews/PI}}{}".format(tag) for tag in tags]
 
     context = iterparse(fname, tag=tags)
     # _, root = next(context)
@@ -157,8 +170,9 @@ def iterparse_pi_xml(fname, ObsClass,
         if element.tag.endswith("header"):
             header = {}
             for h_attr in element:
-                tag = h_attr.tag.replace("{{{0}}}".format(
-                    "http://www.wldelft.nl/fews/PI"), "")
+                tag = h_attr.tag.replace(
+                    "{{{0}}}".format("http://www.wldelft.nl/fews/PI"), ""
+                )
 
                 if tag.startswith("locationId"):
                     logger.info(f"reading {h_attr.text}")
@@ -168,8 +182,7 @@ def iterparse_pi_xml(fname, ObsClass,
                     loc = h_attr.text
                     if loc not in locationIds:
                         element.clear()
-                        logger.info(
-                            f" ... skipping '{loc}', not in locationIds")
+                        logger.info(f" ... skipping '{loc}', not in locationIds")
                         continue
 
                 if filterdict is not None:
@@ -178,8 +191,10 @@ def iterparse_pi_xml(fname, ObsClass,
                             attr = h_attr.text
                             if attr not in v:
                                 element.clear()
-                                logger.info(f" ... skipping '{attr}' not "
-                                            f"in accepted values for '{k}'")
+                                logger.info(
+                                    f" ... skipping '{attr}' not "
+                                    f"in accepted values for '{k}'"
+                                )
                                 continue
 
                 if h_attr.text is not None:
@@ -207,7 +222,7 @@ def iterparse_pi_xml(fname, ObsClass,
                     continue
             events.append({**element.attrib})
 
-        elif element.tag.endswith('series'):
+        elif element.tag.endswith("series"):
             # if specific locations are provided only read those
             if locationIds is not None:
                 if loc not in locationIds:
@@ -231,21 +246,19 @@ def iterparse_pi_xml(fname, ObsClass,
             else:
                 df = pd.DataFrame(events)
                 df.index = pd.to_datetime(
-                    [d + " " + t for d, t in zip(df['date'], df['time'])],
-                    errors="coerce")
+                    [d + " " + t for d, t in zip(df["date"], df["time"])],
+                    errors="coerce",
+                )
                 df.drop(columns=["date", "time"], inplace=True)
                 if return_events:
-                    df['value'] = pd.to_numeric(
-                        df['value'], errors="coerce")
-                    df['flag'] = pd.to_numeric(df['flag'])
+                    df["value"] = pd.to_numeric(df["value"], errors="coerce")
+                    df["flag"] = pd.to_numeric(df["flag"])
                     ts = df
                 else:
-                    mask = df['flag'].isin(keep_flags)
-                    ts = pd.to_numeric(
-                        df.loc[mask, 'value'], errors="coerce")
+                    mask = df["flag"].isin(keep_flags)
+                    ts = pd.to_numeric(df.loc[mask, "value"], errors="coerce")
 
-            o, header = _obs_from_meta(ts, header, translate_dic,
-                                       ObsClass)
+            o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             header_list.append(header)
             obs_list.append(o)
 
@@ -254,16 +267,22 @@ def iterparse_pi_xml(fname, ObsClass,
 
     if return_df:
         for h, s in zip(header_list, obs_list):
-            h['series'] = s
+            h["series"] = s
         return pd.DataFrame(header_list)
     else:
         return obs_list
 
 
-def read_xmlstring(xmlstring, ObsClass,
-                   translate_dic=None, filterdict=None,
-                   locationIds=None, low_memory=True,
-                   to_mnap=False, remove_nan=False):
+def read_xmlstring(
+    xmlstring,
+    ObsClass,
+    translate_dic=None,
+    filterdict=None,
+    locationIds=None,
+    low_memory=True,
+    to_mnap=False,
+    remove_nan=False,
+):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
     obtained using a fews api.
 
@@ -295,28 +314,38 @@ def read_xmlstring(xmlstring, ObsClass,
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {'locationId': 'locatie'}
+        translate_dic = {"locationId": "locatie"}
 
     if low_memory:
-        obs_list = iterparse_pi_xml(StringIO(xmlstring),
-                                    ObsClass,
-                                    translate_dic=translate_dic,
-                                    filterdict=filterdict,
-                                    locationIds=locationIds)
+        obs_list = iterparse_pi_xml(
+            StringIO(xmlstring),
+            ObsClass,
+            translate_dic=translate_dic,
+            filterdict=filterdict,
+            locationIds=locationIds,
+        )
     else:
         root = etree.fromstring(xmlstring)
-        obs_list = read_xml_root(root,
-                                 ObsClass,
-                                 translate_dic=translate_dic,
-                                 locationIds=locationIds,
-                                 to_mnap=to_mnap,
-                                 remove_nan=remove_nan)
+        obs_list = read_xml_root(
+            root,
+            ObsClass,
+            translate_dic=translate_dic,
+            locationIds=locationIds,
+            to_mnap=to_mnap,
+            remove_nan=remove_nan,
+        )
 
     return obs_list
 
 
-def read_xml_root(root, ObsClass, translate_dic=None,
-                  locationIds=None, to_mnap=False, remove_nan=False):
+def read_xml_root(
+    root,
+    ObsClass,
+    translate_dic=None,
+    locationIds=None,
+    to_mnap=False,
+    remove_nan=False,
+):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
     Parameters
@@ -343,44 +372,44 @@ def read_xml_root(root, ObsClass, translate_dic=None,
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {'locationId': 'locatie'}
+        translate_dic = {"locationId": "locatie"}
 
     obs_list = []
     for item in root:
-        if item.tag.endswith('series'):
+        if item.tag.endswith("series"):
             header = {}
             date = []
             time = []
             events = []
             for subitem in item:
-                if subitem.tag.endswith('header'):
+                if subitem.tag.endswith("header"):
                     for subsubitem in subitem:
-                        prop = subsubitem.tag.split('}')[-1]
+                        prop = subsubitem.tag.split("}")[-1]
                         val = subsubitem.text
-                        if prop == 'x' or prop == 'y' or prop == 'lat' or prop == 'lon':
+                        if prop == "x" or prop == "y" or prop == "lat" or prop == "lon":
                             val = float(val)
                         header[prop] = val
-                        if prop == 'locationId':
-                            logger.info(f'read {val}')
-                elif subitem.tag.endswith('event'):
-                    date.append(subitem.attrib.pop('date'))
-                    time.append(subitem.attrib.pop('time'))
+                        if prop == "locationId":
+                            logger.info(f"read {val}")
+                elif subitem.tag.endswith("event"):
+                    date.append(subitem.attrib.pop("date"))
+                    time.append(subitem.attrib.pop("time"))
                     events.append({**subitem.attrib})
 
             # combine events in a dataframe
             index = pd.to_datetime(
-                [d + ' ' + t for d, t in zip(date, time)],
-                errors="coerce")
+                [d + " " + t for d, t in zip(date, time)], errors="coerce"
+            )
             ts = pd.DataFrame(events, index=index, dtype=float)
 
             if remove_nan and (not ts.empty):
-                ts.dropna(subset=['value'], inplace=True)
+                ts.dropna(subset=["value"], inplace=True)
             if to_mnap and (not ts.empty):
-                ts['stand_m_tov_nap'] = ts['value']
+                ts["stand_m_tov_nap"] = ts["value"]
 
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             if locationIds is not None:
-                if header['locatie'] in locationIds:
+                if header["locatie"] in locationIds:
                     obs_list.append(o)
             else:
                 obs_list.append(o)
@@ -427,13 +456,17 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         metadata_available = True
 
     if ObsClass in [GroundwaterObs, WaterlvlObs]:
-        o = ObsClass(ts, x=x, y=y, meta=header,
-                     name=header['locatie'],
-                     locatie=header['locatie'],
-                     metadata_available=metadata_available)
+        o = ObsClass(
+            ts,
+            x=x,
+            y=y,
+            meta=header,
+            name=header["locatie"],
+            locatie=header["locatie"],
+            metadata_available=metadata_available,
+        )
     else:
-        o = ObsClass(ts, x=x, y=y, meta=header,
-                     name=header['locatie'])
+        o = ObsClass(ts, x=x, y=y, meta=header, name=header["locatie"])
 
     return o, header
 
@@ -447,8 +480,7 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
         path to XML file
     """
 
-    assert fname.endswith(
-        ".xml"), "Output file should have '.xml' extension!"
+    assert fname.endswith(".xml"), "Output file should have '.xml' extension!"
 
     # first line of XML file
     line0 = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -458,12 +490,13 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
     FS = r"http://www.wldelft.nl/fews/fs"
     XSI = r"http://www.w3.org/2001/XMLSchema-instance"
     schemaLocation = (
-        r"http://fews.wldelft.nl/schemas/version1.0"
-        r"/Pi-schemas/pi_timeseries.xsd"
+        r"http://fews.wldelft.nl/schemas/version1.0" r"/Pi-schemas/pi_timeseries.xsd"
     )
-    timeseriesline = ('<TimeSeries xmlns="{NS}" xmlns:xsi="{XSI}" '
-                      'xsi:schemaLocation="{NS} {schema}" version="{version}" '
-                      'xmlns:fs="{FS}">\n')
+    timeseriesline = (
+        '<TimeSeries xmlns="{NS}" xmlns:xsi="{XSI}" '
+        'xsi:schemaLocation="{NS} {schema}" version="{version}" '
+        'xmlns:fs="{FS}">\n'
+    )
 
     # line templates
     paramline = "<{tag}>{param}</{tag}>\n"
@@ -476,8 +509,7 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
                 NS=NS, FS=FS, XSI=XSI, schema=schemaLocation, version=version
             )
         )
-        tzline = "\t" + \
-            paramline.format(tag="timeZone", param=timezone)
+        tzline = "\t" + paramline.format(tag="timeZone", param=timezone)
         f.write(tzline)
 
         for o in obs_coll.obs:
@@ -501,13 +533,12 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
                             hdate = o.index[-1].strftime("%Y-%m-%d")
                             htime = o.index[-1].strftime("%H:%M:%S")
                         else:
-                            raise(e)
+                            raise (e)
                     hline = '<{tag} date="{date}" time="{time}"/>\n'.format(
                         tag=htag, date=hdate, time=htime
                     )
                 elif htag.endswith("timeStep"):
-                    hline = '<{tag} unit="{unit}"/>\n'.format(
-                        tag=htag, unit=hval)
+                    hline = '<{tag} unit="{unit}"/>\n'.format(tag=htag, unit=hval)
                 else:
                     hline = paramline.format(tag=htag, param=hval)
                 hlines.append(3 * "\t" + hline)
@@ -523,19 +554,12 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
             )
             # set date and time attributes
             events = (
-                2 * "\t" +
-                '<event date="' +
-                dates.values +
-                '" time="' +
-                times.values
+                2 * "\t" + '<event date="' + dates.values + '" time="' + times.values
             )
             # loop through columns and add to event
             for icol in o.columns:
                 val = o[icol].astype(str)
-                events += (
-                    '" {}="'.format(icol) +
-                    val.values
-                )
+                events += '" {}="'.format(icol) + val.values
             # close event
             events += '"/>\n'
             # write to file
@@ -546,10 +570,18 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
         f.write("</TimeSeries>\n")
 
 
-def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
-                      translate_dic=None, filterdict=None,
-                      to_mnap=False, remove_nan=False, low_memory=True,
-                      **kwargs):
+def read_xml_filelist(
+    fnames,
+    ObsClass,
+    directory=None,
+    locations=None,
+    translate_dic=None,
+    filterdict=None,
+    to_mnap=False,
+    remove_nan=False,
+    low_memory=True,
+    **kwargs
+):
     """Read a list of xml files into a list of observation objects.
 
     Parameters
@@ -586,7 +618,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {'locationId': 'locatie'}
+        translate_dic = {"locationId": "locatie"}
 
     obs_list = []
     nfiles = len(fnames)
@@ -602,12 +634,14 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
             fullpath = os.path.join(directory, ixml)
 
         # read xml fname
-        obs_list += read_xml_fname(fullpath,
-                                   ObsClass,
-                                   translate_dic=translate_dic,
-                                   filterdict=filterdict,
-                                   low_memory=low_memory,
-                                   locationIds=locations,
-                                   **kwargs)
+        obs_list += read_xml_fname(
+            fullpath,
+            ObsClass,
+            translate_dic=translate_dic,
+            filterdict=filterdict,
+            low_memory=low_memory,
+            locationIds=locations,
+            **kwargs
+        )
 
     return obs_list

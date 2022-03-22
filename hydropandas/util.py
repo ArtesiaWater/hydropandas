@@ -32,11 +32,13 @@ def _obslist_to_frame(obs_list):
         DataFrame containing all data
     """
     if len(obs_list) > 0:
-        obs_df = pd.DataFrame([o.to_collection_dict() for o in obs_list],
-                              columns=obs_list[0].to_collection_dict().keys())
-        obs_df.set_index('name', inplace=True)
+        obs_df = pd.DataFrame(
+            [o.to_collection_dict() for o in obs_list],
+            columns=obs_list[0].to_collection_dict().keys(),
+        )
+        obs_df.set_index("name", inplace=True)
         if obs_df.index.duplicated().any():
-            logger.warning('multiple observations with the same name')
+            logger.warning("multiple observations with the same name")
     else:
         obs_df = pd.DataFrame()
     return obs_df
@@ -64,17 +66,18 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     if os.path.exists(dst):
         if not force:
             print(
-                "File not unzipped. Destination already exists. Use 'force=True' to unzip.")
+                "File not unzipped. Destination already exists. Use 'force=True' to unzip."
+            )
             return
     if preserve_datetime:
-        zipf = zipfile.ZipFile(src, 'r')
+        zipf = zipfile.ZipFile(src, "r")
         for f in zipf.infolist():
             zipf.extract(f, path=dst)
             date_time = time.mktime(f.date_time + (0, 0, -1))
             os.utime(os.path.join(dst, f.filename), (date_time, date_time))
         zipf.close()
     else:
-        zipf = zipfile.ZipFile(src, 'r')
+        zipf = zipfile.ZipFile(src, "r")
         zipf.extractall(dst)
         zipf.close()
     return 1
@@ -102,7 +105,7 @@ def unzip_changed_files(zipname, pathname, check_time=True, check_size=False):
             else:
                 extract = True
             if extract:
-                logging.info('extracting {}'.format(info.filename))
+                logging.info("extracting {}".format(info.filename))
                 zf.extract(info.filename, pathname)
                 # set the correct modification time
                 # (which is the time of extraction by default)
@@ -117,8 +120,9 @@ def matlab2datetime(tindex):
     return day + dayfrac
 
 
-def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
-              preserve_datetime=False):
+def get_files(
+    file_or_dir, ext, unpackdir=None, force_unpack=False, preserve_datetime=False
+):
     """internal method to get list of files with specific extension from
     dirname.
 
@@ -139,8 +143,7 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
     # again.
     if unpackdir is not None:
         if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
-            raise ValueError("Please specify a different folder to unpack"
-                             " files!")
+            raise ValueError("Please specify a different folder to unpack" " files!")
     # identify whether file_or_dir started as zip
     if file_or_dir.endswith(".zip"):
         iszip = True
@@ -148,20 +151,20 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
         iszip = False
 
     # unzip dir
-    if file_or_dir.endswith('.zip'):
+    if file_or_dir.endswith(".zip"):
         zipf = file_or_dir
         if unpackdir is None:
             file_or_dir = tempfile.TemporaryDirectory().name
         else:
             file_or_dir = unpackdir
-        unzip_file(zipf, file_or_dir, force=force_unpack,
-                   preserve_datetime=preserve_datetime)
+        unzip_file(
+            zipf, file_or_dir, force=force_unpack, preserve_datetime=preserve_datetime
+        )
 
     # file_or_dir is directory
     if os.path.isdir(file_or_dir):
         # check for zips in dir
-        zip_fnames = [i for i in os.listdir(
-            file_or_dir) if i.endswith(".zip")]
+        zip_fnames = [i for i in os.listdir(file_or_dir) if i.endswith(".zip")]
         if len(zip_fnames) > 0:
             # unzip zips
             if unpackdir is None:
@@ -169,24 +172,25 @@ def get_files(file_or_dir, ext, unpackdir=None, force_unpack=False,
             else:
                 dirname = unpackdir
             for zipf in zip_fnames:
-                unzip_file(os.path.join(file_or_dir, zipf), dirname,
-                           force=True,
-                           preserve_datetime=preserve_datetime)
+                unzip_file(
+                    os.path.join(file_or_dir, zipf),
+                    dirname,
+                    force=True,
+                    preserve_datetime=preserve_datetime,
+                )
                 # remove intermediate zipfiles if initial file_or_dir was zip
                 if iszip:
                     os.remove(os.path.join(file_or_dir, zipf))
         else:
             dirname = file_or_dir
         # get all files with extension ext
-        unzip_fnames = [i for i in os.listdir(
-            dirname) if i.endswith(ext)]
+        unzip_fnames = [i for i in os.listdir(dirname) if i.endswith(ext)]
     elif os.path.isfile(file_or_dir):
         # file_or_dir is actually an xml
         unzip_fnames = [os.path.basename(file_or_dir)]  # get file name
         dirname = os.path.dirname(file_or_dir)  # get directory path
     else:
-        raise NotImplementedError("Cannot parse 'file_or_dir': "
-                                  f"{file_or_dir}!")
+        raise NotImplementedError("Cannot parse 'file_or_dir': " f"{file_or_dir}!")
 
     return dirname, unzip_fnames
 
@@ -223,7 +227,7 @@ def interp_weights(xy, uv, d=2):
     vertices = np.take(tri.simplices, simplex, axis=0)
     temp = np.take(tri.transform, simplex, axis=0)
     delta = uv - temp[:, d]
-    bary = np.einsum('njk,nk->nj', temp[:, :d, :], delta)
+    bary = np.einsum("njk,nk->nj", temp[:, :d, :], delta)
     return vertices, np.hstack((bary, 1 - bary.sum(axis=1, keepdims=True)))
 
 
@@ -253,18 +257,20 @@ def interpolate(values, vtx, wts, fill_value=np.nan):
     ----------
     .. [2] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
-    ret = np.einsum('nj,nj->n', np.take(values, vtx), wts)
+    ret = np.einsum("nj,nj->n", np.take(values, vtx), wts)
     ret[np.any(wts < 0, axis=1)] = fill_value
     return ret
 
 
-def df2gdf(df, xcol='x', ycol='y'):
+def df2gdf(df, xcol="x", ycol="y"):
     """Make a GeoDataFrame from a DataFrame, assuming the geometry are
     points."""
     from geopandas import GeoDataFrame
     from shapely.geometry import Point
-    gdf = GeoDataFrame(df.copy(), geometry=[Point(
-        (s[xcol], s[ycol])) for i, s in df.iterrows()])
+
+    gdf = GeoDataFrame(
+        df.copy(), geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()]
+    )
     return gdf
 
 
