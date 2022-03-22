@@ -18,9 +18,12 @@ def read_xml_fname(fname, ObsClass,
                    locationIds=None,
                    filterdict=None,
                    return_events=True,
-                   keep_flags=(0, 1), return_df=False,
+                   keep_flags=(0, 1),
+                   return_df=False,
                    tags=('series', 'header', 'event'),
-                   skip_errors=True, to_mnap=False, remove_nan=False):
+                   to_mnap=False,
+                   remove_nan=False
+                   ):
     """Read an xml filename into a list of observations objects.
 
     Parameters
@@ -53,13 +56,12 @@ def read_xml_fname(fname, ObsClass,
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
-    skip_errors: bool, optional
-        if True, continue after error, else raise error
     to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe,
+        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
-        nan values is also lost
+        nan values is also lost, only used if low_memory=False
 
     Returns
     -------
@@ -78,8 +80,8 @@ def read_xml_fname(fname, ObsClass,
                                     return_events=return_events,
                                     keep_flags=keep_flags,
                                     return_df=return_df,
-                                    tags=tags,
-                                    skip_errors=skip_errors)
+                                    tags=tags
+                                    )
     else:
         tree = etree.parse(fname)
         root = tree.getroot()
@@ -88,7 +90,8 @@ def read_xml_fname(fname, ObsClass,
                                  translate_dic=translate_dic,
                                  locationIds=locationIds,
                                  to_mnap=to_mnap,
-                                 remove_nan=remove_nan)
+                                 remove_nan=remove_nan
+                                 )
 
     return obs_list
 
@@ -97,8 +100,8 @@ def iterparse_pi_xml(fname, ObsClass,
                      translate_dic=None, filterdict=None,
                      locationIds=None, return_events=True,
                      keep_flags=(0, 1), return_df=False,
-                     tags=('series', 'header', 'event'),
-                     skip_errors=False):
+                     tags=('series', 'header', 'event')
+                     ):
     """Read a FEWS XML-file with measurements, memory efficient.
 
     Parameters
@@ -128,8 +131,6 @@ def iterparse_pi_xml(fname, ObsClass,
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
-    skip_errors: bool, optional
-        if True, continue after error, else raise error
 
     Returns
     -------
@@ -282,10 +283,11 @@ def read_xmlstring(xmlstring, ObsClass,
         whether to use xml-parsing method with lower memory footprint,
         default is True
     to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe,
+        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
-        nan values is also lost
+        nan values is also lost, only used if low_memory=False
 
     Returns
     -------
@@ -546,7 +548,8 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
 def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
                       translate_dic=None, filterdict=None,
-                      to_mnap=False, remove_nan=False, low_memory=True):
+                      to_mnap=False, remove_nan=False, low_memory=True,
+                      **kwargs):
     """Read a list of xml files into a list of observation objects.
 
     Parameters
@@ -568,10 +571,11 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
         accepted names as dictionary values to keep in final result,
         i.e. {"locationId": ["B001", "B002"]}
     to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe,
+        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
-        nan values is also lost
+        nan values is also lost, only used if low_memory=False
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
@@ -603,6 +607,7 @@ def read_xml_filelist(fnames, ObsClass, directory=None, locations=None,
                                    translate_dic=translate_dic,
                                    filterdict=filterdict,
                                    low_memory=low_memory,
-                                   locationIds=locations)
+                                   locationIds=locations,
+                                   **kwargs)
 
     return obs_list
