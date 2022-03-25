@@ -1782,7 +1782,27 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
     return et
 
 
-def get_evaporation(stn=260, et_type='auto', start='2020', end='2021', **kwargs):
+def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
+    """Collect different types of (reference) evaporation 
+    from KNMI weather stations
+
+    Parameters
+    ----------
+    stn : str
+        station number, defaults to 260 De Bilt
+    et_type : str
+        Choice between 'auto', 'penman', 'makkink' or 'hargraves'.
+        Defaults to 'auto' which collects the KNMI Makkink EV24 evaporation.
+    start : pd.TimeStamp
+        start time of observations.
+    end : pd.TimeStamp
+        end time of observations.
+
+    Returns
+    ------
+    DataFrame
+
+    """    
     if et_type == 'auto':
         et, meta = get_knmi_timeseries_stn(stn, meteo_var='EV24',
                                            start=start, end=end, **kwargs)
