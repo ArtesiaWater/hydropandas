@@ -45,12 +45,13 @@ class Obs(DataFrame):
     filename : str
         filename with data of observation point
     """
+
     # temporary properties
-    _internal_names = DataFrame._internal_names + ['none']
+    _internal_names = DataFrame._internal_names + ["none"]
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ['name', 'x', 'y', 'meta', 'filename']
+    _metadata = ["name", "x", "y", "meta", "filename"]
 
     def __init__(self, *args, **kwargs):
         """constructor of Obs class.
@@ -59,11 +60,11 @@ class Obs(DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        self.x = kwargs.pop('x', np.nan)
-        self.y = kwargs.pop('y', np.nan)
-        self.name = kwargs.pop('name', '')
-        self.meta = kwargs.pop('meta', {})
-        self.filename = kwargs.pop('filename', '')
+        self.x = kwargs.pop("x", np.nan)
+        self.y = kwargs.pop("y", np.nan)
+        self.name = kwargs.pop("name", "")
+        self.meta = kwargs.pop("meta", {})
+        self.filename = kwargs.pop("filename", "")
 
         super(Obs, self).__init__(*args, **kwargs)
 
@@ -72,10 +73,10 @@ class Obs(DataFrame):
         buf = StringIO("")
 
         # write metadata properties
-        buf.write('-----metadata------\n')
+        buf.write("-----metadata------\n")
         for att in self._metadata:
-            buf.write(f'{att} : {getattr(self, att)} \n')
-        buf.write('\n')
+            buf.write(f"{att} : {getattr(self, att)} \n")
+        buf.write("\n")
 
         if self._info_repr():
             self.info(buf=buf)
@@ -127,13 +128,13 @@ class Obs(DataFrame):
 
         attrs = self._metadata.copy()
         if not include_meta:
-            attrs.remove('meta')
+            attrs.remove("meta")
 
         d = {}
         for att in attrs:
             d[att] = getattr(self, att)
 
-        d['obs'] = self
+        d["obs"] = self
 
         return d
 
@@ -154,11 +155,15 @@ class GroundwaterObs(Obs):
       the measurement point.
     """
 
-    _metadata = Obs._metadata + \
-        ['locatie', 'filternr',
-         'bovenkant_filter', 'onderkant_filter',
-         'maaiveld', 'meetpunt', 'metadata_available'
-         ]
+    _metadata = Obs._metadata + [
+        "locatie",
+        "filternr",
+        "bovenkant_filter",
+        "onderkant_filter",
+        "maaiveld",
+        "meetpunt",
+        "metadata_available",
+    ]
 
     def __init__(self, *args, **kwargs):
         """
@@ -170,13 +175,13 @@ class GroundwaterObs(Obs):
         plotting and other methods will work automatically without changing
         the default arguments.
         """
-        self.locatie = kwargs.pop('locatie', '')
-        self.filternr = kwargs.pop('filternr', '')
-        self.maaiveld = kwargs.pop('maaiveld', np.nan)
-        self.meetpunt = kwargs.pop('meetpunt', np.nan)
-        self.bovenkant_filter = kwargs.pop('bovenkant_filter', np.nan)
-        self.onderkant_filter = kwargs.pop('onderkant_filter', np.nan)
-        self.metadata_available = kwargs.pop('metadata_available', np.nan)
+        self.locatie = kwargs.pop("locatie", "")
+        self.filternr = kwargs.pop("filternr", "")
+        self.maaiveld = kwargs.pop("maaiveld", np.nan)
+        self.meetpunt = kwargs.pop("meetpunt", np.nan)
+        self.bovenkant_filter = kwargs.pop("bovenkant_filter", np.nan)
+        self.onderkant_filter = kwargs.pop("onderkant_filter", np.nan)
+        self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(GroundwaterObs, self).__init__(*args, **kwargs)
 
@@ -185,10 +190,16 @@ class GroundwaterObs(Obs):
         return GroundwaterObs
 
     @classmethod
-    def from_dino(cls, fname=None, location=None, filternr=1.,
-                  tmin="1900-01-01", tmax="2040-01-01",
-                  split_cluster=True,
-                  **kwargs):
+    def from_dino(
+        cls,
+        fname=None,
+        location=None,
+        filternr=1.0,
+        tmin="1900-01-01",
+        tmax="2040-01-01",
+        split_cluster=True,
+        **kwargs,
+    ):
         """download dino data from the server.
 
         Parameters
@@ -212,40 +223,41 @@ class GroundwaterObs(Obs):
             fname is not None and otherwise to io_dino.findMeetreeks
         """
         from .io import io_dino
+
         if fname is not None:
             # read dino csv file
-            measurements, meta = io_dino.read_dino_groundwater_csv(
-                fname, **kwargs)
+            measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
 
             return cls(measurements, meta=meta, **meta)
 
         elif location is not None:
-            measurements, meta = io_dino.download_dino_groundwater(location,
-                                                                   filternr,
-                                                                   tmin, tmax,
-                                                                   split_cluster,
-                                                                   **kwargs)
+            measurements, meta = io_dino.download_dino_groundwater(
+                location, filternr, tmin, tmax, split_cluster, **kwargs
+            )
 
-            if meta['metadata_available']:
-                return cls(measurements, meta=meta,
-                           x=meta.pop('x'), y=meta.pop('y'),
-                           onderkant_filter=meta.pop('onderkant_filter'),
-                           bovenkant_filter=meta.pop('bovenkant_filter'),
-                           name=meta.pop('name'),
-                           metadata_available=meta.pop('metadata_available'),
-                           locatie=meta.pop('locatie'),
-                           maaiveld=meta.pop('maaiveld'),
-                           filternr=meta.pop('filternr'))
+            if meta["metadata_available"]:
+                return cls(
+                    measurements,
+                    meta=meta,
+                    x=meta.pop("x"),
+                    y=meta.pop("y"),
+                    onderkant_filter=meta.pop("onderkant_filter"),
+                    bovenkant_filter=meta.pop("bovenkant_filter"),
+                    name=meta.pop("name"),
+                    metadata_available=meta.pop("metadata_available"),
+                    locatie=meta.pop("locatie"),
+                    maaiveld=meta.pop("maaiveld"),
+                    filternr=meta.pop("filternr"),
+                )
             else:
                 return cls(measurements, meta=meta)
         else:
-            raise ValueError(
-                'specify fname or location to obtain groundwater heads')
+            raise ValueError("specify fname or location to obtain groundwater heads")
 
     @classmethod
-    def from_dino_server(cls, location, filternr=1.,
-                         tmin="1900-01-01", tmax="2040-01-01",
-                         **kwargs):
+    def from_dino_server(
+        cls, location, filternr=1.0, tmin="1900-01-01", tmax="2040-01-01", **kwargs
+    ):
         """download dino data from the server.
 
         Parameters
@@ -262,23 +274,29 @@ class GroundwaterObs(Obs):
             these arguments are passed to dino.findMeetreeks functie
         """
         warnings.warn(
-            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+            "this method will be removed in future versions, use from_dino instead",
+            DeprecationWarning,
+        )
 
         from .io import io_dino
-        measurements, meta = io_dino.download_dino_groundwater(location,
-                                                               filternr,
-                                                               tmin, tmax,
-                                                               **kwargs)
 
-        if meta['metadata_available']:
-            return cls(measurements, meta=meta,
-                       x=meta.pop('x'), y=meta.pop('y'),
-                       onderkant_filter=meta.pop('onderkant_filter'),
-                       bovenkant_filter=meta.pop('bovenkant_filter'),
-                       name=meta.pop('name'),
-                       locatie=meta.pop('locatie'),
-                       maaiveld=meta.pop('maaiveld'),
-                       filternr=meta.pop('filternr'))
+        measurements, meta = io_dino.download_dino_groundwater(
+            location, filternr, tmin, tmax, **kwargs
+        )
+
+        if meta["metadata_available"]:
+            return cls(
+                measurements,
+                meta=meta,
+                x=meta.pop("x"),
+                y=meta.pop("y"),
+                onderkant_filter=meta.pop("onderkant_filter"),
+                bovenkant_filter=meta.pop("bovenkant_filter"),
+                name=meta.pop("name"),
+                locatie=meta.pop("locatie"),
+                maaiveld=meta.pop("maaiveld"),
+                filternr=meta.pop("filternr"),
+            )
         else:
             return cls(measurements, meta=meta)
 
@@ -296,18 +314,21 @@ class GroundwaterObs(Obs):
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
         warnings.warn(
-            "this method will be removed in future versions, use from_dino instead", DeprecationWarning)
+            "this method will be removed in future versions, use from_dino instead",
+            DeprecationWarning,
+        )
 
         from .io import io_dino
+
         if fname is not None:
             # read dino csv file
-            measurements, meta = io_dino.read_dino_groundwater_csv(
-                fname, **kwargs)
+            measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
 
             return cls(measurements, meta=meta, **meta)
         else:
             raise ValueError(
-                'specify either the name or the filename of the measurement point')
+                "specify either the name or the filename of the measurement point"
+            )
 
     @classmethod
     def from_artdino_file(cls, fname=None, **kwargs):
@@ -323,15 +344,16 @@ class GroundwaterObs(Obs):
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
         from .io import io_dino
+
         if fname is not None:
             # read dino csv file
-            measurements, meta = io_dino.read_artdino_groundwater_csv(
-                fname, **kwargs)
+            measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
 
             return cls(measurements, meta=meta, **meta)
         else:
-            raise ValueError('specify either the name or the filename of the '
-                             'measurement point!')
+            raise ValueError(
+                "specify either the name or the filename of the " "measurement point!"
+            )
 
     @classmethod
     def from_wiski(cls, fname, **kwargs):
@@ -348,34 +370,10 @@ class GroundwaterObs(Obs):
             [description]
         """
         from .io import io_wiski
+
         data, metadata = io_wiski.read_wiski_file(fname, **kwargs)
 
         return cls(data, meta=metadata, **metadata)
-
-    @classmethod
-    def from_pystore_item(cls, item):
-        """Create GroundwaterObs DataFrame from Pystore item.
-
-        Parameters
-        ----------
-        item : pystore.item.Item
-            Pystore item
-
-        Returns
-        -------
-        GroundwaterObs
-            GroundwaterObs DataFrame
-        """
-
-        df = item.to_pandas()
-        try:
-            x = item.metadata["x"]
-            y = item.metadata["y"]
-        except KeyError:
-            x = np.nan
-            y = np.nan
-        item.metadata["datastore"] = item.datastore
-        return cls(df, x=x, y=y, meta=item.metadata)
 
 
 class GroundwaterQualityObs(Obs):
@@ -385,15 +383,19 @@ class GroundwaterQualityObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + \
-        ['locatie', 'filternr', 'maaiveld', 'metadata_available']
+    _metadata = Obs._metadata + [
+        "locatie",
+        "filternr",
+        "maaiveld",
+        "metadata_available",
+    ]
 
     def __init__(self, *args, **kwargs):
 
-        self.locatie = kwargs.pop('locatie', '')
-        self.filternr = kwargs.pop('filternr', '')
-        self.maaiveld = kwargs.pop('maaiveld', np.nan)
-        self.metadata_available = kwargs.pop('metadata_available', np.nan)
+        self.locatie = kwargs.pop("locatie", "")
+        self.filternr = kwargs.pop("filternr", "")
+        self.maaiveld = kwargs.pop("maaiveld", np.nan)
+        self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(GroundwaterQualityObs, self).__init__(*args, **kwargs)
 
@@ -413,8 +415,8 @@ class GroundwaterQualityObs(Obs):
             these arguments are passed to io_dino.read_dino_groundwater_quality_txt
         """
         from .io import io_dino
-        measurements, meta = io_dino.read_dino_groundwater_quality_txt(
-            fname, **kwargs)
+
+        measurements, meta = io_dino.read_dino_groundwater_quality_txt(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -425,12 +427,12 @@ class WaterlvlObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ['locatie', 'metadata_available']
+    _metadata = Obs._metadata + ["locatie", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
 
-        self.locatie = kwargs.pop('locatie', '')
-        self.metadata_available = kwargs.pop('metadata_available', np.nan)
+        self.locatie = kwargs.pop("locatie", "")
+        self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(WaterlvlObs, self).__init__(*args, **kwargs)
 
@@ -450,6 +452,7 @@ class WaterlvlObs(Obs):
             these arguments are passed to io_dino.read_dino_waterlvl_csv
         """
         from .io import io_dino
+
         measurements, meta = io_dino.read_dino_waterlvl_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
@@ -474,9 +477,10 @@ class WaterlvlObs(Obs):
             if file contains data for more than one location
         """
         from .io import io_waterinfo
-        df, metadata = io_waterinfo.read_waterinfo_file(fname,
-                                                        return_metadata=True,
-                                                        **kwargs)
+
+        df, metadata = io_waterinfo.read_waterinfo_file(
+            fname, return_metadata=True, **kwargs
+        )
         return cls(df, meta=metadata, **metadata)
 
 
@@ -486,11 +490,11 @@ class ModelObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ['model']
+    _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
 
-        self.model = kwargs.pop('model', '')
+        self.model = kwargs.pop("model", "")
 
         super(ModelObs, self).__init__(*args, **kwargs)
 
@@ -505,12 +509,12 @@ class MeteoObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ['station', 'meteo_var']
+    _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
 
-        self.station = kwargs.pop('station', np.nan)
-        self.meteo_var = kwargs.pop('meteo_var', '')
+        self.station = kwargs.pop("station", np.nan)
+        self.meteo_var = kwargs.pop("meteo_var", "")
 
         super(MeteoObs, self).__init__(*args, **kwargs)
 
@@ -519,10 +523,18 @@ class MeteoObs(Obs):
         return MeteoObs
 
     @classmethod
-    def from_knmi(cls, stn, meteo_var='RH', startdate=None, enddate=None,
-                  fill_missing_obs=True, interval='daily', inseason=False,
-                  use_precipitation_stn=True, use_api=True,
-                  raise_exceptions=True):
+    def from_knmi(
+        cls,
+        stn,
+        meteo_var="RH",
+        startdate=None,
+        enddate=None,
+        fill_missing_obs=True,
+        interval="daily",
+        inseason=False,
+        use_api=True,
+        raise_exceptions=True,
+    ):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
@@ -542,10 +554,6 @@ class MeteoObs(Obs):
             desired time interval for observations. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
-        use_precipitation_stn : bool, optional
-            if True a combination of neerslagstations and meteo stations are used.
-            If False only meteo stations are used to obtain precipitation data.
-            Default is True.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -555,6 +563,11 @@ class MeteoObs(Obs):
             if True you get errors when no data is returned. The default is False.
 
         List of possible variables:
+            neerslagstations:
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
+            voorafgaande dag tot 0800 utc op de vermelde datum
+
+            meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
@@ -653,28 +666,48 @@ class MeteoObs(Obs):
         """
         from .io import io_knmi
 
-        if interval == 'hourly':
-            use_precipitation_stn = False
+        if interval == "hourly" and meteo_var == "RD":
+            raise NotImplementedError(
+                "hourly values not (yet) available for precipitation stations"
+            )
 
-        settings = {'fill_missing_obs': fill_missing_obs,
-                    'interval': interval,
-                    'inseason': inseason,
-                    'use_api': use_api,
-                    'raise_exceptions': raise_exceptions,
-                    'use_precipitation_stn': use_precipitation_stn}
+        settings = {
+            "fill_missing_obs": fill_missing_obs,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+        }
 
         ts, meta = io_knmi.get_knmi_timeseries_stn(
-            stn, meteo_var, startdate, enddate, settings=settings)
+            stn, meteo_var, startdate, enddate, settings=settings
+        )
 
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var=meteo_var)
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            meteo_var=meteo_var,
+        )
 
     @classmethod
-    def from_nearest_xy(cls, x, y, meteo_var, startdate=None, enddate=None,
-                        fill_missing_obs=True, interval='daily',
-                        inseason=False, use_precipitation_stn=True,
-                        use_api=True,
-                        raise_exceptions=False):
+    def from_nearest_xy(
+        cls,
+        x,
+        y,
+        meteo_var,
+        startdate=None,
+        enddate=None,
+        fill_missing_obs=True,
+        interval="daily",
+        inseason=False,
+        use_precipitation_stn=True,
+        use_api=True,
+        raise_exceptions=False,
+    ):
         """Get a MeteoObs object from the KNMI station closest to the given
         (x,y) coördinates.
 
@@ -715,24 +748,43 @@ class MeteoObs(Obs):
         """
         from .io import io_knmi
 
-        settings = {'fill_missing_obs': fill_missing_obs,
-                    'interval': interval,
-                    'inseason': inseason,
-                    'use_api': use_api,
-                    'raise_exceptions': raise_exceptions,
-                    'use_precipitation_stn': use_precipitation_stn}
+        settings = {
+            "fill_missing_obs": fill_missing_obs,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+            "use_precipitation_stn": use_precipitation_stn,
+        }
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, meteo_var, startdate, enddate, settings=settings)
+            x, y, meteo_var, startdate, enddate, settings=settings
+        )
 
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var=meteo_var)
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            meteo_var=meteo_var,
+        )
 
     @classmethod
-    def from_obs(cls, obs, meteo_var, startdate=None, enddate=None,
-                 fill_missing_obs=True, interval='daily', inseason=False,
-                 use_precipitation_stn=True, use_api=True,
-                 raise_exceptions=False):
+    def from_obs(
+        cls,
+        obs,
+        meteo_var,
+        startdate=None,
+        enddate=None,
+        fill_missing_obs=True,
+        interval="daily",
+        inseason=False,
+        use_precipitation_stn=True,
+        use_api=True,
+        raise_exceptions=False,
+    ):
         """Get a MeteoObs object with measurements from the KNMI station
         closest to the given observation. Uses the x and y coördinates of the
         observation to obtain the nearest KNMI station. Uses the start- and
@@ -769,6 +821,11 @@ class MeteoObs(Obs):
             if True you get errors when no data is returned. The default is False.
 
         List of possible variables:
+            neerslagstations:
+            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
+            voorafgaande dag tot 0800 utc op de vermelde datum
+
+            meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
@@ -818,7 +875,7 @@ class MeteoObs(Obs):
             RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
             Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
             RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
-            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for 
+            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
             <0.05 mm)
             RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
             RHX was measured
@@ -867,12 +924,14 @@ class MeteoObs(Obs):
         """
         from .io import io_knmi
 
-        settings = {'fill_missing_obs': fill_missing_obs,
-                    'interval': interval,
-                    'inseason': inseason,
-                    'use_api': use_api,
-                    'raise_exceptions': raise_exceptions,
-                    'use_precipitation_stn': use_precipitation_stn}
+        settings = {
+            "fill_missing_obs": fill_missing_obs,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+            "use_precipitation_stn": use_precipitation_stn,
+        }
 
         x = obs.x
         y = obs.y
@@ -883,10 +942,18 @@ class MeteoObs(Obs):
             enddate = obs.index[-1]
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, meteo_var, startdate, enddate, settings=settings)
+            x, y, meteo_var, startdate, enddate, settings=settings
+        )
 
-        return cls(ts, meta=meta, station=meta['station'], x=meta['x'],
-                   y=meta['y'], name=meta['name'], meteo_var=meteo_var)
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            meteo_var=meteo_var,
+        )
 
 
 class EvaporationObs(MeteoObs):
@@ -933,9 +1000,7 @@ class EvaporationObs(MeteoObs):
         EvaporationObs object with an evaporation time series and attributes
         """
 
-        return super().from_knmi(stn,
-                                 meteo_var='EV24',
-                                 **kwargs)
+        return super().from_knmi(stn, meteo_var="EV24", **kwargs)
 
     @classmethod
     def from_nearest_xy(cls, x, y, **kwargs):
@@ -973,9 +1038,7 @@ class EvaporationObs(MeteoObs):
         EvaporationObs object with an evaporation time series and attributes
         """
 
-        return super().from_nearest_xy(x, y,
-                                       meteo_var='EV24',
-                                       **kwargs)
+        return super().from_nearest_xy(x, y, meteo_var="EV24", **kwargs)
 
     @classmethod
     def from_obs(cls, obs, **kwargs):
@@ -1014,9 +1077,7 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        return super().from_obs(obs,
-                                meteo_var='EV24',
-                                **kwargs)
+        return super().from_obs(obs, meteo_var="EV24", **kwargs)
 
 
 class PrecipitationObs(MeteoObs):
@@ -1030,7 +1091,7 @@ class PrecipitationObs(MeteoObs):
         return PrecipitationObs
 
     @classmethod
-    def from_knmi(cls, stn, **kwargs):
+    def from_knmi(cls, stn, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
         <0.05 mm).
@@ -1057,6 +1118,9 @@ class PrecipitationObs(MeteoObs):
         ----------
         stn : int or str
             measurement station e.g. 829.
+        stn_type : str, optional
+            type of measurements station. Can be 'meteo' or 'precipitation'.
+            Default is 'meteo'.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1069,9 +1133,6 @@ class PrecipitationObs(MeteoObs):
                 desired time interval for observations. The default is 'daily'.
             inseason : boolean, optional
                 flag to obtain inseason data. The default is False
-            exclude_neerslag_stn : boolean, optional
-                if True only meteostations are used to obtain precipitation data.
-                No neerslag stations are used.
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -1084,12 +1145,17 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with an evaporation time series and attributes
         """
-        return super().from_knmi(stn,
-                                 meteo_var='RH',
-                                 **kwargs)
+        if stn_type == "meteo":
+            meteo_var = "RH"
+        elif stn_type == "precipitation":
+            meteo_var = "RD"
+        else:
+            raise ValueError(f"invalid measurement station type -> {stn_type}")
+
+        return super().from_knmi(stn, meteo_var=meteo_var, **kwargs)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, **kwargs):
+    def from_nearest_xy(cls, x, y, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y)
         coördinates.
@@ -1100,6 +1166,9 @@ class PrecipitationObs(MeteoObs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
+        stn_type : str, optional
+            type of measurements station. Can be 'meteo' or 'precipitation'.
+            Default is 'meteo'.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1112,9 +1181,6 @@ class PrecipitationObs(MeteoObs):
                 desired time interval for observations. The default is 'daily'.
             inseason : boolean, optional
                 flag to obtain inseason data. The default is False
-            exclude_neerslag_stn : boolean, optional
-                if True only meteostations are used to obtain precipitation data.
-                No neerslag stations are used.
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -1127,12 +1193,17 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with a precipitation time series and attributes
         """
-        return super().from_nearest_xy(x, y,
-                                       meteo_var='RH',
-                                       **kwargs)
+        if stn_type == "meteo":
+            meteo_var = "RH"
+        elif stn_type == "precipitation":
+            meteo_var = "RD"
+        else:
+            raise ValueError(f"invalid measurement station type -> {stn_type}")
+
+        return super().from_nearest_xy(x, y, meteo_var=meteo_var, **kwargs)
 
     @classmethod
-    def from_obs(cls, obs, **kwargs):
+    def from_obs(cls, obs, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with evaporation measurements from the
         the meteo or precipitation station closest to the given observation.
         Uses the x and y coördinates of the observation to obtain the nearest
@@ -1144,6 +1215,9 @@ class PrecipitationObs(MeteoObs):
         ----------
         obs : hydropandas.Obs
             Observation object.
+        stn_type : str, optional
+            type of measurements station. Can be 'meteo' or 'precipitation'.
+            Default is 'meteo'.
         **kwargs
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1156,9 +1230,6 @@ class PrecipitationObs(MeteoObs):
                 desired time interval for observations. The default is 'daily'.
             inseason : boolean, optional
                 flag to obtain inseason data. The default is False
-            exclude_neerslag_stn : boolean, optional
-                if True only meteostations are used to obtain precipitation data.
-                No neerslag stations are used.
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
@@ -1171,6 +1242,12 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with a precipitation time series and attributes
         """
-        return super().from_obs(obs,
-                                meteo_var='RH',
-                                **kwargs)
+
+        if stn_type == "meteo":
+            meteo_var = "RH"
+        elif stn_type == "precipitation":
+            meteo_var = "RD"
+        else:
+            raise ValueError(f"invalid measurement station type -> {stn_type}")
+
+        return super().from_obs(obs, meteo_var=meteo_var, **kwargs)

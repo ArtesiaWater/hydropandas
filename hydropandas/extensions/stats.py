@@ -54,11 +54,17 @@ class StatsAccessor:
         """
 
         if isinstance(min_obs, str):
-            pblist = {o.name: o.stats.consecutive_obs_years(
-                min_obs=self._obj.loc[o.name, min_obs], col=col) for o in self._obj.obs}
+            pblist = {
+                o.name: o.stats.consecutive_obs_years(
+                    min_obs=self._obj.loc[o.name, min_obs], col=col
+                )
+                for o in self._obj.obs
+            }
         else:
-            pblist = {o.name: o.stats.consecutive_obs_years(
-                min_obs=min_obs, col=col) for o in self._obj.obs}
+            pblist = {
+                o.name: o.stats.consecutive_obs_years(min_obs=min_obs, col=col)
+                for o in self._obj.obs
+            }
         df = pd.DataFrame.from_dict(pblist)
         return df
 
@@ -88,8 +94,9 @@ class StatsAccessor:
 
         return self._obj.obs.apply(lambda o: o.loc[tmin:tmax, col].mean())
 
-    def get_no_of_observations(self, column_name='stand_m_tov_nap',
-                               after_date=None, before_date=None):
+    def get_no_of_observations(
+        self, column_name="stand_m_tov_nap", after_date=None, before_date=None
+    ):
         """get number of non-nan values of a column in the observation df.
 
         Parameters
@@ -107,8 +114,9 @@ class StatsAccessor:
         collection.
         """
 
-        def get_num_obs(o, column_name=column_name, after_date=after_date,
-                        before_date=before_date):
+        def get_num_obs(
+            o, column_name=column_name, after_date=after_date, before_date=before_date
+        ):
             try:
                 return o[after_date:before_date][column_name].dropna().count()
             except KeyError:
@@ -116,9 +124,13 @@ class StatsAccessor:
 
         return self._obj.obs.apply(get_num_obs)
 
-    def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
-                          winter_months=[1, 2, 3, 4, 11, 12],
-                          summer_months=[5, 6, 7, 8, 9, 10]):
+    def get_seasonal_stat(
+        self,
+        column_name="stand_m_tov_nap",
+        stat="mean",
+        winter_months=(1, 2, 3, 4, 11, 12),
+        summer_months=(5, 6, 7, 8, 9, 10),
+    ):
         """get statistics per season.
 
         Parameters
@@ -127,9 +139,9 @@ class StatsAccessor:
             column name of the  observation data you want stats for
         stat : str, optional
             type of statistics, all statisics from df.describe() are available
-        winter_months : list of int, optional
+        winter_months : tuple of int, optional
             month number of winter months
-        summer_months : list of int, optional
+        summer_months : tuple of int, optional
             month number of summer months
 
 
@@ -140,8 +152,11 @@ class StatsAccessor:
 
         df_list = []
         for o in self._obj.obs.values:
-            df_list.append(o.stats.get_seasonal_stat(column_name, stat,
-                                                     winter_months, summer_months))
+            df_list.append(
+                o.stats.get_seasonal_stat(
+                    column_name, stat, winter_months, summer_months
+                )
+            )
 
         return pd.concat(df_list)
 
@@ -157,14 +172,17 @@ class StatsAccessor:
         date_first_measurement = [o.index.min() for o in self._obj.obs.values]
         date_last_measurement = [o.index.max() for o in self._obj.obs.values]
 
-        first_last_obs = pd.DataFrame(index=self._obj.index,
-                                      data={'date_first_measurement': date_first_measurement,
-                                            'date_last_measurement': date_last_measurement})
+        first_last_obs = pd.DataFrame(
+            index=self._obj.index,
+            data={
+                "date_first_measurement": date_first_measurement,
+                "date_last_measurement": date_last_measurement,
+            },
+        )
 
         return first_last_obs
 
-    def get_min(self, column_name='stand_m_tov_nap',
-                after_date=None, before_date=None):
+    def get_min(self, column_name="stand_m_tov_nap", after_date=None, before_date=None):
         """get the minimum value of every obs object.
 
         Parameters
@@ -182,8 +200,9 @@ class StatsAccessor:
         collection.
         """
 
-        def get_min_obs(o, column_name=column_name, after_date=after_date,
-                        before_date=before_date):
+        def get_min_obs(
+            o, column_name=column_name, after_date=after_date, before_date=before_date
+        ):
             try:
                 return o[after_date:before_date][column_name].dropna().min()
             except KeyError:
@@ -191,8 +210,7 @@ class StatsAccessor:
 
         return self._obj.obs.apply(get_min_obs)
 
-    def get_max(self, column_name='stand_m_tov_nap',
-                after_date=None, before_date=None):
+    def get_max(self, column_name="stand_m_tov_nap", after_date=None, before_date=None):
         """get the maximum value of every obs object.
 
         Parameters
@@ -210,8 +228,9 @@ class StatsAccessor:
         collection.
         """
 
-        def get_max_obs(o, column_name=column_name, after_date=after_date,
-                        before_date=before_date):
+        def get_max_obs(
+            o, column_name=column_name, after_date=after_date, before_date=before_date
+        ):
             try:
                 return o[after_date:before_date][column_name].dropna().max()
             except KeyError:
@@ -225,9 +244,13 @@ class StatsAccessorObs:
     def __init__(self, obs):
         self._obj = obs
 
-    def get_seasonal_stat(self, column_name='stand_m_tov_nap', stat='mean',
-                          winter_months=[1, 2, 3, 4, 11, 12],
-                          summer_months=[5, 6, 7, 8, 9, 10]):
+    def get_seasonal_stat(
+        self,
+        column_name="stand_m_tov_nap",
+        stat="mean",
+        winter_months=(1, 2, 3, 4, 11, 12),
+        summer_months=(5, 6, 7, 8, 9, 10),
+    ):
         """get statistics per season.
 
         Parameters
@@ -236,9 +259,9 @@ class StatsAccessorObs:
             column name of the  observation data you want stats for
         stat : str, optional
             type of statistics, all statisics from df.describe() are available
-        winter_months : list of int, optional
+        winter_months : tuple of int, optional
             month number of winter months
-        summer_months : list of int, optional
+        summer_months : tuple of int, optional
             month number of summer months
 
 
@@ -249,15 +272,31 @@ class StatsAccessorObs:
         """
 
         if self._obj.empty:
-            df = pd.DataFrame(index=[self._obj.name], data={'winter_{}'.format(stat): [np.nan],
-                                                            'summer_{}'.format(stat): [np.nan]})
+            df = pd.DataFrame(
+                index=[self._obj.name],
+                data={
+                    "winter_{}".format(stat): [np.nan],
+                    "summer_{}".format(stat): [np.nan],
+                },
+            )
         else:
-            winter_stat = self._obj.loc[self._obj.index.month.isin(
-                winter_months)].describe().loc[stat, column_name]
-            summer_stat = self._obj.loc[self._obj.index.month.isin(
-                summer_months)].describe().loc[stat, column_name]
-            df = pd.DataFrame(index=[self._obj.name], data={'winter_{}'.format(stat): [winter_stat],
-                                                            'summer_{}'.format(stat): [summer_stat]})
+            winter_stat = (
+                self._obj.loc[self._obj.index.month.isin(winter_months)]
+                .describe()
+                .loc[stat, column_name]
+            )
+            summer_stat = (
+                self._obj.loc[self._obj.index.month.isin(summer_months)]
+                .describe()
+                .loc[stat, column_name]
+            )
+            df = pd.DataFrame(
+                index=[self._obj.name],
+                data={
+                    "winter_{}".format(stat): [winter_stat],
+                    "summer_{}".format(stat): [summer_stat],
+                },
+            )
 
         return df
 
@@ -274,12 +313,12 @@ class StatsAccessorObs:
         # Add missing years
         if obs_per_year.empty:
             # no obs, set series to current year with 0 obs
-            obs_per_year_all = pd.Series(
-                index=[dt.datetime.now().year], data=0)
+            obs_per_year_all = pd.Series(index=[dt.datetime.now().year], data=0)
         else:
-            obs_per_year_all = pd.Series(dtype=float,
-                                         index=range(obs_per_year.index[0],
-                                                     obs_per_year.index[-1] + 1))
+            obs_per_year_all = pd.Series(
+                dtype=float,
+                index=range(obs_per_year.index[0], obs_per_year.index[-1] + 1),
+            )
             obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 
         mask_obs_per_year = obs_per_year_all >= min_obs
@@ -287,7 +326,6 @@ class StatsAccessorObs:
         mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
         cumsum = mask_obs_per_year.cumsum().fillna(method="pad")
         reset = -cumsum.loc[mask_obs_per_year.isnull()].diff().fillna(cumsum)
-        result = mask_obs_per_year.where(
-            mask_obs_per_year.notnull(), reset).cumsum()
+        result = mask_obs_per_year.where(mask_obs_per_year.notnull(), reset).cumsum()
 
         return result

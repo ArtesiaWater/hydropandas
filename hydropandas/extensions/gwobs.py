@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from . import accessor
+from shapely.geometry import Point
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +59,9 @@ def get_model_layer_z(z, zvec, left=-999, right=999):
     zvec = np.sort(zvec)[::-1]
     if z in zvec:
         z += 1e-10
-    lay = int(np.interp(z, zvec[::-1], np.arange(len(zvec))[::-1],
-                        left=left, right=right))
+    lay = int(
+        np.interp(z, zvec[::-1], np.arange(len(zvec))[::-1], left=left, right=right)
+    )
 
     return lay
 
@@ -148,24 +150,20 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
         logger.error("- values for ftop and fbot are invalid!")
         return np.nan
     elif fbot_invalid:
-        lay_ftop = get_model_layer_z(ftop, zvec,
-                                     left=left, right=right)
+        lay_ftop = get_model_layer_z(ftop, zvec, left=left, right=right)
         logger.error(f"- fbot invalid. selected based on ftop: {lay_ftop}")
         return lay_ftop
     elif ftop_invalid:
-        lay_fbot = get_model_layer_z(fbot, zvec,
-                                     left=left, right=right)
+        lay_fbot = get_model_layer_z(fbot, zvec, left=left, right=right)
         logger.error(f"- ftop invalid. selected based on fbot: {lay_fbot}")
         return lay_fbot
 
     if ftop < fbot:
-        logger.warning('- filter top below filter bot, switch top and bot')
+        logger.warning("- filter top below filter bot, switch top and bot")
         fbot, ftop = ftop, fbot
 
-    lay_ftop = get_model_layer_z(ftop, zvec,
-                                 left=left, right=right)
-    lay_fbot = get_model_layer_z(fbot, zvec,
-                                 left=left, right=right)
+    lay_ftop = get_model_layer_z(ftop, zvec, left=left, right=right)
+    lay_fbot = get_model_layer_z(fbot, zvec, left=left, right=right)
 
     # Piezometer in layer in which majority of screen is located
     if lay_fbot == lay_ftop:
@@ -174,25 +172,29 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
 
     else:
         if lay_fbot == left and lay_ftop == right:
-            logger.info('- filter spans all layers. '
-                        'return nan')
+            logger.info("- filter spans all layers. " "return nan")
             return np.nan
         elif lay_ftop == right:
-            logger.info('- filter top higher than top layer. '
-                        f'selected layer {lay_fbot}')
+            logger.info(
+                "- filter top higher than top layer. " f"selected layer {lay_fbot}"
+            )
             return lay_fbot
 
         elif lay_fbot == left:
-            logger.info('- filter bot lower than bottom layer. '
-                        f'selected layer {lay_ftop}')
+            logger.info(
+                "- filter bot lower than bottom layer. " f"selected layer {lay_ftop}"
+            )
             return lay_ftop
 
-        logger.info("- filter crosses layer boundary:\n"
-                    f"  - layers: {lay_ftop}, {lay_fbot}")
+        logger.info(
+            "- filter crosses layer boundary:\n" f"  - layers: {lay_ftop}, {lay_fbot}"
+        )
 
-        logger.info(f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
-                    " checking length per layer\n"
-                    "  - length per layer:")
+        logger.info(
+            f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+            " checking length per layer\n"
+            "  - length per layer:"
+        )
 
         # check which layer has the biggest length of the filter
         length_layers = np.zeros(lay_fbot - lay_ftop + 1)
@@ -243,28 +245,31 @@ def get_zvec(x, y, gwf=None, ds=None):
 
     if gwf and not ds:
         ix = flopy.utils.GridIntersect(gwf.modelgrid)
-        if gwf.modelgrid.grid_type == 'structured':
-            res = ix.intersect([(x, y)], shapetype="point")
+        if gwf.modelgrid.grid_type == "structured":
+            res = ix.intersect(Point(x, y))
             if len(res) > 0:
-                r, c = res["cellids"]
-                zvec = np.array([gwf.modelgrid.top[r, c]] +
-                                [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)])
+                r, c = res["cellids"][0]
+                zvec = np.array(
+                    [gwf.modelgrid.top[r, c]]
+                    + [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)]
+                )
             else:
                 print("Point is not within model extent! Returning NaN.")
                 zvec = np.nan
-        elif gwf.modelgrid.grid_type == 'vertex':
+        elif gwf.modelgrid.grid_type == "vertex":
             res = ix.intersect([(x, y)], shapetype="point")
             idx = res["cellids"].astype(int)[0]
             if len(res) > 0:
-                zvec = ([gwf.modelgrid.top[idx]] +
-                        [gwf.modelgrid.botm[i, idx]
-                         for i in range(gwf.modelgrid.nlay)])
+                zvec = [gwf.modelgrid.top[idx]] + [
+                    gwf.modelgrid.botm[i, idx] for i in range(gwf.modelgrid.nlay)
+                ]
             else:
                 print("Point is not within model extent! Returning NaN.")
                 zvec = np.nan
         else:
             raise NotImplementedError(
-                f'gridtype {gwf.modelgrid.grid_type} not (yet) implemented')
+                f"gridtype {gwf.modelgrid.grid_type} not (yet) implemented"
+            )
     elif ds and not gwf:
         # assuming modflow type definition with 1 top and N botms
         # check extent
@@ -274,8 +279,7 @@ def get_zvec(x, y, gwf=None, ds=None):
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
             first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
-            zvec = np.concatenate(
-                [sel["top"].data[[first_notna]], sel["bot"].data])
+            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["bot"].data])
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)
@@ -286,14 +290,14 @@ def get_zvec(x, y, gwf=None, ds=None):
     return zvec
 
 
-@ accessor.register_obscollection_accessor("gwobs")
+@accessor.register_obscollection_accessor("gwobs")
 class GwObsAccessor:
-
     def __init__(self, oc_obj):
         self._obj = oc_obj
 
-    def set_filter_num(self, radius=1, xcol='x', ycol='y', if_exists='error',
-                       add_to_meta=False):
+    def set_filter_num(
+        self, radius=1, xcol="x", ycol="y", if_exists="error", add_to_meta=False
+    ):
         """This method computes the filternumbers based on the location of the
         observations.
 
@@ -334,41 +338,52 @@ class GwObsAccessor:
         """
 
         # check if column exists in obscollection
-        if 'filternr' in self._obj.columns:
+        if "filternr" in self._obj.columns:
             # set type to numeric
-            if self._obj['filternr'].dtype != np.number:
-                self._obj['filternr'] = pd.to_numeric(
-                    self._obj['filternr'], errors='coerce')
+            if self._obj["filternr"].dtype != np.number:
+                self._obj["filternr"] = pd.to_numeric(
+                    self._obj["filternr"], errors="coerce"
+                )
 
             # check if name should be replaced
-            if if_exists == 'error':
+            if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'filternr' already exist, set if_exists='replace' to replace the current values")
-            elif if_exists == 'replace':
-                self._obj['filternr'] = np.nan
+                    "the column 'filternr' already exist, set if_exists='replace' to replace the current values"
+                )
+            elif if_exists == "replace":
+                self._obj["filternr"] = np.nan
         else:
-            self._obj['filternr'] = np.nan
+            self._obj["filternr"] = np.nan
 
         # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
         for name in self._obj.index:
-            if np.isnan(self._obj.loc[name, 'filternr']):
+            if np.isnan(self._obj.loc[name, "filternr"]):
                 x = self._obj.loc[name, xcol]
                 y = self._obj.loc[name, ycol]
                 distance_to_other_filters = np.sqrt(
-                    (self._obj[xcol] - x)**2 + (self._obj[ycol] - y)**2)
+                    (self._obj[xcol] - x) ** 2 + (self._obj[ycol] - y) ** 2
+                )
                 dup_x = self._obj.loc[distance_to_other_filters < radius]
                 if dup_x.shape[0] == 1:
-                    self._obj._set_metadata_value(name, 'filternr', 1,
-                                                  add_to_meta=add_to_meta)
+                    self._obj._set_metadata_value(
+                        name, "filternr", 1, add_to_meta=add_to_meta
+                    )
                 else:
-                    dup_x2 = dup_x.sort_values(
-                        'onderkant_filter', ascending=False)
+                    dup_x2 = dup_x.sort_values("onderkant_filter", ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
-                        self._obj._set_metadata_value(pb_dub, 'filternr', i + 1,
-                                                      add_to_meta=add_to_meta)
+                        self._obj._set_metadata_value(
+                            pb_dub, "filternr", i + 1, add_to_meta=add_to_meta
+                        )
 
-    def set_filter_num_location(self, loc_col, radius=1, xcol='x', ycol='y',
-                                if_exists='error', add_to_meta=False):
+    def set_filter_num_location(
+        self,
+        loc_col,
+        radius=1,
+        xcol="x",
+        ycol="y",
+        if_exists="error",
+        add_to_meta=False,
+    ):
         """This method sets the filternr and locatie name of an observation
         point based on the location of the observations.
 
@@ -416,41 +431,46 @@ class GwObsAccessor:
         """
 
         # check if columns exists in obscollection
-        if 'filternr' in self._obj.columns or 'locatie' in self._obj.columns:
-            if if_exists == 'error':
+        if "filternr" in self._obj.columns or "locatie" in self._obj.columns:
+            if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'filternr or locatie' already exist, set if_exists='replace' to replace the current values")
-            elif if_exists == 'replace':
-                self._obj['filternr'] = np.nan
-                self._obj['locatie'] = np.nan
+                    "the column 'filternr or locatie' already exist, set if_exists='replace' to replace the current values"
+                )
+            elif if_exists == "replace":
+                self._obj["filternr"] = np.nan
+                self._obj["locatie"] = np.nan
         else:
-            self._obj['filternr'] = np.nan
-            self._obj['locatie'] = np.nan
+            self._obj["filternr"] = np.nan
+            self._obj["locatie"] = np.nan
 
         # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
         for name in self._obj.index:
-            if np.isnan(self._obj.loc[name, 'filternr']):
+            if np.isnan(self._obj.loc[name, "filternr"]):
                 x = self._obj.loc[name, xcol]
                 y = self._obj.loc[name, ycol]
                 distance_to_other_filters = np.sqrt(
-                    (self._obj[xcol] - x)**2 + (self._obj[ycol] - y)**2)
+                    (self._obj[xcol] - x) ** 2 + (self._obj[ycol] - y) ** 2
+                )
                 dup_x = self._obj.loc[distance_to_other_filters < radius]
                 if dup_x.shape[0] == 1:
-                    self._obj._set_metadata_value(name, 'filternr', 1,
-                                                  add_to_meta=add_to_meta)
+                    self._obj._set_metadata_value(
+                        name, "filternr", 1, add_to_meta=add_to_meta
+                    )
                     locatie = self._obj.loc[name, loc_col]
-                    self._obj._set_metadata_value(name, 'locatie', locatie,
-                                                  add_to_meta=add_to_meta)
+                    self._obj._set_metadata_value(
+                        name, "locatie", locatie, add_to_meta=add_to_meta
+                    )
                 else:
-                    dup_x2 = dup_x.sort_values(
-                        'onderkant_filter', ascending=False)
+                    dup_x2 = dup_x.sort_values("onderkant_filter", ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
                         if i == 0:
                             locatie = self._obj.loc[pb_dub, loc_col]
-                        self._obj._set_metadata_value(pb_dub, 'filternr', i + 1,
-                                                      add_to_meta=add_to_meta)
-                        self._obj._set_metadata_value(pb_dub, 'locatie', locatie,
-                                                      add_to_meta=add_to_meta)
+                        self._obj._set_metadata_value(
+                            pb_dub, "filternr", i + 1, add_to_meta=add_to_meta
+                        )
+                        self._obj._set_metadata_value(
+                            pb_dub, "locatie", locatie, add_to_meta=add_to_meta
+                        )
 
     def get_modellayers(self, gwf=None, ds=None):
         """Get the modellayer per observation. The layers can be obtained from
@@ -474,8 +494,9 @@ class GwObsAccessor:
 
             modellayers.append(o.gwobs.get_modellayer_modflow(gwf=gwf, ds=ds))
 
-        modellayers = pd.Series(index=self._obj.index, data=modellayers,
-                                name='modellayer')
+        modellayers = pd.Series(
+            index=self._obj.index, data=modellayers, name="modellayer"
+        )
 
         return modellayers
 
@@ -521,10 +542,13 @@ class GeoAccessorObs:
         if np.all(np.isnan(zvec)):
             return np.nan
         else:
-            modellayer = get_modellayer_from_filter(self._obj.bovenkant_filter,
-                                                    self._obj.onderkant_filter,
-                                                    zvec,
-                                                    left=left, right=right)
+            modellayer = get_modellayer_from_filter(
+                self._obj.bovenkant_filter,
+                self._obj.onderkant_filter,
+                zvec,
+                left=left,
+                right=right,
+            )
             return modellayer
 
     def get_regis_layer(self):
@@ -542,33 +566,38 @@ class GeoAccessorObs:
         import xarray as xr
 
         if np.isnan(self._obj.bovenkant_filter) or np.isnan(self._obj.onderkant_filter):
-            return 'nan'
+            return "nan"
 
         # connect to regis netcdf
-        regis_url = r'http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc'
+        regis_url = r"http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc"
         regis_ds = xr.open_dataset(regis_url, decode_times=False)
 
         # rename layer in regis netcdf
-        regis_ds = regis_ds.rename({'layer': 'layer_old'})
-        regis_ds.coords['layer'] = regis_ds.layer_old.astype(str)
-        regis_ds = regis_ds.swap_dims({'layer_old': 'layer'})
+        regis_ds = regis_ds.rename({"layer": "layer_old"})
+        regis_ds.coords["layer"] = regis_ds.layer_old.astype(str)
+        regis_ds = regis_ds.swap_dims({"layer_old": "layer"})
 
         # get zvec regis netcdf
-        z = regis_ds['bottom'].sel(x=self._obj.x, y=self._obj.y,
-                                   method='nearest').dropna(dim='layer')
-        ztop = regis_ds['top'].sel(x=self._obj.x, y=self._obj.y,
-                                   method='nearest').max()
+        z = (
+            regis_ds["bottom"]
+            .sel(x=self._obj.x, y=self._obj.y, method="nearest")
+            .dropna(dim="layer")
+        )
+        ztop = regis_ds["top"].sel(x=self._obj.x, y=self._obj.y, method="nearest").max()
         zvec = np.concatenate([[ztop.values], z.values])
 
         # get index of regis model layer
-        layer_i = get_modellayer_from_filter(self._obj.bovenkant_filter,
-                                             self._obj.onderkant_filter,
-                                             zvec,
-                                             left=-999, right=999)
+        layer_i = get_modellayer_from_filter(
+            self._obj.bovenkant_filter,
+            self._obj.onderkant_filter,
+            zvec,
+            left=-999,
+            right=999,
+        )
 
         if layer_i == 999:
-            return 'above'
+            return "above"
         elif layer_i == -999:
-            return 'below'
+            return "below"
 
         return str(z.layer[layer_i].values)
