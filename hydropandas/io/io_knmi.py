@@ -1799,14 +1799,16 @@ def get_evaporation(stn=260, et_type='auto', start='2020', end='2021', **kwargs)
         d = {}
         mvs = ['TG', 'Q']
         for mv in mvs:
-            d[mv], meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
-                                                  end=end, **kwargs).squeeze()
+            ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
+                                                  end=end, **kwargs)
+            d[mv] = ts.squeeze()
         et = makkink(d['TG'], d['Q']).to_frame(name=et_type)
     elif et_type == 'penman':
         d = {}
         mvs = ['TG', 'TN', 'TX', 'Q', 'FG', 'UG']
         for mv in mvs:
-            ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, **kwargs)
+            ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
+                                               end=end, **kwargs)
             d[mv] = ts.squeeze()
         et = penman(d['TG'], d['TN'], d['TX'], d['Q'],
                     d['FG'], d['UG'], d['TG'].index,
