@@ -115,17 +115,21 @@ class ObsCollection(pd.DataFrame):
         if iname not in self.index:
             raise ValueError(f"{iname}  not in index")
 
-        self.loc[iname, att_name] = value
-        logger.info(f"set {iname}, {att_name} to {value}")
-
-        o = self.loc[iname, "obs"]
+        o = self.loc[iname, 'obs']
         if att_name in o._metadata:
             setattr(o, att_name, value)
-            logger.info(f"set attribute {att_name} of {iname} to {value}")
+            logger.debug(f'set attribute {att_name} of {iname} to {value}')
+            
+        if att_name == 'name':
+            # name is the index of the ObsCollection dataframe
+            self.rename(index={iname:value}, inplace=True)
+        else:
+            self.loc[iname, att_name] = value
+        logger.debug(f'set {iname}, {att_name} to {value} in obscollection')
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.info(f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(f'add {att_name} of {iname} with value {value} to meta')
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -541,6 +545,7 @@ class ObsCollection(pd.DataFrame):
         unpackdir=None,
         force_unpack=False,
         preserve_datetime=False,
+        **kwargs
     ):
         """Read one or several FEWS PI-XML files.
 
@@ -566,14 +571,15 @@ class ObsCollection(pd.DataFrame):
             list of locationId's to read from XML file, others are skipped.
             If None (default) all locations are read. Only supported by
             low_memory=True method!
-        to_mnap : boolean, optional
-            if True a column with 'stand_m_tov_nap' is added to the dataframe
-        remove_nan : boolean, optional
-            remove nan values from measurements, flag information about the
-            nan values is also lost
         low_memory : bool, optional
             whether to use xml-parsing method with lower memory footprint,
             default is True
+        to_mnap : boolean, optional
+            if True a column with 'stand_m_tov_nap' is added to the dataframe,
+            only used if low_memory=False
+        remove_nan : boolean, optional
+            remove nan values from measurements, flag information about the
+            nan values is also lost, only used if low_memory=False
         unpackdir : str
             destination directory to unzip file if fname is a .zip
         force_unpack : boolean, optional
@@ -614,6 +620,7 @@ class ObsCollection(pd.DataFrame):
                 to_mnap=to_mnap,
                 remove_nan=remove_nan,
                 low_memory=low_memory,
+                **kwargs
             )
 
             obs_df = util._obslist_to_frame(obs_list)
@@ -629,6 +636,7 @@ class ObsCollection(pd.DataFrame):
                 low_memory=low_memory,
                 to_mnap=to_mnap,
                 remove_nan=remove_nan,
+                **kwargs
             )
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
