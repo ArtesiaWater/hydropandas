@@ -1838,4 +1838,4 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
         raise ValueError("Provide valid argument evaporation type \
                          'hargreaves', 'makkink' or 'penman'")
 
-    return et
+    return et, meta
