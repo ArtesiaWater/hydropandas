@@ -569,7 +569,6 @@ def get_knmi_daily_rainfall_url(stn, stn_name, meteo_var,
                              'knmi', f'neerslaggeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'neerslaggeg_{stn_name}_{stn}.txt')
 
-
     # check if file should be downloaded and unzipped
     donwload_and_unzip = True
     if os.path.exists(fname_txt) and use_cache:
@@ -897,7 +896,6 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end,
                              'knmi', f'etmgeg_{stn}.zip')
     fname_dir = os.path.join(tempfile.gettempdir(), 'knmi', f'etmgeg_{stn}')
     fname_txt = os.path.join(fname_dir, f'etmgeg_{stn}.txt')
-
 
     # check if file should be downloaded and unzipped
     donwload_and_unzip = True
@@ -1642,11 +1640,13 @@ def makkink(tmean, K):
     a = 0.646 + 0.0006 * tmean
     b = 1 + tmean / 237.3
     c = 7.5 * np.log(10) * 6.107 * 10**(7.5 * (1 - 1 / b))
-    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a))/(2501 - 2.38 * tmean) * K
+    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / \
+         (2501 - 2.38 * tmean) * K
     return et
 
 
-def penman(tmean, tmin, tmax, K, wind, rh, dates, z=1.0, lat=52.1, G=0.0, wh=10.0, tdew=None):
+def penman(tmean, tmin, tmax, K, wind, rh, dates, z=1.0,
+           lat=52.1, G=0.0, wh=10.0, tdew=None):
     """Estimate of Penman reference evaporation 
     according to Allen et al 1990. 
 
@@ -1759,37 +1759,38 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
     return et
 
 
-def get_et(stn=260, et_type='auto', **kwargs):
-    d = {}
+def get_evaporation(stn=260, et_type='auto', start='2020', end='2021', **kwargs):
     if et_type == 'auto':
-        et = get_knmi_timeseries_stn(
-            stn, meteo_var='EV24', **kwargs)[0].squeeze()
+        et, meta = get_knmi_timeseries_stn(stn, meteo_var='EV24',
+                                           start=start, end=end, **kwargs)
     elif et_type == 'hargreaves':
+        d = {}
         mvs = ['TG', 'TN', 'TX']
         for mv in mvs:
-            ts = get_knmi_timeseries_stn(stn, meteo_var=mv, **kwargs)
-            d[mv] = ts[0].squeeze()
-            meta = ts[1]
-        et = hargreaves(d[mvs[0]], d[mvs[1]], d[mvs[2]], d[mvs[0]].index,
-                        meta['LAT_north'][str(meta['station'])])
+            ts, meta = get_knmi_timeseries_stn(
+                stn, meteo_var=mv, start=start, end=end, **kwargs)
+            d[mv] = ts.squeeze()
+        et = hargreaves(d['TG'], d['TN'], d['TX'], d['TG'].index,
+                        meta['LAT_north'][str(meta['station'])]).to_frame(name=et_type)
     elif et_type == 'makkink':
+        d = {}
         mvs = ['TG', 'Q']
         for mv in mvs:
-            d[mv] = get_knmi_timeseries_stn(stn, meteo_var=mv, 
-            **kwargs)[0].squeeze()
-        et = makkink(d[mvs[0]][mvs[0]].values, d[mvs[1]][mvs[1]].values)
+            d[mv], meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
+                                                  end=end, **kwargs).squeeze()
+        et = makkink(d['TG'], d['Q']).to_frame(name=et_type)
     elif et_type == 'penman':
+        d = {}
         mvs = ['TG', 'TN', 'TX', 'Q', 'FG', 'UG']
         for mv in mvs:
-            ts = get_knmi_timeseries_stn(stn, meteo_var=mv, **kwargs)
-            d[mv] = ts[0].squeeze()
-            meta = ts[1]
-        et = penman(d[mvs[0]], d[mvs[1]], d[mvs[2]], d[mvs[3]],
-                    d[mvs[4]], d[mvs[5]], d[mvs[0]].index,
+            ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, **kwargs)
+            d[mv] = ts.squeeze()
+        et = penman(d['TG'], d['TN'], d['TX'], d['Q'],
+                    d['FG'], d['UG'], d['TG'].index,
                     meta['LAT_north'][str(meta['station'])],
-                    meta['ALT_m'][str(meta['station'])])
+                    meta['ALT_m'][str(meta['station'])]).to_frame(name=et_type)
     else:
         raise ValueError("Provide valid argument evaporation type \
                          'hargreaves', 'makkink' or 'penman'")
 
-    return et.to_frame(name='Er')
+    return et
