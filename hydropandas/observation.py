@@ -967,14 +967,17 @@ class EvaporationObs(MeteoObs):
         return EvaporationObs
 
     @classmethod
-    def from_knmi(cls, stn, **kwargs):
-        """Get an EvaporationObs timeseries from the KNMI evaporation. The
-        evaporation is the Potential evapotranspiration (Makkink) (in 0.1 mm)
+    def from_knmi(cls, stn, et_type='auto', **kwargs):
+        """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
         Parameters
         ----------
         stn : int or str
             measurement station e.g. 829.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'auto', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'auto' which collects the KNMI Makkink EV24 evaporation.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -999,11 +1002,16 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
+        from .io import io_knmi
 
-        return super().from_knmi(stn, meteo_var="EV24", **kwargs)
+        ts, meta = io_knmi.get_evaporation(stn, et_type, **kwargs)
+        
+        return cls(ts, meta=meta, station=meta["station"],
+                   x=meta["x"], y=meta["y"],
+                   name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, **kwargs):
+    def from_nearest_xy(cls, x, y, et_type='auto', **kwargs):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given (x,y) coördinates.
 
@@ -1013,6 +1021,10 @@ class EvaporationObs(MeteoObs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'auto', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'auto' which collects the KNMI Makkink EV24 evaporation.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1037,11 +1049,17 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
+        from .io import io_knmi
 
-        return super().from_nearest_xy(x, y, meteo_var="EV24", **kwargs)
+        stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+        ts, meta = io_knmi.get_evaporation(stn, et_type, **kwargs)
+
+        return cls(ts, meta=meta, station=meta["station"],
+                   x=meta["x"], y=meta["y"],
+                   name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_obs(cls, obs, **kwargs):
+    def from_obs(cls, obs, et_type='auto', **kwargs):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
         coördinates of the observation to obtain the nearest KNMI evaporation
@@ -1053,6 +1071,10 @@ class EvaporationObs(MeteoObs):
         ----------
         obs : hydropandas.Obs
             Observation object.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'auto', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'auto' which collects the KNMI Makkink EV24 evaporation.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1077,7 +1099,17 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        return super().from_obs(obs, meteo_var="EV24", **kwargs)
+        from .io import io_knmi
+
+        x = obs.x
+        y = obs.y
+
+        stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+        ts, meta = io_knmi.get_evaporation(stn, et_type, **kwargs)
+
+        return cls(ts, meta=meta, station=meta["station"],
+                   x=meta["x"], y=meta["y"],
+                   name=meta["name"], meteo_var=et_type)
 
 
 class PrecipitationObs(MeteoObs):
