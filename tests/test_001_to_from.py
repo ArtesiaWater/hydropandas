@@ -173,13 +173,19 @@ def test_to_pastastore():
 
 #%% Evaporation
 
-
 def test_evap_obs_from_stn():
-    return obs.EvaporationObs.from_knmi(344)
+    return obs.EvaporationObs.from_knmi(260, et_type='EV24')
 
+def test_evap_obs_from_stn_makkink():
+    return obs.EvaporationObs.from_knmi(260, et_type='makkink')
+
+def test_evap_obs_from_stn_penman():
+    return obs.EvaporationObs.from_knmi(260, et_type='penman')
+
+def test_evap_obs_from_stn_hargreaves():
+    return obs.EvaporationObs.from_knmi(260, et_type='hargreaves')
 
 #%% Precipitation
-
 
 def test_precip_obs_from_stn():
     return obs.PrecipitationObs.from_knmi(233, "precipitation")
