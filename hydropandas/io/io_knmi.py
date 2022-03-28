@@ -1283,8 +1283,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
             "x": x,
             "y": y,
             "station": stn,
-            "name": f"{meteo_var}_{stn_name}",
-            "variable": meteo_var,
+            "name": f"{meteo_var}_{stn_name}"
         }
     )
 
@@ -1388,11 +1387,13 @@ def get_knmi_obslist(
     obs_list = []
     for i, meteo_var in enumerate(meteo_vars):
         obs_kwargs = {}
-        if meteo_var in ("RD", "RH"):
+        if meteo_var in ("RD", "RH", "EV24"):
             if meteo_var == "RD":
                 obs_kwargs["stn_type"] = "precipitation"
             elif meteo_var == "RH":
                 obs_kwargs["stn_type"] = "meteo"
+            elif meteo_var == 'EV24':
+                obs_kwargs["et_type"] = "auto"
 
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
         if stns is None:
@@ -1430,7 +1431,7 @@ def get_knmi_obslist(
                     o = pd.read_pickle(pklz_path)
                 else:
                     o = ObsClass[i].from_knmi(
-                        stn, meteo_var=meteo_var,
+                        stn,
                         startdate=start[i],
                         enddate=end[i],
                         fill_missing_obs=settings["fill_missing_obs"],
@@ -1442,7 +1443,7 @@ def get_knmi_obslist(
                     o.to_pickle(pklz_path)
             else:
                 o = ObsClass[i].from_knmi(
-                    stn, meteo_var=meteo_var,
+                    stn,
                     startdate=start[i],
                     enddate=end[i],
                     fill_missing_obs=settings["fill_missing_obs"],
@@ -1782,7 +1783,8 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
     return et
 
 
-def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
+def get_evaporation(stn=260, et_type='auto', start=None, end=None,
+                    settings=None):
     """Collect different types of (reference) evaporation 
     from KNMI weather stations
 
@@ -1797,6 +1799,22 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
         start time of observations.
     end : pd.TimeStamp
         end time of observations.
+    settings : dict or None, optional
+        settings for obtaining the right time series, options are:
+            fill_missing_obs : bool, optional
+                if True nan values in time series are filled with nearby time series.
+                The default is True.
+            interval : str, optional
+                desired time interval for observations. The default is 'daily'.
+            inseason : boolean, optional
+                flag to obtain inseason data. The default is False
+            use_api : bool, optional
+                if True the api is used to obtain the data, API documentation is here:
+                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+                Default is True as the API since (July 2021).
+            raise_exceptions : bool, optional
+                if True you get errors when no data is returned. The default is True.
+
 
     Returns
     ------
@@ -1805,13 +1823,14 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
     """    
     if et_type == 'auto':
         et, meta = get_knmi_timeseries_stn(stn, meteo_var='EV24',
-                                           start=start, end=end, **kwargs)
+                                           start=start, end=end,
+                                           settings=settings)
     elif et_type == 'hargreaves':
         d = {}
         mvs = ['TG', 'TN', 'TX']
         for mv in mvs:
             ts, meta = get_knmi_timeseries_stn(
-                stn, meteo_var=mv, start=start, end=end, **kwargs)
+                stn, meteo_var=mv, start=start, end=end, settings=settings)
             d[mv] = ts.squeeze()
         et = hargreaves(d['TG'], d['TN'], d['TX'], d['TG'].index,
                         meta['LAT_north'][str(meta['station'])]).to_frame(name=et_type)
@@ -1820,7 +1839,7 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
         mvs = ['TG', 'Q']
         for mv in mvs:
             ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
-                                                  end=end, **kwargs)
+                                                  end=end, settings=settings)
             d[mv] = ts.squeeze()
         et = makkink(d['TG'], d['Q']).to_frame(name=et_type)
     elif et_type == 'penman':
@@ -1828,7 +1847,7 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None, **kwargs):
         mvs = ['TG', 'TN', 'TX', 'Q', 'FG', 'UG']
         for mv in mvs:
             ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
-                                               end=end, **kwargs)
+                                               end=end, settings=settings)
             d[mv] = ts.squeeze()
         et = penman(d['TG'], d['TN'], d['TX'], d['Q'],
                     d['FG'], d['UG'], d['TG'].index,
