@@ -1393,7 +1393,7 @@ def get_knmi_obslist(
             elif meteo_var == "RH":
                 obs_kwargs["stn_type"] = "meteo"
             elif meteo_var == 'EV24':
-                obs_kwargs["et_type"] = "auto"
+                obs_kwargs["et_type"] = "EV24"
 
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
         if stns is None:
@@ -1783,7 +1783,7 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
     return et
 
 
-def get_evaporation(stn=260, et_type='auto', start=None, end=None,
+def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
                     settings=None):
     """Collect different types of (reference) evaporation 
     from KNMI weather stations
@@ -1793,8 +1793,8 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None,
     stn : str
         station number, defaults to 260 De Bilt
     et_type : str
-        Choice between 'auto', 'penman', 'makkink' or 'hargraves'.
-        Defaults to 'auto' which collects the KNMI Makkink EV24 evaporation.
+        Choice between 'EV24', 'penman', 'makkink' or 'hargraves'.
+        Defaults to 'EV24' which collects the KNMI Makkink EV24 evaporation.
     start : pd.TimeStamp
         start time of observations.
     end : pd.TimeStamp
@@ -1821,7 +1821,7 @@ def get_evaporation(stn=260, et_type='auto', start=None, end=None,
     DataFrame
 
     """    
-    if et_type == 'auto':
+    if et_type == 'EV24':
         et, meta = get_knmi_timeseries_stn(stn, meteo_var='EV24',
                                            start=start, end=end,
                                            settings=settings)

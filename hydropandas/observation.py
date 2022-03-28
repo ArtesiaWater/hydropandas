@@ -967,7 +967,7 @@ class EvaporationObs(MeteoObs):
         return EvaporationObs
 
     @classmethod
-    def from_knmi(cls, stn, et_type='auto', startdate=None,
+    def from_knmi(cls, stn, et_type='EV24', startdate=None,
                   enddate=None, fill_missing_obs=True,
                   interval="daily", inseason=False,
                   use_precipitation_stn=True, use_api=True,
@@ -980,8 +980,8 @@ class EvaporationObs(MeteoObs):
             measurement station e.g. 829.
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between 
-            'auto', 'penman', 'makkink' or 'hargraves'. Defaults to 
-            'auto' which collects the KNMI Makkink EV24 evaporation.
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1024,7 +1024,7 @@ class EvaporationObs(MeteoObs):
                    name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, et_type='auto', startdate=None,
+    def from_nearest_xy(cls, x, y, et_type='EV24', startdate=None,
                         enddate=None, fill_missing_obs=True,
                         interval="daily", inseason=False,
                         use_precipitation_stn=True, use_api=True,
@@ -1040,8 +1040,8 @@ class EvaporationObs(MeteoObs):
             y coördinate in m RD.
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between 
-            'auto', 'penman', 'makkink' or 'hargraves'. Defaults to 
-            'auto' which collects the KNMI Makkink EV24 evaporation.
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1085,11 +1085,11 @@ class EvaporationObs(MeteoObs):
                    name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_obs(cls, obs, et_type='auto', startdate=None,
+    def from_obs(cls, obs, et_type='EV24', startdate=None,
                  enddate=None, fill_missing_obs=True,
-                        interval="daily", inseason=False,
-                        use_precipitation_stn=True, use_api=True,
-                        raise_exceptions=False):
+                 interval="daily", inseason=False,
+                 use_precipitation_stn=True, use_api=True,
+                 raise_exceptions=False):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
         coördinates of the observation to obtain the nearest KNMI evaporation
@@ -1103,8 +1103,8 @@ class EvaporationObs(MeteoObs):
             Observation object.
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between 
-            'auto', 'penman', 'makkink' or 'hargraves'. Defaults to 
-            'auto' which collects the KNMI Makkink EV24 evaporation.
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
