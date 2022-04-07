@@ -115,17 +115,21 @@ class ObsCollection(pd.DataFrame):
         if iname not in self.index:
             raise ValueError(f"{iname}  not in index")
 
-        self.loc[iname, att_name] = value
-        logger.info(f"set {iname}, {att_name} to {value}")
-
-        o = self.loc[iname, "obs"]
+        o = self.loc[iname, 'obs']
         if att_name in o._metadata:
             setattr(o, att_name, value)
-            logger.info(f"set attribute {att_name} of {iname} to {value}")
+            logger.debug(f'set attribute {att_name} of {iname} to {value}')
+            
+        if att_name == 'name':
+            # name is the index of the ObsCollection dataframe
+            self.rename(index={iname:value}, inplace=True)
+        else:
+            self.loc[iname, att_name] = value
+        logger.debug(f'set {iname}, {att_name} to {value} in obscollection')
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.info(f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(f'add {att_name} of {iname} with value {value} to meta')
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):

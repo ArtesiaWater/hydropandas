@@ -967,43 +967,68 @@ class EvaporationObs(MeteoObs):
         return EvaporationObs
 
     @classmethod
-    def from_knmi(cls, stn, **kwargs):
-        """Get an EvaporationObs timeseries from the KNMI evaporation. The
-        evaporation is the Potential evapotranspiration (Makkink) (in 0.1 mm)
+    def from_knmi(cls, stn, et_type='EV24', startdate=None,
+                  enddate=None, fill_missing_obs=True,
+                  interval="daily", inseason=False,
+                  use_precipitation_stn=True, use_api=True,
+                  raise_exceptions=False):
+        """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
         Parameters
         ----------
         stn : int or str
             measurement station e.g. 829.
-        **kwargs:
-            startdate : str, datetime or None, optional
-                start date of observations. The default is None.
-            enddate : str, datetime or None, optional
-                end date of observations. The default is None.
-            fill_missing_obs : bool, optional
-                if True nan values in time series are filled with nearby time series.
-                The default is True.
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is False.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is True.
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
+
 
         Returns
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        kwargs.pop("meteo_var", None)
-        return super().from_knmi(stn, meteo_var="EV24", **kwargs)
+        from .io import io_knmi
+
+        settings = {
+            "fill_missing_obs": fill_missing_obs,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+        }
+
+        ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
+                                           end=enddate, settings=settings)
+
+        return cls(ts, meta=meta, station=meta["station"],
+                   x=meta["x"], y=meta["y"],
+                   name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, **kwargs):
+    def from_nearest_xy(cls, x, y, et_type='EV24', startdate=None,
+                        enddate=None, fill_missing_obs=True,
+                        interval="daily", inseason=False,
+                        use_precipitation_stn=True, use_api=True,
+                        raise_exceptions=False):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given (x,y) coördinates.
 
@@ -1013,35 +1038,58 @@ class EvaporationObs(MeteoObs):
             x coördinate in m RD.
         y : int or float
             y coördinate in m RD.
-        **kwargs:
-            startdate : str, datetime or None, optional
-                start date of observations. The default is None.
-            enddate : str, datetime or None, optional
-                end date of observations. The default is None.
-            fill_missing_obs : bool
-                if True missing observations are filled with values of next closest
-                KNMI station
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is False.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        fill_missing_obs : bool
+            if True missing observations are filled with values of next closest
+            KNMI station
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+
 
         Returns
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
+        from .io import io_knmi
 
-        return super().from_nearest_xy(x, y, meteo_var="EV24", **kwargs)
+        settings = {
+            "fill_missing_obs": fill_missing_obs,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+        }
+
+        stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+        ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
+                                           end=enddate, settings=settings)
+
+        return cls(ts, meta=meta, station=meta["station"],
+                   x=meta["x"], y=meta["y"],
+                   name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_obs(cls, obs, **kwargs):
+    def from_obs(cls, obs, et_type='EV24', startdate=None,
+                 enddate=None, fill_missing_obs=True,
+                 interval="daily", inseason=False,
+                 use_precipitation_stn=True, use_api=True,
+                 raise_exceptions=False):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
         coördinates of the observation to obtain the nearest KNMI evaporation
@@ -1053,31 +1101,53 @@ class EvaporationObs(MeteoObs):
         ----------
         obs : hydropandas.Obs
             Observation object.
-        **kwargs:
-            startdate : str, datetime or None, optional
-                start date of observations. The default is None.
-            enddate : str, datetime or None, optional
-                end date of observations. The default is None.
-            fill_missing_obs : bool
-                if True missing observations are filled with values of next closest
-                KNMI station
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is False.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        fill_missing_obs : bool
+            if True missing observations are filled with values of next closest
+            KNMI station
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        return super().from_obs(obs, meteo_var="EV24", **kwargs)
+        from .io import io_knmi
+
+        settings = {
+            "fill_missing_obs": fill_missing_obs,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+        }
+
+        x = obs.x
+        y = obs.y
+
+        stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+        ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
+                                           end=enddate, settings=settings)
+
+        return cls(ts, meta=meta, station=meta["station"],
+                   x=meta["x"], y=meta["y"],
+                   name=meta["name"], meteo_var=et_type)
 
 
 class PrecipitationObs(MeteoObs):
