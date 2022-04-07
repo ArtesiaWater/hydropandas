@@ -695,7 +695,7 @@ class ObsCollection(pd.DataFrame):
         stns=None,
         xmid=None,
         ymid=None,
-        meteo_vars=("RH"),
+        meteo_vars=("RH",),
         name="",
         start=None,
         end=None,

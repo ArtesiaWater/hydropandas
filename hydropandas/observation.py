@@ -999,7 +999,7 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-
+        kwargs.pop("meteo_var", None)
         return super().from_knmi(stn, meteo_var="EV24", **kwargs)
 
     @classmethod
@@ -1147,8 +1147,10 @@ class PrecipitationObs(MeteoObs):
         """
         if stn_type == "meteo":
             meteo_var = "RH"
+            kwargs.pop("meteo_var", None)
         elif stn_type == "precipitation":
             meteo_var = "RD"
+            kwargs.pop("meteo_var", None)
         else:
             raise ValueError(f"invalid measurement station type -> {stn_type}")
 

@@ -1296,7 +1296,7 @@ def get_knmi_obslist(
     stns=None,
     xmid=None,
     ymid=None,
-    meteo_vars=("RH"),
+    meteo_vars=("RH",),
     start=None,
     end=None,
     ObsClass=None,
@@ -1430,7 +1430,8 @@ def get_knmi_obslist(
                     o = pd.read_pickle(pklz_path)
                 else:
                     o = ObsClass[i].from_knmi(
-                        stn, meteo_var=meteo_var,
+                        stn, 
+                        meteo_var=meteo_var,
                         startdate=start[i],
                         enddate=end[i],
                         fill_missing_obs=settings["fill_missing_obs"],
@@ -1442,7 +1443,8 @@ def get_knmi_obslist(
                     o.to_pickle(pklz_path)
             else:
                 o = ObsClass[i].from_knmi(
-                    stn, meteo_var=meteo_var,
+                    stn, 
+                    meteo_var=meteo_var,
                     startdate=start[i],
                     enddate=end[i],
                     fill_missing_obs=settings["fill_missing_obs"],
