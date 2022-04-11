@@ -59,8 +59,10 @@ def get_stations(meteo_var="RH"):
         stations.drop(377, inplace=True)
 
     elif meteo_var == "EV24":
-        # in Woensdrecht wordt geen verdamping gemeten
+        # in Woensdrecht wordt geen globale straling gemeten
         stations.drop(340, inplace=True)
+        # op Vlieland wordt geen globale straling gemeten
+        stations.drop(265, inplace=True)
 
     return stations
 
