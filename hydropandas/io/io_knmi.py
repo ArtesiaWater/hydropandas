@@ -1803,19 +1803,19 @@ def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
         end time of observations.
     settings : dict or None, optional
         settings for obtaining the right time series, options are:
-            fill_missing_obs : bool, optional
-                if True nan values in time series are filled with nearby time series.
-                The default is True.
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                Default is True as the API since (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is True.
+    fill_missing_obs : bool, optional
+        if True nan values in time series are filled with nearby time series.
+        The default is True.
+    interval : str, optional
+        desired time interval for observations. The default is 'daily'.
+    inseason : boolean, optional
+        flag to obtain inseason data. The default is False
+    use_api : bool, optional
+        if True the api is used to obtain the data, API documentation is here:
+            https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+        Default is True as the API since (July 2021).
+    raise_exceptions : bool, optional
+        if True you get errors when no data is returned. The default is True.
 
 
     Returns

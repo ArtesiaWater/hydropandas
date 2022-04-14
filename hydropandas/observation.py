@@ -16,7 +16,8 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 import warnings
 import numpy as np
-from pandas import DataFrame
+from pandas import DataFrame, date_range
+from scipy.interpolate import RBFInterpolator
 
 from _io import StringIO
 from pandas._config import get_option
@@ -1027,8 +1028,7 @@ class EvaporationObs(MeteoObs):
     def from_nearest_xy(cls, x, y, et_type='EV24', startdate=None,
                         enddate=None, fill_missing_obs=True,
                         interval="daily", inseason=False,
-                        use_precipitation_stn=True, use_api=True,
-                        raise_exceptions=False):
+                        use_api=True, raise_exceptions=False):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given (x,y) coördinates.
 
@@ -1085,11 +1085,94 @@ class EvaporationObs(MeteoObs):
                    name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_obs(cls, obs, et_type='EV24', startdate=None,
-                 enddate=None, fill_missing_obs=True,
-                 interval="daily", inseason=False,
-                 use_precipitation_stn=True, use_api=True,
-                 raise_exceptions=False):
+    def from_xy(cls, x, y, et_type='EV24', startdate=None,
+                enddate=None, interval='daily', inseason=False,
+                use_api=True, raise_exceptions=False):
+        """Get an EvaporationObs object with evaporation measurements from the
+        KNMI station closest to the given (x,y) coördinates.
+
+        Parameters
+        ----------
+        x : int, float or array
+            x coördinate in m RD.
+        y : int, float or array
+            y coördinate in m RD.
+        et_type: str
+            type of evapotranspiration to get from KNMI. Choice between 
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            'EV24' which collects the KNMI Makkink EV24 evaporation.
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        interval : str, optional
+            desired time interval for observations. The default is 'daily'.
+        inseason : boolean, optional
+            flag to obtain inseason data. The default is False
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the data is read from there.
+            Default is True since the api is back online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+
+
+        Returns
+        -------
+        EvaporationObs object with an evaporation time series and attributes
+        """
+        from .io import io_knmi
+
+        settings = {
+            "fill_missing_obs": False,
+            "interval": interval,
+            "inseason": inseason,
+            "use_api": use_api,
+            "raise_exceptions": raise_exceptions,
+        }
+
+        stns = io_knmi.get_stations(meteo_var='EV24').sort_index()
+        df = DataFrame(index=date_range(start='1900', end=enddate, freq='H'), columns=stns.index)
+        for stn in stns.index:
+            ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
+                                               end=enddate, settings=settings)
+            df[stn] = ts
+        df = df.dropna(how='all').copy()
+
+        if isinstance(x, int) or isinstance(x, float):
+            et = DataFrame(index=df.index, columns=[et_type])
+        else:
+            et = DataFrame(index=df.index, columns=[f'EV24_{str(np.array([x, y]).T[i])}' for i in range(len(x))])
+        xy = stns.loc[df.columns, ['x', 'y']]
+        for idx in df.index:
+            # get all stations with values for this date
+            val = df.loc[idx].dropna()
+            # get stations for this date
+            coor = xy.loc[val.index].to_numpy()
+            if len(val) < 3: # if there are less than 3 stations, thin plate spline does not work
+                kernel = 'linear'
+            else:
+                kernel = 'thin_plate_spline' 
+                # options: inverse_quadratic, linear, multiquadric, gaussian, 
+                # inverse_multiquadric, cubic, quintic, thin_plate_spline
+
+            # create an scipy interpolator
+            rbf = RBFInterpolator(coor, val.to_numpy(), epsilon=1, kernel=kernel)
+            if isinstance(x, int) or isinstance(x, float):
+                val_rbf = rbf.__call__(np.array([[x, y], [x, y]]))
+                et.loc[idx, et_type] = max(val_rbf[0], 0)
+            else:
+                val_rbf = rbf.__call__(np.array([x, y]).T)
+                et.loc[idx] = val_rbf
+
+        return cls(et, meta=meta, station=meta["station"],
+                   x=x, y=y, name=meta["name"], meteo_var=et_type)
+
+    @classmethod
+    def from_obs(cls, obs, et_type='EV24', startdate=None, enddate=None, 
+                 fill_missing_obs=True, use_api=True, interval='daily',
+                 inseason=False, raise_exceptions=False):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
         coördinates of the observation to obtain the nearest KNMI evaporation
