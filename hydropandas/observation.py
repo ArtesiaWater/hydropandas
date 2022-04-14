@@ -1082,14 +1082,13 @@ class EvaporationObs(MeteoObs):
 
         if location == 'nearest':
             stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
-            et, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
+            ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
                                                end=enddate, settings=settings)
         
         elif location == 'interpolate':
             settings["fill_missing_obs"] = False # dont fill missing obs
 
             stns = io_knmi.get_stations(meteo_var='EV24').sort_index() # get all station locations
-            xy = stns.loc[df.columns, ['x', 'y']]
 
             df = DataFrame(index=date_range(start='1900', end=enddate, freq='H'), columns=stns.index)
             for stn in stns.index: # fill dataframe with measurements
@@ -1097,7 +1096,8 @@ class EvaporationObs(MeteoObs):
                                                    end=enddate, settings=settings)
                 df[stn] = et
             df = df.dropna(how='all').copy()
-
+            
+            xy = stns.loc[df.columns, ['x', 'y']]
             ts = DataFrame(index=df.index, columns=[et_type])
             for idx in df.index:
                 # get all stations with values for this date
@@ -1118,8 +1118,9 @@ class EvaporationObs(MeteoObs):
                 ts.loc[idx, et_type] = max(val_rbf[0], 0)
             
             #adjust metadata
-            meta = {'station':'interpolation thin plate sline', 'x':x, 'y':y, 'name':'TPS'}
-        
+            meta = {'station': 'interpolation thin plate sline',
+                    'x': x, 'y': y, 'name': 'EV24_interpolated'}
+
         else:
             raise ValueError("Please provide either 'nearest' or 'interpolate'")
 
