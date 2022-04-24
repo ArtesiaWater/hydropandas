@@ -704,6 +704,7 @@ class ObsCollection(pd.DataFrame):
         start=None,
         end=None,
         ObsClass=None,
+        method='nearest',
         **kwargs,):
         """Get knmi observations from a list of locations or a list of
         stations.
@@ -889,11 +890,12 @@ class ObsCollection(pd.DataFrame):
             ObsClass=ObsClass,
             start=start,
             end=end,
+            method=method,
             **kwargs,
         )
-
+                
         obs_df = util._obslist_to_frame(obs_list)
-
+        # return obs_list
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod

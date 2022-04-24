@@ -1026,17 +1026,17 @@ class EvaporationObs(MeteoObs):
 
     @classmethod
     def from_xy(cls, x, y, et_type='EV24', method='nearest',
-                        startdate=None, enddate=None, fill_missing_obs=True, 
-                        interval="daily", inseason=False, use_api=True, 
-                        raise_exceptions=False):
+                startdate=None, enddate=None, fill_missing_obs=True,
+                interval="daily", inseason=False, use_api=True,
+                raise_exceptions=False):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given (x,y) coördinates.
 
         Parameters
         ----------
-        x : int or float
+        x : float
             x coördinate in m RD.
-        y : int or float
+        y : float
             y coördinate in m RD.
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between 
@@ -1097,12 +1097,15 @@ class EvaporationObs(MeteoObs):
                 df[stn] = et
             df = df.dropna(how='all').copy()
             
-            ts = io_knmi.interpolate([x], [y], stns, df)
+            if isinstance(x, float) or isinstance(x, int):
+                ts = io_knmi.interpolate([x], [y], stns, df)
+                meta = {'station': 'interpolation thin plate sline', \
+                        'x': x, 'y': y, 'name': ts.columns, 'meteo_var': et_type}
+            else:
+                ts = io_knmi.interpolate(np.array(x), np.array(y), stns, df)
+                meta = {'station': 'interpolation thin plate sline',
+                        'x': 'x', 'y': 'y', 'name': f'{et_type}_interpolated', 'meteo_var': et_type}
             
-            #adjust metadata
-            meta = {'station': 'interpolation thin plate sline',
-                    'x': x, 'y': y, 'name': 'EV24_interpolated'}
-
         else:
             raise ValueError("Please provide either 'nearest' or 'interpolate'")
 
