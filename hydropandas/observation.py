@@ -1025,7 +1025,7 @@ class EvaporationObs(MeteoObs):
                    name=meta["name"], meteo_var=et_type)
 
     @classmethod
-    def from_xy(cls, x, y, et_type='EV24', location='nearest',
+    def from_xy(cls, x, y, et_type='EV24', method='nearest',
                         startdate=None, enddate=None, fill_missing_obs=True, 
                         interval="daily", inseason=False, use_api=True, 
                         raise_exceptions=False):
@@ -1080,12 +1080,12 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        if location == 'nearest':
+        if method == 'nearest':
             stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
             ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
                                                end=enddate, settings=settings)
         
-        elif location == 'interpolate':
+        elif method == 'interpolation':
             settings["fill_missing_obs"] = False # dont fill missing obs
 
             stns = io_knmi.get_stations(meteo_var='EV24').sort_index() # get all station locations
@@ -1097,25 +1097,7 @@ class EvaporationObs(MeteoObs):
                 df[stn] = et
             df = df.dropna(how='all').copy()
             
-            xy = stns.loc[df.columns, ['x', 'y']]
-            ts = DataFrame(index=df.index, columns=[et_type])
-            for idx in df.index:
-                # get all stations with values for this date
-                val = df.loc[idx].dropna()
-                # get stations for this date
-                coor = xy.loc[val.index].to_numpy()
-                if len(val) < 3: # if there are less than 3 stations, 
-                                 # thin plate spline does not work
-                    kernel = 'linear'
-                else:
-                    kernel = 'thin_plate_spline' 
-                    # options: inverse_quadratic, linear, multiquadric, gaussian, 
-                    # inverse_multiquadric, cubic, quintic, thin_plate_spline
-
-                # create an scipy interpolator
-                rbf = RBFInterpolator(coor, val.to_numpy(), epsilon=1, kernel=kernel)
-                val_rbf = rbf.__call__(np.array([[x, y], [x, y]]))
-                ts.loc[idx, et_type] = max(val_rbf[0], 0)
+            ts = io_knmi.interpolate([x], [y], stns, df)
             
             #adjust metadata
             meta = {'station': 'interpolation thin plate sline',

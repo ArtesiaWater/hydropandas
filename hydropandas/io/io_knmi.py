@@ -18,6 +18,7 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
+from scipy.interpolate import RBFInterpolator
 import requests
 
 from .. import util
@@ -106,7 +107,7 @@ def get_nearest_stations_xy(x, y, meteo_var, n=1, stations=None, ignore=None):
         measurement variable e.g. 'RH' or 'EV24'
     n : int, optional
         number of stations you want to return. The default is 1.
-    stations : pd.DataFrame, optional
+    stations : pandas DataFrame, optional
         if None stations will be obtained using the get_stations function.
         The default is None.
     ignore : list, optional
@@ -139,13 +140,13 @@ def get_nearest_station_df(
 
     Parameters
     ----------
-    locations : pd.DataFrame
+    locations : pandas DataFrame
         x and y coordinates
     xcol : str
         name of the column in the locations dataframe with the x values
     ycol : str
         name of the column in the locations dataframe with the y values
-    stations : pd.DataFrame, optional
+    stations : pandas DataFrame, optional
         if None stations will be obtained using the get_stations function.
         The default is None.
     meteo_var : str
@@ -194,7 +195,7 @@ def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RH", ignore=N
         x coördinates of the cell centers of your grid shape(ncol)
     ymid : np.array
         y coördinates of the cell centers of your grid shape(nrow)
-    stations : pd.DataFrame, optional
+    stations : pandas DataFrame, optional
         if None stations will be obtained using the get_stations function.
         The default is None.
     meteo_var : str
@@ -370,11 +371,11 @@ def download_knmi_data(
 
     Returns
     -------
-    knmi_df : pd.DataFrame
+    knmi_df : pandas DataFrame
         data from one station from one type of observation
     variables : dictionary
         information about the observerd variables
-    stations : pd.DataFrame
+    stations : pandas DataFrame
         information about the measurement station.
     """
 
@@ -488,7 +489,7 @@ def get_knmi_daily_rainfall_api(
 
     Returns
     -------
-    pd.DataFrame
+    pandas DataFrame
         measurements.
     variables : dictionary
         additional information about the variables
@@ -550,7 +551,7 @@ def get_knmi_daily_rainfall_url(
 
     Returns
     -------
-    pd.DataFrame
+    pandas DataFrame
         measurements.
     variables : dictionary
         additional information about the variables
@@ -665,7 +666,7 @@ def _transform_variables(df, variables):
 
     Parameters
     ----------
-    df : DataFrame
+    df : pandas DataFrame
         time series.
     variables : dictionary
         description of variables in time series.
@@ -678,7 +679,7 @@ def _transform_variables(df, variables):
 
     Returns
     -------
-    df : DataFrame
+    df : pandas DataFrame
         time series.
     variables : dictionary
         description of variables in time series.
@@ -821,11 +822,11 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
 
     Returns
     -------
-    pd.DataFrame
+    pandas DataFrame
         measurements.
     variables : dictionary
         additional information about the variables
-    stations : pd.DataFrame
+    stations : pandas DataFrame
         additional data about the measurement station
     """
     data = {
@@ -872,11 +873,11 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
 
     Returns
     -------
-    pd.DataFrame
+    pandas DataFrame
         measurements.
     variables : dictionary
         additional information about the variables
-    stations : pd.DataFrame
+    stations : pandas DataFrame
         additional data about the measurement station
     """
     url = f"https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/daggegevens/etmgeg_{stn}.zip"
@@ -1045,7 +1046,7 @@ def get_knmi_timeseries_xy(x, y, meteo_var, start, end, stn_name=None, settings=
 
     Returns
     -------
-    knmi_df : pd.DataFrame
+    knmi_df : pandas DataFrame
         time series.
     meta : dic
         dictionary with metadata.
@@ -1244,7 +1245,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 
     Returns
     -------
-    knmi_df : pandas.DataFrame
+    knmi_df : pandas DataFrame
         time series with measurements.
     meta : dictionary
         metadata from the measurement station.
@@ -1310,7 +1311,7 @@ def get_knmi_obslist(
 
     Parameters
     ----------
-    locations : pd.DataFrame or None
+    locations : pandas DataFrame or None
         dataframe with x and y coordinates. The default is None
     stns : list of str or None
         list of knmi stations. The default is None
@@ -1470,7 +1471,7 @@ def add_missing_indices(knmi_df, stn, start, end):
 
     Parameters
     ----------
-    knmi_df : pd.DataFrame
+    knmi_df : pandas DataFrame
         data from one station from one type of observation, with additional
         column to see which station is used to fill the value
     stn : int or str
@@ -1482,7 +1483,7 @@ def add_missing_indices(knmi_df, stn, start, end):
 
     Returns
     -------
-    knmi_df : pd.DataFrame
+    knmi_df : pandas DataFrame
         data from one station from one type of observation
     """
     # check if given dates are more or less similar than measurement dates
@@ -1539,12 +1540,12 @@ def fill_missing_measurements(
 
     Returns
     -------
-    knmi_df : pd.DataFrame
+    knmi_df : pandas DataFrame
         data from one station from one type of observation, with additional
         column to see which station is used to fill the value
     variables : dictionary
         information about the observerd variables
-    stations : pd.DataFrame
+    stations : pandas DataFrame
         information about the measurement station.
     """
     settings = _get_default_settings(settings)
@@ -1820,7 +1821,7 @@ def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
 
     Returns
     ------
-    DataFrame
+    pandas DataFrame
 
     """    
     if et_type == 'EV24':
@@ -1860,3 +1861,73 @@ def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
                          'hargreaves', 'makkink' or 'penman'")
 
     return et, meta
+
+
+def interpolate(x, y, obs_locations, obs, kernel='thin_plate_spline',
+                kernel2='linear', epsilon=None):
+
+    """Interpolation method using the Scipy radial basis function (RBF)
+
+    Parameters
+    ----------
+    x : list or numpy array
+        x coördinate(s) in m RD.
+    y : list or numpy array
+        y coördinate(s) in m RD.
+    obs_locations : pandas DataFrame
+        Dataframe containing the observation locations at the index
+        and the x and y coordinates as a column 'x' and 'y' respectively.
+    obs : pandas DataFrame
+        Dataframe containing the observation locations as columns and
+        the observations at a measurement time in each row.
+    kernel : str, optional
+        Type of radial basis funtion, by default thin_plate_spline.
+        Other options are linear, gaussian, inverse_quadratic,
+        multiquadric, inverse_multiquadric, cubic or quintic
+    kernel2 : str, optional
+        Kernel in case there are not enough observations (3 or 6) for 
+        time step, by default linear. Other options are gaussian, 
+        inverse_quadratic, multiquadric, or inverse_multiquadric.
+    epsilon : float, optional
+        Shape parameter that scales the input to the RBF. If kernel is 
+        linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
+        Otherwise this must be specified.
+
+    Returns
+    -------
+    pandas DataFrame
+        DataFrame with the interpolated observations.
+    """
+
+    if (kernel == 'thin_plate_spline') or (kernel == 'cubic'):
+        min_val = 3
+    elif kernel == 'quintic':
+        min_val = 6
+    else:
+        min_val = len(obs.columns)
+
+    xy = obs_locations.loc[obs.columns, ['x', 'y']]
+    df = pd.DataFrame(index=obs.index, columns=[f'EV24_{str(np.array([x, y]).T[i])}' \
+                                                for i in range(len(x))])
+    for idx in obs.index:
+        # get all stations with values for this date
+        val = obs.loc[idx].dropna()
+        # get stations for this date
+        coor = xy.loc[val.index]
+
+        if len(val) >= min_val:
+            kernel = kernel
+        else:
+            kernel = kernel2
+
+        # create an scipy interpolator
+        rbf = RBFInterpolator(coor.to_numpy(), val.to_numpy(),
+                              epsilon=epsilon, kernel=kernel)
+        if len(x) == 1:
+            val_rbf = rbf.__call__(np.array([[x[0], y[0]], [x[0], y[0]]]))
+            df.loc[idx] = val_rbf[0]
+        else:
+            val_rbf = rbf.__call__(np.array([[x, y].T]))
+            df.loc[idx] = val_rbf
+    
+    return df
