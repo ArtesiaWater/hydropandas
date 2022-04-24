@@ -21,7 +21,7 @@ import pandas as pd
 from scipy.interpolate import RBFInterpolator
 import requests
 
-from .. import util
+from .. import util, observation
 
 logger = logging.getLogger(__name__)
 
@@ -1305,7 +1305,8 @@ def get_knmi_obslist(
     settings=None,
     cache=False,
     raise_exceptions=False,
-):
+    method='nearest'):
+
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
 
@@ -1366,10 +1367,11 @@ def get_knmi_obslist(
         collection of multiple point observations
     """
 
-    settings = _get_default_settings(settings)
+    if settings == None:
+        settings = _get_default_settings(settings)
     settings["raise_exceptions"] = raise_exceptions
 
-    if start is None:
+    if start == None:
         start = [None] * len(meteo_vars)
     elif isinstance(start, (str, dt.datetime)):
         start = [start] * len(meteo_vars)
@@ -1378,7 +1380,7 @@ def get_knmi_obslist(
     else:
         raise TypeError("must be None, str, dt.datetime or list")
 
-    if end is None:
+    if end == None:
         end = [None] * len(meteo_vars)
     elif isinstance(end, (str, dt.datetime)):
         end = [end] * len(meteo_vars)
@@ -1399,13 +1401,13 @@ def get_knmi_obslist(
                 obs_kwargs["et_type"] = "EV24"
 
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
-        if stns is None:
+        if (stns == None) and (method == 'nearest'):
             stations = get_stations(meteo_var=meteo_var)
-            if (locations is None) and (xmid is not None):
+            if (locations == None) and (xmid != None):
                 _stns = get_nearest_station_grid(
                     xmid, ymid, stations=stations, meteo_var=meteo_var
                 )
-            elif locations is not None:
+            elif locations != None:
                 _stns = get_nearest_station_df(
                     locations, stations=stations, meteo_var=meteo_var
                 )
@@ -1413,25 +1415,40 @@ def get_knmi_obslist(
                 raise ValueError(
                     "stns, location and xmid are all None" "please specify one of these"
                 )
+        elif (stns == None) and (method == 'interpolation'):
+            stations = get_stations(meteo_var=meteo_var)
         else:
             _stns = stns
+        
+        if method == 'nearest':
+            for stn in _stns:
+                if cache:
+                    cache_dir = os.path.join(tempfile.gettempdir(), "knmi")
+                    if not os.path.isdir(cache_dir):
+                        os.mkdir(cache_dir)
 
-        for stn in _stns:
-            if cache:
-                cache_dir = os.path.join(tempfile.gettempdir(), "knmi")
-                if not os.path.isdir(cache_dir):
-                    os.mkdir(cache_dir)
+                    fname = (
+                        f'{stn}-{meteo_var}-{start[i].strftime("%Y%m%d")}'
+                        f'-{end[i].strftime("%Y%m%d")}'
+                        f'-{settings["fill_missing_obs"]}' + ".pklz"
+                        )
+                    pklz_path = os.path.join(cache_dir, fname)
 
-                fname = (
-                    f'{stn}-{meteo_var}-{start[i].strftime("%Y%m%d")}'
-                    f'-{end[i].strftime("%Y%m%d")}'
-                    f'-{settings["fill_missing_obs"]}' + ".pklz"
-                )
-                pklz_path = os.path.join(cache_dir, fname)
-
-                if os.path.isfile(pklz_path):
-                    logger.info(f"reading {fname} from cache")
-                    o = pd.read_pickle(pklz_path)
+                    if os.path.isfile(pklz_path):
+                        logger.info(f"reading {fname} from cache")
+                        o = pd.read_pickle(pklz_path)
+                    else:
+                        o = ObsClass[i].from_knmi(
+                            stn,
+                            startdate=start[i],
+                            enddate=end[i],
+                            fill_missing_obs=settings["fill_missing_obs"],
+                            interval=settings["interval"],
+                            inseason=settings["inseason"],
+                            raise_exceptions=raise_exceptions,
+                            **obs_kwargs,
+                            )
+                        o.to_pickle(pklz_path)
                 else:
                     o = ObsClass[i].from_knmi(
                         stn,
@@ -1442,23 +1459,45 @@ def get_knmi_obslist(
                         inseason=settings["inseason"],
                         raise_exceptions=raise_exceptions,
                         **obs_kwargs,
-                    )
-                    o.to_pickle(pklz_path)
-            else:
-                o = ObsClass[i].from_knmi(
-                    stn,
-                    startdate=start[i],
-                    enddate=end[i],
-                    fill_missing_obs=settings["fill_missing_obs"],
-                    interval=settings["interval"],
-                    inseason=settings["inseason"],
-                    raise_exceptions=raise_exceptions,
-                    **obs_kwargs,
-                )
-            if settings["normalize_index"]:
-                o.index = o.index.normalize()
+                        )
+                
+                if settings["normalize_index"]:
+                    o.index = o.index.normalize()
 
-            obs_list.append(o)
+                obs_list.append(o)
+
+        elif method == 'interpolation':
+            settings["fill_missing_obs"] = False
+            # empty dataframe
+            df = pd.DataFrame(columns=stations.index, 
+                            index=pd.date_range(start=start[i],
+                                                end=end[i],
+                                                freq='H'))
+            for stn in stations.index:
+                df_stn = ObsClass[i].from_xy(stn, 
+                                            startdate=start[i],
+                                            enddate=end[i],
+                                            fill_missing_obs=settings["fill_missing_obs"],
+                                            interval=settings["interval"],
+                                            inseason=settings["inseason"],
+                                            raise_exceptions=raise_exceptions,
+                                            **obs_kwargs,
+                                            )
+                df[stn] = df_stn
+            df = df.dropna(how='all').copy()
+
+            if locations:
+                xmid = locations['x'].to_numpy()
+                ymid = locations['y'].to_numpy()
+            
+            ts = interpolate(xmid, ymid, stations, df)
+            for col in ts.columns:
+                o = ts[[col]].copy()
+                
+                if settings['normalize_index']:
+                    o.index = o.index.normalize()
+                
+                obs_list.append(o)
 
     return obs_list
 
@@ -1927,7 +1966,7 @@ def interpolate(x, y, obs_locations, obs, kernel='thin_plate_spline',
             val_rbf = rbf.__call__(np.array([[x[0], y[0]], [x[0], y[0]]]))
             df.loc[idx] = val_rbf[0]
         else:
-            val_rbf = rbf.__call__(np.array([[x, y].T]))
+            val_rbf = rbf.__call__(np.array([x, y]).T)
             df.loc[idx] = val_rbf
     
     return df
