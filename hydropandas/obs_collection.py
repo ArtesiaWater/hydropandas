@@ -704,41 +704,41 @@ class ObsCollection(pd.DataFrame):
         start=None,
         end=None,
         ObsClass=None,
-        **kwargs,
-    ):
-        """get knmi observations from a list of locations or a list of
+        **kwargs,):
+        """Get knmi observations from a list of locations or a list of
         stations.
 
         Parameters
         ----------
-        locations : pd.DataFrame or None
-            dataframe with x and y coordinates. The default is None
+        locations : pandas DataFrame or None
+            dataframe with columns 'x' and 'y' as coordinates. The 
+            default is None
         stns : list of str or None
             list of knmi stations. The default is None
-        xmid : np.array, optional
+        xmid : list or numpy array, optional
             x coördinates of the cell centers of your grid shape(ncol)
-        ymid : np.array, optional
+        ymid : list or numpy array, optional
             y coördinates of the cell centers of your grid shape(nrow)
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
         name : str, optional
-            name of the obscollection. The default is ''.
+            name of the obscollection. The default is ''
         start : None, str, datetime or list, optional
             start date of observations per meteo variable. The start date is
             included in the time series.
             If start is None the start date will be January 1st of the
             previous year.
-            if start is str it will be converted to datetime
-            if start is a list it should be the same length as meteo_vars and
+            If start is str it will be converted to datetime.
+            If start is a list it should be the same length as meteo_vars and
             the start time for each variable. The default is None
-        end : list of str, datetime or None]
+        end : list of str, datetime or None
             end date of observations per meteo variable. The end date is
             included in the time series.
             If end is None the start date will be January 1st of the
             previous year.
-            if end is a str it will be converted to datetime
-            if end is a list it should be the same length as meteo_vars and
+            If end is a str it will be converted to datetime.
+            If end is a list it should be the same length as meteo_vars and
             the end time for each meteo variable. The default is None
         ObsClass : type, list of type or None
             class of the observations, can be PrecipitationObs, EvaporationObs
@@ -750,9 +750,7 @@ class ObsCollection(pd.DataFrame):
         List of possible variables:
             neerslagstations:
             RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
-            voorafgaande dag tot 0800 utc op de vermelde datum
-
-            meteostations:
+            voorafgaande dag tot 0800 utc op de vermelde datum meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken

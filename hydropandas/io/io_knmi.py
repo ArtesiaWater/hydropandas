@@ -1329,7 +1329,7 @@ def get_knmi_obslist(
         if start is str it will be converted to datetime
         if start is a list it should be the same length as meteo_vars and
         the start time for each variable. The default is None
-    end : list of str, datetime or None]
+    end : list of str, datetime or None
         end date of observations per meteo variable. The end date is
         included in the time series.
         If end is None the start date will be January 1st of the
@@ -1338,8 +1338,8 @@ def get_knmi_obslist(
         if end is a list it should be the same length as meteo_vars and
         the end time for each meteo variable. The default is None
     ObsClass : list of type or None
-        class of the observations, can be PrecipitationObs or EvapObs. The
-        default is [None].
+        class of the observations, can be PrecipitationObs or 
+        EvaporationObs. The default is None.
     settings : dict or None, optional
         settings for obtaining the right time series, options are:
             fill_missing_obs : bool, optional
