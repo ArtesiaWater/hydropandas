@@ -21,7 +21,7 @@ import pandas as pd
 from scipy.interpolate import RBFInterpolator
 import requests
 
-from .. import util, observation
+from .. import util
 
 logger = logging.getLogger(__name__)
 
@@ -1367,11 +1367,11 @@ def get_knmi_obslist(
         collection of multiple point observations
     """
 
-    if settings == None:
+    if settings is None:
         settings = _get_default_settings(settings)
     settings["raise_exceptions"] = raise_exceptions
 
-    if start == None:
+    if start is None:
         start = [None] * len(meteo_vars)
     elif isinstance(start, (str, dt.datetime)):
         start = [start] * len(meteo_vars)
@@ -1380,7 +1380,7 @@ def get_knmi_obslist(
     else:
         raise TypeError("must be None, str, dt.datetime or list")
 
-    if end == None:
+    if end is None:
         end = [None] * len(meteo_vars)
     elif isinstance(end, (str, dt.datetime)):
         end = [end] * len(meteo_vars)
@@ -1415,7 +1415,7 @@ def get_knmi_obslist(
                 raise ValueError(
                     "stns, location and xmid are all None" "please specify one of these"
                 )
-        elif (stns == None) and (method == 'interpolation'):
+        elif (stns is None) and (method == 'interpolation'):
             stations = get_stations(meteo_var=meteo_var)
         else:
             _stns = stns

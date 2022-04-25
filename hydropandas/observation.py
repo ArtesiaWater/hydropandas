@@ -16,8 +16,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 import warnings
 import numpy as np
-from pandas import DataFrame, date_range
-from scipy.interpolate import RBFInterpolator
+from pandas import DataFrame
 
 from _io import StringIO
 from pandas._config import get_option
