@@ -1897,8 +1897,9 @@ def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
     return et, meta
 
 
-def interpolate(x, y, obs_locations, obs, kernel='thin_plate_spline',
-                kernel2='linear', epsilon=None):
+def interpolate(x, y, obs_locations, obs, obs_str='EV', 
+                kernel='thin_plate_spline', kernel2='linear',
+                epsilon=None):
 
     """Interpolation method using the Scipy radial basis function (RBF)
 
@@ -1914,6 +1915,8 @@ def interpolate(x, y, obs_locations, obs, kernel='thin_plate_spline',
     obs : pandas DataFrame
         Dataframe containing the observation locations as columns and
         the observations at a measurement time in each row.
+    obs_str : str, optional
+        Kind of observation to put in the column name DataFrame
     kernel : str, optional
         Type of radial basis funtion, by default thin_plate_spline.
         Other options are linear, gaussian, inverse_quadratic,
@@ -1941,7 +1944,7 @@ def interpolate(x, y, obs_locations, obs, kernel='thin_plate_spline',
         min_val = len(obs.columns)
 
     xy = obs_locations.loc[obs.columns, ['x', 'y']]
-    df = pd.DataFrame(index=obs.index, columns=[f'EV24_{str(np.array([x, y]).T[i])}' \
+    df = pd.DataFrame(index=obs.index, columns=[f'{obs_str}_{str(np.array([np.round(x, 0), np.round(y, 0)]).T[i])}' \
                                                 for i in range(len(x))])
     for idx in obs.index:
         # get all stations with values for this date
