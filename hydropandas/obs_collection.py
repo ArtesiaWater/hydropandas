@@ -895,7 +895,7 @@ class ObsCollection(pd.DataFrame):
         )
                 
         obs_df = util._obslist_to_frame(obs_list)
-        # return obs_list
+
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod

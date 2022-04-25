@@ -1467,7 +1467,7 @@ def get_knmi_obslist(
                 obs_list.append(o)
 
         elif method == 'interpolation':
-            # if isinstance(ObsClass[i], observation.EvaporationObs):
+
             if locations:
                 xmid = locations['x'].to_list()
                 ymid = locations['y'].to_list()
@@ -1482,21 +1482,17 @@ def get_knmi_obslist(
                                      method=method,
                                      **obs_kwargs,
                                      )
-            # meta = ts.meta.copy()
-
-            for j, col in enumerate(ts.columns):
-                o = ts.loc[:, [col]].copy()
+            if isinstance(ts, dict):
+                for key in ts:
+                    o = ts[key].copy()
                 
-                # o.meta.update({'name':meta['name'][j], 'x':meta['x'][j], 'y':meta['y'][j]})
-
-                # if settings['normalize_index']:
-                    # o.index = o.index.normalize()
-                
+                    if settings['normalize_index']:
+                        o.index = o.index.normalize()
+                    
+                    obs_list.append(o)
+            else:
+                o = ts.copy() 
                 obs_list.append(o)
-                
-            # else:
-                # TypeError('Interpolation does not work other Obs than EvaorationObs')
-
 
     return obs_list
 
