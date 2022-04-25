@@ -971,8 +971,7 @@ class EvaporationObs(MeteoObs):
     def from_knmi(cls, stn, et_type='EV24', startdate=None,
                   enddate=None, fill_missing_obs=True,
                   interval="daily", inseason=False,
-                  use_precipitation_stn=True, use_api=True,
-                  raise_exceptions=False):
+                  use_api=True, raise_exceptions=False):
         """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
         Parameters
@@ -1042,10 +1041,10 @@ class EvaporationObs(MeteoObs):
             type of evapotranspiration to get from KNMI. Choice between 
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
             'EV24' which collects the KNMI Makkink EV24 evaporation.
-        location: str
+        method: str
             specify whether evaporation should be collected from the nearest
             meteo station (fast) or interpolated using thin plate spline (slow).
-            Choiche betweeen 'nearest' or 'interpolate'
+            Choiche betweeen 'nearest' or 'interpolation'
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1095,16 +1094,15 @@ class EvaporationObs(MeteoObs):
             # get all station locations
             stns = io_knmi.get_stations(meteo_var='EV24').sort_index()
 
-            df = DataFrame(index=date_range(
-                start='1900', end=enddate, freq='H'), columns=stns.index)
+            df = DataFrame(columns=stns.index) #index=date_range(start='1900', end=enddate, freq='H')
             for stn in stns.index:  # fill dataframe with measurements
                 et, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
                                                    end=enddate, settings=settings)
                 df[stn] = et
-            df = df.dropna(how='all').copy()
+
             # only one location
             if isinstance(x, float) or isinstance(x, int):
-                ts = io_knmi.interpolate([x], [y], stns, df)
+                ts = io_knmi.interpolate([x], [y], stns, df).astype(float)
 
                 meta = {'station': 'interpolation thin plate sline',
                         'x': x, 'y': y, 'name': ts.columns, 'meteo_var': et_type}
@@ -1114,7 +1112,8 @@ class EvaporationObs(MeteoObs):
                            name=meta["name"], meteo_var=et_type)
             # multiple locations
             else:
-                ts = io_knmi.interpolate(np.array(x), np.array(y), stns, df)
+                ts = io_knmi.interpolate(np.array(x), np.array(y), stns, df).astype(float)
+
                 d = {}
                 for i, col in enumerate(ts.columns):
                     meta = {'station': 'interpolation thin plate sline',

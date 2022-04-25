@@ -741,10 +741,14 @@ class ObsCollection(pd.DataFrame):
             If end is a str it will be converted to datetime.
             If end is a list it should be the same length as meteo_vars and
             the end time for each meteo variable. The default is None
-        ObsClass : type, list of type or None
+        ObsClass : list of type or None
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
+        method : str, optional
+            specify whether EvaporationObs should be collected from the nearest
+            meteo station (fast) or interpolated using thin plate spline (slow).
+            Choiche betweeen 'nearest' or 'interpolation'
         **kwargs :
             kwargs are passed to the io_knmi.get_knmi_obslist function
 
