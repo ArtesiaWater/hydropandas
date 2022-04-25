@@ -1104,7 +1104,7 @@ class EvaporationObs(MeteoObs):
                 ts = io_knmi.interpolate([x], [y], stns, df, obs_str=et_type).astype(float)
 
                 meta = {'station': 'interpolation thin plate sline',
-                        'x': x, 'y': y, 'name': ts.columns, 'meteo_var': et_type}
+                        'x': x, 'y': y, 'name': ts.columns[0], 'meteo_var': et_type}
 
                 return cls(ts, meta=meta, station=meta["station"],
                            x=meta["x"], y=meta["y"],
