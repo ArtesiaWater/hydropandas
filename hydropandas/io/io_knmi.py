@@ -1401,13 +1401,13 @@ def get_knmi_obslist(
                 obs_kwargs["et_type"] = "EV24"
 
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
-        if (stns == None) and (method == 'nearest'):
+        if (stns is None) and (method == 'nearest'):
             stations = get_stations(meteo_var=meteo_var)
-            if (locations == None) and (xmid != None):
+            if (locations is None) and (xmid is not None):
                 _stns = get_nearest_station_grid(
                     xmid, ymid, stations=stations, meteo_var=meteo_var
                 )
-            elif locations != None:
+            elif locations is not None:
                 _stns = get_nearest_station_df(
                     locations, stations=stations, meteo_var=meteo_var
                 )
@@ -1468,7 +1468,7 @@ def get_knmi_obslist(
 
         elif method == 'interpolation':
 
-            if locations:
+            if locations is not None:
                 xmid = locations['x'].to_list()
                 ymid = locations['y'].to_list()
 
