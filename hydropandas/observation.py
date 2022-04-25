@@ -1084,34 +1084,49 @@ class EvaporationObs(MeteoObs):
             stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
             ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
                                                end=enddate, settings=settings)
-        
+
+            return cls(ts, meta=meta, station=meta["station"],
+                       x=meta["x"], y=meta["y"],
+                       name=meta["name"], meteo_var=et_type)
+
         elif method == 'interpolation':
-            settings["fill_missing_obs"] = False # dont fill missing obs
+            settings["fill_missing_obs"] = False  # dont fill missing obs
 
-            stns = io_knmi.get_stations(meteo_var='EV24').sort_index() # get all station locations
+            # get all station locations
+            stns = io_knmi.get_stations(meteo_var='EV24').sort_index()
 
-            df = DataFrame(index=date_range(start='1900', end=enddate, freq='H'), columns=stns.index)
-            for stn in stns.index: # fill dataframe with measurements
+            df = DataFrame(index=date_range(
+                start='1900', end=enddate, freq='H'), columns=stns.index)
+            for stn in stns.index:  # fill dataframe with measurements
                 et, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
                                                    end=enddate, settings=settings)
                 df[stn] = et
             df = df.dropna(how='all').copy()
-            
+            # only one location
             if isinstance(x, float) or isinstance(x, int):
                 ts = io_knmi.interpolate([x], [y], stns, df)
-                meta = {'station': 'interpolation thin plate sline', \
+
+                meta = {'station': 'interpolation thin plate sline',
                         'x': x, 'y': y, 'name': ts.columns, 'meteo_var': et_type}
+
+                return cls(ts, meta=meta, station=meta["station"],
+                           x=meta["x"], y=meta["y"],
+                           name=meta["name"], meteo_var=et_type)
+            # multiple locations
             else:
                 ts = io_knmi.interpolate(np.array(x), np.array(y), stns, df)
-                meta = {'station': 'interpolation thin plate sline',
-                        'x': 'x', 'y': 'y', 'name': f'{et_type}_interpolated', 'meteo_var': et_type}
-            
+                d = {}
+                for i, col in enumerate(ts.columns):
+                    meta = {'station': 'interpolation thin plate sline',
+                        'x': x[i], 'y': y[i], 'name': col, 'meteo_var': et_type}
+                    d[col] = cls(ts.loc[:, [col]].copy(), meta=meta,
+                                 station=meta["station"], x=meta["x"],
+                                 y=meta["y"], name=meta["name"],
+                                 meteo_var=et_type)
+                return d
         else:
-            raise ValueError("Please provide either 'nearest' or 'interpolate'")
-
-        return cls(ts, meta=meta, station=meta["station"],
-                   x=meta["x"], y=meta["y"],
-                   name=meta["name"], meteo_var=et_type)
+            raise ValueError("Please provide either 'nearest' or 'interpolation' as method")
+        
 
     @classmethod
     def from_obs(cls, obs, et_type='EV24', startdate=None, enddate=None, 
