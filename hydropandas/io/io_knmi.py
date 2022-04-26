@@ -1944,8 +1944,7 @@ def interpolate(x, y, obs_locations, obs, obs_str='EV',
         min_val = len(obs.columns)
 
     xy = obs_locations.loc[obs.columns, ['x', 'y']]
-    df = pd.DataFrame(index=obs.index, columns=[f'{obs_str}_{str(np.array([np.round(x, 0), np.round(y, 0)]).T[i])}' \
-                                                for i in range(len(x))])
+    df = pd.DataFrame(index=obs.index, columns=[f'{obs_str}_[{int(x[i])} {int(y[i])}]' for i in range(len(x))])
     for idx in obs.index:
         # get all stations with values for this date
         val = obs.loc[idx].dropna()
