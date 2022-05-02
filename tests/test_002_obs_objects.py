@@ -94,10 +94,17 @@ def test_copy_obs():
     o = test_groundwater_obs(name="grondwaterobs_001", filternr=2)
     o2 = o.copy()
     
-    o.meta['nieuw ding'] = 'testje'
+    o.meta['hello'] = 'world'
     
-    if 'nieuw ding' in o2.meta.keys():
-        raise ValueError('copy method failed')
+    # check deep copy attributes
+    assert 'nieuw ding' in o2.meta.keys(), 'copy method failed'
+        
+    o3 = o.copy(deep=False)
+    
+    # check shallow copy attributes
+    o.meta['answer'] = 42
+    assert 'answer' not in o3.meta.keys(), 'copy method failed'
+    
 
 def test_merge_observations_same_timeseries():
     # base
