@@ -1102,6 +1102,7 @@ class EvaporationObs(MeteoObs):
             # only one location
             if isinstance(x, float) or isinstance(x, int):
                 ts = io_knmi.interpolate([x], [y], stns, df, obs_str=et_type).astype(float)
+                ts[ts < 0] = 0
 
                 meta = {'station': 'interpolation thin plate sline',
                         'x': x, 'y': y, 'name': ts.columns[0], 'meteo_var': et_type}
@@ -1112,7 +1113,8 @@ class EvaporationObs(MeteoObs):
             # multiple locations
             else:
                 ts = io_knmi.interpolate(np.array(x), np.array(y), stns, df, obs_str=et_type).astype(float)
-
+                ts[ts < 0] = 0
+                
                 d = {}
                 for i, col in enumerate(ts.columns):
                     meta = {'station': 'interpolation thin plate sline',
