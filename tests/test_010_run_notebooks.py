@@ -34,8 +34,3 @@ def test_run_notebook_02_knmi_observations():
 @pytest.mark.notebooks
 def test_run_notebook_03_pastastore_from_observations():
     _run_notebook(nbdir, "03_pastastore_from_observations.ipynb")
-
-
-@pytest.mark.notebooks
-def test_run_notebook_04_interpolation():
-    _run_notebook(nbdir, "04_interpolation.ipynb")
