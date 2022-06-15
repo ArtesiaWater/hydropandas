@@ -59,7 +59,7 @@ def test_waterlvl_obs():
         x=x,
         y=y,
         filename="",
-        meta={"info": "in deze dictionary " "kan je extra informatie kwijt"},
+        meta={"info": "in deze dictionary kan je extra informatie kwijt"},
     )
     return wlvl
 
@@ -97,13 +97,13 @@ def test_copy_obs():
     o.meta['hello'] = 'world'
     
     # check deep copy attributes
-    assert 'nieuw ding' in o2.meta.keys(), 'copy method failed'
+    assert 'hello' not in o2.meta.keys(), 'copy method failed'
         
     o3 = o.copy(deep=False)
     
     # check shallow copy attributes
     o.meta['answer'] = 42
-    assert 'answer' not in o3.meta.keys(), 'copy method failed'
+    assert 'answer' in o3.meta.keys(), 'copy method failed'
     
 
 def test_merge_observations_same_timeseries():
