@@ -16,14 +16,18 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 import warnings
 import numpy as np
-from pandas import DataFrame
+import pandas as pd
 
 from _io import StringIO
 from pandas._config import get_option
 from pandas.io.formats import console
 
+import logging
 
-class Obs(DataFrame):
+logger = logging.getLogger(__name__)
+
+
+class Obs(pd.DataFrame):
     """class for point observations.
 
     An Obs object is a subclass of a pandas.DataFrame and allows for additional
@@ -47,7 +51,7 @@ class Obs(DataFrame):
     """
 
     # temporary properties
-    _internal_names = DataFrame._internal_names + ["none"]
+    _internal_names = pd.DataFrame._internal_names + ["none"]
     _internal_names_set = set(_internal_names)
 
     # normal properties
@@ -106,6 +110,45 @@ class Obs(DataFrame):
     @property
     def _constructor(self):
         return Obs
+    
+    def copy(self, deep=True):
+        """create a copy of the observation.
+        
+        When ``deep=True`` (default), a new object will be created with a
+        copy of the calling object's data and indices. Modifications to
+        the data or indices of the copy will not be reflected in the
+        original object (see notes below).
+
+        When ``deep=False``, a new object will be created without copying
+        the calling object's data or index (only references to the data
+        and index are copied). Any changes to the data of the original
+        will be reflected in the shallow copy (and vice versa).
+        
+        Parameters
+        ----------
+        deep : bool, default True
+            Make a deep copy, including a copy of the data and the indices.
+            With ``deep=False`` neither the indices nor the data are copied.
+        
+        Returns
+        -------
+        o : TYPE
+            DESCRIPTION.
+
+        """
+        
+        if not deep:
+            return super().copy(deep=deep)
+        
+        o = super().copy(deep=deep)
+        
+        # creat a copy of all mutable attributes
+        for att in self._metadata:
+            val = getattr(self, att)
+            if isinstance(val, (list, dict)):
+                setattr(o, att, val.copy())
+        
+        return o
 
     def to_collection_dict(self, include_meta=False):
         """get dictionary with registered attributes and their values of an Obs
@@ -137,6 +180,92 @@ class Obs(DataFrame):
         d["obs"] = self
 
         return d
+    
+    def merge_observation(self, o, check_metadata=False):
+        """ Merge with another observation of the same type. 
+
+        Parameters
+        ----------
+        o : hpd.observation.Obs
+            Observation object.
+        check_metadata : bool, optional
+            If True the metadata of the two objects are compared. Differences
+            are logged. The metadata of the current observation is always
+            used for the merged observation. The default is False.
+            
+        Raises
+        ------
+        TypeError
+            when the observation types are not the same.
+        ValueError
+            when the time series have different values on the same date.
+
+        Returns
+        -------
+        Observation object.
+
+        """
+        logger.warn("function 'merge_observation' not thoroughly tested, please be carefull!")
+        
+        
+        # check observation type
+        if type(self) != type(o):
+            raise TypeError(f'existing observation has a different type {type(self)} than new observation {type(o)}')
+        
+        # check if metadata is the same
+        if check_metadata:
+            same_metadata = True
+            for key in self._metadata:
+                v1 = getattr(self, key)
+                v2 = getattr(o, key)
+                try:
+                    if v1 != v2:
+                        same_metadata = False
+                        logger.info(f'existing observation {key} differs from new observation, use existing')
+                except TypeError:
+                    logger.info(f'existing observation {key} differs from new observation, use existing')
+                    same_metadata = False
+            if same_metadata:
+                logger.info('new and existing observation have the same metadata')
+
+        # check if time series are the same
+        if self.equals(o):
+            logger.info('new and existing observation have the same time series')
+            return self
+        
+        logger.info('new observation has a different time series')
+        logger.info('merge time series')
+        
+        new_o = self.iloc[0:0, 0:0]
+        
+        # merge overlapping columns
+        overlap_cols = list(set(self.columns) & set(o.columns))
+        
+        # check for overlapping indices and columns
+        dup_ind_o = o.loc[o.index.isin(self.index)]
+        if not dup_ind_o.empty:
+            if not self.loc[dup_ind_o.index, overlap_cols].equals(dup_ind_o[overlap_cols]):
+                raise ValueError('observation have different values for same time steps')
+        
+        # merge non overlapping indices
+        unique_ind_o = o.loc[~o.index.isin(self.index)]
+        dfcol = pd.concat([self[overlap_cols], unique_ind_o[overlap_cols]])
+        new_o = pd.concat([new_o, dfcol], axis=1)
+
+        # merge non overlapping columns                
+        for col in o.columns:
+            if col not in new_o.columns:
+                new_o = pd.concat([new_o, o[[col]]], axis=1)
+        for col in self.columns:
+            if col not in new_o.columns:
+                new_o = pd.concat([new_o, self[[col]]], axis=1)
+                    
+        # reset metadata (use existing observation)
+        for key in self._metadata:
+            setattr(new_o, key, getattr(self, key))
+                
+        return new_o
+        
 
 
 class GroundwaterObs(Obs):

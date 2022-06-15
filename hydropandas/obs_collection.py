@@ -8,6 +8,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import warnings
+import numbers
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -119,10 +120,10 @@ class ObsCollection(pd.DataFrame):
         if att_name in o._metadata:
             setattr(o, att_name, value)
             logger.debug(f'set attribute {att_name} of {iname} to {value}')
-            
+
         if att_name == 'name':
             # name is the index of the ObsCollection dataframe
-            self.rename(index={iname:value}, inplace=True)
+            self.rename(index={iname: value}, inplace=True)
         else:
             self.loc[iname, att_name] = value
         logger.debug(f'set {iname}, {att_name} to {value} in obscollection')
@@ -130,6 +131,117 @@ class ObsCollection(pd.DataFrame):
         if add_to_meta:
             o.meta.update({att_name: value})
             logger.debug(f'add {att_name} of {iname} with value {value} to meta')
+
+    def _is_consistent(self, check_individual_obs=True):
+        """ check if an observation collection is consistent. An observation
+        collection is consistent if:
+            1. all observations have a unique name
+            2. there are no nan values in the obs column
+            3. the metadata of each observation has the same type and value
+            as the corresponding row in the observation collection dataframe.
+
+
+        Parameters
+        ----------
+        check_individual_obs : bool, optional
+            If True the third condition in the list above is check. The 
+            default is True.
+
+        Returns
+        -------
+        bool
+            True -> consistent
+            False -> inconsistent.
+
+        """
+        # check unique index
+        if not self.index.is_unique:
+            logger.warning(f'index of observation collection -> {self.name} not unique')
+            return False
+
+        # check nan values in observations
+        if self.obs.isna().any():
+            logger.warning(f'missing observation object in collection -> {self.name} ')
+            return False
+
+        # check oc data with individual object attributes
+        if check_individual_obs:
+            for o in self.obs.values:
+                for att in o._metadata:
+                    if att not in ['name', 'meta']:
+                        v1 = self.loc[o.name, att]
+                        v2 = getattr(o, att)
+                        # check if values are equal
+                        try:
+                            if v1 != v2:
+                                # check if both are nan
+                                if isinstance(v1, numbers.Number) and isinstance(v2, numbers.Number):
+                                    if np.isnan(v1) and np.isnan(v2):
+                                        continue
+
+                                # otherwise return Nan
+                                logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} {att} value')
+                                return False
+                        except TypeError:
+                            logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} {att} value')
+                            return False
+                    elif att == 'name':
+                        if o.name not in self.index:
+                            logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} name')
+                            return False
+
+        return True
+
+    def add_observation(self, o, check_consistency=True,
+                        check_metadata=False):
+        """ add an observation to an existing observation collection. If the
+        observation exists the two observations are merged.
+
+        Parameters
+        ----------
+        o : hpd.observation.Obs
+            Observation object.
+        check_consistency : bool, optional
+            If True the consistency of the collection is first checked. The 
+            default is True.
+        check_metadata : bool, optional
+            If True and observations are merged the metadata of the two
+            observations are compared. Differences are logged. The metadata of
+            the observation in the collection is always used for the merged 
+            observation. The default is False.
+
+        Raises
+        ------
+        RuntimeError
+            when the observation collection is inconsistent.
+        TypeError
+            when the observation type is wrong.
+
+        Returns
+        -------
+        None.
+
+        """
+        if check_consistency:
+            if not self._is_consistent():
+                raise RuntimeError('inconsistent observation collection')
+
+        if not isinstance(o, obs.Obs):
+            raise TypeError('Observation should be of type hydropandas.observation.Obs')
+
+        # add new observation to collection
+        if o.name not in self.index:
+            logger.info(f'adding {o.name} to collection')
+            self.loc[o.name] = o.to_collection_dict()
+        else:
+            logger.info(f'observation name {o.name} already in collection, merging observations')
+            
+            o1 = self.loc[o.name, 'obs']
+            omerged = o1.merge_observation(o, check_metadata=check_metadata)
+
+            # overwrite observation in collection
+            self.loc[o.name] = omerged.to_collection_dict()
+
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -1179,7 +1291,7 @@ class ObsCollection(pd.DataFrame):
             key in meta dictionary of observation object
         """
 
-        self[key] = [o.meta[key] for o in self.obs.values]
+        self[key] = [o.meta[key] if key in o.meta.keys() else None for o in self.obs.values]
 
     def get_series(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         if tmin is None:
