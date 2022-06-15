@@ -1287,7 +1287,7 @@ class ObsCollection(pd.DataFrame):
             key in meta dictionary of observation object
         """
 
-        self[key] = [o.meta[key] for o in self.obs.values]
+        self[key] = [o.meta[key] if key in o.meta.keys() else None for o in self.obs.values]
 
     def get_series(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         if tmin is None:
