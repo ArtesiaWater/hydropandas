@@ -1222,7 +1222,7 @@ class EvaporationObs(MeteoObs):
             # get all station locations
             stns = io_knmi.get_stations(meteo_var='EV24').sort_index()
 
-            df = DataFrame(columns=stns.index) #index=date_range(start='1900', end=enddate, freq='H')
+            df = pd.DataFrame(columns=stns.index) #index=date_range(start='1900', end=enddate, freq='H')
             for stn in stns.index:  # fill dataframe with measurements
                 et, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
                                                    end=enddate, settings=settings)
