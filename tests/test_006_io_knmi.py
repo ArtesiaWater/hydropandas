@@ -32,7 +32,6 @@ def test_get_knmi_precip_meteostation_fill_missing():
     return ts2, meta2
 
 
-@pytest.mark.skip(reason="KNMI API is down")
 def test_get_knmi_precip_meteostation_hourly():
 
     # De Bilt meteostation uurlijks
@@ -131,7 +130,6 @@ def test_download_ev24_210_no_api():
         210, meteo_var="EV24", start="1952", end=None, settings=settings
     )
     return knmi_df, variables, stations
-
 
 
 def test_get_knmi_daily_meteo_ev24_empty():
