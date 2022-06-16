@@ -460,7 +460,7 @@ def download_knmi_data(
 
     return knmi_df, variables, stations
 
-@lru_cache
+@lru_cache()
 def get_knmi_daily_rainfall_api(
     url, stn, meteo_var, start=None, end=None, inseason=False
 ):
@@ -523,7 +523,7 @@ def get_knmi_daily_rainfall_api(
     return knmi_df[[meteo_var]], variables
 
 
-@lru_cache
+@lru_cache()
 def get_knmi_daily_rainfall_url(
     stn, stn_name, meteo_var, start=None, end=None, inseason=False, use_cache=True
 ):
@@ -802,7 +802,7 @@ def _read_station_location(f):
     return f, stations
 
 
-@lru_cache
+@lru_cache()
 def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
     """download and read knmi daily meteo data.
 
@@ -856,7 +856,7 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
     return knmi_df[[meteo_var]], variables, stations
 
 
-@lru_cache
+@lru_cache()
 def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     """download and read knmi daily meteo data.
 
@@ -977,7 +977,7 @@ def read_knmi_daily_meteo(f):
 
     return df, variables, stations
 
-@lru_cache
+@lru_cache()
 def get_knmi_hourly_api(url, stn, meteo_var, start, end):
 
     data = {
