@@ -809,8 +809,8 @@ class ObsCollection(pd.DataFrame):
         cls,
         locations=None,
         stns=None,
-        xmid=None,
-        ymid=None,
+        x=None,
+        y=None,
         meteo_vars=("RH",),
         name="",
         start=None,
@@ -828,10 +828,10 @@ class ObsCollection(pd.DataFrame):
             default is None
         stns : list of str or None
             list of knmi stations. The default is None
-        xmid : list or numpy array, optional
-            x coördinates of the cell centers of your grid shape(ncol)
-        ymid : list or numpy array, optional
-            y coördinates of the cell centers of your grid shape(nrow)
+        x : list or numpy array, optional
+            x coördinates of the locations
+        y : list or numpy array, optional
+            y coördinates of the locations
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
@@ -1000,8 +1000,8 @@ class ObsCollection(pd.DataFrame):
         obs_list = get_knmi_obslist(
             locations,
             stns,
-            xmid,
-            ymid,
+            x,
+            y,
             meteo_vars,
             ObsClass=ObsClass,
             start=start,

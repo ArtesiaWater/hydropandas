@@ -15,6 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import warnings
+import numbers
 import numpy as np
 import pandas as pd
 
@@ -1228,8 +1229,7 @@ class EvaporationObs(MeteoObs):
                                                    end=enddate, settings=settings)
                 df[stn] = et
 
-            # only one location
-            if isinstance(x, float) or isinstance(x, int):
+            if isinstance(x, numbers.Number):
                 ts = io_knmi.interpolate([x], [y], stns, df, obs_str=et_type).astype(float)
                 ts[ts < 0] = 0
 
@@ -1239,20 +1239,8 @@ class EvaporationObs(MeteoObs):
                 return cls(ts, meta=meta, station=meta["station"],
                            x=meta["x"], y=meta["y"],
                            name=meta["name"], meteo_var=et_type)
-            # multiple locations
             else:
-                ts = io_knmi.interpolate(np.array(x), np.array(y), stns, df, obs_str=et_type).astype(float)
-                ts[ts < 0] = 0
-                
-                d = {}
-                for i, col in enumerate(ts.columns):
-                    meta = {'station': 'interpolation thin plate sline',
-                        'x': x[i], 'y': y[i], 'name': col, 'meteo_var': et_type}
-                    d[col] = cls(ts.loc[:, [col]].copy(), meta=meta,
-                                 station=meta["station"], x=meta["x"],
-                                 y=meta["y"], name=meta["name"],
-                                 meteo_var=et_type)
-                return d
+                raise TypeError(f'expected nummerical type but got {type(x)} instead')
         else:
             raise ValueError("Please provide either 'nearest' or 'interpolation' as method")
         

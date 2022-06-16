@@ -8,7 +8,7 @@ The main function to obtain a time series are:
 There is some ugly code involved if you want to obtain precipitation data.
 This code combines the data from the meteo_stations and the neerslagstations.
 """
-
+from functools import lru_cache
 import datetime as dt
 import logging
 import os
@@ -180,21 +180,21 @@ def get_nearest_station_df(
         columns=stations.index,
     )
 
-    stns = distances.idxmin(axis=1).unique()
+    stns = distances.idxmin(axis=1).to_list()
 
     return stns
 
 
-def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RH", ignore=None):
-    """find the KNMI stations that measure 'meteo_var' closest to all cells in
-    a grid.
+def get_nearest_station_xy(x, y, stations=None, meteo_var="RH", ignore=None):
+    """find the KNMI stations that measure 'meteo_var' closest to the given
+    x and y coördinates.
 
     Parameters
     ----------
-    xmid : np.array
-        x coördinates of the cell centers of your grid shape(ncol)
-    ymid : np.array
-        y coördinates of the cell centers of your grid shape(nrow)
+    x : list or numpy array, optional
+        x coördinates of the locations
+    y : list or numpy array, optional
+        y coördinates of the locations
     stations : pandas DataFrame, optional
         if None stations will be obtained using the get_stations function.
         The default is None.
@@ -212,9 +212,8 @@ def get_nearest_station_grid(xmid, ymid, stations=None, meteo_var="RH", ignore=N
     -----
     assumes you have a structured rectangular grid.
     """
-    mg = np.meshgrid(xmid, ymid)
 
-    locations = pd.DataFrame(data={"x": mg[0].ravel(), "y": mg[1].ravel()})
+    locations = pd.DataFrame(data={"x": x, "y": y})
 
     stns = get_nearest_station_df(
         locations,
@@ -461,7 +460,7 @@ def download_knmi_data(
 
     return knmi_df, variables, stations
 
-
+@lru_cache
 def get_knmi_daily_rainfall_api(
     url, stn, meteo_var, start=None, end=None, inseason=False
 ):
@@ -524,6 +523,7 @@ def get_knmi_daily_rainfall_api(
     return knmi_df[[meteo_var]], variables
 
 
+@lru_cache
 def get_knmi_daily_rainfall_url(
     stn, stn_name, meteo_var, start=None, end=None, inseason=False, use_cache=True
 ):
@@ -802,6 +802,7 @@ def _read_station_location(f):
     return f, stations
 
 
+@lru_cache
 def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
     """download and read knmi daily meteo data.
 
@@ -855,6 +856,7 @@ def get_knmi_daily_meteo_api(url, stn, meteo_var, start, end, inseason):
     return knmi_df[[meteo_var]], variables, stations
 
 
+@lru_cache
 def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     """download and read knmi daily meteo data.
 
@@ -975,7 +977,7 @@ def read_knmi_daily_meteo(f):
 
     return df, variables, stations
 
-
+@lru_cache
 def get_knmi_hourly_api(url, stn, meteo_var, start, end):
 
     data = {
@@ -1296,8 +1298,8 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 def get_knmi_obslist(
     locations=None,
     stns=None,
-    xmid=None,
-    ymid=None,
+    x=None,
+    y=None,
     meteo_vars=("RH",),
     start=None,
     end=None,
@@ -1316,10 +1318,10 @@ def get_knmi_obslist(
         dataframe with x and y coordinates. The default is None
     stns : list of str or None
         list of knmi stations. The default is None
-    xmid : np.array, optional
-        x coördinates of the cell centers of your grid shape(ncol)
-    ymid : np.array, optional
-        y coördinates of the cell centers of your grid shape(nrow)
+    x : list or numpy array, optional
+        x coördinates of the locations
+    y : list or numpy array, optional
+        y coördinates of the locations
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RH", "EV24"]. The default is ("RH")
     start : None, str, datetime or list, optional
@@ -1403,9 +1405,9 @@ def get_knmi_obslist(
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
         if (stns is None) and (method == 'nearest'):
             stations = get_stations(meteo_var=meteo_var)
-            if (locations is None) and (xmid is not None):
-                _stns = get_nearest_station_grid(
-                    xmid, ymid, stations=stations, meteo_var=meteo_var
+            if (locations is None) and (x is not None):
+                _stns = get_nearest_station_xy(
+                    x, y, stations=stations, meteo_var=meteo_var
                 )
             elif locations is not None:
                 _stns = get_nearest_station_df(
@@ -1469,29 +1471,22 @@ def get_knmi_obslist(
         elif method == 'interpolation':
 
             if locations is not None:
-                xmid = locations['x'].to_list()
-                ymid = locations['y'].to_list()
-
-            ts = ObsClass[i].from_xy(xmid, ymid,
-                                     startdate=start[i],
-                                     enddate=end[i],
-                                     fill_missing_obs=False,
-                                     interval=settings["interval"],
-                                     inseason=settings["inseason"],
-                                     raise_exceptions=raise_exceptions,
-                                     method=method,
-                                     **obs_kwargs,
-                                     )
-            if isinstance(ts, dict):
-                for key in ts:
-                    o = ts[key].copy()
-                
-                    if settings['normalize_index']:
-                        o.index = o.index.normalize()
-                    
-                    obs_list.append(o)
-            else:
-                o = ts.copy() 
+                x = locations['x'].to_list()
+                y = locations['y'].to_list()
+            
+            for xv, yv in zip(x,y):
+                o = ObsClass[i].from_xy(xv, yv,
+                                         startdate=start[i],
+                                         enddate=end[i],
+                                         fill_missing_obs=False,
+                                         interval=settings["interval"],
+                                         inseason=settings["inseason"],
+                                         raise_exceptions=raise_exceptions,
+                                         method=method,
+                                         **obs_kwargs,
+                                         )
+                if settings['normalize_index']:
+                    o.index = o.index.normalize()
                 obs_list.append(o)
 
     return obs_list

@@ -239,11 +239,11 @@ def test_knmi_collection_from_stns():
 
 def test_knmi_collection_from_grid():
     # somewhere in Noord-Holland (near Castricum)
-    xmid = np.array([104150.0, 104550.0])
-    ymid = np.array([510150.0, 510550.0])
+    x = np.array([104150.0, 104550.0])
+    y = np.array([510150.0, 510550.0])
     oc_knmi = oc.ObsCollection.from_knmi(
-        xmid=xmid,
-        ymid=ymid,
+        x=x,
+        y=y,
         meteo_vars=["RH"],
         start=["2010", "2010"],
         end=["2015", "2015"],
