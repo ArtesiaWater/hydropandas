@@ -460,6 +460,7 @@ def download_knmi_data(
 
     return knmi_df, variables, stations
 
+
 @lru_cache()
 def get_knmi_daily_rainfall_api(
     url, stn, meteo_var, start=None, end=None, inseason=False
@@ -977,6 +978,7 @@ def read_knmi_daily_meteo(f):
 
     return df, variables, stations
 
+
 @lru_cache()
 def get_knmi_hourly_api(url, stn, meteo_var, start, end):
 
@@ -1283,14 +1285,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
     # set metadata
     x = stations.loc[stn, "x"]
     y = stations.loc[stn, "y"]
-    meta.update(
-        {
-            "x": x,
-            "y": y,
-            "station": stn,
-            "name": f"{meteo_var}_{stn_name}"
-        }
-    )
+    meta.update({"x": x, "y": y, "station": stn, "name": f"{meteo_var}_{stn_name}"})
 
     return knmi_df, meta
 
@@ -1307,7 +1302,8 @@ def get_knmi_obslist(
     settings=None,
     cache=False,
     raise_exceptions=False,
-    method='nearest'):
+    method="nearest",
+):
 
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
@@ -1399,11 +1395,11 @@ def get_knmi_obslist(
                 obs_kwargs["stn_type"] = "precipitation"
             elif meteo_var == "RH":
                 obs_kwargs["stn_type"] = "meteo"
-            elif meteo_var == 'EV24':
+            elif meteo_var == "EV24":
                 obs_kwargs["et_type"] = "EV24"
 
         start[i], end[i] = _start_end_to_datetime(start[i], end[i])
-        if (stns is None) and (method == 'nearest'):
+        if (stns is None) and (method == "nearest"):
             stations = get_stations(meteo_var=meteo_var)
             if (locations is None) and (x is not None):
                 _stns = get_nearest_station_xy(
@@ -1418,12 +1414,12 @@ def get_knmi_obslist(
                     "stns, location and xmid are all None" "please specify one of these"
                 )
             _stns = np.unique(_stns)
-        elif (stns is None) and (method == 'interpolation'):
+        elif (stns is None) and (method == "interpolation"):
             stations = get_stations(meteo_var=meteo_var)
         else:
             _stns = stns
-        
-        if method == 'nearest':
+
+        if method == "nearest":
             for stn in _stns:
                 if cache:
                     cache_dir = os.path.join(tempfile.gettempdir(), "knmi")
@@ -1434,7 +1430,7 @@ def get_knmi_obslist(
                         f'{stn}-{meteo_var}-{start[i].strftime("%Y%m%d")}'
                         f'-{end[i].strftime("%Y%m%d")}'
                         f'-{settings["fill_missing_obs"]}' + ".pklz"
-                        )
+                    )
                     pklz_path = os.path.join(cache_dir, fname)
 
                     if os.path.isfile(pklz_path):
@@ -1450,7 +1446,7 @@ def get_knmi_obslist(
                             inseason=settings["inseason"],
                             raise_exceptions=raise_exceptions,
                             **obs_kwargs,
-                            )
+                        )
                         o.to_pickle(pklz_path)
                 else:
                     o = ObsClass[i].from_knmi(
@@ -1462,31 +1458,33 @@ def get_knmi_obslist(
                         inseason=settings["inseason"],
                         raise_exceptions=raise_exceptions,
                         **obs_kwargs,
-                        )
-                
+                    )
+
                 if settings["normalize_index"]:
                     o.index = o.index.normalize()
 
                 obs_list.append(o)
 
-        elif method == 'interpolation':
+        elif method == "interpolation":
 
             if locations is not None:
-                x = locations['x'].to_list()
-                y = locations['y'].to_list()
-            
-            for xv, yv in zip(x,y):
-                o = ObsClass[i].from_xy(xv, yv,
-                                         startdate=start[i],
-                                         enddate=end[i],
-                                         fill_missing_obs=False,
-                                         interval=settings["interval"],
-                                         inseason=settings["inseason"],
-                                         raise_exceptions=raise_exceptions,
-                                         method=method,
-                                         **obs_kwargs,
-                                         )
-                if settings['normalize_index']:
+                x = locations["x"].to_list()
+                y = locations["y"].to_list()
+
+            for xv, yv in zip(x, y):
+                o = ObsClass[i].from_xy(
+                    xv,
+                    yv,
+                    startdate=start[i],
+                    enddate=end[i],
+                    fill_missing_obs=False,
+                    interval=settings["interval"],
+                    inseason=settings["inseason"],
+                    raise_exceptions=raise_exceptions,
+                    method=method,
+                    **obs_kwargs,
+                )
+                if settings["normalize_index"]:
                     o.index = o.index.normalize()
                 obs_list.append(o)
 
@@ -1696,14 +1694,14 @@ def makkink(tmean, K):
 
     a = 0.646 + 0.0006 * tmean
     b = 1 + tmean / 237.3
-    c = 7.5 * np.log(10) * 6.107 * 10**(7.5 * (1 - 1 / b))
-    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / \
-         (2501 - 2.38 * tmean) * K
+    c = 7.5 * np.log(10) * 6.107 * 10 ** (7.5 * (1 - 1 / b))
+    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / (2501 - 2.38 * tmean) * K
     return et
 
 
-def penman(tmean, tmin, tmax, K, wind, rh, dates, z=1.0,
-           lat=52.1, G=0.0, wh=10.0, tdew=None):
+def penman(
+    tmean, tmin, tmax, K, wind, rh, dates, z=1.0, lat=52.1, G=0.0, wh=10.0, tdew=None
+):
     """Estimate of Penman reference evaporation 
     according to Allen et al 1990. 
 
@@ -1743,8 +1741,7 @@ def penman(tmean, tmin, tmax, K, wind, rh, dates, z=1.0,
     P = 101.3 * ((293 - 0.0065 * z) / 293) ** 5.26  # kPa
     gamma = 0.665e-3 * P  # kPa/C
     tg = (tmax - tmin) / 2  # C
-    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) /
-                (tg + 237.3)**2)  # kPa/C
+    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) / (tg + 237.3) ** 2)  # kPa/C
     es0 = 0.6108 * np.exp(17.27 * tmean / (tmean + 237.3))  # kPa
     esmax = 0.6108 * np.exp(17.27 * tmax / (tmax + 237.3))  # kPa
     esmin = 0.6108 * np.exp(17.27 * tmin / (tmin + 237.3))  # kPa
@@ -1754,18 +1751,24 @@ def penman(tmean, tmin, tmax, K, wind, rh, dates, z=1.0,
     else:
         ea = es0 * rh / 100  # kPa
     u2 = wind * 4.87 / np.log(67.8 * wh - 5.42)  # m/s
-    J = pd.Series([int(date.strftime('%j')) for date in dates],
-                  index=dates)
+    J = pd.Series([int(date.strftime("%j")) for date in dates], index=dates)
     dr = 1 + 0.033 * np.cos(2 * np.pi * J / 365)  # -
     delt = 0.409 * np.sin(2 * np.pi * J / 365 - 1.39)  # rad
     phi = lat * np.pi / 180  # rad
     ws = np.arccos(-np.tan(phi) * np.tan(delt))  # rad
-    Kext = 1366 * dr / np.pi * \
-        (ws * np.sin(phi) * np.sin(delt) + np.cos(phi) *
-         np.cos(delt) * np.sin(ws))  # W/m2/d
+    Kext = (
+        1366
+        * dr
+        / np.pi
+        * (ws * np.sin(phi) * np.sin(delt) + np.cos(phi) * np.cos(delt) * np.sin(ws))
+    )  # W/m2/d
     K0 = Kext * (0.75 + 2e-5 * z)  # W/m2/d
-    Lout_in = 5.67e-8 * (((tmax+273)**4 + (tmin+273)**4) / 2) * \
-        (0.34 - 0.14 * np.sqrt(ea)) * (1.35 * K/K0 - 0.35)  # W/m2/d
+    Lout_in = (
+        5.67e-8
+        * (((tmax + 273) ** 4 + (tmin + 273) ** 4) / 2)
+        * (0.34 - 0.14 * np.sqrt(ea))
+        * (1.35 * K / K0 - 0.35)
+    )  # W/m2/d
     Q = (1 - 0.23) * K + Lout_in  # W/m2/d
     Q = Q * 0.0864  # W/m2/d to MJ/m2
     straling = 0.408 * s * (Q - G)
@@ -1800,15 +1803,19 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
     pandas.Series
 
     """
-    J = pd.Series([int(date.strftime('%j')) for date in dates],
-                  index=dates)
+    J = pd.Series([int(date.strftime("%j")) for date in dates], index=dates)
     dr = 1 + 0.033 * np.cos(2 * np.pi * J / 365)
     delt = 0.409 * np.sin(2 * np.pi * J / 365 - 1.39)
     phi = lat * np.pi / 180
     ws = np.arccos(-np.tan(phi) * np.tan(delt))
-    Kext = 12 * 60 * 0.0820 * dr / np.pi * \
-        (ws * np.sin(phi) * np.sin(delt) + np.cos(phi)
-         * np.cos(delt) * np.sin(ws))  # MJ/m2/d
+    Kext = (
+        12
+        * 60
+        * 0.0820
+        * dr
+        / np.pi
+        * (ws * np.sin(phi) * np.sin(delt) + np.cos(phi) * np.cos(delt) * np.sin(ws))
+    )  # MJ/m2/d
     Kext = 0.408 * Kext  # MJ/m2/d to mm/d
     et = 0.0023 * (tmean + 273 + 17.8) / np.sqrt(tmax - tmin) * Kext * 1e-3
     if x:
@@ -1816,8 +1823,7 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
     return et
 
 
-def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
-                    settings=None):
+def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None):
     """Collect different types of (reference) evaporation 
     from KNMI weather stations
 
@@ -1853,49 +1859,73 @@ def get_evaporation(stn=260, et_type='EV24', start=None, end=None,
     ------
     pandas DataFrame
 
-    """    
-    if et_type == 'EV24':
-        et, meta = get_knmi_timeseries_stn(stn, meteo_var='EV24',
-                                           start=start, end=end,
-                                           settings=settings)
-    elif et_type == 'hargreaves':
+    """
+    if et_type == "EV24":
+        et, meta = get_knmi_timeseries_stn(
+            stn, meteo_var="EV24", start=start, end=end, settings=settings
+        )
+    elif et_type == "hargreaves":
         d = {}
-        mvs = ['TG', 'TN', 'TX']
+        mvs = ["TG", "TN", "TX"]
         for mv in mvs:
             ts, meta = get_knmi_timeseries_stn(
-                stn, meteo_var=mv, start=start, end=end, settings=settings)
+                stn, meteo_var=mv, start=start, end=end, settings=settings
+            )
             d[mv] = ts.squeeze()
-        et = hargreaves(d['TG'], d['TN'], d['TX'], d['TG'].index,
-                        meta['LAT_north'][str(meta['station'])]).to_frame(name=et_type)
-    elif et_type == 'makkink':
+        et = hargreaves(
+            d["TG"],
+            d["TN"],
+            d["TX"],
+            d["TG"].index,
+            meta["LAT_north"][str(meta["station"])],
+        ).to_frame(name=et_type)
+    elif et_type == "makkink":
         d = {}
-        mvs = ['TG', 'Q']
+        mvs = ["TG", "Q"]
         for mv in mvs:
-            ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
-                                                  end=end, settings=settings)
+            ts, meta = get_knmi_timeseries_stn(
+                stn, meteo_var=mv, start=start, end=end, settings=settings
+            )
             d[mv] = ts.squeeze()
-        et = makkink(d['TG'], d['Q']).to_frame(name=et_type)
-    elif et_type == 'penman':
+        et = makkink(d["TG"], d["Q"]).to_frame(name=et_type)
+    elif et_type == "penman":
         d = {}
-        mvs = ['TG', 'TN', 'TX', 'Q', 'FG', 'UG']
+        mvs = ["TG", "TN", "TX", "Q", "FG", "UG"]
         for mv in mvs:
-            ts, meta = get_knmi_timeseries_stn(stn, meteo_var=mv, start=start,
-                                               end=end, settings=settings)
+            ts, meta = get_knmi_timeseries_stn(
+                stn, meteo_var=mv, start=start, end=end, settings=settings
+            )
             d[mv] = ts.squeeze()
-        et = penman(d['TG'], d['TN'], d['TX'], d['Q'],
-                    d['FG'], d['UG'], d['TG'].index,
-                    meta['LAT_north'][str(meta['station'])],
-                    meta['ALT_m'][str(meta['station'])]).to_frame(name=et_type)
+        et = penman(
+            d["TG"],
+            d["TN"],
+            d["TX"],
+            d["Q"],
+            d["FG"],
+            d["UG"],
+            d["TG"].index,
+            meta["LAT_north"][str(meta["station"])],
+            meta["ALT_m"][str(meta["station"])],
+        ).to_frame(name=et_type)
     else:
-        raise ValueError("Provide valid argument evaporation type \
-                         'hargreaves', 'makkink' or 'penman'")
+        raise ValueError(
+            "Provide valid argument evaporation type \
+                         'hargreaves', 'makkink' or 'penman'"
+        )
 
     return et, meta
 
 
-def interpolate(x, y, obs_locations, obs, obs_str='EV', 
-                kernel='thin_plate_spline', kernel2='linear',
-                epsilon=None):
+def interpolate(
+    x,
+    y,
+    obs_locations,
+    obs,
+    obs_str="EV",
+    kernel="thin_plate_spline",
+    kernel2="linear",
+    epsilon=None,
+):
 
     """Interpolation method using the Scipy radial basis function (RBF)
 
@@ -1932,15 +1962,18 @@ def interpolate(x, y, obs_locations, obs, obs_str='EV',
         DataFrame with the interpolated observations.
     """
 
-    if (kernel == 'thin_plate_spline') or (kernel == 'cubic'):
+    if (kernel == "thin_plate_spline") or (kernel == "cubic"):
         min_val = 3
-    elif kernel == 'quintic':
+    elif kernel == "quintic":
         min_val = 6
     else:
         min_val = len(obs.columns)
 
-    xy = obs_locations.loc[obs.columns, ['x', 'y']]
-    df = pd.DataFrame(index=obs.index, columns=[f'{obs_str}_[{int(x[i])} {int(y[i])}]' for i in range(len(x))])
+    xy = obs_locations.loc[obs.columns, ["x", "y"]]
+    df = pd.DataFrame(
+        index=obs.index,
+        columns=[f"{obs_str}_[{int(x[i])} {int(y[i])}]" for i in range(len(x))],
+    )
     for idx in obs.index:
         # get all stations with values for this date
         val = obs.loc[idx].dropna()
@@ -1953,13 +1986,14 @@ def interpolate(x, y, obs_locations, obs, obs_str='EV',
             kernel = kernel2
 
         # create an scipy interpolator
-        rbf = RBFInterpolator(coor.to_numpy(), val.to_numpy(),
-                              epsilon=epsilon, kernel=kernel)
+        rbf = RBFInterpolator(
+            coor.to_numpy(), val.to_numpy(), epsilon=epsilon, kernel=kernel
+        )
         if len(x) == 1:
             val_rbf = rbf.__call__(np.array([[x[0], y[0]], [x[0], y[0]]]))
             df.loc[idx] = val_rbf[0]
         else:
             val_rbf = rbf.__call__(np.array([x, y]).T)
             df.loc[idx] = val_rbf
-    
+
     return df

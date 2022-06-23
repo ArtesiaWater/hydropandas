@@ -41,7 +41,7 @@ def _obslist_to_frame(obs_list):
             logger.warning("multiple observations with the same name")
     else:
         obs_df = pd.DataFrame()
-    
+
     return obs_df
 
 

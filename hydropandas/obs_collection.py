@@ -116,21 +116,21 @@ class ObsCollection(pd.DataFrame):
         if iname not in self.index:
             raise ValueError(f"{iname}  not in index")
 
-        o = self.loc[iname, 'obs']
+        o = self.loc[iname, "obs"]
         if att_name in o._metadata:
             setattr(o, att_name, value)
-            logger.debug(f'set attribute {att_name} of {iname} to {value}')
+            logger.debug(f"set attribute {att_name} of {iname} to {value}")
 
-        if att_name == 'name':
+        if att_name == "name":
             # name is the index of the ObsCollection dataframe
             self.rename(index={iname: value}, inplace=True)
         else:
             self.loc[iname, att_name] = value
-        logger.debug(f'set {iname}, {att_name} to {value} in obscollection')
+        logger.debug(f"set {iname}, {att_name} to {value} in obscollection")
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(f'add {att_name} of {iname} with value {value} to meta')
+            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """ check if an observation collection is consistent. An observation
@@ -156,38 +156,46 @@ class ObsCollection(pd.DataFrame):
         """
         # check unique index
         if not self.index.is_unique:
-            logger.warning(f'index of observation collection -> {self.name} not unique')
+            logger.warning(f"index of observation collection -> {self.name} not unique")
             return False
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(f'missing observation object in collection -> {self.name} ')
+            logger.warning(f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
         if check_individual_obs:
             for o in self.obs.values:
                 for att in o._metadata:
-                    if att not in ['name', 'meta']:
+                    if att not in ["name", "meta"]:
                         v1 = self.loc[o.name, att]
                         v2 = getattr(o, att)
                         # check if values are equal
                         try:
                             if v1 != v2:
                                 # check if both are nan
-                                if isinstance(v1, numbers.Number) and isinstance(v2, numbers.Number):
+                                if isinstance(v1, numbers.Number) and isinstance(
+                                    v2, numbers.Number
+                                ):
                                     if np.isnan(v1) and np.isnan(v2):
                                         continue
 
                                 # otherwise return Nan
-                                logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} {att} value')
+                                logger.warning(
+                                    f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                )
                                 return False
                         except TypeError:
-                            logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} {att} value')
+                            logger.warning(
+                                f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                            )
                             return False
-                    elif att == 'name':
+                    elif att == "name":
                         if o.name not in self.index:
-                            logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} name')
+                            logger.warning(
+                                f"observation collection -> {self.name} not consistent with observation -> {o.name} name"
+                            )
                             return False
 
         return True
@@ -232,24 +240,25 @@ class ObsCollection(pd.DataFrame):
         """
         if check_consistency:
             if not self._is_consistent():
-                raise RuntimeError('inconsistent observation collection')
+                raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError('Observation should be of type hydropandas.observation.Obs')
+            raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
         # add new observation to collection
         if o.name not in self.index:
-            logger.info(f'adding {o.name} to collection')
+            logger.info(f"adding {o.name} to collection")
             self.loc[o.name] = o.to_collection_dict()
         else:
-            logger.info(f'observation name {o.name} already in collection, merging observations')
-            
-            o1 = self.loc[o.name, 'obs']
+            logger.info(
+                f"observation name {o.name} already in collection, merging observations"
+            )
+
+            o1 = self.loc[o.name, "obs"]
             omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
             self.loc[o.name] = omerged.to_collection_dict()
-
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -665,7 +674,7 @@ class ObsCollection(pd.DataFrame):
         unpackdir=None,
         force_unpack=False,
         preserve_datetime=False,
-        **kwargs
+        **kwargs,
     ):
         """Read one or several FEWS PI-XML files.
 
@@ -740,7 +749,7 @@ class ObsCollection(pd.DataFrame):
                 to_mnap=to_mnap,
                 remove_nan=remove_nan,
                 low_memory=low_memory,
-                **kwargs
+                **kwargs,
             )
 
             obs_df = util._obslist_to_frame(obs_list)
@@ -756,7 +765,7 @@ class ObsCollection(pd.DataFrame):
                 low_memory=low_memory,
                 to_mnap=to_mnap,
                 remove_nan=remove_nan,
-                **kwargs
+                **kwargs,
             )
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
@@ -824,8 +833,9 @@ class ObsCollection(pd.DataFrame):
         start=None,
         end=None,
         ObsClass=None,
-        method='nearest',
-        **kwargs,):
+        method="nearest",
+        **kwargs,
+    ):
         """Get knmi observations from a list of locations or a list of
         stations.
 
@@ -1017,7 +1027,7 @@ class ObsCollection(pd.DataFrame):
             method=method,
             **kwargs,
         )
-                
+
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
@@ -1299,7 +1309,9 @@ class ObsCollection(pd.DataFrame):
             key in meta dictionary of observation object
         """
 
-        self[key] = [o.meta[key] if key in o.meta.keys() else None for o in self.obs.values]
+        self[key] = [
+            o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+        ]
 
     def get_series(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         if tmin is None:

@@ -173,19 +173,25 @@ def test_to_pastastore():
 
 #%% Evaporation
 
+
 def test_evap_obs_from_stn():
-    return obs.EvaporationObs.from_knmi(260, et_type='EV24')
+    return obs.EvaporationObs.from_knmi(260, et_type="EV24")
+
 
 def test_evap_obs_from_stn_makkink():
-    return obs.EvaporationObs.from_knmi(260, et_type='makkink')
+    return obs.EvaporationObs.from_knmi(260, et_type="makkink")
+
 
 def test_evap_obs_from_stn_penman():
-    return obs.EvaporationObs.from_knmi(260, et_type='penman')
+    return obs.EvaporationObs.from_knmi(260, et_type="penman")
+
 
 def test_evap_obs_from_stn_hargreaves():
-    return obs.EvaporationObs.from_knmi(260, et_type='hargreaves')
+    return obs.EvaporationObs.from_knmi(260, et_type="hargreaves")
+
 
 #%% Precipitation
+
 
 def test_precip_obs_from_stn():
     return obs.PrecipitationObs.from_knmi(233, "precipitation")
@@ -242,11 +248,7 @@ def test_knmi_collection_from_grid():
     x = np.array([104150.0, 104550.0])
     y = np.array([510150.0, 510550.0])
     oc_knmi = oc.ObsCollection.from_knmi(
-        x=x,
-        y=y,
-        meteo_vars=["RH"],
-        start=["2010", "2010"],
-        end=["2015", "2015"],
+        x=x, y=y, meteo_vars=["RH"], start=["2010", "2010"], end=["2015", "2015"],
     )
     return oc_knmi
 
