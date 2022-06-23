@@ -192,8 +192,7 @@ class ObsCollection(pd.DataFrame):
 
         return True
 
-    def add_observation(self, o, check_consistency=True,
-                        check_metadata=False):
+    def add_observation(self, o, check_consistency=True, **kwargs):
         """ add an observation to an existing observation collection. If the
         observation exists the two observations are merged.
 
@@ -204,11 +203,20 @@ class ObsCollection(pd.DataFrame):
         check_consistency : bool, optional
             If True the consistency of the collection is first checked. The 
             default is True.
-        check_metadata : bool, optional
-            If True and observations are merged the metadata of the two
-            observations are compared. Differences are logged. The metadata of
-            the observation in the collection is always used for the merged 
-            observation. The default is False.
+        **kwargs passed to Obs.merge_observation:
+            check_metadata : bool, optional
+                If True and observations are merged the metadata of the two
+                observations are compared. Differences are logged. The metadata of
+                the observation in the collection is always used for the merged 
+                observation. The default is False.
+            overlap : str, optional
+                How to deal with overlapping timeseries with different values.
+                Options are:
+                - error : Raise a ValueError
+                - use_left : use the overlapping part from the existing
+                observations
+                - use_right : use the overlapping part from the new observation
+                Default is 'error'.
 
         Raises
         ------
@@ -237,7 +245,7 @@ class ObsCollection(pd.DataFrame):
             logger.info(f'observation name {o.name} already in collection, merging observations')
             
             o1 = self.loc[o.name, 'obs']
-            omerged = o1.merge_observation(o, check_metadata=check_metadata)
+            omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
             self.loc[o.name] = omerged.to_collection_dict()

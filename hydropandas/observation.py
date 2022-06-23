@@ -182,7 +182,8 @@ class Obs(pd.DataFrame):
 
         return d
     
-    def merge_observation(self, o, check_metadata=False):
+    def merge_observation(self, o, check_metadata=False,
+                          overlap='error'):
         """ Merge with another observation of the same type. 
 
         Parameters
@@ -193,6 +194,14 @@ class Obs(pd.DataFrame):
             If True the metadata of the two objects are compared. Differences
             are logged. The metadata of the current observation is always
             used for the merged observation. The default is False.
+        overlap : str, optional
+            How to deal with overlapping timeseries with different values.
+            Options are:
+                error : Raise a ValueError
+                use_left : use the overlapping part from the existing
+                observations
+                use_right : use the overlapping part from the new observation
+            Default is 'error'.
             
         Raises
         ------
@@ -242,15 +251,31 @@ class Obs(pd.DataFrame):
         # merge overlapping columns
         overlap_cols = list(set(self.columns) & set(o.columns))
         
-        # check for overlapping indices and columns
+        # get timeseries for overlapping columns and indices
         dup_ind_o = o.loc[o.index.isin(self.index)]
         if not dup_ind_o.empty:
+            # check if overlapping timeseries have different values
             if not self.loc[dup_ind_o.index, overlap_cols].equals(dup_ind_o[overlap_cols]):
-                raise ValueError('observation have different values for same time steps')
+                logger.warning(f'timeseries of observation {o.name} overlap with different values')
+                if overlap=='error':
+                    raise ValueError('observations have different values for same time steps')
+                elif overlap=='use_left':
+                    dup_o = self.loc[dup_ind_o.index, overlap_cols]
+                elif overlap=='use_right':
+                    dup_o = dup_ind_o[overlap_cols]
+            else:
+                dup_o = self.loc[dup_ind_o.index, overlap_cols]
+        else:
+            dup_o = dup_ind_o[overlap_cols]
         
-        # merge non overlapping indices
-        unique_ind_o = o.loc[~o.index.isin(self.index)]
-        dfcol = pd.concat([self[overlap_cols], unique_ind_o[overlap_cols]])
+        # get unique observations from overlapping columns
+        unique_o_left = self.loc[~self.index.isin(o.index)] # get unique observations left
+        unique_o_right = o.loc[~o.index.isin(self.index)] # get unique observations right
+        
+        # merge unique observations from overlapping columns with duplicate observations from overlapping columns
+        dfcol = pd.concat([dup_o, 
+                           unique_o_left[overlap_cols],
+                           unique_o_right[overlap_cols]])
         new_o = pd.concat([new_o, dfcol], axis=1)
 
         # merge non overlapping columns                
