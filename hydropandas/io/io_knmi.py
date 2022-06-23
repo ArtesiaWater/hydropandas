@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 URL_DAILY_NEERSLAG = "https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen"
 URL_DAILY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
 URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
-LOOK_BACK_DAYS = 180
+LOOK_BACK_DAYS = 365
 
 
 def get_stations(meteo_var="RH"):
@@ -1417,6 +1417,7 @@ def get_knmi_obslist(
                 raise ValueError(
                     "stns, location and xmid are all None" "please specify one of these"
                 )
+            _stns = np.unique(_stns)
         elif (stns is None) and (method == 'interpolation'):
             stations = get_stations(meteo_var=meteo_var)
         else:
