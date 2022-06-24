@@ -259,6 +259,57 @@ class ObsCollection(pd.DataFrame):
 
             # overwrite observation in collection
             self.loc[o.name] = omerged.to_collection_dict()
+            
+            
+    def add_obs_collection(self, obs_collection, check_consistency=True, 
+                           **kwargs):
+        """ add an observation collection to another existing observation 
+        collection. See add_observation method for more details
+        
+        Parameters
+        ----------
+        obs_collection : hpd.ObsCollection
+            ObsCollection object.
+        check_consistency : bool, optional
+            If True the consistency of both collections is first checked. The 
+            default is True.
+        **kwargs passed to Obs.merge_observation:
+            check_metadata : bool, optional
+                If True and observations are merged the metadata of the two
+                observations are compared. Differences are logged. The metadata of
+                the observation in the collection is always used for the merged 
+                observation. The default is False.
+            overlap : str, optional
+                How to deal with overlapping timeseries with different values.
+                Options are:
+                - error : Raise a ValueError
+                - use_left : use the overlapping part from the existing
+                observations
+                - use_right : use the overlapping part from the new observation
+                Default is 'error'.
+
+        Raises
+        ------
+        RuntimeError
+            when the observation collection is inconsistent.
+        TypeError
+            when the observation type is wrong.
+
+        Returns
+        -------
+        None.
+
+        """
+        if check_consistency:
+            if not self._is_consistent():
+                raise RuntimeError(f"inconsistent observation collection -> {self.name}")
+                
+            if not obs_collection._is_consistent():
+                raise RuntimeError(f"inconsistent observation collection -> {obs_collection.name}")
+
+        for o in obs_collection.obs.values:
+            self.add_observation(o, check_consistency=False, **kwargs)
+            
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
