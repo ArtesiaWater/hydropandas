@@ -144,7 +144,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         check_individual_obs : bool, optional
-            If True the third condition in the list above is check. The 
+            If True the third condition in the list above is checked. The 
             default is True.
 
         Returns
@@ -211,6 +211,7 @@ class ObsCollection(pd.DataFrame):
         check_consistency : bool, optional
             If True the consistency of the collection is first checked. The 
             default is True.
+        
         **kwargs passed to Obs.merge_observation:
             check_metadata : bool, optional
                 If True and observations are merged the metadata of the two
@@ -245,6 +246,8 @@ class ObsCollection(pd.DataFrame):
         if not isinstance(o, obs.Obs):
             raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
+        #
+
         # add new observation to collection
         if o.name not in self.index:
             logger.info(f"adding {o.name} to collection")
@@ -262,6 +265,7 @@ class ObsCollection(pd.DataFrame):
             
             
     def add_obs_collection(self, obs_collection, check_consistency=True, 
+                           inplace=False,
                            **kwargs):
         """ add an observation collection to another existing observation 
         collection. See add_observation method for more details
@@ -273,6 +277,9 @@ class ObsCollection(pd.DataFrame):
         check_consistency : bool, optional
             If True the consistency of both collections is first checked. The 
             default is True.
+        inplace : bool, optional
+            If True, modifies the ObsCollection in place (do not create a new 
+            object). The default is False.
         **kwargs passed to Obs.merge_observation:
             check_metadata : bool, optional
                 If True and observations are merged the metadata of the two
@@ -292,12 +299,11 @@ class ObsCollection(pd.DataFrame):
         ------
         RuntimeError
             when the observation collection is inconsistent.
-        TypeError
-            when the observation type is wrong.
 
         Returns
         -------
-        None.
+        ObsCollection or None
+            merged ObsCollection if ``inplace=True``.
 
         """
         if check_consistency:
@@ -307,8 +313,16 @@ class ObsCollection(pd.DataFrame):
             if not obs_collection._is_consistent():
                 raise RuntimeError(f"inconsistent observation collection -> {obs_collection.name}")
 
-        for o in obs_collection.obs.values:
-            self.add_observation(o, check_consistency=False, **kwargs)
+        if inplace:
+            for o in obs_collection.obs.values:
+                self.add_observation(o, check_consistency=False, **kwargs)
+        
+        else:
+            oc = self.copy()
+            for o in obs_collection.obs.values:
+                oc.add_observation(o, check_consistency=False, **kwargs)
+                
+            return oc
             
 
     @classmethod

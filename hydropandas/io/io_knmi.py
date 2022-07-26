@@ -1411,7 +1411,7 @@ def get_knmi_obslist(
                 )
             else:
                 raise ValueError(
-                    "stns, location and xmid are all None" "please specify one of these"
+                    "stns, location and x are both None" "please specify one of these"
                 )
             _stns = np.unique(_stns)
         elif (stns is None) and (method == "interpolation"):
