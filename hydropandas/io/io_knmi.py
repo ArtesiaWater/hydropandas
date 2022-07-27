@@ -315,9 +315,11 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                 )
             except (RuntimeError, requests.ConnectionError):
                 logger.info("KNMI API failed, switching to non-API method")
-                knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
+                knmi_df, _, _ = get_knmi_daily_meteo_url(
+                    260, meteo_var, start, end)
         else:
-            knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
+            knmi_df, _, _ = get_knmi_daily_meteo_url(
+                260, meteo_var, start, end)
 
     knmi_df = knmi_df.dropna()
     if knmi_df.empty:
@@ -564,8 +566,10 @@ def get_knmi_daily_rainfall_url(
     basedir = os.path.join(tempfile.gettempdir(), "knmi")
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(), "knmi", f"neerslaggeg_{stn}.zip")
-    fname_dir = os.path.join(tempfile.gettempdir(), "knmi", f"neerslaggeg_{stn}")
+    fname_zip = os.path.join(tempfile.gettempdir(),
+                             "knmi", f"neerslaggeg_{stn}.zip")
+    fname_dir = os.path.join(tempfile.gettempdir(),
+                             "knmi", f"neerslaggeg_{stn}")
     fname_txt = os.path.join(fname_dir, f"neerslaggeg_{stn_name}_{stn}.txt")
 
     # check if file should be downloaded and unzipped
@@ -579,13 +583,15 @@ def get_knmi_daily_rainfall_url(
         # download zip file
         r = requests.get(url, stream=True)
         if r.status_code != 200:
-            raise ValueError(f"invalid url {url} please check station name {stn_name}")
+            raise ValueError(
+                f"invalid url {url} please check station name {stn_name}")
         with open(fname_zip, "wb") as fd:
             for chunk in r.iter_content(chunk_size=128):
                 fd.write(chunk)
 
         # unzip file
-        util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
+        util.unzip_file(fname_zip, fname_dir, force=True,
+                        preserve_datetime=True)
 
     with open(fname_txt, "r") as f:
         line = f.readline()
@@ -609,7 +615,8 @@ def get_knmi_daily_rainfall_url(
 
         df = pd.read_csv(f, header=None, names=columns, na_values="     ")
 
-        df.set_index(pd.to_datetime(df.YYYYMMDD, format="%Y%m%d"), inplace=True)
+        df.set_index(pd.to_datetime(
+            df.YYYYMMDD, format="%Y%m%d"), inplace=True)
         df = df.drop("YYYYMMDD", axis=1)
 
         if df.index.duplicated().sum() > 0:
@@ -889,7 +896,8 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     basedir = os.path.join(tempfile.gettempdir(), "knmi")
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(), "knmi", f"etmgeg_{stn}.zip")
+    fname_zip = os.path.join(tempfile.gettempdir(),
+                             "knmi", f"etmgeg_{stn}.zip")
     fname_dir = os.path.join(tempfile.gettempdir(), "knmi", f"etmgeg_{stn}")
     fname_txt = os.path.join(fname_dir, f"etmgeg_{stn}.txt")
 
@@ -908,7 +916,8 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
                 fd.write(chunk)
 
         # unzip file
-        util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
+        util.unzip_file(fname_zip, fname_dir, force=True,
+                        preserve_datetime=True)
 
     variables = None
     with open(fname_txt, "r") as f:
@@ -932,8 +941,10 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
                 values = f.readline()
                 if values == "\n":
                     values = f.readline()
-                df = pd.read_csv(f, header=None, names=columns, na_values="     ")
-                df.set_index(pd.to_datetime(df.YYYYMMDD, format="%Y%m%d"), inplace=True)
+                df = pd.read_csv(
+                    f, header=None, names=columns, na_values="     ")
+                df.set_index(pd.to_datetime(
+                    df.YYYYMMDD, format="%Y%m%d"), inplace=True)
                 df = df.drop("YYYYMMDD", axis=1)
 
                 df = df.loc[df.index.notnull(), :]
@@ -1265,7 +1276,8 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 
     # download data
     if settings["fill_missing_obs"] and (settings["interval"] == "hourly"):
-        raise NotImplementedError("cannot yet fill missing values in hourly data")
+        raise NotImplementedError(
+            "cannot yet fill missing values in hourly data")
 
     elif settings["fill_missing_obs"]:
         knmi_df, variables, station_meta = fill_missing_measurements(
@@ -1285,7 +1297,8 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
     # set metadata
     x = stations.loc[stn, "x"]
     y = stations.loc[stn, "y"]
-    meta.update({"x": x, "y": y, "station": stn, "name": f"{meteo_var}_{stn_name}"})
+    meta.update({"x": x, "y": y, "station": stn,
+                "name": f"{meteo_var}_{stn_name}"})
 
     return knmi_df, meta
 
@@ -1304,7 +1317,6 @@ def get_knmi_obslist(
     raise_exceptions=False,
     method="nearest",
 ):
-
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
 
@@ -1337,7 +1349,7 @@ def get_knmi_obslist(
         if end is a list it should be the same length as meteo_vars and
         the end time for each meteo variable. The default is None
     ObsClass : list of type or None
-        class of the observations, can be PrecipitationObs or 
+        class of the observations, can be PrecipitationObs or
         EvaporationObs. The default is None.
     settings : dict or None, optional
         settings for obtaining the right time series, options are:
@@ -1471,21 +1483,26 @@ def get_knmi_obslist(
                 x = locations["x"].to_list()
                 y = locations["y"].to_list()
 
-            for xv, yv in zip(x, y):
-                o = ObsClass[i].from_xy(
-                    xv,
-                    yv,
-                    startdate=start[i],
-                    enddate=end[i],
-                    fill_missing_obs=False,
-                    interval=settings["interval"],
-                    inseason=settings["inseason"],
-                    raise_exceptions=raise_exceptions,
-                    method=method,
-                    **obs_kwargs,
-                )
-                if settings["normalize_index"]:
-                    o.index = o.index.normalize()
+            ts = ObsClass[i].from_xy(x, y,
+                                     startdate=start[i],
+                                     enddate=end[i],
+                                     fill_missing_obs=False,
+                                     interval=settings["interval"],
+                                     inseason=settings["inseason"],
+                                     raise_exceptions=raise_exceptions,
+                                     method=method,
+                                     **obs_kwargs,
+                                     )
+            if isinstance(ts, dict):
+                for key in ts:
+                    o = ts[key].copy()
+
+                    if settings['normalize_index']:
+                        o.index = o.index.normalize()
+
+                    obs_list.append(o)
+            else:
+                o = ts.copy()
                 obs_list.append(o)
 
     return obs_list
@@ -1526,7 +1543,8 @@ def add_missing_indices(knmi_df, stn, start, end):
             minute=knmi_df.index[0].minute,
             second=knmi_df.index[0].second,
         )
-        logger.info(f"station {stn} has no measurements before {knmi_df.index[0]}")
+        logger.info(
+            f"station {stn} has no measurements before {knmi_df.index[0]}")
 
     if (end - knmi_df.index[-1]).days < 2:
         new_end = knmi_df.index[-1]
@@ -1539,7 +1557,8 @@ def add_missing_indices(knmi_df, stn, start, end):
             minute=knmi_df.index[-1].minute,
             second=knmi_df.index[-1].second,
         )
-        logger.info(f"station {stn} has no measurements after {knmi_df.index[-1]}")
+        logger.info(
+            f"station {stn} has no measurements after {knmi_df.index[-1]}")
 
     # add missing indices
     new_index = pd.date_range(new_start, new_end, freq="D")
@@ -1609,7 +1628,8 @@ def fill_missing_measurements(
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
-        logger.info(f"station {stn} has no measurements between {start} and {end}")
+        logger.info(
+            f"station {stn} has no measurements between {start} and {end}")
         logger.info("trying to get measurements from nearest station")
         stn = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
@@ -1665,7 +1685,8 @@ def fill_missing_measurements(
                 # index for missing but in newly downloaded data
                 ix_idx = missing_idx.intersection(knmi_df_comp.index)
                 # update missing data
-                knmi_df.loc[ix_idx, meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
+                knmi_df.loc[ix_idx,
+                            meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
                 # add source station number
                 knmi_df.loc[ix_idx, "station_opvulwaarde"] = str(stn_comp)
 
@@ -1695,15 +1716,16 @@ def makkink(tmean, K):
     a = 0.646 + 0.0006 * tmean
     b = 1 + tmean / 237.3
     c = 7.5 * np.log(10) * 6.107 * 10 ** (7.5 * (1 - 1 / b))
-    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / (2501 - 2.38 * tmean) * K
+    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / \
+        (2501 - 2.38 * tmean) * K
     return et
 
 
 def penman(
     tmean, tmin, tmax, K, wind, rh, dates, z=1.0, lat=52.1, G=0.0, wh=10.0, tdew=None
 ):
-    """Estimate of Penman reference evaporation 
-    according to Allen et al 1990. 
+    """Estimate of Penman reference evaporation
+    according to Allen et al 1990.
 
     Parameters
     ----------
@@ -1741,7 +1763,8 @@ def penman(
     P = 101.3 * ((293 - 0.0065 * z) / 293) ** 5.26  # kPa
     gamma = 0.665e-3 * P  # kPa/C
     tg = (tmax - tmin) / 2  # C
-    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) / (tg + 237.3) ** 2)  # kPa/C
+    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) /
+                (tg + 237.3) ** 2)  # kPa/C
     es0 = 0.6108 * np.exp(17.27 * tmean / (tmean + 237.3))  # kPa
     esmax = 0.6108 * np.exp(17.27 * tmax / (tmax + 237.3))  # kPa
     esmin = 0.6108 * np.exp(17.27 * tmin / (tmin + 237.3))  # kPa
@@ -1824,7 +1847,7 @@ def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
 
 
 def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None):
-    """Collect different types of (reference) evaporation 
+    """Collect different types of (reference) evaporation
     from KNMI weather stations
 
     Parameters
@@ -1926,7 +1949,6 @@ def interpolate(
     kernel2="linear",
     epsilon=None,
 ):
-
     """Interpolation method using the Scipy radial basis function (RBF)
 
     Parameters
@@ -1948,11 +1970,11 @@ def interpolate(
         Other options are linear, gaussian, inverse_quadratic,
         multiquadric, inverse_multiquadric, cubic or quintic
     kernel2 : str, optional
-        Kernel in case there are not enough observations (3 or 6) for 
-        time step, by default linear. Other options are gaussian, 
+        Kernel in case there are not enough observations (3 or 6) for
+        time step, by default linear. Other options are gaussian,
         inverse_quadratic, multiquadric, or inverse_multiquadric.
     epsilon : float, optional
-        Shape parameter that scales the input to the RBF. If kernel is 
+        Shape parameter that scales the input to the RBF. If kernel is
         linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
         Otherwise this must be specified.
 
@@ -1972,7 +1994,8 @@ def interpolate(
     xy = obs_locations.loc[obs.columns, ["x", "y"]]
     df = pd.DataFrame(
         index=obs.index,
-        columns=[f"{obs_str}_[{int(x[i])} {int(y[i])}]" for i in range(len(x))],
+        columns=[
+            f"{obs_str}_[{int(x[i])} {int(y[i])}]" for i in range(len(x))],
     )
     for idx in obs.index:
         # get all stations with values for this date

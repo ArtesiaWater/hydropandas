@@ -1340,7 +1340,7 @@ class EvaporationObs(MeteoObs):
                     stn, et_type, start=startdate, end=enddate, settings=settings
                 )
                 df[stn] = et
-
+            # only one location
             if isinstance(x, numbers.Number):
                 ts = io_knmi.interpolate([x], [y], stns, df.dropna(how='all'), obs_str=et_type).astype(
                     float
@@ -1364,8 +1364,20 @@ class EvaporationObs(MeteoObs):
                     name=meta["name"],
                     meteo_var=et_type,
                 )
+            # multiple locations
             else:
-                raise TypeError(f"expected nummerical type but got {type(x)} instead")
+                ts = io_knmi.interpolate(np.asarray(x), np.asarray(y), stns, df.dropna(how='all'), obs_str=et_type).astype(float)
+                ts[ts < 0] = 0
+
+                d = {}
+                for i, col in enumerate(ts.columns):
+                    meta = {'station': 'interpolation thin plate sline',
+                        'x': x[i], 'y': y[i], 'name': col, 'meteo_var': et_type}
+                    d[col] = cls(ts.loc[:, [col]].copy(), meta=meta,
+                                 station=meta["station"], x=meta["x"],
+                                 y=meta["y"], name=meta["name"],
+                                 meteo_var=et_type)
+                return d
         else:
             raise ValueError(
                 "Please provide either 'nearest' or 'interpolation' as method"
