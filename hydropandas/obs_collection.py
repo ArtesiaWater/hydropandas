@@ -262,11 +262,10 @@ class ObsCollection(pd.DataFrame):
 
             # overwrite observation in collection
             self.loc[o.name] = omerged.to_collection_dict()
-            
-            
-    def add_obs_collection(self, obs_collection, check_consistency=True, 
-                           inplace=False,
-                           **kwargs):
+
+    def add_obs_collection(
+        self, obs_collection, check_consistency=True, inplace=False, **kwargs
+    ):
         """ add an observation collection to another existing observation 
         collection. See add_observation method for more details
         
@@ -308,22 +307,25 @@ class ObsCollection(pd.DataFrame):
         """
         if check_consistency:
             if not self._is_consistent():
-                raise RuntimeError(f"inconsistent observation collection -> {self.name}")
-                
+                raise RuntimeError(
+                    f"inconsistent observation collection -> {self.name}"
+                )
+
             if not obs_collection._is_consistent():
-                raise RuntimeError(f"inconsistent observation collection -> {obs_collection.name}")
+                raise RuntimeError(
+                    f"inconsistent observation collection -> {obs_collection.name}"
+                )
 
         if inplace:
             for o in obs_collection.obs.values:
                 self.add_observation(o, check_consistency=False, **kwargs)
-        
+
         else:
             oc = self.copy()
             for o in obs_collection.obs.values:
                 oc.add_observation(o, check_consistency=False, **kwargs)
-                
+
             return oc
-            
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -1245,6 +1247,50 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
+
+    def to_excel(self, path, main_sheet_name=None):
+        """ write an ObsCollection to an excel, the first sheet in the
+        excel contains the metadata, the other tabs are the timeseries of each 
+        observation.
+        
+
+        Parameters
+        ----------
+        path : str
+            full path of xlsx file.
+        main_sheet_name : str or None, optional
+            sheetname with metadata, if None the name of the ObsCollection is 
+            used. The default is None.
+
+        Raises
+        ------
+        RuntimeError
+            If the ObsCollection is inconsistent.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        if main_sheet_name is None:
+            main_sheet_name = self.name
+
+        if not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
+
+        with pd.ExcelWriter(path) as writer:
+            # write ObsCollection dataframe without observations to first sheet
+            super(ObsCollection, self.drop(columns="obs")).to_excel(
+                writer, main_sheet_name
+            )
+
+            # write each observation time series to next sheets
+            for o in self.obs.values:
+                sheetname = o.name
+                for ch in ['[',']',':','*','?','/','\\']:
+                    sheetname = sheetname.replace(ch, '_')
+                o.to_excel(writer, sheetname)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import io_fews
