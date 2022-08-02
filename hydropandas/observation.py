@@ -114,7 +114,7 @@ class Obs(pd.DataFrame):
 
     def copy(self, deep=True):
         """create a copy of the observation.
-        
+
         When ``deep=True`` (default), a new object will be created with a
         copy of the calling object's data and indices. Modifications to
         the data or indices of the copy will not be reflected in the
@@ -124,13 +124,13 @@ class Obs(pd.DataFrame):
         the calling object's data or index (only references to the data
         and index are copied). Any changes to the data of the original
         will be reflected in the shallow copy (and vice versa).
-        
+
         Parameters
         ----------
         deep : bool, default True
             Make a deep copy, including a copy of the data and the indices.
             With ``deep=False`` neither the indices nor the data are copied.
-        
+
         Returns
         -------
         o : TYPE
@@ -183,7 +183,7 @@ class Obs(pd.DataFrame):
         return d
 
     def merge_observation(self, o, overlap="error", check_metadata=False):
-        """ Merge with another observation of the same type. 
+        """ Merge with another observation of the same type.
 
         Parameters
         ----------
@@ -194,18 +194,18 @@ class Obs(pd.DataFrame):
             values.
             Options are:
                 error : Raise a ValueError
-                use_left : use the part of the overlapping timeseries from the 
+                use_left : use the part of the overlapping timeseries from the
                 existing observation
-                use_right : use the part of the overlapping timeseries from the 
+                use_right : use the part of the overlapping timeseries from the
                 new observation
             Default is 'error'.
         check_metadata : bool, optional
             If True the metadata of the two objects are compared. If there are
-            any difference the overlap parameter is used to determine which 
+            any difference the overlap parameter is used to determine which
             metadata is used. If check_metadata is False, the metadata of the
-            existing observation is always used for the merged observation. 
+            existing observation is always used for the merged observation.
             The default is False.
-            
+
         Raises
         ------
         TypeError
@@ -1196,8 +1196,8 @@ class EvaporationObs(MeteoObs):
         stn : int or str
             measurement station e.g. 829.
         et_type: str
-            type of evapotranspiration to get from KNMI. Choice between 
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            type of evapotranspiration to get from KNMI. Choice between
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
@@ -1272,8 +1272,8 @@ class EvaporationObs(MeteoObs):
         y : float
             y coördinate in m RD.
         et_type: str
-            type of evapotranspiration to get from KNMI. Choice between 
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            type of evapotranspiration to get from KNMI. Choice between
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
         method: str
             specify whether evaporation should be collected from the nearest
@@ -1335,17 +1335,16 @@ class EvaporationObs(MeteoObs):
             # get all station locations
             stns = io_knmi.get_stations(meteo_var="EV24").sort_index()
 
-            df = pd.DataFrame(
-                columns=stns.index
-            )  # index=date_range(start='1900', end=enddate, freq='H')
+            df = pd.DataFrame(index=pd.date_range(start='1900', end=enddate, freq='H'),
+                columns=stns.index)
             for stn in stns.index:  # fill dataframe with measurements
                 et, meta = io_knmi.get_evaporation(
                     stn, et_type, start=startdate, end=enddate, settings=settings
                 )
                 df[stn] = et
-
+            # only one location
             if isinstance(x, numbers.Number):
-                ts = io_knmi.interpolate([x], [y], stns, df, obs_str=et_type).astype(
+                ts = io_knmi.interpolate([x], [y], stns, df.dropna(how='all'), obs_str=et_type).astype(
                     float
                 )
                 ts[ts < 0] = 0
@@ -1367,8 +1366,20 @@ class EvaporationObs(MeteoObs):
                     name=meta["name"],
                     meteo_var=et_type,
                 )
+            # multiple locations
             else:
-                raise TypeError(f"expected nummerical type but got {type(x)} instead")
+                ts = io_knmi.interpolate(np.asarray(x), np.asarray(y), stns, df.dropna(how='all'), obs_str=et_type).astype(float)
+                ts[ts < 0] = 0
+
+                d = {}
+                for i, col in enumerate(ts.columns):
+                    meta = {'station': 'interpolation thin plate sline',
+                        'x': x[i], 'y': y[i], 'name': col, 'meteo_var': et_type}
+                    d[col] = cls(ts.loc[:, [col]].copy(), meta=meta,
+                                 station=meta["station"], x=meta["x"],
+                                 y=meta["y"], name=meta["name"],
+                                 meteo_var=et_type)
+                return d
         else:
             raise ValueError(
                 "Please provide either 'nearest' or 'interpolation' as method"
@@ -1399,8 +1410,8 @@ class EvaporationObs(MeteoObs):
         obs : hydropandas.Obs
             Observation object.
         et_type: str
-            type of evapotranspiration to get from KNMI. Choice between 
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            type of evapotranspiration to get from KNMI. Choice between
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
