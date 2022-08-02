@@ -222,20 +222,22 @@ class Obs(pd.DataFrame):
         logger.warn(
             "function 'merge_observation' not thoroughly tested, please be carefull!"
         )
-        
-        if overlap not in ['error','use_left', 'use_right']:
-            raise ValueError('invalid value for overlap, choose between error, use_left and use_right')
+
+        if overlap not in ["error", "use_left", "use_right"]:
+            raise ValueError(
+                "invalid value for overlap, choose between error, use_left and use_right"
+            )
 
         # check observation type
         if type(self) != type(o):
             raise TypeError(
                 f"existing observation has a different type {type(self)} than new observation {type(o)}"
             )
-            
+
         new_o = self.iloc[0:0, 0:0]
 
         # check if metadata is the same
-        
+
         if check_metadata:
             new_metadata = {}
             same_metadata = True
@@ -247,17 +249,17 @@ class Obs(pd.DataFrame):
                         same_metadata = False
                         if overlap == "error":
                             raise ValueError(
-                            f"existing observation {key} differs from new observation"
-                        )
+                                f"existing observation {key} differs from new observation"
+                            )
                         elif overlap == "use_left":
                             logger.info(
-                            f"existing observation {key} differs from new observation, use existing"
-                        )
+                                f"existing observation {key} differs from new observation, use existing"
+                            )
                             new_metadata[key] = v1
                         elif overlap == "use_right":
                             logger.info(
-                            f"existing observation {key} differs from new observation, use new"
-                        )
+                                f"existing observation {key} differs from new observation, use new"
+                            )
                             new_metadata[key] = v2
                     else:
                         new_metadata[key] = v1
@@ -265,22 +267,22 @@ class Obs(pd.DataFrame):
                     same_metadata = False
                     if overlap == "error":
                         raise ValueError(
-                        f"existing observation {key} differs from new observation"
-                    )
+                            f"existing observation {key} differs from new observation"
+                        )
                     elif overlap == "use_left":
                         logger.info(
-                        f"existing observation {key} differs from new observation, use existing"
-                    )
+                            f"existing observation {key} differs from new observation, use existing"
+                        )
                         new_metadata[key] = v1
                     elif overlap == "use_right":
                         logger.info(
-                        f"existing observation {key} differs from new observation, use new"
-                    )
+                            f"existing observation {key} differs from new observation, use new"
+                        )
                         new_metadata[key] = v2
             if same_metadata:
                 logger.info("new and existing observation have the same metadata")
         else:
-            new_metadata = {key:getattr(self, key) for key in self._metadata}
+            new_metadata = {key: getattr(self, key) for key in self._metadata}
 
         # check if time series are the same
         if self.equals(o):
@@ -337,7 +339,7 @@ class Obs(pd.DataFrame):
         for col in self.columns:
             if col not in new_o.columns:
                 new_o = pd.concat([new_o, self[[col]]], axis=1)
-                
+
         new_o.sort_index(inplace=True)
 
         # reset metadata (use existing observation)
