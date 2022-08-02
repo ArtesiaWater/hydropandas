@@ -15,7 +15,7 @@ folium
 bokeh
 pastas
 xarray
-netCDF4
+netCDF4==1.5.7
 nbformat
 nbconvert
 ipykernel

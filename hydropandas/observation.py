@@ -15,6 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import warnings
+import numbers
 import numpy as np
 import pandas as pd
 
@@ -110,10 +111,10 @@ class Obs(pd.DataFrame):
     @property
     def _constructor(self):
         return Obs
-    
+
     def copy(self, deep=True):
         """create a copy of the observation.
-        
+
         When ``deep=True`` (default), a new object will be created with a
         copy of the calling object's data and indices. Modifications to
         the data or indices of the copy will not be reflected in the
@@ -123,31 +124,31 @@ class Obs(pd.DataFrame):
         the calling object's data or index (only references to the data
         and index are copied). Any changes to the data of the original
         will be reflected in the shallow copy (and vice versa).
-        
+
         Parameters
         ----------
         deep : bool, default True
             Make a deep copy, including a copy of the data and the indices.
             With ``deep=False`` neither the indices nor the data are copied.
-        
+
         Returns
         -------
         o : TYPE
             DESCRIPTION.
 
         """
-        
+
         if not deep:
             return super().copy(deep=deep)
-        
+
         o = super().copy(deep=deep)
-        
+
         # creat a copy of all mutable attributes
         for att in self._metadata:
             val = getattr(self, att)
             if isinstance(val, (list, dict)):
                 setattr(o, att, val.copy())
-        
+
         return o
 
     def to_collection_dict(self, include_meta=False):
@@ -180,40 +181,65 @@ class Obs(pd.DataFrame):
         d["obs"] = self
 
         return d
-    
-    def merge_observation(self, o, check_metadata=False):
-        """ Merge with another observation of the same type. 
+
+    def merge_observation(self, o, overlap="error", check_metadata=False):
+        """ Merge with another observation of the same type.
 
         Parameters
         ----------
         o : hpd.observation.Obs
             Observation object.
+        overlap : str, optional
+            How to deal with overlapping timeseries or metadata with different
+            values.
+            Options are:
+                error : Raise a ValueError
+                use_left : use the part of the overlapping timeseries from the
+                existing observation
+                use_right : use the part of the overlapping timeseries from the
+                new observation
+            Default is 'error'.
         check_metadata : bool, optional
-            If True the metadata of the two objects are compared. Differences
-            are logged. The metadata of the current observation is always
-            used for the merged observation. The default is False.
-            
+            If True the metadata of the two objects are compared. If there are
+            any difference the overlap parameter is used to determine which
+            metadata is used. If check_metadata is False, the metadata of the
+            existing observation is always used for the merged observation.
+            The default is False.
+
         Raises
         ------
         TypeError
             when the observation types are not the same.
         ValueError
-            when the time series have different values on the same date.
+            when the time series have different values on the same date or
+            different values for the same metadata.
 
         Returns
         -------
         Observation object.
 
         """
-        logger.warn("function 'merge_observation' not thoroughly tested, please be carefull!")
-        
-        
+        logger.warn(
+            "function 'merge_observation' not thoroughly tested, please be carefull!"
+        )
+
+        if overlap not in ["error", "use_left", "use_right"]:
+            raise ValueError(
+                "invalid value for overlap, choose between error, use_left and use_right"
+            )
+
         # check observation type
         if type(self) != type(o):
-            raise TypeError(f'existing observation has a different type {type(self)} than new observation {type(o)}')
-        
+            raise TypeError(
+                f"existing observation has a different type {type(self)} than new observation {type(o)}"
+            )
+
+        new_o = self.iloc[0:0, 0:0]
+
         # check if metadata is the same
+
         if check_metadata:
+            new_metadata = {}
             same_metadata = True
             for key in self._metadata:
                 v1 = getattr(self, key)
@@ -221,51 +247,106 @@ class Obs(pd.DataFrame):
                 try:
                     if v1 != v2:
                         same_metadata = False
-                        logger.info(f'existing observation {key} differs from new observation, use existing')
+                        if overlap == "error":
+                            raise ValueError(
+                                f"existing observation {key} differs from new observation"
+                            )
+                        elif overlap == "use_left":
+                            logger.info(
+                                f"existing observation {key} differs from new observation, use existing"
+                            )
+                            new_metadata[key] = v1
+                        elif overlap == "use_right":
+                            logger.info(
+                                f"existing observation {key} differs from new observation, use new"
+                            )
+                            new_metadata[key] = v2
+                    else:
+                        new_metadata[key] = v1
                 except TypeError:
-                    logger.info(f'existing observation {key} differs from new observation, use existing')
                     same_metadata = False
+                    if overlap == "error":
+                        raise ValueError(
+                            f"existing observation {key} differs from new observation"
+                        )
+                    elif overlap == "use_left":
+                        logger.info(
+                            f"existing observation {key} differs from new observation, use existing"
+                        )
+                        new_metadata[key] = v1
+                    elif overlap == "use_right":
+                        logger.info(
+                            f"existing observation {key} differs from new observation, use new"
+                        )
+                        new_metadata[key] = v2
             if same_metadata:
-                logger.info('new and existing observation have the same metadata')
+                logger.info("new and existing observation have the same metadata")
+        else:
+            new_metadata = {key: getattr(self, key) for key in self._metadata}
 
         # check if time series are the same
         if self.equals(o):
-            logger.info('new and existing observation have the same time series')
+            logger.info("new and existing observation have the same time series")
             return self
-        
-        logger.info('new observation has a different time series')
-        logger.info('merge time series')
-        
-        new_o = self.iloc[0:0, 0:0]
-        
+
+        logger.info("new observation has a different time series")
+        logger.info("merge time series")
+
         # merge overlapping columns
         overlap_cols = list(set(self.columns) & set(o.columns))
-        
-        # check for overlapping indices and columns
+
+        # get timeseries for overlapping columns and indices
         dup_ind_o = o.loc[o.index.isin(self.index)]
         if not dup_ind_o.empty:
-            if not self.loc[dup_ind_o.index, overlap_cols].equals(dup_ind_o[overlap_cols]):
-                raise ValueError('observation have different values for same time steps')
-        
-        # merge non overlapping indices
-        unique_ind_o = o.loc[~o.index.isin(self.index)]
-        dfcol = pd.concat([self[overlap_cols], unique_ind_o[overlap_cols]])
+            # check if overlapping timeseries have different values
+            if not self.loc[dup_ind_o.index, overlap_cols].equals(
+                dup_ind_o[overlap_cols]
+            ):
+                logger.warning(
+                    f"timeseries of observation {o.name} overlap with different values"
+                )
+                if overlap == "error":
+                    raise ValueError(
+                        "observations have different values for same time steps"
+                    )
+                elif overlap == "use_left":
+                    dup_o = self.loc[dup_ind_o.index, overlap_cols]
+                elif overlap == "use_right":
+                    dup_o = dup_ind_o[overlap_cols]
+            else:
+                dup_o = self.loc[dup_ind_o.index, overlap_cols]
+        else:
+            dup_o = dup_ind_o[overlap_cols]
+
+        # get unique observations from overlapping columns
+        unique_o_left = self.loc[
+            ~self.index.isin(o.index)
+        ]  # get unique observations left
+        unique_o_right = o.loc[
+            ~o.index.isin(self.index)
+        ]  # get unique observations right
+
+        # merge unique observations from overlapping columns with duplicate observations from overlapping columns
+        dfcol = pd.concat(
+            [dup_o, unique_o_left[overlap_cols], unique_o_right[overlap_cols]]
+        )
         new_o = pd.concat([new_o, dfcol], axis=1)
 
-        # merge non overlapping columns                
+        # merge non overlapping columns
         for col in o.columns:
             if col not in new_o.columns:
                 new_o = pd.concat([new_o, o[[col]]], axis=1)
         for col in self.columns:
             if col not in new_o.columns:
                 new_o = pd.concat([new_o, self[[col]]], axis=1)
-                    
+
+        new_o.sort_index(inplace=True)
+
         # reset metadata (use existing observation)
-        for key in self._metadata:
-            setattr(new_o, key, getattr(self, key))
-                
+        for key, item in new_metadata.items():
+            setattr(new_o, key, item)
+
         return new_o
-        
 
 
 class GroundwaterObs(Obs):
@@ -1096,11 +1177,18 @@ class EvaporationObs(MeteoObs):
         return EvaporationObs
 
     @classmethod
-    def from_knmi(cls, stn, et_type='EV24', startdate=None,
-                  enddate=None, fill_missing_obs=True,
-                  interval="daily", inseason=False,
-                  use_precipitation_stn=True, use_api=True,
-                  raise_exceptions=False):
+    def from_knmi(
+        cls,
+        stn,
+        et_type="EV24",
+        startdate=None,
+        enddate=None,
+        fill_missing_obs=True,
+        interval="daily",
+        inseason=False,
+        use_api=True,
+        raise_exceptions=False,
+    ):
         """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
         Parameters
@@ -1108,8 +1196,8 @@ class EvaporationObs(MeteoObs):
         stn : int or str
             measurement station e.g. 829.
         et_type: str
-            type of evapotranspiration to get from KNMI. Choice between 
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            type of evapotranspiration to get from KNMI. Choice between
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
@@ -1145,32 +1233,52 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
-                                           end=enddate, settings=settings)
+        ts, meta = io_knmi.get_evaporation(
+            stn, et_type, start=startdate, end=enddate, settings=settings
+        )
 
-        return cls(ts, meta=meta, station=meta["station"],
-                   x=meta["x"], y=meta["y"],
-                   name=meta["name"], meteo_var=et_type)
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            meteo_var=et_type,
+        )
 
     @classmethod
-    def from_nearest_xy(cls, x, y, et_type='EV24', startdate=None,
-                        enddate=None, fill_missing_obs=True,
-                        interval="daily", inseason=False,
-                        use_precipitation_stn=True, use_api=True,
-                        raise_exceptions=False):
+    def from_xy(
+        cls,
+        x,
+        y,
+        et_type="EV24",
+        method="nearest",
+        startdate=None,
+        enddate=None,
+        fill_missing_obs=True,
+        interval="daily",
+        inseason=False,
+        use_api=True,
+        raise_exceptions=False,
+    ):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given (x,y) coördinates.
 
         Parameters
         ----------
-        x : int or float
+        x : float
             x coördinate in m RD.
-        y : int or float
+        y : float
             y coördinate in m RD.
         et_type: str
-            type of evapotranspiration to get from KNMI. Choice between 
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            type of evapotranspiration to get from KNMI. Choice between
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
+        method: str
+            specify whether evaporation should be collected from the nearest
+            meteo station (fast) or interpolated using thin plate spline (slow).
+            Choiche betweeen 'nearest' or 'interpolation'
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1205,20 +1313,91 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
-        ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
-                                           end=enddate, settings=settings)
+        if method == "nearest":
+            stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+            ts, meta = io_knmi.get_evaporation(
+                stn, et_type, start=startdate, end=enddate, settings=settings
+            )
 
-        return cls(ts, meta=meta, station=meta["station"],
-                   x=meta["x"], y=meta["y"],
-                   name=meta["name"], meteo_var=et_type)
+            return cls(
+                ts,
+                meta=meta,
+                station=meta["station"],
+                x=meta["x"],
+                y=meta["y"],
+                name=meta["name"],
+                meteo_var=et_type,
+            )
+
+        elif method == "interpolation":
+            settings["fill_missing_obs"] = False  # dont fill missing obs
+
+            # get all station locations
+            stns = io_knmi.get_stations(meteo_var="EV24").sort_index()
+
+            df = pd.DataFrame(index=pd.date_range(start='1900', end=enddate, freq='H'),
+                columns=stns.index)
+            for stn in stns.index:  # fill dataframe with measurements
+                et, meta = io_knmi.get_evaporation(
+                    stn, et_type, start=startdate, end=enddate, settings=settings
+                )
+                df[stn] = et
+            # only one location
+            if isinstance(x, numbers.Number):
+                ts = io_knmi.interpolate([x], [y], stns, df.dropna(how='all'), obs_str=et_type).astype(
+                    float
+                )
+                ts[ts < 0] = 0
+
+                meta = {
+                    "station": "interpolation thin plate sline",
+                    "x": x,
+                    "y": y,
+                    "name": ts.columns[0],
+                    "meteo_var": et_type,
+                }
+
+                return cls(
+                    ts,
+                    meta=meta,
+                    station=meta["station"],
+                    x=meta["x"],
+                    y=meta["y"],
+                    name=meta["name"],
+                    meteo_var=et_type,
+                )
+            # multiple locations
+            else:
+                ts = io_knmi.interpolate(np.asarray(x), np.asarray(y), stns, df.dropna(how='all'), obs_str=et_type).astype(float)
+                ts[ts < 0] = 0
+
+                d = {}
+                for i, col in enumerate(ts.columns):
+                    meta = {'station': 'interpolation thin plate sline',
+                        'x': x[i], 'y': y[i], 'name': col, 'meteo_var': et_type}
+                    d[col] = cls(ts.loc[:, [col]].copy(), meta=meta,
+                                 station=meta["station"], x=meta["x"],
+                                 y=meta["y"], name=meta["name"],
+                                 meteo_var=et_type)
+                return d
+        else:
+            raise ValueError(
+                "Please provide either 'nearest' or 'interpolation' as method"
+            )
 
     @classmethod
-    def from_obs(cls, obs, et_type='EV24', startdate=None,
-                 enddate=None, fill_missing_obs=True,
-                 interval="daily", inseason=False,
-                 use_precipitation_stn=True, use_api=True,
-                 raise_exceptions=False):
+    def from_obs(
+        cls,
+        obs,
+        et_type="EV24",
+        startdate=None,
+        enddate=None,
+        fill_missing_obs=True,
+        use_api=True,
+        interval="daily",
+        inseason=False,
+        raise_exceptions=False,
+    ):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
         coördinates of the observation to obtain the nearest KNMI evaporation
@@ -1231,8 +1410,8 @@ class EvaporationObs(MeteoObs):
         obs : hydropandas.Obs
             Observation object.
         et_type: str
-            type of evapotranspiration to get from KNMI. Choice between 
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to 
+            type of evapotranspiration to get from KNMI. Choice between
+            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
@@ -1271,12 +1450,19 @@ class EvaporationObs(MeteoObs):
         y = obs.y
 
         stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
-        ts, meta = io_knmi.get_evaporation(stn, et_type, start=startdate,
-                                           end=enddate, settings=settings)
+        ts, meta = io_knmi.get_evaporation(
+            stn, et_type, start=startdate, end=enddate, settings=settings
+        )
 
-        return cls(ts, meta=meta, station=meta["station"],
-                   x=meta["x"], y=meta["y"],
-                   name=meta["name"], meteo_var=et_type)
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            meteo_var=et_type,
+        )
 
 
 class PrecipitationObs(MeteoObs):
