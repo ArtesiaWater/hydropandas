@@ -1968,4 +1968,4 @@ def interpolate(
         val_rbf = rbf(xy)
         df.loc[idx] = val_rbf
 
-    return df
+    return df.astype(float)
