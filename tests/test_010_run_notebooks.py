@@ -34,3 +34,9 @@ def test_run_notebook_02_knmi_observations():
 @pytest.mark.notebooks
 def test_run_notebook_03_pastastore_from_observations():
     _run_notebook(nbdir, "03_pastastore_from_observations.ipynb")
+
+
+# not tested because notebook has intentional errors
+# @pytest.mark.notebooks
+# def test_run_notebook_04_merging_observations():
+#     _run_notebook(nbdir, "03_pastastore_from_observations.ipynb")

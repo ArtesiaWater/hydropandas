@@ -893,13 +893,12 @@ class ObsCollection(pd.DataFrame):
         cls,
         locations=None,
         stns=None,
-        x=None,
-        y=None,
+        xy=None,
         meteo_vars=("RH",),
         name="",
-        start=None,
-        end=None,
-        ObsClass=None,
+        starts=None,
+        ends=None,
+        ObsClasses=None,
         method="nearest",
         **kwargs,
     ):
@@ -913,16 +912,14 @@ class ObsCollection(pd.DataFrame):
             default is None
         stns : list of str or None
             list of knmi stations. The default is None
-        x : list or numpy array, optional
-            x coördinates of the locations
-        y : list or numpy array, optional
-            y coördinates of the locations
+        xy : list or numpy array, optional
+            xy coördinates of the locations. e.g. [[10,25], [5,25]]
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
         name : str, optional
             name of the obscollection. The default is ''
-        start : None, str, datetime or list, optional
+        starts : None, str, datetime or list, optional
             start date of observations per meteo variable. The start date is
             included in the time series.
             If start is None the start date will be January 1st of the
@@ -930,7 +927,7 @@ class ObsCollection(pd.DataFrame):
             If start is str it will be converted to datetime.
             If start is a list it should be the same length as meteo_vars and
             the start time for each variable. The default is None
-        end : list of str, datetime or None
+        ends : list of str, datetime or None
             end date of observations per meteo variable. The end date is
             included in the time series.
             If end is None the start date will be January 1st of the
@@ -938,7 +935,7 @@ class ObsCollection(pd.DataFrame):
             If end is a str it will be converted to datetime.
             If end is a list it should be the same length as meteo_vars and
             the end time for each meteo variable. The default is None
-        ObsClass : list of type or None
+        ObsClasses : list of type or None
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
@@ -1049,26 +1046,26 @@ class ObsCollection(pd.DataFrame):
         from .io.io_knmi import get_knmi_obslist
 
         # obtain ObsClass
-        if ObsClass is None:
-            ObsClass = []
+        if ObsClasses is None:
+            ObsClasses = []
             for meteovar in meteo_vars:
                 if meteovar in ("RH", "RD"):
-                    ObsClass.append(obs.PrecipitationObs)
+                    ObsClasses.append(obs.PrecipitationObs)
                 elif meteovar == "EV24":
-                    ObsClass.append(obs.EvaporationObs)
+                    ObsClasses.append(obs.EvaporationObs)
                 else:
-                    ObsClass.append(obs.MeteoObs)
+                    ObsClasses.append(obs.MeteoObs)
 
-        elif isinstance(ObsClass, type):
+        elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClass, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
             ):
-                ObsClass = [ObsClass] * len(meteo_vars)
+                ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
                 TypeError(
                     "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
                 )
-        elif isinstance(ObsClass, (list, tuple)):
+        elif isinstance(ObsClasses, (list, tuple)):
             pass
         else:
             TypeError(
@@ -1076,21 +1073,20 @@ class ObsCollection(pd.DataFrame):
             )
 
         meta = {}
-        meta["start"] = start
-        meta["end"] = end
+        meta["starts"] = starts
+        meta["ends"] = ends
         meta["name"] = name
-        meta["ObsClass"] = ObsClass
+        meta["ObsClasses"] = ObsClasses
         meta["meteo_vars"] = meteo_vars
 
         obs_list = get_knmi_obslist(
             locations,
             stns,
-            x,
-            y,
+            xy,
             meteo_vars,
-            ObsClass=ObsClass,
-            start=start,
-            end=end,
+            ObsClasses=ObsClasses,
+            starts=starts,
+            ends=ends,
             method=method,
             **kwargs,
         )
@@ -1288,8 +1284,8 @@ class ObsCollection(pd.DataFrame):
             # write each observation time series to next sheets
             for o in self.obs.values:
                 sheetname = o.name
-                for ch in ['[',']',':','*','?','/','\\']:
-                    sheetname = sheetname.replace(ch, '_')
+                for ch in ["[", "]", ":", "*", "?", "/", "\\"]:
+                    sheetname = sheetname.replace(ch, "_")
                 o.to_excel(writer, sheetname)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):

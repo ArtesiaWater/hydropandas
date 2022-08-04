@@ -906,8 +906,7 @@ class MeteoObs(Obs):
     @classmethod
     def from_nearest_xy(
         cls,
-        x,
-        y,
+        xy,
         meteo_var,
         startdate=None,
         enddate=None,
@@ -923,10 +922,8 @@ class MeteoObs(Obs):
 
         Parameters
         ----------
-        x : int or float
-            x coordinate in m RD.
-        y : int or float
-            y coordinate in m RD.
+        xy : list. tuple or numpy array of int or floats
+            xy coördinates. e.g. [10.1,25.05]
         meteo_var : str,
             meteo variable e.g. "RH" or "EV24". See list with al options below.
         startdate : str, datetime or None, optional
@@ -968,7 +965,7 @@ class MeteoObs(Obs):
         }
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, meteo_var, startdate, enddate, settings=settings
+            xy, meteo_var, startdate, enddate, settings=settings
         )
 
         return cls(
@@ -1143,8 +1140,7 @@ class MeteoObs(Obs):
             "use_precipitation_stn": use_precipitation_stn,
         }
 
-        x = obs.x
-        y = obs.y
+        xy = (obs.x, obs.y)
 
         if startdate is None:
             startdate = obs.index[0]
@@ -1152,7 +1148,7 @@ class MeteoObs(Obs):
             enddate = obs.index[-1]
 
         ts, meta = io_knmi.get_knmi_timeseries_xy(
-            x, y, meteo_var, startdate, enddate, settings=settings
+            xy, meteo_var, startdate, enddate, settings=settings
         )
 
         return cls(
@@ -1250,8 +1246,7 @@ class EvaporationObs(MeteoObs):
     @classmethod
     def from_xy(
         cls,
-        x,
-        y,
+        xy,
         et_type="EV24",
         method="nearest",
         startdate=None,
@@ -1267,10 +1262,8 @@ class EvaporationObs(MeteoObs):
 
         Parameters
         ----------
-        x : float
-            x coördinate in m RD.
-        y : float
-            y coördinate in m RD.
+        xy : list. tuple or numpy array of int or floats
+            xy coördinates. e.g. (10.1,25.05)
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
@@ -1314,7 +1307,7 @@ class EvaporationObs(MeteoObs):
         }
 
         if method == "nearest":
-            stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+            stn = io_knmi.get_nearest_stations_xy(xy, meteo_var="EV24")[0]
             ts, meta = io_knmi.get_evaporation(
                 stn, et_type, start=startdate, end=enddate, settings=settings
             )
@@ -1330,56 +1323,17 @@ class EvaporationObs(MeteoObs):
             )
 
         elif method == "interpolation":
-            settings["fill_missing_obs"] = False  # dont fill missing obs
+            obs_list = io_knmi.get_knmi_obslist(
+                xy=[xy],
+                meteo_vars=(et_type,),
+                starts=startdate,
+                ends=enddate,
+                ObsClasses=(cls,),
+                settings=settings,
+                method=method,
+            )
 
-            # get all station locations
-            stns = io_knmi.get_stations(meteo_var="EV24").sort_index()
-
-            df = pd.DataFrame(index=pd.date_range(start='1900', end=enddate, freq='H'),
-                columns=stns.index)
-            for stn in stns.index:  # fill dataframe with measurements
-                et, meta = io_knmi.get_evaporation(
-                    stn, et_type, start=startdate, end=enddate, settings=settings
-                )
-                df[stn] = et
-            # only one location
-            if isinstance(x, numbers.Number):
-                ts = io_knmi.interpolate([x], [y], stns, df.dropna(how='all'), obs_str=et_type).astype(
-                    float
-                )
-                ts[ts < 0] = 0
-
-                meta = {
-                    "station": "interpolation thin plate sline",
-                    "x": x,
-                    "y": y,
-                    "name": ts.columns[0],
-                    "meteo_var": et_type,
-                }
-
-                return cls(
-                    ts,
-                    meta=meta,
-                    station=meta["station"],
-                    x=meta["x"],
-                    y=meta["y"],
-                    name=meta["name"],
-                    meteo_var=et_type,
-                )
-            # multiple locations
-            else:
-                ts = io_knmi.interpolate(np.asarray(x), np.asarray(y), stns, df.dropna(how='all'), obs_str=et_type).astype(float)
-                ts[ts < 0] = 0
-
-                d = {}
-                for i, col in enumerate(ts.columns):
-                    meta = {'station': 'interpolation thin plate sline',
-                        'x': x[i], 'y': y[i], 'name': col, 'meteo_var': et_type}
-                    d[col] = cls(ts.loc[:, [col]].copy(), meta=meta,
-                                 station=meta["station"], x=meta["x"],
-                                 y=meta["y"], name=meta["name"],
-                                 meteo_var=et_type)
-                return d
+            return obs_list[0]
         else:
             raise ValueError(
                 "Please provide either 'nearest' or 'interpolation' as method"
@@ -1542,17 +1496,15 @@ class PrecipitationObs(MeteoObs):
         return super().from_knmi(stn, meteo_var=meteo_var, **kwargs)
 
     @classmethod
-    def from_nearest_xy(cls, x, y, stn_type="meteo", **kwargs):
+    def from_nearest_xy(cls, xy, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y)
         coördinates.
 
         Parameters
         ----------
-        x : int or float
-            x coördinate in m RD.
-        y : int or float
-            y coördinate in m RD.
+        xy : list. tuple or numpy array of ints or floats
+            xy coördinates. e.g. [10.1,25.05]
         stn_type : str, optional
             type of measurements station. Can be 'meteo' or 'precipitation'.
             Default is 'meteo'.
@@ -1587,7 +1539,7 @@ class PrecipitationObs(MeteoObs):
         else:
             raise ValueError(f"invalid measurement station type -> {stn_type}")
 
-        return super().from_nearest_xy(x, y, meteo_var=meteo_var, **kwargs)
+        return super().from_nearest_xy(xy, meteo_var=meteo_var, **kwargs)
 
     @classmethod
     def from_obs(cls, obs, stn_type="meteo", **kwargs):
