@@ -1247,7 +1247,7 @@ class ObsCollection(pd.DataFrame):
         """ write an ObsCollection to an excel, the first sheet in the
         excel contains the metadata, the other tabs are the timeseries of each
         observation.
-        
+
 
         Parameters
         ----------

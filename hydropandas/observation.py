@@ -179,8 +179,7 @@ class Obs(pd.DataFrame):
         d["obs"] = self
 
         return d
-    
-    
+
     def merge_metadata(self, right, overlap='error'):
         """Merge the metadata of an Obs object with new metadata.
 
