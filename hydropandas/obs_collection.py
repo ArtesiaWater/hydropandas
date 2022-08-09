@@ -144,7 +144,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         check_individual_obs : bool, optional
-            If True the third condition in the list above is checked. The 
+            If True the third condition in the list above is checked. The
             default is True.
 
         Returns
@@ -209,14 +209,13 @@ class ObsCollection(pd.DataFrame):
         o : hpd.observation.Obs
             Observation object.
         check_consistency : bool, optional
-            If True the consistency of the collection is first checked. The 
+            If True the consistency of the collection is first checked. The
             default is True.
-        
         **kwargs passed to Obs.merge_observation:
             check_metadata : bool, optional
                 If True and observations are merged the metadata of the two
                 observations are compared. Differences are logged. The metadata of
-                the observation in the collection is always used for the merged 
+                the observation in the collection is always used for the merged
                 observation. The default is False.
             overlap : str, optional
                 How to deal with overlapping timeseries with different values.
@@ -266,7 +265,7 @@ class ObsCollection(pd.DataFrame):
     def add_obs_collection(
         self, obs_collection, check_consistency=True, inplace=False, **kwargs
     ):
-        """ add an observation collection to another existing observation 
+        """ add an observation collection to another existing observation
         collection. See add_observation method for more details
         
         Parameters
@@ -274,10 +273,10 @@ class ObsCollection(pd.DataFrame):
         obs_collection : hpd.ObsCollection
             ObsCollection object.
         check_consistency : bool, optional
-            If True the consistency of both collections is first checked. The 
+            If True the consistency of both collections is first checked. The
             default is True.
         inplace : bool, optional
-            If True, modifies the ObsCollection in place (do not create a new 
+            If True, modifies the ObsCollection in place (do not create a new
             object). The default is False.
         **kwargs passed to Obs.merge_observation:
             check_metadata : bool, optional
@@ -908,7 +907,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         locations : pandas DataFrame or None
-            dataframe with columns 'x' and 'y' as coordinates. The 
+            dataframe with columns 'x' and 'y' as coordinates. The
             default is None
         stns : list of str or None
             list of knmi stations. The default is None
@@ -1246,7 +1245,7 @@ class ObsCollection(pd.DataFrame):
 
     def to_excel(self, path, main_sheet_name=None):
         """ write an ObsCollection to an excel, the first sheet in the
-        excel contains the metadata, the other tabs are the timeseries of each 
+        excel contains the metadata, the other tabs are the timeseries of each
         observation.
         
 
@@ -1255,7 +1254,7 @@ class ObsCollection(pd.DataFrame):
         path : str
             full path of xlsx file.
         main_sheet_name : str or None, optional
-            sheetname with metadata, if None the name of the ObsCollection is 
+            sheetname with metadata, if None the name of the ObsCollection is
             used. The default is None.
 
         Raises

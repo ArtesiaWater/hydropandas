@@ -180,17 +180,91 @@ class Obs(pd.DataFrame):
         d["obs"] = self
 
         return d
-
-    def merge_observation(self, o, overlap="error", check_metadata=False):
-        """ Merge with another observation of the same type.
+    
+    
+    def merge_metadata(self, right, overlap='error'):
+        """ Merge the metadata of an Obs object with new metadata
+        
 
         Parameters
         ----------
-        o : hpd.observation.Obs
+        right : dict
+            dictionary with the metadata of an Obs object.
+        overlap : str, optional
+            How to deal with overlapping metadata with different values.
+            Options are:
+                error : Raise a ValueError
+                use_left : Use the metadata from self
+                use_right : Use the given metadata
+            Default is 'error'.
+
+        Raises
+        ------
+        ValueError
+            if the metadata differs and overlap='error'.
+
+        Returns
+        -------
+        new_metadata : dict
+            metadata after merge.
+
+        """
+        new_metadata = {}
+        same_metadata = True
+        for key in self._metadata:
+            v1 = getattr(self, key)
+            v2 = right[key]
+            try:
+                if v1 != v2:
+                    same_metadata = False
+                    if overlap == "error":
+                        raise ValueError(
+                            f"existing observation {key} differs from new observation"
+                        )
+                    elif overlap == "use_left":
+                        logger.info(
+                            f"existing observation {key} differs from new observation, use existing"
+                        )
+                        new_metadata[key] = v1
+                    elif overlap == "use_right":
+                        logger.info(
+                            f"existing observation {key} differs from new observation, use new"
+                        )
+                        new_metadata[key] = v2
+                else:
+                    new_metadata[key] = v1
+            except TypeError:
+                same_metadata = False
+                if overlap == "error":
+                    raise ValueError(
+                        f"existing observation {key} differs from new observation"
+                    )
+                elif overlap == "use_left":
+                    logger.info(
+                        f"existing observation {key} differs from new observation, use existing"
+                    )
+                    new_metadata[key] = v1
+                elif overlap == "use_right":
+                    logger.info(
+                        f"existing observation {key} differs from new observation, use new"
+                    )
+                    new_metadata[key] = v2
+        if same_metadata:
+            logger.info("new and existing observation have the same metadata")
+            
+        return new_metadata
+    
+    
+    def _merge_timeseries(self, right, overlap='error'):
+        """ merge two timeseries.
+        
+
+        Parameters
+        ----------
+        right : hpd.observation.Obs
             Observation object.
         overlap : str, optional
-            How to deal with overlapping timeseries or metadata with different
-            values.
+            How to deal with overlapping timeseries with different values.
             Options are:
                 error : Raise a ValueError
                 use_left : use the part of the overlapping timeseries from the
@@ -198,12 +272,101 @@ class Obs(pd.DataFrame):
                 use_right : use the part of the overlapping timeseries from the
                 new observation
             Default is 'error'.
-        check_metadata : bool, optional
-            If True the metadata of the two objects are compared. If there are
-            any difference the overlap parameter is used to determine which
-            metadata is used. If check_metadata is False, the metadata of the
-            existing observation is always used for the merged observation.
-            The default is False.
+
+        Raises
+        ------
+        ValueError
+            when the time series have different values on the same timestamp.
+
+        Returns
+        -------
+        Observation object.
+
+        """
+        o = self.iloc[0:0, 0:0]
+        
+        # check if time series are the same
+        if self.equals(right):
+            logger.info("new and existing observation have the same time series")
+            return self
+
+        logger.info("new observation has a different time series")
+        logger.info("merge time series")
+
+        # merge overlapping columns
+        overlap_cols = list(set(self.columns) & set(right.columns))
+
+        # get timeseries for overlapping columns and indices
+        dup_ind_o = right.loc[right.index.isin(self.index)]
+        if not dup_ind_o.empty:
+            # check if overlapping timeseries have different values
+            if not self.loc[dup_ind_o.index, overlap_cols].equals(
+                dup_ind_o[overlap_cols]
+            ):
+                logger.warning(
+                    f"timeseries of observation {right.name} overlap with different values"
+                )
+                if overlap == "error":
+                    raise ValueError(
+                        "observations have different values for same time steps"
+                    )
+                elif overlap == "use_left":
+                    dup_o = self.loc[dup_ind_o.index, overlap_cols]
+                elif overlap == "use_right":
+                    dup_o = dup_ind_o[overlap_cols]
+            else:
+                dup_o = self.loc[dup_ind_o.index, overlap_cols]
+        else:
+            dup_o = dup_ind_o[overlap_cols]
+
+        # get unique observations from overlapping columns
+        unique_o_left = self.loc[
+            ~self.index.isin(right.index)
+        ]  # get unique observations left
+        unique_o_right = right.loc[
+            ~right.index.isin(self.index)
+        ]  # get unique observations right
+
+        # merge unique observations from overlapping columns with duplicate observations from overlapping columns
+        dfcol = pd.concat(
+            [dup_o, unique_o_left[overlap_cols], unique_o_right[overlap_cols]]
+        )
+        o = pd.concat([o, dfcol], axis=1)
+
+        # merge non overlapping columns
+        for col in right.columns:
+            if col not in o.columns:
+                o = pd.concat([o, right[[col]]], axis=1)
+        for col in self.columns:
+            if col not in o.columns:
+                o = pd.concat([o, self[[col]]], axis=1)
+
+        o.sort_index(inplace=True)
+        
+        return o
+        
+
+    def merge_observation(self, right, overlap="error", merge_metadata=True):
+        """ Merge with another observation of the same type.
+
+        Parameters
+        ----------
+        right : hpd.observation.Obs
+            Observation object.
+        overlap : str, optional
+            How to deal with overlapping timeseries or metadata with different
+            values.
+            Options are:
+                error : Raise a ValueError
+                use_left : use the part of the overlapping timeseries from self
+                use_right : use the part of the overlapping timeseries from
+                right
+            Default is 'error'.
+        merge_metadata : bool, optional
+            If True the metadata of the two objects are merged. If there are
+            any differences the overlap parameter is used to determine which
+            metadata is used. If merge_metadata is False, the metadata of self
+            is always used for the merged observation. The default is True.
 
         Raises
         ------
@@ -228,124 +391,25 @@ class Obs(pd.DataFrame):
             )
 
         # check observation type
-        if type(self) != type(o):
+        if not isinstance(right, type(self)):
             raise TypeError(
-                f"existing observation has a different type {type(self)} than new observation {type(o)}"
+                f"existing observation has a different type {type(self)} than new observation {type(right)}"
             )
+            
+        # merge timeseries
+        o = self._merge_timeseries(right, overlap=overlap)
 
-        new_o = self.iloc[0:0, 0:0]
-
-        # check if metadata is the same
-
-        if check_metadata:
-            new_metadata = {}
-            same_metadata = True
-            for key in self._metadata:
-                v1 = getattr(self, key)
-                v2 = getattr(o, key)
-                try:
-                    if v1 != v2:
-                        same_metadata = False
-                        if overlap == "error":
-                            raise ValueError(
-                                f"existing observation {key} differs from new observation"
-                            )
-                        elif overlap == "use_left":
-                            logger.info(
-                                f"existing observation {key} differs from new observation, use existing"
-                            )
-                            new_metadata[key] = v1
-                        elif overlap == "use_right":
-                            logger.info(
-                                f"existing observation {key} differs from new observation, use new"
-                            )
-                            new_metadata[key] = v2
-                    else:
-                        new_metadata[key] = v1
-                except TypeError:
-                    same_metadata = False
-                    if overlap == "error":
-                        raise ValueError(
-                            f"existing observation {key} differs from new observation"
-                        )
-                    elif overlap == "use_left":
-                        logger.info(
-                            f"existing observation {key} differs from new observation, use existing"
-                        )
-                        new_metadata[key] = v1
-                    elif overlap == "use_right":
-                        logger.info(
-                            f"existing observation {key} differs from new observation, use new"
-                        )
-                        new_metadata[key] = v2
-            if same_metadata:
-                logger.info("new and existing observation have the same metadata")
+        # merge metadata
+        if merge_metadata:
+            metadata = {key: getattr(right, key) for key in right._metadata}
+            new_metadata = self.merge_metadata(metadata, overlap=overlap)
         else:
             new_metadata = {key: getattr(self, key) for key in self._metadata}
-
-        # check if time series are the same
-        if self.equals(o):
-            logger.info("new and existing observation have the same time series")
-            return self
-
-        logger.info("new observation has a different time series")
-        logger.info("merge time series")
-
-        # merge overlapping columns
-        overlap_cols = list(set(self.columns) & set(o.columns))
-
-        # get timeseries for overlapping columns and indices
-        dup_ind_o = o.loc[o.index.isin(self.index)]
-        if not dup_ind_o.empty:
-            # check if overlapping timeseries have different values
-            if not self.loc[dup_ind_o.index, overlap_cols].equals(
-                dup_ind_o[overlap_cols]
-            ):
-                logger.warning(
-                    f"timeseries of observation {o.name} overlap with different values"
-                )
-                if overlap == "error":
-                    raise ValueError(
-                        "observations have different values for same time steps"
-                    )
-                elif overlap == "use_left":
-                    dup_o = self.loc[dup_ind_o.index, overlap_cols]
-                elif overlap == "use_right":
-                    dup_o = dup_ind_o[overlap_cols]
-            else:
-                dup_o = self.loc[dup_ind_o.index, overlap_cols]
-        else:
-            dup_o = dup_ind_o[overlap_cols]
-
-        # get unique observations from overlapping columns
-        unique_o_left = self.loc[
-            ~self.index.isin(o.index)
-        ]  # get unique observations left
-        unique_o_right = o.loc[
-            ~o.index.isin(self.index)
-        ]  # get unique observations right
-
-        # merge unique observations from overlapping columns with duplicate observations from overlapping columns
-        dfcol = pd.concat(
-            [dup_o, unique_o_left[overlap_cols], unique_o_right[overlap_cols]]
-        )
-        new_o = pd.concat([new_o, dfcol], axis=1)
-
-        # merge non overlapping columns
-        for col in o.columns:
-            if col not in new_o.columns:
-                new_o = pd.concat([new_o, o[[col]]], axis=1)
-        for col in self.columns:
-            if col not in new_o.columns:
-                new_o = pd.concat([new_o, self[[col]]], axis=1)
-
-        new_o.sort_index(inplace=True)
-
-        # reset metadata (use existing observation)
+        
         for key, item in new_metadata.items():
-            setattr(new_o, key, item)
+            setattr(o, key, item)
 
-        return new_o
+        return o
 
 
 class GroundwaterObs(Obs):
