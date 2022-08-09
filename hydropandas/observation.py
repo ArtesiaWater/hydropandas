@@ -219,7 +219,7 @@ class Obs(pd.DataFrame):
         Observation object.
 
         """
-        logger.warn(
+        logger.warning(
             "function 'merge_observation' not thoroughly tested, please be carefull!"
         )
 
@@ -483,7 +483,7 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to dino.findMeetreeks functie
         """
-        warnings.warn(
+        warnings.warning(
             "this method will be removed in future versions, use from_dino instead",
             DeprecationWarning,
         )
@@ -523,7 +523,7 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
-        warnings.warn(
+        warnings.warning(
             "this method will be removed in future versions, use from_dino instead",
             DeprecationWarning,
         )
