@@ -134,7 +134,6 @@ class Obs(pd.DataFrame):
         -------
         o : TYPE
             DESCRIPTION.
-
         """
 
         if not deep:
@@ -183,8 +182,7 @@ class Obs(pd.DataFrame):
     
     
     def merge_metadata(self, right, overlap='error'):
-        """ Merge the metadata of an Obs object with new metadata
-        
+        """Merge the metadata of an Obs object with new metadata.
 
         Parameters
         ----------
@@ -207,7 +205,6 @@ class Obs(pd.DataFrame):
         -------
         new_metadata : dict
             metadata after merge.
-
         """
         new_metadata = {}
         same_metadata = True
@@ -256,8 +253,7 @@ class Obs(pd.DataFrame):
     
     
     def _merge_timeseries(self, right, overlap='error'):
-        """ merge two timeseries.
-        
+        """merge two timeseries.
 
         Parameters
         ----------
@@ -281,7 +277,6 @@ class Obs(pd.DataFrame):
         Returns
         -------
         Observation object.
-
         """
         o = self.iloc[0:0, 0:0]
         
@@ -347,7 +342,7 @@ class Obs(pd.DataFrame):
         
 
     def merge_observation(self, right, overlap="error", merge_metadata=True):
-        """ Merge with another observation of the same type.
+        """Merge with another observation of the same type.
 
         Parameters
         ----------
@@ -379,7 +374,6 @@ class Obs(pd.DataFrame):
         Returns
         -------
         Observation object.
-
         """
         logger.warning(
             "function 'merge_observation' not thoroughly tested, please be carefull!"
@@ -1494,7 +1488,8 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_knmi(cls, stn, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
-        precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for
+        precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for.
+
         <0.05 mm).
 
         There are 3 different ways to obtain precipitation data from the knmi:

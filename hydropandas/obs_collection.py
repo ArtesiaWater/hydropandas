@@ -267,7 +267,7 @@ class ObsCollection(pd.DataFrame):
     ):
         """ add an observation collection to another existing observation
         collection. See add_observation method for more details
-        
+
         Parameters
         ----------
         obs_collection : hpd.ObsCollection
@@ -282,7 +282,7 @@ class ObsCollection(pd.DataFrame):
             check_metadata : bool, optional
                 If True and observations are merged the metadata of the two
                 observations are compared. Differences are logged. The metadata of
-                the observation in the collection is always used for the merged 
+                the observation in the collection is always used for the merged
                 observation. The default is False.
             overlap : str, optional
                 How to deal with overlapping timeseries with different values.

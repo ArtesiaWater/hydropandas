@@ -115,7 +115,7 @@ def test_merge_observations_same_timeseries():
     o2 = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
     o2.iloc[:, 0] = o.iloc[:, 0]
 
-    omerged = o.merge_observation(o2)
+    omerged = o.merge_observation(o2, merge_metadata=False)
     # check if merged object is identical to first observation
     assert omerged.to_collection_dict() == o.to_collection_dict()
 
