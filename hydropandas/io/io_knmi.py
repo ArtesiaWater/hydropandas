@@ -586,7 +586,7 @@ def get_knmi_daily_rainfall_url(
     with open(fname_txt, "r") as f:
         line = f.readline()
         # get meteo var
-        for iline in range(50):
+        for _ in range(50):
             if "RD   " in line:  # RD komt te vaak voor vandaar de spaties
                 key, item = line.split("=")
                 variables = {key.strip(): item.strip()}
@@ -594,7 +594,7 @@ def get_knmi_daily_rainfall_url(
             line = f.readline()
 
         # get dataframe
-        for iline in range(50):
+        for _ in range(50):
             if "STN" in line:
                 columns = line.strip("# ").strip("\n").split(",")
                 columns = [x.strip(" ") for x in columns]
@@ -771,7 +771,7 @@ def _read_station_location(f):
     stations = None
 
     line = f.readline()
-    for iline in range(30):
+    for _ in range(30):
         if "STN" in line:
             titels = line.strip("# ").split()
             titels = [x.replace("(", "_") for x in titels]
@@ -910,7 +910,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     with open(fname_txt, "r") as f:
         line = f.readline()
         # get meteo var
-        for iline in range(50):
+        for _ in range(50):
             if meteo_var in line:
                 key, item = line.split("=")
                 variables = {key.strip(): item.strip()}
@@ -921,7 +921,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
             raise ValueError(f"could not find {meteo_var} for station {stn}")
 
         # get dataframe
-        for iline in range(50):
+        for _ in range(50):
             if "STN" in line:
                 columns = line.strip("# ").strip("\n").split(",")
                 columns = [x.strip(" ") for x in columns]

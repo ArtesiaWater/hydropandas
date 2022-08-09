@@ -15,7 +15,6 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import warnings
-import numbers
 import numpy as np
 import pandas as pd
 
@@ -1307,7 +1306,7 @@ class EvaporationObs(MeteoObs):
         }
 
         if method == "nearest":
-            stn = io_knmi.get_nearest_stations_xy(xy, meteo_var="EV24")[0]
+            stn = io_knmi.get_nearest_stations_xy(xy, "EV24")[0]
             ts, meta = io_knmi.get_evaporation(
                 stn, et_type, start=startdate, end=enddate, settings=settings
             )
@@ -1400,10 +1399,9 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        x = obs.x
-        y = obs.y
+        xy = (obs.x, obs.y)
 
-        stn = io_knmi.get_nearest_stations_xy(x, y, meteo_var="EV24")[0]
+        stn = io_knmi.get_nearest_stations_xy(xy, "EV24")[0]
         ts, meta = io_knmi.get_evaporation(
             stn, et_type, start=startdate, end=enddate, settings=settings
         )

@@ -105,6 +105,7 @@ ENV/
 
 *.html
 *cov.xml
+*.png
 
 .ignore*
 .examples/figure*
