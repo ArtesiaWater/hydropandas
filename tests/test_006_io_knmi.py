@@ -164,15 +164,13 @@ def test_fill_missing_measurements_rh_278():
 
 
 def test_obslist_from_grid():
-    x = np.array([104150.0, 104550.0])
-    y = np.array([510150.0, 510550.0])
+    xy = [[x, y] for x in [104150.0, 104550.0] for y in [510150.0, 510550.0]]
+
     obs_list = io_knmi.get_knmi_obslist(
-        x=x,
-        y=y,
+        xy=xy,
         meteo_vars=["RH", "EV24"],
-        start=["2010", "2010"],
-        end=[None, None],
-        ObsClass=[obs.PrecipitationObs, obs.EvaporationObs],
+        starts=["2010", "2010"],
+        ObsClasses=[obs.PrecipitationObs, obs.EvaporationObs],
     )
 
     return obs_list
@@ -181,11 +179,7 @@ def test_obslist_from_grid():
 def test_obslist_from_locations():
     locations = pd.DataFrame(data={"x": [100000], "y": [350000]})
     obs_list = io_knmi.get_knmi_obslist(
-        locations,
-        meteo_vars=["EV24"],
-        start=[None, None],
-        ObsClass=[obs.EvaporationObs],
-        end=[None, None],
+        locations, meteo_vars=["EV24"], ObsClasses=[obs.EvaporationObs]
     )
 
     return obs_list
@@ -196,9 +190,9 @@ def test_obslist_from_stns():
     obs_list = io_knmi.get_knmi_obslist(
         stns=stns,
         meteo_vars=["RH", "EV24"],
-        start=["2010", "2010"],
-        end=["2015", "2015"],
-        ObsClass=[obs.PrecipitationObs, obs.EvaporationObs],
+        starts=["2010", "2010"],
+        ends=["2015", "2015"],
+        ObsClasses=[obs.PrecipitationObs, obs.EvaporationObs],
     )
 
     return obs_list
@@ -209,9 +203,29 @@ def test_obslist_from_stns_single_startdate():
     obs_list = io_knmi.get_knmi_obslist(
         stns=stns,
         meteo_vars=["RH", "EV24"],
-        start="2010",
-        end="2015",
-        ObsClass=[obs.PrecipitationObs, obs.EvaporationObs],
+        starts="2010",
+        ends="2015",
+        ObsClasses=[obs.PrecipitationObs, obs.EvaporationObs],
     )
 
     return obs_list
+
+
+def test_interpolate():
+    stations = io_knmi.get_stations(meteo_var="EV24")
+    settings = io_knmi._get_default_settings(None)
+    settings["fill_missing_obs"] = False  # dont fill missing obs
+    # get dataframe with data from all knmi stations
+    df = pd.DataFrame(
+        index=pd.date_range(start="1900", end="2021", freq="H"), columns=stations.index
+    )
+
+    for stn in stations.index:  # fill dataframe with measurements
+        et, meta = io_knmi.get_evaporation(
+            stn, "EV24", start="2020", end="2021", settings=settings
+        )
+        df[stn] = et
+
+    xy = [[x, y] for x in [117000, 117500] for y in [439000, 439500]]
+
+    return io_knmi.interpolate(xy=xy, stations=stations, obs=df.dropna(how="all"))
