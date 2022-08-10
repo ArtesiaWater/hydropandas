@@ -148,3 +148,4 @@ After you've done this you can install hydropandas using
 -   Onno Ebbens, Artesia
 -   Ruben Caljé, Artesia
 -   Davíd Brakenhoff, Artesia
+-   Martin Vonk, Artesia

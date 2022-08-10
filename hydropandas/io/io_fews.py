@@ -26,6 +26,7 @@ def read_xml_fname(
     skip_errors=True,
     to_mnap=False,
     remove_nan=False,
+    **kwargs,
 ):
     """Read an xml filename into a list of observations objects.
 
@@ -59,13 +60,12 @@ def read_xml_fname(
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
-    skip_errors: bool, optional
-        if True, continue after error, else raise error
     to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe,
+        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
-        nan values is also lost
+        nan values is also lost, only used if low_memory=False
 
     Returns
     -------
@@ -144,8 +144,6 @@ def iterparse_pi_xml(
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
-    skip_errors: bool, optional
-        if True, continue after error, else raise error
 
     Returns
     -------
@@ -304,10 +302,11 @@ def read_xmlstring(
         whether to use xml-parsing method with lower memory footprint,
         default is True
     to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe,
+        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
-        nan values is also lost
+        nan values is also lost, only used if low_memory=False
 
     Returns
     -------
@@ -581,6 +580,7 @@ def read_xml_filelist(
     to_mnap=False,
     remove_nan=False,
     low_memory=True,
+    **kwargs,
 ):
     """Read a list of xml files into a list of observation objects.
 
@@ -603,10 +603,11 @@ def read_xml_filelist(
         accepted names as dictionary values to keep in final result,
         i.e. {"locationId": ["B001", "B002"]}
     to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
+        if True a column with 'stand_m_tov_nap' is added to the dataframe,
+        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
-        nan values is also lost
+        nan values is also lost, only used if low_memory=False
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
@@ -640,6 +641,7 @@ def read_xml_filelist(
             filterdict=filterdict,
             low_memory=low_memory,
             locationIds=locations,
+            **kwargs,
         )
 
     return obs_list
