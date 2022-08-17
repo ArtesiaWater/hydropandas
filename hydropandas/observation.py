@@ -85,7 +85,8 @@ class Obs(pd.DataFrame):
         if self._info_repr():
             self.info(buf=buf)
             return buf.getvalue()
-
+        
+        buf.write("-----observations------\n")
         max_rows = get_option("display.max_rows")
         min_rows = get_option("display.min_rows")
         max_cols = get_option("display.max_columns")
