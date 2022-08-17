@@ -5,13 +5,13 @@ folium
 geopandas
 imod
 lxml
-matplotlib>=3.0
-numpy>=1.15
+matplotlib
+numpy
 pandas
 pastastore
 pyproj
 requests
-scipy>=1.8
+scipy
 Shapely
 tqdm
 xarray
