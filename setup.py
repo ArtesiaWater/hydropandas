@@ -33,5 +33,6 @@ setup(
     package_data={"hydropandas": ["data/*.json"]},
     include_package_data=True,
     extras_require={"full": ["geopandas", "pastastore", "bokeh",
-                             "branca", "folium", "flopy", "xarray"]},
+                             "branca", "folium", "flopy", "xarray",
+							 "shapely", "pyproj", ]},
 )

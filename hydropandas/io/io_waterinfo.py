@@ -120,6 +120,7 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
     obs_collection : list
         list of Obs objects
     """
+    from pyproj import Transformer
 
     # Waterinfo file
     if os.path.isfile(file_or_dir):
