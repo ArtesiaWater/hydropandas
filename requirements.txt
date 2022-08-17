@@ -17,3 +17,4 @@ tqdm
 xarray
 zeep
 nbconvert
+netCDF4==1.5.7
