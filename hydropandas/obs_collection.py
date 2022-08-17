@@ -11,7 +11,6 @@ import warnings
 import numbers
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 
 from . import observation as obs
 from . import util
@@ -1383,6 +1382,8 @@ class ObsCollection(pd.DataFrame):
         ycol : str
             column name with y values
         """
+        from geopandas.array import GeometryDtype
+
         gdf = util.df2gdf(self, xcol, ycol)
 
         # remove obs column
@@ -1392,7 +1393,7 @@ class ObsCollection(pd.DataFrame):
         # change dtypes that are not accepted for shapefiles
         for colname, coltype in gdf.dtypes.items():
             # ommit geometry dtype
-            if isinstance(coltype, gpd.array.GeometryDtype):
+            if isinstance(coltype, GeometryDtype):
                 pass
             # cast boolean columns to int
             elif coltype == bool:
