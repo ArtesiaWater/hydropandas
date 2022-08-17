@@ -28,8 +28,9 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     platforms="Windows, Mac OS-X",
-    install_requires=["scipy", "pandas>=1.0", "tqdm", "zeep", "requests", "geopandas"],
+    install_requires=["scipy", "pandas>=1.0", "tqdm", "requests", "zeep"],
     packages=find_packages(exclude=[]),
     package_data={"hydropandas": ["data/*.json"]},
     include_package_data=True,
+    extras_require={"full": ["geopandas"]},
 )
