@@ -32,5 +32,6 @@ setup(
     packages=find_packages(exclude=[]),
     package_data={"hydropandas": ["data/*.json"]},
     include_package_data=True,
-    extras_require={"full": ["geopandas"]},
+    extras_require={"full": ["geopandas", "pastastore", "bokeh",
+                             "branca", "folium", "flopy", "xarray"]},
 )
