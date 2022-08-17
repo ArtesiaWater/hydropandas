@@ -8,11 +8,12 @@ import logging
 import os
 
 import numpy as np
-from hydropandas import observation
 from pandas import DataFrame, Series
 from scipy.io import loadmat
 
 from ..util import matlab2datetime
+from ..observation import GroundwaterObs, WaterlvlObs
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def read_file(fname, ObsClass):
 
     logger.info(f"reading menyanthes file {fname}")
 
-    if ObsClass == observation.GroundwaterObs:
+    if ObsClass == GroundwaterObs:
         _rename_dic = {
             "xcoord": "x",
             "ycoord": "y",
@@ -46,7 +47,7 @@ def read_file(fname, ObsClass):
             "onderkant_filter",
         ]
 
-    elif ObsClass == observation.WaterlvlObs:
+    elif ObsClass == WaterlvlObs:
         _rename_dic = {"xcoord": "x", "ycoord": "y", "meetpunt": "measpointlev"}
 
         _keys_o = ["name", "x", "y", "locatie"]

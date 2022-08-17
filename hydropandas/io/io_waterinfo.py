@@ -3,7 +3,7 @@ import zipfile
 
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
+
 from tqdm import tqdm
 
 
@@ -32,6 +32,7 @@ def read_waterinfo_file(
         dict containing metadata, returned if return_metadata is
         True, default is False
     """
+    from pyproj import Transformer
 
     name = os.path.splitext(os.path.basename(path_to_file))[0]
 

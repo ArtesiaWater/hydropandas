@@ -6,8 +6,9 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
-from hydropandas.observation import GroundwaterObs, WaterlvlObs
 from lxml.etree import iterparse
+
+from ..observation import GroundwaterObs, WaterlvlObs
 
 logger = logging.getLogger(__name__)
 
