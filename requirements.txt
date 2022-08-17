@@ -16,3 +16,4 @@ Shapely
 tqdm
 xarray
 zeep
+nbconvert

@@ -34,5 +34,5 @@ setup(
     include_package_data=True,
     extras_require={"full": ["geopandas", "pastastore", "bokeh",
                              "branca", "folium", "flopy", "xarray",
-							 "shapely", "pyproj", ]},
+							 "shapely", "pyproj"]},
 )

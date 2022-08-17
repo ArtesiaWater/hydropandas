@@ -35,7 +35,6 @@ jobs:
           pip install pytest-cov
           pip install pytest-dependency
           pip install codacy-coverage
-          pip install nbformat
           pip install -e .
       - name: Lint with flake8
         run: |
