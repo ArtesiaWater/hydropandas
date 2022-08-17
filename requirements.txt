@@ -11,7 +11,7 @@ pandas
 pastastore
 pyproj
 requests
-scipy>=1.15
+scipy>=1.8
 Shapely
 tqdm
 xarray
