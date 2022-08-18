@@ -15,7 +15,7 @@ def _run_notebook(nbdir, fname):
     fname_nb = os.path.join(nbdir, fname)
     with open(fname_nb) as f:
         nb = nbformat.read(f, as_version=4)
-    ep = ExecutePreprocessor(timeout=600)
+    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
     out = ep.preprocess(nb, {"metadata": {"path": nbdir}})
 
     return out
