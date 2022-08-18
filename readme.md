@@ -9,9 +9,9 @@
 
 # hydropandas
 
-The Hydropandas package allows users to manipulate data using 
-all of the wonderful features included in pandas extented with custom methods and attributes related to hydrological timeseries. The hydropandas 
-module extends pandas.DataFrame with extra functionality and stores metadata 
+The Hydropandas package allows users to manipulate data using
+all of the wonderful features included in pandas extented with custom methods and attributes related to hydrological timeseries. The hydropandas
+module extends pandas.DataFrame with extra functionality and stores metadata
 related to the type of measurements.
 
 ## Installation
@@ -20,11 +20,11 @@ Install the module with pip:
 
 `pip install hydropandas`
 
-Hydropandas requires `numpy`, `scipy`, `matplotlib`, `pandas`, `geopandas`, 
-`requests` and `zeep`. 
+Hydropandas requires `numpy`, `scipy`, `matplotlib`, `pandas`, `requests` and `zeep`.
 
 For some functionality additional packages are required:
 
+-   `geopandas`: for dealing with shapefiles
 -   `pastastore`: for reading or storing data from PastaStore
 -   `bokeh`, `branca`, `folium`: for interactive maps
 -   `flopy`: for reading data from MODFLOW models
@@ -32,8 +32,9 @@ For some functionality additional packages are required:
 
 For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
+For installing all the optional packages use `pip install -e .[full]`
 
-If you have trouble installing hydropandas, refer to the 
+If you have trouble installing hydropandas, refer to the
 [Dependencies section](#dependencies) below.
 
 ## Example usage
@@ -61,7 +62,7 @@ dino_gw = hpd.ObsCollection.from_dino(dirname=dinozip,
 
 ## The Obs class
 
-The Obs class holds the measurements and metadata for one timeseries. There are 
+The Obs class holds the measurements and metadata for one timeseries. There are
 currently 5 specific Obs classes for different types of measurements:
 
 -   GroundwaterObs: for groundwater measurements
@@ -72,23 +73,23 @@ currently 5 specific Obs classes for different types of measurements:
 -   PrecipitationObs: for precipitation observations, subclass of MeteoObs
 -   EvaporationObs: for evaporation observations, subclass of MeteoObs
 
-Each of these Obs classes is essentially a pandas DataFrame with additional 
-methods and attributes related to the type of measurement that it holds. 
+Each of these Obs classes is essentially a pandas DataFrame with additional
+methods and attributes related to the type of measurement that it holds.
 The classes also contain specific methods to read data from specific sources.
 
 ## The ObsCollection class
 
-The ObsCollection class, as the name implies, represents a collection of Obs 
-classes, e.g. 10 timeseries of the groundwater level in a certain area. The 
-ObsCollection is also a pandas DataFrame in which each timeseries is stored 
-in a different row. Each row contains metadata (e.g. latitude and longitude 
-of the observation point) and the Obs object (DataFrame) that holds the 
-measurements. It is recommended to let an ObsCollection contain only one Obs 
-type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate 
+The ObsCollection class, as the name implies, represents a collection of Obs
+classes, e.g. 10 timeseries of the groundwater level in a certain area. The
+ObsCollection is also a pandas DataFrame in which each timeseries is stored
+in a different row. Each row contains metadata (e.g. latitude and longitude
+of the observation point) and the Obs object (DataFrame) that holds the
+measurements. It is recommended to let an ObsCollection contain only one Obs
+type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate
 ObsCollection for 5 PrecipitationObs.
 
-Like the Obs class, the ObsCollection class contains a bunch of methods for 
-reading data from different sources. See the next section for supported data 
+Like the Obs class, the ObsCollection class contains a bunch of methods for
+reading data from different sources. See the next section for supported data
 sources.
 
 ## Supported data sources
@@ -110,37 +111,37 @@ An ObsCollection can be written to:
 
 ## Dependencies
 
-Hydropandas (indirectly) uses some packages that cannot be installed 
+Hydropandas (indirectly) uses some packages that cannot be installed
 automatically with `pip` on Windows. These packages are:
 
 -   GDAL
 -   Fiona
 -   Shapely
 
-If you do not have these packages already it is recommended to first try 
-installing them with `conda install <pkg>`. Otherwise, read the instructions 
+If you do not have these packages already it is recommended to first try
+installing them with `conda install <pkg>`. Otherwise, read the instructions
 below how to install them manually.
 
-Download the packages from [Christoph Gohlke's website](https://www.lfd.uci.edu/~gohlke/pythonlibs). 
-Use CTRL+F to find the download link on the page. Be sure to download the 
-correct version of the package. The Python version should match your Python 
-version. Also the architecture should match (i.e. 64bits vs 32bits). 
+Download the packages from [Christoph Gohlke's website](https://www.lfd.uci.edu/~gohlke/pythonlibs).
+Use CTRL+F to find the download link on the page. Be sure to download the
+correct version of the package. The Python version should match your Python
+version. Also the architecture should match (i.e. 64bits vs 32bits).
 For example:
 
 -   GDAL-3.1.4-cp38-cp38-win_amd64.whl
 
-This is the GDAL version for Python 3.8 (as can be seen from the cp38 in the 
+This is the GDAL version for Python 3.8 (as can be seen from the cp38 in the
 name), for 64-bits Python (as derived from the amd64 in the name).
 
-Once you have downloaded the correct files, navigate to the directory in which 
-you saved your downloads. Now type the following commands (the order is 
+Once you have downloaded the correct files, navigate to the directory in which
+you saved your downloads. Now type the following commands (the order is
 important):
 
 1.  `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
 2.  `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
 3.  `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
 
-After you've done this you can install hydropandas using 
+After you've done this you can install hydropandas using
 `pip install hydropandas`.
 
 ## Authors
