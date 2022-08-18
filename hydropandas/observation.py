@@ -75,6 +75,8 @@ class Obs(pd.DataFrame):
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
         buf = StringIO("")
+        
+        buf.write(f"{type(self).__name__} {self.name}\n")
 
         # write metadata properties
         buf.write("-----metadata------\n")

@@ -5,7 +5,7 @@
 """
 import logging
 import numbers
-import pastastore as pst
+
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +87,8 @@ def create_pastastore(
         the pastastore with the series from the ObsCollection
 
     """
+    import pastastore as pst
+
     if pstore is None:
         if conn is None:
             conn = pst.DictConnector("my_conn")
