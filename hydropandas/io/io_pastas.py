@@ -88,7 +88,7 @@ def create_pastastore(
 
     """
     import pastastore as pst
-    
+
     if pstore is None:
         if conn is None:
             conn = pst.DictConnector("my_conn")
