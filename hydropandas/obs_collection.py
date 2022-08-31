@@ -11,7 +11,6 @@ import warnings
 import numbers
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 
 from . import observation as obs
 from . import util
@@ -116,21 +115,21 @@ class ObsCollection(pd.DataFrame):
         if iname not in self.index:
             raise ValueError(f"{iname}  not in index")
 
-        o = self.loc[iname, 'obs']
+        o = self.loc[iname, "obs"]
         if att_name in o._metadata:
             setattr(o, att_name, value)
-            logger.debug(f'set attribute {att_name} of {iname} to {value}')
+            logger.debug(f"set attribute {att_name} of {iname} to {value}")
 
-        if att_name == 'name':
+        if att_name == "name":
             # name is the index of the ObsCollection dataframe
             self.rename(index={iname: value}, inplace=True)
         else:
             self.loc[iname, att_name] = value
-        logger.debug(f'set {iname}, {att_name} to {value} in obscollection')
+        logger.debug(f"set {iname}, {att_name} to {value} in obscollection")
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(f'add {att_name} of {iname} with value {value} to meta')
+            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """ check if an observation collection is consistent. An observation
@@ -144,7 +143,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         check_individual_obs : bool, optional
-            If True the third condition in the list above is check. The 
+            If True the third condition in the list above is checked. The
             default is True.
 
         Returns
@@ -156,44 +155,51 @@ class ObsCollection(pd.DataFrame):
         """
         # check unique index
         if not self.index.is_unique:
-            logger.warning(f'index of observation collection -> {self.name} not unique')
+            logger.warning(f"index of observation collection -> {self.name} not unique")
             return False
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(f'missing observation object in collection -> {self.name} ')
+            logger.warning(f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
         if check_individual_obs:
             for o in self.obs.values:
                 for att in o._metadata:
-                    if att not in ['name', 'meta']:
+                    if att not in ["name", "meta"]:
                         v1 = self.loc[o.name, att]
                         v2 = getattr(o, att)
                         # check if values are equal
                         try:
                             if v1 != v2:
                                 # check if both are nan
-                                if isinstance(v1, numbers.Number) and isinstance(v2, numbers.Number):
+                                if isinstance(v1, numbers.Number) and isinstance(
+                                    v2, numbers.Number
+                                ):
                                     if np.isnan(v1) and np.isnan(v2):
                                         continue
 
                                 # otherwise return Nan
-                                logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} {att} value')
+                                logger.warning(
+                                    f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                )
                                 return False
                         except TypeError:
-                            logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} {att} value')
+                            logger.warning(
+                                f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                            )
                             return False
-                    elif att == 'name':
+                    elif att == "name":
                         if o.name not in self.index:
-                            logger.warning(f'observation collection -> {self.name} not consistent with observation -> {o.name} name')
+                            logger.warning(
+                                f"observation collection -> {self.name} not consistent with observation -> {o.name} name"
+                            )
                             return False
 
         return True
 
-    def add_observation(self, o, check_consistency=True,
-                        check_metadata=False):
+    def add_observation(self, o, check_consistency=True, **kwargs):
         """ add an observation to an existing observation collection. If the
         observation exists the two observations are merged.
 
@@ -202,13 +208,22 @@ class ObsCollection(pd.DataFrame):
         o : hpd.observation.Obs
             Observation object.
         check_consistency : bool, optional
-            If True the consistency of the collection is first checked. The 
+            If True the consistency of the collection is first checked. The
             default is True.
-        check_metadata : bool, optional
-            If True and observations are merged the metadata of the two
-            observations are compared. Differences are logged. The metadata of
-            the observation in the collection is always used for the merged 
-            observation. The default is False.
+        **kwargs passed to Obs.merge_observation:
+            check_metadata : bool, optional
+                If True and observations are merged the metadata of the two
+                observations are compared. Differences are logged. The metadata of
+                the observation in the collection is always used for the merged
+                observation. The default is False.
+            overlap : str, optional
+                How to deal with overlapping timeseries with different values.
+                Options are:
+                - error : Raise a ValueError
+                - use_left : use the overlapping part from the existing
+                observations
+                - use_right : use the overlapping part from the new observation
+                Default is 'error'.
 
         Raises
         ------
@@ -224,24 +239,91 @@ class ObsCollection(pd.DataFrame):
         """
         if check_consistency:
             if not self._is_consistent():
-                raise RuntimeError('inconsistent observation collection')
+                raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError('Observation should be of type hydropandas.observation.Obs')
+            raise TypeError("Observation should be of type hydropandas.observation.Obs")
+
+        #
 
         # add new observation to collection
         if o.name not in self.index:
-            logger.info(f'adding {o.name} to collection')
+            logger.info(f"adding {o.name} to collection")
             self.loc[o.name] = o.to_collection_dict()
         else:
-            logger.info(f'observation name {o.name} already in collection, merging observations')
-            
-            o1 = self.loc[o.name, 'obs']
-            omerged = o1.merge_observation(o, check_metadata=check_metadata)
+            logger.info(
+                f"observation name {o.name} already in collection, merging observations"
+            )
+
+            o1 = self.loc[o.name, "obs"]
+            omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
             self.loc[o.name] = omerged.to_collection_dict()
 
+    def add_obs_collection(
+        self, obs_collection, check_consistency=True, inplace=False, **kwargs
+    ):
+        """ add an observation collection to another existing observation
+        collection. See add_observation method for more details
+
+        Parameters
+        ----------
+        obs_collection : hpd.ObsCollection
+            ObsCollection object.
+        check_consistency : bool, optional
+            If True the consistency of both collections is first checked. The
+            default is True.
+        inplace : bool, optional
+            If True, modifies the ObsCollection in place (do not create a new
+            object). The default is False.
+        **kwargs passed to Obs.merge_observation:
+            check_metadata : bool, optional
+                If True and observations are merged the metadata of the two
+                observations are compared. Differences are logged. The metadata of
+                the observation in the collection is always used for the merged
+                observation. The default is False.
+            overlap : str, optional
+                How to deal with overlapping timeseries with different values.
+                Options are:
+                - error : Raise a ValueError
+                - use_left : use the overlapping part from the existing
+                observations
+                - use_right : use the overlapping part from the new observation
+                Default is 'error'.
+
+        Raises
+        ------
+        RuntimeError
+            when the observation collection is inconsistent.
+
+        Returns
+        -------
+        ObsCollection or None
+            merged ObsCollection if ``inplace=True``.
+
+        """
+        if check_consistency:
+            if not self._is_consistent():
+                raise RuntimeError(
+                    f"inconsistent observation collection -> {self.name}"
+                )
+
+            if not obs_collection._is_consistent():
+                raise RuntimeError(
+                    f"inconsistent observation collection -> {obs_collection.name}"
+                )
+
+        if inplace:
+            for o in obs_collection.obs.values:
+                self.add_observation(o, check_consistency=False, **kwargs)
+
+        else:
+            oc = self.copy()
+            for o in obs_collection.obs.values:
+                oc.add_observation(o, check_consistency=False, **kwargs)
+
+            return oc
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -657,7 +739,7 @@ class ObsCollection(pd.DataFrame):
         unpackdir=None,
         force_unpack=False,
         preserve_datetime=False,
-        **kwargs
+        **kwargs,
     ):
         """Read one or several FEWS PI-XML files.
 
@@ -732,7 +814,7 @@ class ObsCollection(pd.DataFrame):
                 to_mnap=to_mnap,
                 remove_nan=remove_nan,
                 low_memory=low_memory,
-                **kwargs
+                **kwargs,
             )
 
             obs_df = util._obslist_to_frame(obs_list)
@@ -748,7 +830,7 @@ class ObsCollection(pd.DataFrame):
                 low_memory=low_memory,
                 to_mnap=to_mnap,
                 remove_nan=remove_nan,
-                **kwargs
+                **kwargs,
             )
             obs_df = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta)
@@ -809,62 +891,63 @@ class ObsCollection(pd.DataFrame):
         cls,
         locations=None,
         stns=None,
-        xmid=None,
-        ymid=None,
+        xy=None,
         meteo_vars=("RH",),
         name="",
-        start=None,
-        end=None,
-        ObsClass=None,
+        starts=None,
+        ends=None,
+        ObsClasses=None,
+        method="nearest",
         **kwargs,
     ):
-        """get knmi observations from a list of locations or a list of
+        """Get knmi observations from a list of locations or a list of
         stations.
 
         Parameters
         ----------
-        locations : pd.DataFrame or None
-            dataframe with x and y coordinates. The default is None
+        locations : pandas DataFrame or None
+            dataframe with columns 'x' and 'y' as coordinates. The
+            default is None
         stns : list of str or None
             list of knmi stations. The default is None
-        xmid : np.array, optional
-            x coördinates of the cell centers of your grid shape(ncol)
-        ymid : np.array, optional
-            y coördinates of the cell centers of your grid shape(nrow)
+        xy : list or numpy array, optional
+            xy coördinates of the locations. e.g. [[10,25], [5,25]]
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
         name : str, optional
-            name of the obscollection. The default is ''.
-        start : None, str, datetime or list, optional
+            name of the obscollection. The default is ''
+        starts : None, str, datetime or list, optional
             start date of observations per meteo variable. The start date is
             included in the time series.
             If start is None the start date will be January 1st of the
             previous year.
-            if start is str it will be converted to datetime
-            if start is a list it should be the same length as meteo_vars and
+            If start is str it will be converted to datetime.
+            If start is a list it should be the same length as meteo_vars and
             the start time for each variable. The default is None
-        end : list of str, datetime or None]
+        ends : list of str, datetime or None
             end date of observations per meteo variable. The end date is
             included in the time series.
             If end is None the start date will be January 1st of the
             previous year.
-            if end is a str it will be converted to datetime
-            if end is a list it should be the same length as meteo_vars and
+            If end is a str it will be converted to datetime.
+            If end is a list it should be the same length as meteo_vars and
             the end time for each meteo variable. The default is None
-        ObsClass : type, list of type or None
+        ObsClasses : list of type or None
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
+        method : str, optional
+            specify whether EvaporationObs should be collected from the nearest
+            meteo station (fast) or interpolated using thin plate spline (slow).
+            Choiche betweeen 'nearest' or 'interpolation'
         **kwargs :
             kwargs are passed to the io_knmi.get_knmi_obslist function
 
         List of possible variables:
             neerslagstations:
             RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
-            voorafgaande dag tot 0800 utc op de vermelde datum
-
-            meteostations:
+            voorafgaande dag tot 0800 utc op de vermelde datum meteostations:
             DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
             90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
             http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
@@ -961,26 +1044,26 @@ class ObsCollection(pd.DataFrame):
         from .io.io_knmi import get_knmi_obslist
 
         # obtain ObsClass
-        if ObsClass is None:
-            ObsClass = []
+        if ObsClasses is None:
+            ObsClasses = []
             for meteovar in meteo_vars:
                 if meteovar in ("RH", "RD"):
-                    ObsClass.append(obs.PrecipitationObs)
+                    ObsClasses.append(obs.PrecipitationObs)
                 elif meteovar == "EV24":
-                    ObsClass.append(obs.EvaporationObs)
+                    ObsClasses.append(obs.EvaporationObs)
                 else:
-                    ObsClass.append(obs.MeteoObs)
+                    ObsClasses.append(obs.MeteoObs)
 
-        elif isinstance(ObsClass, type):
+        elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClass, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
             ):
-                ObsClass = [ObsClass] * len(meteo_vars)
+                ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
                 TypeError(
                     "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
                 )
-        elif isinstance(ObsClass, (list, tuple)):
+        elif isinstance(ObsClasses, (list, tuple)):
             pass
         else:
             TypeError(
@@ -988,21 +1071,21 @@ class ObsCollection(pd.DataFrame):
             )
 
         meta = {}
-        meta["start"] = start
-        meta["end"] = end
+        meta["starts"] = starts
+        meta["ends"] = ends
         meta["name"] = name
-        meta["ObsClass"] = ObsClass
+        meta["ObsClasses"] = ObsClasses
         meta["meteo_vars"] = meteo_vars
 
         obs_list = get_knmi_obslist(
             locations,
             stns,
-            xmid,
-            ymid,
+            xy,
             meteo_vars,
-            ObsClass=ObsClass,
-            start=start,
-            end=end,
+            ObsClasses=ObsClasses,
+            starts=starts,
+            ends=ends,
+            method=method,
             **kwargs,
         )
 
@@ -1159,6 +1242,50 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=name, meta=meta)
 
+    def to_excel(self, path, main_sheet_name=None):
+        """ write an ObsCollection to an excel, the first sheet in the
+        excel contains the metadata, the other tabs are the timeseries of each
+        observation.
+
+
+        Parameters
+        ----------
+        path : str
+            full path of xlsx file.
+        main_sheet_name : str or None, optional
+            sheetname with metadata, if None the name of the ObsCollection is
+            used. The default is None.
+
+        Raises
+        ------
+        RuntimeError
+            If the ObsCollection is inconsistent.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        if main_sheet_name is None:
+            main_sheet_name = self.name
+
+        if not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
+
+        with pd.ExcelWriter(path) as writer:
+            # write ObsCollection dataframe without observations to first sheet
+            super(ObsCollection, self.drop(columns="obs")).to_excel(
+                writer, main_sheet_name
+            )
+
+            # write each observation time series to next sheets
+            for o in self.obs.values:
+                sheetname = o.name
+                for ch in ["[", "]", ":", "*", "?", "/", "\\"]:
+                    sheetname = sheetname.replace(ch, "_")
+                o.to_excel(writer, sheetname)
+
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import io_fews
 
@@ -1255,6 +1382,8 @@ class ObsCollection(pd.DataFrame):
         ycol : str
             column name with y values
         """
+        from geopandas.array import GeometryDtype
+
         gdf = util.df2gdf(self, xcol, ycol)
 
         # remove obs column
@@ -1264,7 +1393,7 @@ class ObsCollection(pd.DataFrame):
         # change dtypes that are not accepted for shapefiles
         for colname, coltype in gdf.dtypes.items():
             # ommit geometry dtype
-            if isinstance(coltype, gpd.array.GeometryDtype):
+            if isinstance(coltype, GeometryDtype):
                 pass
             # cast boolean columns to int
             elif coltype == bool:
@@ -1287,7 +1416,9 @@ class ObsCollection(pd.DataFrame):
             key in meta dictionary of observation object
         """
 
-        self[key] = [o.meta[key] if key in o.meta.keys() else None for o in self.obs.values]
+        self[key] = [
+            o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+        ]
 
     def get_series(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
         if tmin is None:

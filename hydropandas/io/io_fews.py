@@ -6,8 +6,9 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
-from hydropandas.observation import GroundwaterObs, WaterlvlObs
 from lxml.etree import iterparse
+
+from ..observation import GroundwaterObs, WaterlvlObs
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def read_xml_fname(
     skip_errors=True,
     to_mnap=False,
     remove_nan=False,
-    **kwargs
+    **kwargs,
 ):
     """Read an xml filename into a list of observations objects.
 
@@ -580,7 +581,7 @@ def read_xml_filelist(
     to_mnap=False,
     remove_nan=False,
     low_memory=True,
-    **kwargs
+    **kwargs,
 ):
     """Read a list of xml files into a list of observation objects.
 
@@ -641,7 +642,7 @@ def read_xml_filelist(
             filterdict=filterdict,
             low_memory=low_memory,
             locationIds=locations,
-            **kwargs
+            **kwargs,
         )
 
     return obs_list

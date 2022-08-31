@@ -1,11 +1,8 @@
 import logging
-
-import flopy
 import numpy as np
 import pandas as pd
 
 from . import accessor
-from shapely.geometry import Point
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +239,8 @@ def get_zvec(x, y, gwf=None, ds=None):
     zvec : list
         list of vertical layer boundaries. length is nlay + 1.
     """
+    from shapely.geometry import Point
+    import flopy
 
     if gwf and not ds:
         ix = flopy.utils.GridIntersect(gwf.modelgrid)
