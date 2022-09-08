@@ -307,25 +307,28 @@ class StatsAccessorObs:
             return self._obj.groupby(self._obj.index.year).count()[col]
 
     def consecutive_obs_years(self, col, min_obs=12):
-
         obs_per_year = self._obj.stats.obs_per_year(col=col)
+        return consecutive_obs_years(obs_per_year, min_obs=min_obs)
 
-        # Add missing years
-        if obs_per_year.empty:
-            # no obs, set series to current year with 0 obs
-            obs_per_year_all = pd.Series(index=[dt.datetime.now().year], data=0)
-        else:
-            obs_per_year_all = pd.Series(
-                dtype=float,
-                index=range(obs_per_year.index[0], obs_per_year.index[-1] + 1),
-            )
-            obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 
-        mask_obs_per_year = obs_per_year_all >= min_obs
-        mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
-        mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
-        cumsum = mask_obs_per_year.cumsum().fillna(method="pad")
-        reset = -cumsum.loc[mask_obs_per_year.isnull()].diff().fillna(cumsum)
-        result = mask_obs_per_year.where(mask_obs_per_year.notnull(), reset).cumsum()
+def consecutive_obs_years(obs_per_year, min_obs=12):
+    # Add missing years
+    if obs_per_year.empty:
+        # no obs, set series to current year with 0 obs
+        obs_per_year_all = pd.Series(index=[dt.datetime.now().year], data=0)
+    else:
+        obs_per_year_all = pd.Series(
+            dtype=float,
+            index=range(obs_per_year.index[0], obs_per_year.index[-1] + 1),
+        )
+        obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 
-        return result
+    mask_obs_per_year = obs_per_year_all >= min_obs
+    mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
+    mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
+    cumsum = mask_obs_per_year.cumsum().fillna(method="pad")
+    reset = -cumsum.loc[mask_obs_per_year.isnull()].diff().fillna(cumsum)
+    result = mask_obs_per_year.where(
+        mask_obs_per_year.notnull(), reset).cumsum()
+
+    return result
