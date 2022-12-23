@@ -18,7 +18,7 @@ from ..observation import GroundwaterObs, WaterlvlObs
 logger = logging.getLogger(__name__)
 
 
-def read_file(fname, ObsClass, read_oseries=True, read_stresses=True):
+def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
     """This method is used to read the file."""
 
     logger.info(f"reading menyanthes file {fname}")
@@ -65,7 +65,7 @@ def read_file(fname, ObsClass, read_oseries=True, read_stresses=True):
     mat = loadmat(fname, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
 
     obs_list = []
-    if read_oseries:
+    if load_oseries:
         d_h = read_oseries(mat)
 
         locations = d_h.keys()
@@ -86,7 +86,7 @@ def read_file(fname, ObsClass, read_oseries=True, read_stresses=True):
             o = ObsClass(df, meta=metadata, **meta_o)
             obs_list.append(o)
 
-    if read_stresses:
+    if load_stresses:
         d_in = read_stresses(mat)
         stresses = d_in.keys()
         for stress in stresses:
