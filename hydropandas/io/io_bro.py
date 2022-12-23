@@ -4,7 +4,7 @@ https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleverancie
 
 import requests
 import pandas as pd
-import xml
+import xml.etree.ElementTree
 import logging
 import json
 from tqdm import tqdm
@@ -56,7 +56,7 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False):
     gmn = tree.find(".//xmlns:GMN_PO", ns)
     gmws = gmn.findall("xmlns:measuringPoint", ns)
     
-    logger.info('len(gmws) groundwater monitoring wells within groundwater meetnet')
+    logger.info(f'{len(gmws)} groundwater monitoring wells within groundwater meetnet')
     
     obs_list = []
     for gmw in tqdm(gmws):
@@ -533,7 +533,7 @@ def get_obs_list_from_extent(extent, ObsClass, tmin=None, tmax=None,
         
     gmws = tree.findall(".//dsgmw:GMW_C", ns)
     
-    logger.info('len(gmws) groundwater monitoring wells found within extent')
+    logger.info(f'{len(gmws)} groundwater monitoring wells found within extent')
     
     obs_list = []
     for gmw in tqdm(gmws):
