@@ -3,7 +3,6 @@
 
 @author: oebbe
 """
-from hydropandas import observation as obs
 from hydropandas.io import io_dino
 
 import logging

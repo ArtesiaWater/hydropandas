@@ -81,7 +81,8 @@ class Obs(pd.DataFrame):
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._metadata:
-            buf.write(f"{att} : {getattr(self, att)} \n")
+            if not att == 'meta':
+                buf.write(f"{att} : {getattr(self, att)} \n")
         buf.write("\n")
 
         if self._info_repr():
@@ -457,6 +458,71 @@ class GroundwaterObs(Obs):
     @property
     def _constructor(self):
         return GroundwaterObs
+    
+    @classmethod
+    def from_bro(cls,
+        bro_id,
+        filternr=None,
+        tmin="1900-01-01",
+        tmax="2040-01-01",
+        to_wintertime=True, 
+        drop_duplicate_times=True,
+        only_metadata=False
+    ):
+        """download BRO groundwater observations from the server.
+        
+
+        Parameters
+        ----------
+        bro_id : str
+            can be a GLD id or GMW id. If a GMW id is given a filternr is
+            required as well. e.g. 'GLD000000012893'.
+        filternr : str or None, optional
+            if the bro_id is a GMW object the filternr should be given.
+        tmin : str or None, optional
+            start date in format YYYY-MM-DD
+        tmax : str or None, optional
+            end date in format YYYY-MM-DD
+        to_wintertime : bool, optional
+            if True the time index is converted to Dutch winter time. The default
+            is True.
+        drop_duplicate_times : bool, optional
+            if True rows with a duplicate time stamp are removed keeping only the
+            first row. The default is True.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        
+        from .io import io_bro
+        
+        measurements, meta = io_bro.get_bro_groundwater(bro_id, 
+                                                        filternr,
+                                                        tmin=tmin, 
+                                                        tmax=tmax,
+                                                        to_wintertime=to_wintertime, 
+                                                        drop_duplicate_times=drop_duplicate_times,
+                                                        only_metadata=only_metadata)
+        
+        return cls(
+                    measurements,
+                    meta=meta,
+                    name=bro_id,
+                    x=meta.pop("x"),
+                    y=meta.pop("y"),
+                    onderkant_filter=meta.pop("onderkant_filter"),
+                    bovenkant_filter=meta.pop("bovenkant_filter"),
+                    maaiveld=meta.pop("maaiveld"),
+                    metadata_available=meta.pop("metadata_available"),
+                    locatie=meta.pop("locatie"),
+                    filternr=meta.pop("filternr"),
+                    meetpunt=meta.pop('meetpunt')
+                )
+        
+        
 
     @classmethod
     def from_dino(

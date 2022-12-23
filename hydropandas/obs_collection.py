@@ -324,6 +324,57 @@ class ObsCollection(pd.DataFrame):
                 oc.add_observation(o, check_consistency=False, **kwargs)
 
             return oc
+        
+    @classmethod
+    def from_bro(cls, extent=None, bro_id=None, name="", 
+                 tmin=None, tmax=None,
+                 only_metadata=False):
+        """ get all the observations within an extent or within a
+        groundwatermonitoring net.
+        
+
+        Parameters
+        ----------
+        extent : list, tuple, numpy-array or None, optional
+            get groundwater monitoring wells within this extent
+            [xmin, xmax, ymin, ymax]
+        bro_id : str or None, optional
+            starts with 'GMN'.
+        name : str, optional
+            name of the observation collection
+        tmin : str or None, optional
+            start time of observations. The default is None.
+        tmax : str or None, optional
+            end time of observations. The default is None.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster. The default
+            is False.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame with the 'obs' column
+
+        """
+        
+        from .io.io_bro import get_obs_list_from_gmn, get_obs_list_from_extent
+        
+        if bro_id is None and (extent is not None):
+            obs_list = get_obs_list_from_extent(extent, obs.GroundwaterObs,
+                                                tmin=tmin, tmax=tmax,
+                                                only_metadata=only_metadata)
+            meta={}
+        elif bro_id is not None:
+            obs_list, meta = get_obs_list_from_gmn(bro_id, obs.GroundwaterObs,
+                                                   only_metadata=only_metadata)
+            name=meta.pop('name')
+        else:
+            raise ValueError('specify bro_id or extent')
+            
+        obs_df = util._obslist_to_frame(obs_list)
+        
+        return cls(obs_df, name=name, meta=meta)
+    
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):

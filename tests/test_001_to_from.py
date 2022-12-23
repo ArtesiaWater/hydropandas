@@ -5,6 +5,28 @@ import pytest
 from hydropandas import obs_collection as oc
 from hydropandas import observation as obs
 
+
+#%% BRO
+
+def test_bro_gld():
+    # single observation
+    bro_id = 'GLD000000012893'
+    gw = obs.GroundwaterObs.from_bro(bro_id)
+    return gw
+
+def test_bro_gmn():
+    # single observation
+    bro_id = 'GMN000000000163'
+    gw = oc.ObsCollection.from_bro(bro_id=bro_id, only_metadata=True)
+    return gw
+
+
+def test_bro_extent():
+    # single observation
+    extent = (102395, 103121, 434331, 434750)
+    gw = oc.ObsCollection.from_bro(extent=extent, only_metadata=True)
+    return gw
+
 # %% DINO
 
 dinozip = "./tests/data/2019-Dino-test/dino.zip"
