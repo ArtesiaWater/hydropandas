@@ -83,7 +83,7 @@ class ObsCollection(pd.DataFrame):
             raise TypeError("could not infer observation type")
 
     def _set_metadata_value(self, iname, att_name, value, add_to_meta=False):
-        """ Set a value on three different levels at once:
+        """Set a value on three different levels at once:
             1. the value in an ObsCollection DataFrame
             2. the attribute of the observation
             3. the value in the meta dictionary of an observation (optional)
@@ -132,7 +132,7 @@ class ObsCollection(pd.DataFrame):
             logger.debug(f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
-        """ check if an observation collection is consistent. An observation
+        """check if an observation collection is consistent. An observation
         collection is consistent if:
             1. all observations have a unique name
             2. there are no nan values in the obs column
@@ -200,7 +200,7 @@ class ObsCollection(pd.DataFrame):
         return True
 
     def add_observation(self, o, check_consistency=True, **kwargs):
-        """ add an observation to an existing observation collection. If the
+        """add an observation to an existing observation collection. If the
         observation exists the two observations are merged.
 
         Parameters
@@ -264,7 +264,7 @@ class ObsCollection(pd.DataFrame):
     def add_obs_collection(
         self, obs_collection, check_consistency=True, inplace=False, **kwargs
     ):
-        """ add an observation collection to another existing observation
+        """add an observation collection to another existing observation
         collection. See add_observation method for more details
 
         Parameters
@@ -1108,16 +1108,20 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name)
 
     @classmethod
-    def from_menyanthes(cls, fname, name="", ObsClass=obs.GroundwaterObs):
+    def from_menyanthes(
+        cls, fname, name="", ObsClass=obs.Obs, read_oseries=True, read_stresses=True
+    ):
 
         from .io.io_menyanthes import read_file
 
         menyanthes_meta = {"filename": fname, "type": ObsClass}
 
-        obs_list = read_file(fname, ObsClass)
+        obs_list = read_file(
+            fname, ObsClass, read_oseries=read_oseries, read_stresses=read_stresses
+        )
         obs_df = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, meta=menyanthes_meta)
+        return cls(obs_df, meta=menyanthes_meta, name=name)
 
     @classmethod
     def from_modflow(
@@ -1243,7 +1247,7 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     def to_excel(self, path, main_sheet_name=None):
-        """ write an ObsCollection to an excel, the first sheet in the
+        """write an ObsCollection to an excel, the first sheet in the
         excel contains the metadata, the other tabs are the timeseries of each
         observation.
 
