@@ -785,7 +785,7 @@ def _read_station_location(f):
             stations.set_index(["STN"], inplace=True)
             for col in stations.columns:
                 try:
-                    stations.loc[:, col] = stations[col].astype(float)
+                    stations[col] = stations[col].astype(float)
                 except ValueError:
                     pass
 
