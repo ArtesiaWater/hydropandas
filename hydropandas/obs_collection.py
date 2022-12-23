@@ -1160,7 +1160,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_menyanthes(
-        cls, fname, name="", ObsClass=obs.Obs, read_oseries=True, read_stresses=True
+        cls, fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
     ):
 
         from .io.io_menyanthes import read_file
@@ -1168,7 +1168,7 @@ class ObsCollection(pd.DataFrame):
         menyanthes_meta = {"filename": fname, "type": ObsClass}
 
         obs_list = read_file(
-            fname, ObsClass, read_oseries=read_oseries, read_stresses=read_stresses
+            fname, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
         )
         obs_df = util._obslist_to_frame(obs_list)
 
