@@ -328,7 +328,8 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_bro(cls, extent=None, bro_id=None, name="", 
                  tmin=None, tmax=None,
-                 only_metadata=False):
+                 only_metadata=False, keep_all_obs=True,
+                 epsg=28992):
         """ get all the observations within an extent or within a
         groundwatermonitoring net.
         
@@ -349,6 +350,11 @@ class ObsCollection(pd.DataFrame):
         only_metadata : bool, optional
             if True download only metadata, significantly faster. The default
             is False.
+        keep_all_obs : boolean, optional
+            add all observation points to the collection, even without
+            measurements
+        epsg : int, optional
+            epsg code of the extent. The default is 28992 (RD).
 
         Returns
         -------
@@ -362,11 +368,14 @@ class ObsCollection(pd.DataFrame):
         if bro_id is None and (extent is not None):
             obs_list = get_obs_list_from_extent(extent, obs.GroundwaterObs,
                                                 tmin=tmin, tmax=tmax,
-                                                only_metadata=only_metadata)
+                                                only_metadata=only_metadata,
+                                                keep_all_obs=keep_all_obs,
+                                                epsg=epsg)
             meta={}
         elif bro_id is not None:
             obs_list, meta = get_obs_list_from_gmn(bro_id, obs.GroundwaterObs,
-                                                   only_metadata=only_metadata)
+                                                   only_metadata=only_metadata,
+                                                   keep_all_obs=keep_all_obs)
             name=meta.pop('name')
         else:
             raise ValueError('specify bro_id or extent')

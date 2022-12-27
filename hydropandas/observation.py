@@ -510,7 +510,7 @@ class GroundwaterObs(Obs):
         return cls(
                     measurements,
                     meta=meta,
-                    name=bro_id,
+                    name=meta.pop('name'),
                     x=meta.pop("x"),
                     y=meta.pop("y"),
                     onderkant_filter=meta.pop("onderkant_filter"),

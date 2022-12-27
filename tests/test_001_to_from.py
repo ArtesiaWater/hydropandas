@@ -1,5 +1,4 @@
 # import os
-import numpy as np
 import pandas as pd
 import pytest
 from hydropandas import obs_collection as oc
@@ -22,8 +21,9 @@ def test_bro_gmn():
 
 
 def test_bro_extent():
-    # single observation
-    extent = (102395, 103121, 434331, 434750)
+    extent = (213260, 213550, 473890, 473920) # extent skip duplicates
+    extent = (102395, 103121, 434331, 434750) # 4 observations within extent
+    
     gw = oc.ObsCollection.from_bro(extent=extent, only_metadata=True)
     return gw
 

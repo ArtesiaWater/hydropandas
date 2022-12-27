@@ -14,7 +14,8 @@ from pyproj import Transformer
 logger = logging.getLogger(__name__)
 
 
-def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False):
+def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False,
+                          keep_all_obs=True):
     """
 
     Parameters
@@ -26,6 +27,9 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False):
     only_metadata : bool, optional
         if True download only metadata, significantly faster. The default
         is False.
+    keep_all_obs : boolean, optional
+        add all observation points to the collection, even without
+        measurements
 
     Raises
     ------
@@ -67,6 +71,12 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False):
         
         o = ObsClass.from_bro(bro_id=gmw_id, filternr=filternr,
                              only_metadata=only_metadata)
+        if o.empty:
+            logger.warning(f'no measurements found for gmw_id {gmw_id} and tube number {filternr}')
+            if keep_all_obs:
+                obs_list.append(o)
+        else:
+            obs_list.append(o)
         obs_list.append(o)
         
     meta = {}
@@ -109,6 +119,8 @@ def get_bro_groundwater(bro_id, filternr=None, only_metadata=False, **kwargs):
         metadata.
 
     """
+    logger.info(f'reading bro_id {bro_id}')
+    
     if bro_id.startswith('GLD'):
         if only_metadata:
             raise ValueError('cannot get metadata from gld id')
@@ -117,17 +129,20 @@ def get_bro_groundwater(bro_id, filternr=None, only_metadata=False, **kwargs):
     elif bro_id.startswith('GMW'):
         if filternr is None:
             raise ValueError('if bro_id is GMW a filternumber should be specified')
-        if only_metadata:
-            meta = get_metadata_from_gmw(bro_id, filternr)
-            empty_df = pd.DataFrame()
-            return empty_df, meta
         
+        meta = get_metadata_from_gmw(bro_id, filternr)
         gld_id = get_gld_id_from_gmw(bro_id, filternr)
         
         if gld_id is None:
-            meta = get_metadata_from_gmw(bro_id, filternr)
+            meta['name'] = f'{bro_id}_{filternr}'
+            only_metadata = True #cannot get time series without gld id
+        else:
+            meta['name'] = gld_id
+            
+        if only_metadata:
             empty_df = pd.DataFrame()
             return empty_df, meta
+        
         return measurements_from_gld(gld_id, **kwargs)
         
 def get_gld_id_from_gmw(bro_id, filternr):
@@ -166,7 +181,7 @@ def get_gld_id_from_gmw(bro_id, filternr):
     d = json.loads(req.text)
         
     if len(d['monitoringTubeReferences']) == 0:
-        logger.info(f'no groundwater level dossier for {bro_id}')
+        logger.info(f'no groundwater level dossier for {bro_id} and tube number {filternr}')
         return None
         
     for tube in d['monitoringTubeReferences']:
@@ -247,6 +262,7 @@ def measurements_from_gld(bro_id, tmin=None, tmax=None,
     gld = glds[0]
     
     meta = {}
+    meta['name'] = bro_id
     meta['locatie'] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
     meta['filternr'] = int(gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text)
     meta['monitoringsnet'] = gld.find("ns11:groundwaterMonitoringNet//gldcommon:broId", ns).text
@@ -462,7 +478,7 @@ def get_metadata_from_gmw(bro_id, filternr):
     return meta
 
 def get_obs_list_from_extent(extent, ObsClass, tmin=None, tmax=None,
-                             only_metadata=False,
+                             only_metadata=False, keep_all_obs=True,
                              epsg=28992):
     """ get a list of gmw observations within an extent.
     
@@ -521,8 +537,6 @@ def get_obs_list_from_extent(extent, ObsClass, tmin=None, tmax=None,
     if req.status_code > 200:
         print(req.json()["errors"][0]["message"])
     
-    with open('text.xml', 'w') as fo:
-        fo.write(req.text)
     # read results
     tree = xml.etree.ElementTree.fromstring(req.text)
     
@@ -533,16 +547,26 @@ def get_obs_list_from_extent(extent, ObsClass, tmin=None, tmax=None,
         
     gmws = tree.findall(".//dsgmw:GMW_C", ns)
     
-    logger.info(f'{len(gmws)} groundwater monitoring wells found within extent')
     
     obs_list = []
+    gmw_list = []
     for gmw in tqdm(gmws):
         gmw_id = gmw.find("brocom:broId", ns).text
+        if gmw_id in gmw_list:
+            logger.debug(f'gmw_id {gmw_id} already read, skipping')
+            continue
+        
         ntubes = int(gmw.find("dsgmw:numberOfMonitoringTubes", ns).text)
         for filternr in range(1, ntubes+1):
             o = ObsClass.from_bro(gmw_id,filternr=filternr,
                                   tmin=tmin, tmax=tmax,
                                   only_metadata=only_metadata)
-            obs_list.append(o)
-            
+            if o.empty:
+                logger.warning(f'no measurements found for gmw_id {gmw_id} and tube number {filternr}')
+                if keep_all_obs:
+                    obs_list.append(o)
+            else:
+                obs_list.append(o)
+        gmw_list.append(gmw_id)
+
     return obs_list
