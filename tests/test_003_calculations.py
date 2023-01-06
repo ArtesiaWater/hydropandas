@@ -99,24 +99,24 @@ def test_get_nearest_polygon():
     return dino_gw[["nearest polygon", "distance nearest polygon"]]
 
 
-def test_get_surface_level_oc():
+def test_get_ground_level_oc():
     try:
         from art_tools import hpd_extension
 
         gw = ttf.test_obscollection_fews_lowmemory()
-        zp = gw.art.geo_get_surface_level()
+        zp = gw.art.geo_get_ground_level()
         return zp
     except ModuleNotFoundError as e:
         print(e)
     return
 
 
-def test_get_surface_level_gwobs():
+def test_get_ground_level_gwobs():
     try:
         from art_tools import hpd_extension
 
         gw = ttf.test_observation_gw()
-        mv = gw.art.geo_get_surface_level()
+        mv = gw.art.geo_get_ground_level()
         return mv
     except ModuleNotFoundError as e:
         print(e)

@@ -11,15 +11,16 @@ from hydropandas import observation as obs
 import test_001_to_from as ttf
 
 
-def test_set_filter_num():
+def test_set_tube_nr():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    dino_gw.gwobs.set_filter_num(if_exists="replace")
+    dino_gw.gwobs.set_tube_nr(if_exists="replace")
     return dino_gw
 
 
-def test_set_filter_num_location():
+def test_set_tube_nr_monitoring_well():
     fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
-    fews_gw_prod.gwobs.set_filter_num_location("locatie", if_exists="replace")
+    fews_gw_prod.gwobs.set_tube_nr_monitoring_well("monitoring_well",
+                                                   if_exists="replace")
     return fews_gw_prod
 
 

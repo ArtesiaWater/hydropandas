@@ -65,7 +65,7 @@ def test_obscollection_from_list():
 
 
 def test_obscollection_from_df():
-    df = pd.DataFrame(index=["pb1", "pb2"], data={"filternr": [1, 1]})
+    df = pd.DataFrame(index=["pb1", "pb2"], data={"tube_nr": [1, 1]})
 
     df_oc = oc.ObsCollection.from_dataframe(df)
 
@@ -127,7 +127,6 @@ def test_obscollection_dino_download_bbox_empty():
 def test_obscollection_fews_highmemory():
     fews_gw_prod = oc.ObsCollection.from_fews_xml(
         "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
-        translate_dic={"locationId": "locatie"},
         to_mnap=False,
         remove_nan=False,
         low_memory=False,

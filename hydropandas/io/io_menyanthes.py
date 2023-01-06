@@ -27,36 +27,36 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
         _rename_dic = {
             "xcoord": "x",
             "ycoord": "y",
-            "upfiltlev": "bovenkant_filter",
-            "lowfiltlev": "onderkant_filter",
-            "surflev": "maaiveld",
-            "filtnr": "filternr",
-            "meetpunt": "measpointlev",
+            "upfiltlev": "screen_top",
+            "lowfiltlev": "screen_bottom",
+            "surflev": "ground_level",
+            "filtnr": "tube_nr",
+             "measpointlev": "tube_top",
         }
 
         _keys_o = [
             "name",
             "x",
             "y",
-            "locatie",
-            "filternr",
+            "monitoring_well",
+            "tube_nr",
             "metadata_available",
-            "maaiveld",
-            "meetpunt",
-            "bovenkant_filter",
-            "onderkant_filter",
+            "ground_level",
+            "tube_top",
+            "screen_top",
+            "screen_bottom",
         ]
 
     elif ObsClass == WaterlvlObs:
-        _rename_dic = {"xcoord": "x", "ycoord": "y", "meetpunt": "measpointlev"}
+        _rename_dic = {"xcoord": "x", "ycoord": "y", "measpointlev": "tube_top"}
 
-        _keys_o = ["name", "x", "y", "locatie"]
+        _keys_o = ["name", "x", "y", "source", "monitoring_well"]
     else:
         _rename_dic = {
             "xcoord": "x",
             "ycoord": "y",
         }
-        _keys_o = ["name", "x", "y"]
+        _keys_o = ["name", "x", "y", "source"]
 
     # Check if file is present
     if not (os.path.isfile(fname)):
@@ -74,6 +74,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata = d_h[location]
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
+            metadata["source"] = 'Menyanthes'
 
             s = metadata.pop("values")
             df = DataFrame(s, columns=["stand_m_tov_nap"])
@@ -94,6 +95,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata = d_in[stress]
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
+            metadata["source"] = 'Menyanthes'
             s = metadata.pop("values")
             df = DataFrame(s, columns=[stress])
             for key in _rename_dic.keys():
@@ -105,6 +107,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
                 name=metadata["name"],
                 x=metadata["x"],
                 y=metadata["y"],
+                source=metadata["source"]
             )
             obs_list.append(o)
 

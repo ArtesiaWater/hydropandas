@@ -1,6 +1,5 @@
 from hydropandas import observation as obs
 from hydropandas.io import io_bro
-
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -32,7 +31,7 @@ def test_groundwater_monitoring_net_metadata():
 
 def test_groundwater_observations():
     bro_id = 'GLD000000012893'
-    measurements, meta = io_bro.get_bro_groundwater(bro_id, filternr=None, 
+    measurements, meta = io_bro.get_bro_groundwater(bro_id, tube_nr=None, 
                                                     only_metadata=False)
 
     return measurements
@@ -42,7 +41,7 @@ def test_get_gld_id_from_gmw():
     
     bro_id = 'GMW000000036287'
     bro_id = 'GMW000000055372'
-    gld = io_bro.get_gld_id_from_gmw(bro_id, filternr=1)
+    gld = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1)
     
     return gld
 

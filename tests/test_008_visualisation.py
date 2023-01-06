@@ -15,7 +15,7 @@ def test_interactive_plot():
         savedir=plot_dir,
         plot_columns=("stand_m_tov_nap",),
         hoover_date_format="{%F}",
-        add_filter_to_legend=True,
+        add_screen_to_legend=True,
     )
     return
 
@@ -28,7 +28,7 @@ def test_obscollection_dino_to_imap():
         plot_columns=("stand_m_tov_nap",),
         fname="imap.html",
         legend_name="grondwater DINO",
-        add_filter_to_legend=True,
+        add_screen_to_legend=True,
         hoover_names=("gws",),
         zoom_start=9,
     )
@@ -69,7 +69,8 @@ def test_obscollection_to_imap():
     fews_gw_prod["lat"] = fews_gw_prod["lat"].astype(float)
     fews_gw_prod["lon"] = fews_gw_prod["lon"].astype(float)
 
-    fews_gw_prod.gwobs.set_filter_num_location("locatie", if_exists="replace")
+    fews_gw_prod.gwobs.set_tube_nr_monitoring_well("monitoring_well", 
+                                                   if_exists="replace")
 
     m = fews_gw_prod.plots.interactive_map(
         plot_dir,

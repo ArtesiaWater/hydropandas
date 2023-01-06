@@ -67,12 +67,12 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False,
         tags = ['MeasuringPoint','monitoringTube','GroundwaterMonitoringTube']
         tube = gmw.find(f".//xmlns:{'//xmlns:'.join(tags)}", ns)
         gmw_id = tube.find('xmlns:broId',ns).text
-        filternr = int(tube.find('xmlns:tubeNumber',ns).text)
+        tube_nr = int(tube.find('xmlns:tubeNumber',ns).text)
         
-        o = ObsClass.from_bro(bro_id=gmw_id, filternr=filternr,
+        o = ObsClass.from_bro(bro_id=gmw_id, tube_nr=tube_nr,
                              only_metadata=only_metadata)
         if o.empty:
-            logger.warning(f'no measurements found for gmw_id {gmw_id} and tube number {filternr}')
+            logger.warning(f'no measurements found for gmw_id {gmw_id} and tube number {tube_nr}')
             if keep_all_obs:
                 obs_list.append(o)
         else:
@@ -88,7 +88,7 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False,
         
     
 
-def get_bro_groundwater(bro_id, filternr=None, only_metadata=False, **kwargs):
+def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
     """ get bro groundwater measurement from a GLD id or a GMW id with a
     filter number. 
     
@@ -97,8 +97,8 @@ def get_bro_groundwater(bro_id, filternr=None, only_metadata=False, **kwargs):
     ----------
     bro_id : str
         starts with 'GLD' or 'GMW' e.g. 'GLD000000012893'.
-    filternr : int or None, optional
-        filter number, required if bro_id starts with 'GMW'. The default is
+    tube_nr : int or None, optional
+        tube number, required if bro_id starts with 'GMW'. The default is
         None.
     only_metadata : bool, optional
         if True download only metadata, significantly faster. The default
@@ -127,14 +127,14 @@ def get_bro_groundwater(bro_id, filternr=None, only_metadata=False, **kwargs):
         return measurements_from_gld(bro_id, **kwargs)
         
     elif bro_id.startswith('GMW'):
-        if filternr is None:
+        if tube_nr is None:
             raise ValueError('if bro_id is GMW a filternumber should be specified')
         
-        meta = get_metadata_from_gmw(bro_id, filternr)
-        gld_id = get_gld_id_from_gmw(bro_id, filternr)
+        meta = get_metadata_from_gmw(bro_id, tube_nr)
+        gld_id = get_gld_id_from_gmw(bro_id, tube_nr)
         
         if gld_id is None:
-            meta['name'] = f'{bro_id}_{filternr}'
+            meta['name'] = f'{bro_id}_{tube_nr}'
             only_metadata = True #cannot get time series without gld id
         else:
             meta['name'] = gld_id
@@ -145,7 +145,7 @@ def get_bro_groundwater(bro_id, filternr=None, only_metadata=False, **kwargs):
         
         return measurements_from_gld(gld_id, **kwargs)
         
-def get_gld_id_from_gmw(bro_id, filternr):
+def get_gld_id_from_gmw(bro_id, tube_nr):
     """ get bro_id of a grondwterstandendossier (gld) from a bro_id of a 
     grondwatermonitoringsput (gmw).
 
@@ -153,8 +153,8 @@ def get_gld_id_from_gmw(bro_id, filternr):
     ----------
     bro_id : str
         starts with 'GLD' or 'GMW' e.g. 'GMW000000036287'.
-    filternr : int
-        filter number.
+    tube_nr : int
+        tube number.
 
     Raises
     ------
@@ -181,11 +181,11 @@ def get_gld_id_from_gmw(bro_id, filternr):
     d = json.loads(req.text)
         
     if len(d['monitoringTubeReferences']) == 0:
-        logger.info(f'no groundwater level dossier for {bro_id} and tube number {filternr}')
+        logger.info(f'no groundwater level dossier for {bro_id} and tube number {tube_nr}')
         return None
         
     for tube in d['monitoringTubeReferences']:
-        if tube['tubeNumber'] == filternr:
+        if tube['tubeNumber'] == tube_nr:
             if len(tube['gldReferences']) != 1:
                 raise RuntimeError('unexpected number of gld references')
             return tube['gldReferences'][0]['broId']
@@ -261,10 +261,10 @@ def measurements_from_gld(bro_id, tmin=None, tmax=None,
         raise (Exception("Only one gld supported"))
     gld = glds[0]
     
-    meta = {}
-    meta['name'] = bro_id
-    meta['locatie'] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
-    meta['filternr'] = int(gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text)
+    meta = {'name': bro_id,
+            'source': "BRO"}
+    meta['monitoring_well'] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
+    meta['tube_nr'] = int(gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text)
     meta['monitoringsnet'] = gld.find("ns11:groundwaterMonitoringNet//gldcommon:broId", ns).text
     
     # get observations
@@ -293,13 +293,13 @@ def measurements_from_gld(bro_id, tmin=None, tmax=None,
     df = df.sort_index()
     
     # add metedata from gmw
-    meta.update(get_metadata_from_gmw(meta['locatie'], meta['filternr']))
+    meta.update(get_metadata_from_gmw(meta['monitoring_well'], meta['tube_nr']))
    
     
     return df, meta
 
 
-def get_full_metadata_from_gmw(bro_id, filternr):
+def get_full_metadata_from_gmw(bro_id, tube_nr):
     """ get metadata for a groundwater monitoring well.
     
 
@@ -307,7 +307,7 @@ def get_full_metadata_from_gmw(bro_id, filternr):
     ----------
     bro_id : str
         bro id of groundwater monitoring well e.g. 'GMW000000036287'.
-    filternr : int
+    tube_nr : int
         filter number you want metadata for.
 
     Raises
@@ -336,8 +336,9 @@ def get_full_metadata_from_gmw(bro_id, filternr):
     if len(gmws) != 1:
         raise (Exception("Only one gmw supported"))
     gmw = gmws[0]
-    meta = {'locatie':bro_id,
-            'filternr':filternr}
+    meta = {'monitoring_well':bro_id,
+            'tube_nr':tube_nr,
+            'source': "BRO"}
     for child in gmw:
         key = child.tag.split("}", 1)[1]
         if len(child) == 0:
@@ -365,7 +366,7 @@ def get_full_metadata_from_gmw(bro_id, filternr):
                 if len(grandchild) == 0:
                     tube_key = grandchild.tag.split("}", 1)[1]
                     if tube_key == 'tubeNumber':
-                        if int(grandchild.text) == filternr:
+                        if int(grandchild.text) == tube_nr:
                             tube=True
                     else:
                         tube_dic[tube_key] = grandchild.text
@@ -378,10 +379,10 @@ def get_full_metadata_from_gmw(bro_id, filternr):
                 meta.update(tube_dic)
         
         
-    rename_dic = {'groundLevelPosition':'maaiveld',
-                  'screenTopPosition':'bovenkant_filter',
-                  'screenBottomPosition':'onderkant_filter',
-                  'tubeTopPosition':'meetpunt'}
+    rename_dic = {'groundLevelPosition':'ground_level',
+                  'screenTopPosition':'screen_top',
+                  'screenBottomPosition':'screen_bottom',
+                  'tubeTopPosition':'tube_top'}
 
     for key, val in rename_dic.items():
         meta[val] = meta.pop(key)
@@ -389,24 +390,24 @@ def get_full_metadata_from_gmw(bro_id, filternr):
     return meta                        
 
 
-def get_metadata_from_gmw(bro_id, filternr):
+def get_metadata_from_gmw(bro_id, tube_nr):
     """ get selection of metadata for a groundwater monitoring well.
-    coordinaten, maaiveld, meetpunt and filterstelling
+    coordinates, ground_level, tube_top and tube screen
     
 
     Parameters
     ----------
     bro_id : str
         bro id of groundwater monitoring well e.g. 'GMW000000036287'.
-    filternr : int
-        filter number you want metadata for.
+    tube_nr : int
+        tube number you want metadata for.
 
     Raises
     ------
     ValueError
         if bro_id is invalid.
     TypeError
-        if filternr is not an int
+        if tube_nr is not an int
 
     Returns
     -------
@@ -421,8 +422,8 @@ def get_metadata_from_gmw(bro_id, filternr):
     if not bro_id.startswith('GMW'):
         raise ValueError('can only get metadata if bro id starts with GMW')
         
-    if not isinstance(filternr, int):
-        raise TypeError(f'expected integer got {type(filternr)}')
+    if not isinstance(tube_nr, int):
+        raise TypeError(f'expected integer got {type(tube_nr)}')
 
 
     url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
@@ -436,43 +437,44 @@ def get_metadata_from_gmw(bro_id, filternr):
         raise (Exception("Only one gmw supported"))
     gmw = gmws[0]
     
-    meta = {'locatie':bro_id,
-            'filternr':filternr}
+    meta = {'monitoring_well':bro_id,
+            'tube_nr':tube_nr,
+            'source':"BRO"}
     
     # x and y   
     xy = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
     meta['x'], meta['y'] = [float(val) for val in xy.text.split()]    
 
-    # maaiveld
+    # ground_level
     vert_pos = gmw.find("dsgmw:deliveredVerticalPosition", ns)
     mv = vert_pos.find("gmwcommon:groundLevelPosition",ns)
     datum = vert_pos.find("gmwcommon:verticalDatum",ns)
     if datum.text == 'NAP' and mv.attrib['uom'] == 'm':
-        meta['maaiveld'] = float(mv.text)
+        meta['ground_level'] = float(mv.text)
     else:
-        raise ValueError('invalid maaiveld datum or unit')
+        raise ValueError('invalid ground_level datum or unit')
     
     # buis eigenschappen
     tubes = gmw.findall("dsgmw:monitoringTube", ns)
     for tube in tubes:
-        if int(tube.find("dsgmw:tubeNumber", ns).text) == filternr:
+        if int(tube.find("dsgmw:tubeNumber", ns).text) == tube_nr:
             break
     
-    # meetpunt
+    # tube_top
     mp = tube.find("dsgmw:tubeTopPosition", ns)
     if mp.attrib['uom']  == 'm':
-        meta['meetpunt'] = float(mp.text)
+        meta['tube_top'] = float(mp.text)
     
     # bovenkant filter
     bkf = tube.find("dsgmw:screen//dsgmw:screenTopPosition", ns)
     if bkf.attrib['uom']  == 'm':
-        meta['bovenkant_filter'] = float(bkf.text)
+        meta['screen_top'] = float(bkf.text)
     
     # onderkant filter
     okf = tube.find("dsgmw:screen//dsgmw:screenBottomPosition", ns)
     if okf.attrib['uom']  == 'm':
-        meta['onderkant_filter'] = float(okf.text)
-    
+        meta['screen_bottom'] = float(okf.text)
+
     meta['metadata_available'] = True
     
     return meta
@@ -557,12 +559,12 @@ def get_obs_list_from_extent(extent, ObsClass, tmin=None, tmax=None,
             continue
         
         ntubes = int(gmw.find("dsgmw:numberOfMonitoringTubes", ns).text)
-        for filternr in range(1, ntubes+1):
-            o = ObsClass.from_bro(gmw_id,filternr=filternr,
+        for tube_nr in range(1, ntubes+1):
+            o = ObsClass.from_bro(gmw_id,tube_nr=tube_nr,
                                   tmin=tmin, tmax=tmax,
                                   only_metadata=only_metadata)
             if o.empty:
-                logger.warning(f'no measurements found for gmw_id {gmw_id} and tube number {filternr}')
+                logger.warning(f'no measurements found for gmw_id {gmw_id} and tube number {tube_nr}')
                 if keep_all_obs:
                     obs_list.append(o)
             else:

@@ -136,8 +136,9 @@ class ObsCollection(pd.DataFrame):
         collection is consistent if:
             1. all observations have a unique name
             2. there are no nan values in the obs column
-            3. the metadata of each observation has the same type and value
-            as the corresponding row in the observation collection dataframe.
+            3. (optional) the metadata of each observation has the same type
+            and value as the corresponding row in the observation collection
+            dataframe. Only checked if check_individual_obs is True.
 
 
         Parameters
@@ -211,11 +212,13 @@ class ObsCollection(pd.DataFrame):
             If True the consistency of the collection is first checked. The
             default is True.
         **kwargs passed to Obs.merge_observation:
-            check_metadata : bool, optional
+            merge_metadata : bool, optional
                 If True and observations are merged the metadata of the two
-                observations are compared. Differences are logged. The metadata of
-                the observation in the collection is always used for the merged
-                observation. The default is False.
+                objects are merged. If there are any differences the overlap
+                parameter is used to determine which metadata is used. If
+                merge_metadata is False, the metadata of the original
+                observation is always used for the merged observation. The
+                default is True.
             overlap : str, optional
                 How to deal with overlapping timeseries with different values.
                 Options are:
@@ -244,8 +247,6 @@ class ObsCollection(pd.DataFrame):
         if not isinstance(o, obs.Obs):
             raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
-        #
-
         # add new observation to collection
         if o.name not in self.index:
             logger.info(f"adding {o.name} to collection")
@@ -264,7 +265,7 @@ class ObsCollection(pd.DataFrame):
     def add_obs_collection(
         self, obs_collection, check_consistency=True, inplace=False, **kwargs
     ):
-        """add an observation collection to another existing observation
+        """add one observation collection to another observation
         collection. See add_observation method for more details
 
         Parameters
@@ -278,11 +279,13 @@ class ObsCollection(pd.DataFrame):
             If True, modifies the ObsCollection in place (do not create a new
             object). The default is False.
         **kwargs passed to Obs.merge_observation:
-            check_metadata : bool, optional
+            merge_metadata : bool, optional
                 If True and observations are merged the metadata of the two
-                observations are compared. Differences are logged. The metadata of
-                the observation in the collection is always used for the merged
-                observation. The default is False.
+                objects are merged. If there are any differences the overlap
+                parameter is used to determine which metadata is used. If
+                merge_metadata is False, the metadata of the original
+                observation is always used for the merged observation. The
+                default is True.
             overlap : str, optional
                 How to deal with overlapping timeseries with different values.
                 Options are:
@@ -590,7 +593,7 @@ class ObsCollection(pd.DataFrame):
         """
 
         warnings.warn(
-            "this method will be removed in future versions," " use from_dino instead",
+            "this method will be removed in future versions," " use from_bro instead",
             DeprecationWarning,
         )
 
@@ -849,7 +852,7 @@ class ObsCollection(pd.DataFrame):
         from .io.io_fews import read_xml_filelist, read_xmlstring
 
         if translate_dic is None:
-            translate_dic = {"locationId": "locatie"}
+            translate_dic = {"locationId": "monitoring_well"}
 
         meta = {"type": ObsClass}
 
@@ -1372,15 +1375,15 @@ class ObsCollection(pd.DataFrame):
         return util.df2gdf(self, xcol, ycol)
 
     def to_report_table(
-        self, columns=("locatie", "filternr", "Van", "Tot", "# metingen")
+        self, columns=("monitoring_well", "tube_nr", "startdate", "enddate", "# measurements")
     ):
 
-        if "Van" in columns:
-            self["Van"] = self.obs.apply(lambda x: x.index[0])
-        if "Tot" in columns:
-            self["Tot"] = self.obs.apply(lambda x: x.index[-1])
-        if "# metingen" in columns:
-            self["# metingen"] = self.obs.apply(lambda x: x.shape[0])
+        if "startdate" in columns:
+            self["startdate"] = self.obs.apply(lambda x: x.index[0])
+        if "enddate" in columns:
+            self["enddate"] = self.obs.apply(lambda x: x.index[-1])
+        if "# measurements" in columns:
+            self["# measurements"] = self.obs.apply(lambda x: x.shape[0])
 
         return self[columns]
 

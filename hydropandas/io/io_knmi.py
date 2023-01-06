@@ -1279,7 +1279,9 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
     # set metadata
     x = stations.loc[stn, "x"]
     y = stations.loc[stn, "y"]
-    meta.update({"x": x, "y": y, "station": stn, "name": f"{meteo_var}_{stn_name}"})
+    meta.update({"x": x, "y": y, "station": stn, 
+                 "name": f"{meteo_var}_{stn_name}",
+                 "source":'KNMI'})
 
     return knmi_df, meta
 

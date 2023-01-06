@@ -38,7 +38,7 @@ def test_dino_csv_duplicate_index():
 def test_dino_metadata():
     # download metadata
     dinorest = io_dino.DinoREST()
-    meta = dinorest.get_gwo_metadata(location="B52C0057", filternr="001")
+    meta = dinorest.get_gwo_metadata(location="B52C0057", tube_nr="001")
 
     return meta
 
@@ -46,7 +46,7 @@ def test_dino_metadata():
 def test_dino_metadata2():
     # download metadata without sample metadata in json
     dinorest = io_dino.DinoREST()
-    meta = dinorest.get_gwo_metadata(location="B57B0069", filternr="002")
+    meta = dinorest.get_gwo_metadata(location="B57B0069", tube_nr="002")
     assert meta["metadata_available"]
     return meta
 
@@ -54,7 +54,7 @@ def test_dino_metadata2():
 def test_dino_metadata3():
     # try to download metadata of a well that does not have metadata
     dinorest = io_dino.DinoREST()
-    meta = dinorest.get_gwo_metadata(location="B45G1147", filternr="001")
+    meta = dinorest.get_gwo_metadata(location="B45G1147", tube_nr="001")
 
     assert not meta["metadata_available"]
 

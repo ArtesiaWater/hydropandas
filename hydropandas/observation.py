@@ -48,6 +48,8 @@ class Obs(pd.DataFrame):
         metadata
     filename : str
         filename with data of observation point
+    source : str
+        source of the observation e.g. BRO or KNMI
     """
 
     # temporary properties
@@ -55,7 +57,7 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ["name", "x", "y", "meta", "filename"]
+    _metadata = ["name", "x", "y", "meta", "filename", "source"]
 
     def __init__(self, *args, **kwargs):
         """constructor of Obs class.
@@ -69,6 +71,7 @@ class Obs(pd.DataFrame):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
         self.filename = kwargs.pop("filename", "")
+        self.source = kwargs.pop("source", "")
 
         super(Obs, self).__init__(*args, **kwargs)
 
@@ -414,24 +417,23 @@ class GroundwaterObs(Obs):
 
     Subclass of the Obs class. Has the following attributes:
 
-    - locatie: 2 filters at one piezometer should have the same 'locatie'
-    - filternr: 2 filters at one piezometer should have a different 'filternr'.
-      a higher filter number is preferably deeper than a lower filter number.
-    - bovenkant_filter: top op the filter in m NAP
-    - onderkant_filter: bottom of the filter in m NAP
-    - maaiveld: surface level in m NAP
-    - meetpunt: ? in m NAP
+    - monitoring_well: 2 tubes at one piezometer should have the same 'monitoring_well'
+    - tube_nr: 2 tubes at one piezometer should have a different 'tube_nr'.
+    - screen_top: top op the filter in m above date (NAP)
+    - screen_bottom: bottom of the filter in m above date (NAP)
+    - ground_level: surface level in m above date (NAP) (maaiveld in Dutch)
+    - tube_top: top of the tube in m above date (NAP)
     - metadata_available: boolean indicating if metadata is available for
       the measurement point.
     """
 
     _metadata = Obs._metadata + [
-        "locatie",
-        "filternr",
-        "bovenkant_filter",
-        "onderkant_filter",
-        "maaiveld",
-        "meetpunt",
+        "monitoring_well",
+        "tube_nr",
+        "screen_top",
+        "screen_bottom",
+        "ground_level",
+        "tube_top",
         "metadata_available",
     ]
 
@@ -445,12 +447,12 @@ class GroundwaterObs(Obs):
         plotting and other methods will work automatically without changing
         the default arguments.
         """
-        self.locatie = kwargs.pop("locatie", "")
-        self.filternr = kwargs.pop("filternr", "")
-        self.maaiveld = kwargs.pop("maaiveld", np.nan)
-        self.meetpunt = kwargs.pop("meetpunt", np.nan)
-        self.bovenkant_filter = kwargs.pop("bovenkant_filter", np.nan)
-        self.onderkant_filter = kwargs.pop("onderkant_filter", np.nan)
+        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        self.tube_nr = kwargs.pop("tube_nr", "")
+        self.ground_level = kwargs.pop("ground_level", np.nan)
+        self.tube_top = kwargs.pop("tube_top", np.nan)
+        self.screen_top = kwargs.pop("screen_top", np.nan)
+        self.screen_bottom = kwargs.pop("screen_bottom", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(GroundwaterObs, self).__init__(*args, **kwargs)
@@ -462,7 +464,7 @@ class GroundwaterObs(Obs):
     @classmethod
     def from_bro(cls,
         bro_id,
-        filternr=None,
+        tube_nr=None,
         tmin="1900-01-01",
         tmax="2040-01-01",
         to_wintertime=True, 
@@ -475,10 +477,10 @@ class GroundwaterObs(Obs):
         Parameters
         ----------
         bro_id : str
-            can be a GLD id or GMW id. If a GMW id is given a filternr is
+            can be a GLD id or GMW id. If a GMW id is given a tube number is
             required as well. e.g. 'GLD000000012893'.
-        filternr : str or None, optional
-            if the bro_id is a GMW object the filternr should be given.
+        tube_nr : str or None, optional
+            if the bro_id is a GMW object the tube number should be given.
         tmin : str or None, optional
             start date in format YYYY-MM-DD
         tmax : str or None, optional
@@ -500,7 +502,7 @@ class GroundwaterObs(Obs):
         from .io import io_bro
         
         measurements, meta = io_bro.get_bro_groundwater(bro_id, 
-                                                        filternr,
+                                                        tube_nr,
                                                         tmin=tmin, 
                                                         tmax=tmax,
                                                         to_wintertime=to_wintertime, 
@@ -513,13 +515,13 @@ class GroundwaterObs(Obs):
                     name=meta.pop('name'),
                     x=meta.pop("x"),
                     y=meta.pop("y"),
-                    onderkant_filter=meta.pop("onderkant_filter"),
-                    bovenkant_filter=meta.pop("bovenkant_filter"),
-                    maaiveld=meta.pop("maaiveld"),
+                    screen_bottom=meta.pop("screen_bottom"),
+                    screen_top=meta.pop("screen_top"),
+                    ground_level=meta.pop("ground_level"),
                     metadata_available=meta.pop("metadata_available"),
-                    locatie=meta.pop("locatie"),
-                    filternr=meta.pop("filternr"),
-                    meetpunt=meta.pop('meetpunt')
+                    monitoring_well=meta.pop("monitoring_well"),
+                    tube_nr=meta.pop("tube_nr"),
+                    tube_top=meta.pop('tube_top')
                 )
         
         
@@ -529,7 +531,7 @@ class GroundwaterObs(Obs):
         cls,
         fname=None,
         location=None,
-        filternr=1.0,
+        tube_nr=1.0,
         tmin="1900-01-01",
         tmax="2040-01-01",
         split_cluster=True,
@@ -543,7 +545,7 @@ class GroundwaterObs(Obs):
             dino csv filename
         location : str, optional
             location of the peilbuis, i.e. B57F0077
-        filternr : float, optional
+        tube_nr : float, optional
             filter_nr of the peilbuis, i.e. 1.
         tmin : str
             start date in format YYYY-MM-DD
@@ -567,7 +569,7 @@ class GroundwaterObs(Obs):
 
         elif location is not None:
             measurements, meta = io_dino.download_dino_groundwater(
-                location, filternr, tmin, tmax, split_cluster, **kwargs
+                location, tube_nr, tmin, tmax, split_cluster, **kwargs
             )
 
             if meta["metadata_available"]:
@@ -576,13 +578,13 @@ class GroundwaterObs(Obs):
                     meta=meta,
                     x=meta.pop("x"),
                     y=meta.pop("y"),
-                    onderkant_filter=meta.pop("onderkant_filter"),
-                    bovenkant_filter=meta.pop("bovenkant_filter"),
+                    screen_bottom=meta.pop("screen_bottom"),
+                    screen_top=meta.pop("screen_top"),
                     name=meta.pop("name"),
                     metadata_available=meta.pop("metadata_available"),
-                    locatie=meta.pop("locatie"),
-                    maaiveld=meta.pop("maaiveld"),
-                    filternr=meta.pop("filternr"),
+                    monitoring_well=meta.pop("monitoring_well"),
+                    ground_level=meta.pop("ground_level"),
+                    tube_nr=meta.pop("tube_nr"),
                 )
             else:
                 return cls(measurements, meta=meta)
@@ -591,7 +593,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_dino_server(
-        cls, location, filternr=1.0, tmin="1900-01-01", tmax="2040-01-01", **kwargs
+        cls, location, tube_nr=1.0, tmin="1900-01-01", tmax="2040-01-01", **kwargs
     ):
         """download dino data from the server.
 
@@ -599,7 +601,7 @@ class GroundwaterObs(Obs):
         ----------
         location : str
             location of the peilbuis, i.e. B57F0077
-        filternr : float
+        tube_nr : float
             filter_nr of the peilbuis, i.e. 1.0
         tmin : str
             start date in format YYYY-MM-DD
@@ -616,7 +618,7 @@ class GroundwaterObs(Obs):
         from .io import io_dino
 
         measurements, meta = io_dino.download_dino_groundwater(
-            location, filternr, tmin, tmax, **kwargs
+            location, tube_nr, tmin, tmax, **kwargs
         )
 
         if meta["metadata_available"]:
@@ -625,12 +627,12 @@ class GroundwaterObs(Obs):
                 meta=meta,
                 x=meta.pop("x"),
                 y=meta.pop("y"),
-                onderkant_filter=meta.pop("onderkant_filter"),
-                bovenkant_filter=meta.pop("bovenkant_filter"),
+                screen_bottom=meta.pop("screen_bottom"),
+                screen_top=meta.pop("screen_top"),
                 name=meta.pop("name"),
-                locatie=meta.pop("locatie"),
-                maaiveld=meta.pop("maaiveld"),
-                filternr=meta.pop("filternr"),
+                monitoring_well=meta.pop("monitoring_well"),
+                ground_level=meta.pop("ground_level"),
+                tube_nr=meta.pop("tube_nr"),
             )
         else:
             return cls(measurements, meta=meta)
@@ -719,17 +721,17 @@ class GroundwaterQualityObs(Obs):
     """
 
     _metadata = Obs._metadata + [
-        "locatie",
-        "filternr",
-        "maaiveld",
+        "monitoring_well",
+        "tube_nr",
+        "ground_level",
         "metadata_available",
     ]
 
     def __init__(self, *args, **kwargs):
 
-        self.locatie = kwargs.pop("locatie", "")
-        self.filternr = kwargs.pop("filternr", "")
-        self.maaiveld = kwargs.pop("maaiveld", np.nan)
+        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        self.tube_nr = kwargs.pop("tube_nr", "")
+        self.ground_level = kwargs.pop("ground_level", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(GroundwaterQualityObs, self).__init__(*args, **kwargs)
@@ -762,11 +764,11 @@ class WaterlvlObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ["locatie", "metadata_available"]
+    _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
 
-        self.locatie = kwargs.pop("locatie", "")
+        self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(WaterlvlObs, self).__init__(*args, **kwargs)
@@ -1025,6 +1027,7 @@ class MeteoObs(Obs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
             meteo_var=meteo_var,
         )
 
@@ -1100,6 +1103,7 @@ class MeteoObs(Obs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
             meteo_var=meteo_var,
         )
 
@@ -1283,6 +1287,7 @@ class MeteoObs(Obs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
             meteo_var=meteo_var,
         )
 
@@ -1365,6 +1370,7 @@ class EvaporationObs(MeteoObs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
             meteo_var=et_type,
         )
 
