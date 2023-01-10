@@ -9,10 +9,19 @@
 
 # hydropandas
 
-The Hydropandas package allows users to manipulate data using
-all of the wonderful features included in pandas extented with custom methods and attributes related to hydrological timeseries. The hydropandas
-module extends pandas.DataFrame with extra functionality and stores metadata
-related to the type of measurements.
+The Hydropandas package allows users to store observation data at multiple locations in a single object (ObsCollection). 
+An ObsCollection is a pandas DataFrame extended with custom methods and attributes related to hydrological timeseries.
+The hydropandas package also provides convenient read functions for Dutch hydrological data from:
+-   [BRO](https://www.broloket.nl)
+-   [DINO](https://www.dinoloket.nl)
+-   FEWS PI-XML
+-   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script)
+-   MODFLOW groundwater models
+-   IMOD groundwater models
+-   [Pastastore](https://github.com/pastas/pastastore)
+-   [waterinfo](https://waterinfo.rws.nl/)
+-   WISKI csv files
+
 
 ## Installation
 
@@ -44,7 +53,7 @@ Importing a single DINO csv file:
 ```python
 import hydropandas as hpd
 fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-gw = hpd.GroundwaterObs.from_dino(fname=fname, verbose=True)
+gw = hpd.GroundwaterObs.from_dino(fname=fname)
 ```
 
 Or for a zipfile:
@@ -52,12 +61,11 @@ Or for a zipfile:
 ```python
 import hydropandas as hpd
 dinozip = './tests/data/2019-Dino-test/dino.zip'
-dino_gw = hpd.ObsCollection.from_dino(dirname=dinozip,
-                                      subdir='Grondwaterstanden_Put',
-                                      suffix='1.csv',
-                                      ObsClass=hpd.GroundwaterObs,
-                                      keep_all_obs=False,
-                                      verbose=False)
+dino_gw = hpd.read_dino(dirname=dinozip,
+					    subdir='Grondwaterstanden_Put',
+                        suffix='1.csv',
+                        ObsClass=hpd.GroundwaterObs,
+                        keep_all_obs=False)
 ```
 
 ## The Obs class
@@ -91,23 +99,6 @@ ObsCollection for 5 PrecipitationObs.
 Like the Obs class, the ObsCollection class contains a bunch of methods for
 reading data from different sources. See the next section for supported data
 sources.
-
-## Supported data sources
-
-Currently supported datasources that can be read:
-
--   FEWS PI-XML
--   [DINO](https://www.dinoloket.nl) csv
--   WISKI csv
--   [Pastastore](https://github.com/pastas/pastastore), for managing Pastas timeseries and models
--   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script) data
--   MODFLOW groundwater models
--   IMOD groundwater models
-
-An ObsCollection can be written to:
-
--   a shapefile
--   a PastaStore
 
 ## Dependencies
 
