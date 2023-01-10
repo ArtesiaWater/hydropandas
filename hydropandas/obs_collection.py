@@ -571,11 +571,11 @@ def read_waterinfo(file_or_dir,
     ObsCollection
         ObsCollection containing data
     """
-    oc = ObsCollection.from_wiski(file_or_dir=file_or_dir, 
-                                  name=name, 
-                                  ObsClass=ObsClass, 
-                                  progressbar=progressbar, 
-                                  **kwargs)
+    oc = ObsCollection.from_waterinfo(file_or_dir=file_or_dir, 
+                                      name=name, 
+                                      ObsClass=ObsClass, 
+                                      progressbar=progressbar, 
+                                      **kwargs)
     
     return oc
 
@@ -596,7 +596,7 @@ def read_wiski(dirname,
     ObsClass : type, optional
         type of Obs. The default is obs.GroundwaterObs.
     suffix : str, optional
-        DESCRIPTION. The default is ".csv".
+        extension of filenames to read. The default is ".csv".
     unpackdir : str or None, optional
         directory to unpack zipped directory. The default is None.
     force_unpack : bool, optional
