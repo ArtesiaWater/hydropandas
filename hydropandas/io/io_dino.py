@@ -237,12 +237,14 @@ def read_dino_groundwater_quality_txt(fname):
             index_col="Monster datum",
         )
 
-    meta = {"filename":fname,
-            "source":'dino',
-            "monitoring_well": locatie["NITG-nr"],
-            "name": locatie["NITG-nr"],
-            "x": locatie["X-coord"],
-            "y": locatie["Y-coord"]}
+    meta = {
+        "filename": fname,
+        "source": "dino",
+        "monitoring_well": locatie["NITG-nr"],
+        "name": locatie["NITG-nr"],
+        "x": locatie["X-coord"],
+        "y": locatie["Y-coord"],
+    }
     try:
         meta["ground_level"] = locatie["Maaiveldhoogte (m tov NAP)"]
     except KeyError:
@@ -297,7 +299,7 @@ def read_dino_groundwater_csv(
         if not meta["metadata_available"]:
             logger.warning(f"could not read metadata -> {fname}")
         meta["filename"] = fname
-        meta['source'] = "dino"
+        meta["source"] = "dino"
 
         # read measurements
         if read_series:
@@ -457,7 +459,7 @@ def read_artdino_groundwater_csv(fname, to_mnap=True, read_series=True):
             logger.warning(f"could not read metadata -> {fname}")
 
         meta["filename"] = fname
-        meta['source'] = "dino"
+        meta["source"] = "dino"
 
         # read measurements
         if read_series:
@@ -1293,9 +1295,7 @@ def download_dino_groundwater_bulk(
     for loc in locations:
         iloc, tube_nr = loc.split(filtersep)
         try:
-            obslist.append(
-                ObsClass.from_dino(location=iloc, tube_nr=tube_nr, **kwargs)
-            )
+            obslist.append(ObsClass.from_dino(location=iloc, tube_nr=tube_nr, **kwargs))
         except Exception as e:
             if stop_on_error:
                 raise e
@@ -1627,7 +1627,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
                 else:
                     meta["metadata_available"] = False
                 meta["filename"] = fname
-                meta["source"] = 'dino'
+                meta["source"] = "dino"
             elif p_data.match(line):
                 if read_series:
                     measurements = _read_dino_waterlvl_measurements(f, line)

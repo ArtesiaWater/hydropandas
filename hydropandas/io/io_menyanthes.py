@@ -31,7 +31,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             "lowfiltlev": "screen_bottom",
             "surflev": "ground_level",
             "filtnr": "tube_nr",
-             "measpointlev": "tube_top",
+            "measpointlev": "tube_top",
         }
 
         _keys_o = [
@@ -74,7 +74,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata = d_h[location]
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
-            metadata["source"] = 'Menyanthes'
+            metadata["source"] = "Menyanthes"
 
             s = metadata.pop("values")
             df = DataFrame(s, columns=["stand_m_tov_nap"])
@@ -95,7 +95,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata = d_in[stress]
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
-            metadata["source"] = 'Menyanthes'
+            metadata["source"] = "Menyanthes"
             s = metadata.pop("values")
             df = DataFrame(s, columns=[stress])
             for key in _rename_dic.keys():
@@ -107,7 +107,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
                 name=metadata["name"],
                 x=metadata["x"],
                 y=metadata["y"],
-                source=metadata["source"]
+                source=metadata["source"],
             )
             obs_list.append(o)
 

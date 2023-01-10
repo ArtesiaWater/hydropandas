@@ -5,9 +5,6 @@
 """
 
 import numpy as np
-from hydropandas import obs_collection as oc
-from hydropandas import observation as obs
-
 import test_001_to_from as ttf
 
 
@@ -19,8 +16,9 @@ def test_set_tube_nr():
 
 def test_set_tube_nr_monitoring_well():
     fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
-    fews_gw_prod.gwobs.set_tube_nr_monitoring_well("monitoring_well",
-                                                   if_exists="replace")
+    fews_gw_prod.gwobs.set_tube_nr_monitoring_well(
+        "monitoring_well", if_exists="replace"
+    )
     return fews_gw_prod
 
 

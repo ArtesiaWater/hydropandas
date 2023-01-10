@@ -6,8 +6,7 @@
 
 import numpy as np
 import pandas as pd
-from hydropandas import obs_collection as oc
-from hydropandas import observation as obs
+import hydropandas as hpd
 
 # import sys
 # sys.path.insert(1, "..")
@@ -27,7 +26,7 @@ def test_groundwater_obs(name="grondwaterobs_001", tube_nr=2):
     ground_level = np.random.random()
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    gwo = obs.GroundwaterObs(
+    gwo = hpd.GroundwaterObs(
         df,
         name=name,
         monitoring_well=name.split("_")[0],
@@ -52,7 +51,7 @@ def test_waterlvl_obs():
     )
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    wlvl = obs.WaterlvlObs(
+    wlvl = hpd.WaterlvlObs(
         df,
         name="waterlvl_obs1",
         monitoring_well="obs1",
@@ -68,7 +67,7 @@ def test_groundwater_quality_obs():
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"), data={"pH": np.random.rand(10)}
     )
-    gwq = obs.WaterlvlObs(
+    gwq = hpd.WaterlvlObs(
         df,
         name="waterquality_obs1",
         monitoring_well="waterquality",
@@ -85,7 +84,7 @@ def test_obscollection_from_list():
     for i in range(10):
         o_list.append(test_groundwater_obs(name=f"grondwaterobs_00{i}", tube_nr=i))
 
-    obs_col = oc.ObsCollection.from_list(o_list)
+    obs_col = hpd.ObsCollection.from_list(o_list)
 
     return obs_col
 

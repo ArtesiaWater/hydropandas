@@ -7,7 +7,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from hydropandas import observation as obs
+import hydropandas as hpd
 from hydropandas.io import io_knmi
 
 import logging
@@ -170,7 +170,7 @@ def test_obslist_from_grid():
         xy=xy,
         meteo_vars=["RH", "EV24"],
         starts=["2010", "2010"],
-        ObsClasses=[obs.PrecipitationObs, obs.EvaporationObs],
+        ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
 
     return obs_list
@@ -179,7 +179,7 @@ def test_obslist_from_grid():
 def test_obslist_from_locations():
     locations = pd.DataFrame(data={"x": [100000], "y": [350000]})
     obs_list = io_knmi.get_knmi_obslist(
-        locations, meteo_vars=["EV24"], ObsClasses=[obs.EvaporationObs]
+        locations, meteo_vars=["EV24"], ObsClasses=[hpd.EvaporationObs]
     )
 
     return obs_list
@@ -192,7 +192,7 @@ def test_obslist_from_stns():
         meteo_vars=["RH", "EV24"],
         starts=["2010", "2010"],
         ends=["2015", "2015"],
-        ObsClasses=[obs.PrecipitationObs, obs.EvaporationObs],
+        ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
 
     return obs_list
@@ -205,7 +205,7 @@ def test_obslist_from_stns_single_startdate():
         meteo_vars=["RH", "EV24"],
         starts="2010",
         ends="2015",
-        ObsClasses=[obs.PrecipitationObs, obs.EvaporationObs],
+        ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
 
     return obs_list

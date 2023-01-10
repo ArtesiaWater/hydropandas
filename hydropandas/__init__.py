@@ -1,4 +1,15 @@
-from .obs_collection import ObsCollection
+from .obs_collection import (
+    ObsCollection,
+    read_bro,
+    read_dino,
+    read_fews,
+    read_imod,
+    read_knmi,
+    read_menyanthes,
+    read_modflow,
+    read_wiski,
+    read_waterinfo
+)
 from .observation import (
     Obs,
     GroundwaterObs,

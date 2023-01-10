@@ -179,12 +179,14 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
 
         elif lay_fbot == left:
             logger.info(
-                "- tube screen bot lower than bottom layer. " f"selected layer {lay_ftop}"
+                "- tube screen bot lower than bottom layer. "
+                f"selected layer {lay_ftop}"
             )
             return lay_ftop
 
         logger.info(
-            "- tube screen crosses layer boundary:\n" f"  - layers: {lay_ftop}, {lay_fbot}"
+            "- tube screen crosses layer boundary:\n"
+            f"  - layers: {lay_ftop}, {lay_fbot}"
         )
 
         logger.info(
@@ -457,7 +459,10 @@ class GwObsAccessor:
                     )
                     monitoring_well = self._obj.loc[name, loc_col]
                     self._obj._set_metadata_value(
-                        name, "monitoring_well", monitoring_well, add_to_meta=add_to_meta
+                        name,
+                        "monitoring_well",
+                        monitoring_well,
+                        add_to_meta=add_to_meta,
                     )
                 else:
                     dup_x2 = dup_x.sort_values("screen_bottom", ascending=False)
@@ -468,7 +473,10 @@ class GwObsAccessor:
                             pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
                         self._obj._set_metadata_value(
-                            pb_dub, "monitoring_well", monitoring_well, add_to_meta=add_to_meta
+                            pb_dub,
+                            "monitoring_well",
+                            monitoring_well,
+                            add_to_meta=add_to_meta,
                         )
 
     def get_modellayers(self, gwf=None, ds=None):
@@ -587,11 +595,7 @@ class GeoAccessorObs:
 
         # get index of regis model layer
         layer_i = get_modellayer_from_screen_depth(
-            self._obj.screen_top,
-            self._obj.screen_bottom,
-            zvec,
-            left=-999,
-            right=999,
+            self._obj.screen_top, self._obj.screen_bottom, zvec, left=-999, right=999,
         )
 
         if layer_i == 999:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """run notebooks in the examples directory."""
 import os
 

@@ -78,20 +78,20 @@ class Obs(pd.DataFrame):
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
         buf = StringIO("")
-        
+
         buf.write(f"{type(self).__name__} {self.name}\n")
 
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._metadata:
-            if not att == 'meta':
+            if not att == "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
         buf.write("\n")
 
         if self._info_repr():
             self.info(buf=buf)
             return buf.getvalue()
-        
+
         buf.write("-----time series------\n")
         max_rows = get_option("display.max_rows")
         min_rows = get_option("display.min_rows")
@@ -187,7 +187,7 @@ class Obs(pd.DataFrame):
 
         return d
 
-    def merge_metadata(self, right, overlap='error'):
+    def merge_metadata(self, right, overlap="error"):
         """Merge the metadata of an Obs object with new metadata.
 
         Parameters
@@ -254,11 +254,10 @@ class Obs(pd.DataFrame):
                     new_metadata[key] = v2
         if same_metadata:
             logger.info("new and existing observation have the same metadata")
-            
+
         return new_metadata
-    
-    
-    def _merge_timeseries(self, right, overlap='error'):
+
+    def _merge_timeseries(self, right, overlap="error"):
         """merge two timeseries.
 
         Parameters
@@ -285,7 +284,7 @@ class Obs(pd.DataFrame):
         Observation object.
         """
         o = self.iloc[0:0, 0:0]
-        
+
         # check if time series are the same
         if self.equals(right):
             logger.info("new and existing observation have the same time series")
@@ -343,9 +342,8 @@ class Obs(pd.DataFrame):
                 o = pd.concat([o, self[[col]]], axis=1)
 
         o.sort_index(inplace=True)
-        
+
         return o
-        
 
     def merge_observation(self, right, overlap="error", merge_metadata=True):
         """Merge with another observation of the same type.
@@ -395,7 +393,7 @@ class Obs(pd.DataFrame):
             raise TypeError(
                 f"existing observation has a different type {type(self)} than new observation {type(right)}"
             )
-            
+
         # merge timeseries
         o = self._merge_timeseries(right, overlap=overlap)
 
@@ -405,7 +403,7 @@ class Obs(pd.DataFrame):
             new_metadata = self.merge_metadata(metadata, overlap=overlap)
         else:
             new_metadata = {key: getattr(self, key) for key in self._metadata}
-        
+
         for key, item in new_metadata.items():
             setattr(o, key, item)
 
@@ -460,16 +458,17 @@ class GroundwaterObs(Obs):
     @property
     def _constructor(self):
         return GroundwaterObs
-    
+
     @classmethod
-    def from_bro(cls,
+    def from_bro(
+        cls,
         bro_id,
         tube_nr=None,
         tmin="1900-01-01",
         tmax="2040-01-01",
-        to_wintertime=True, 
+        to_wintertime=True,
         drop_duplicate_times=True,
-        only_metadata=False
+        only_metadata=False,
     ):
         """download BRO groundwater observations from the server.
         
@@ -498,33 +497,33 @@ class GroundwaterObs(Obs):
             DESCRIPTION.
 
         """
-        
+
         from .io import io_bro
-        
-        measurements, meta = io_bro.get_bro_groundwater(bro_id, 
-                                                        tube_nr,
-                                                        tmin=tmin, 
-                                                        tmax=tmax,
-                                                        to_wintertime=to_wintertime, 
-                                                        drop_duplicate_times=drop_duplicate_times,
-                                                        only_metadata=only_metadata)
-        
+
+        measurements, meta = io_bro.get_bro_groundwater(
+            bro_id,
+            tube_nr,
+            tmin=tmin,
+            tmax=tmax,
+            to_wintertime=to_wintertime,
+            drop_duplicate_times=drop_duplicate_times,
+            only_metadata=only_metadata,
+        )
+
         return cls(
-                    measurements,
-                    meta=meta,
-                    name=meta.pop('name'),
-                    x=meta.pop("x"),
-                    y=meta.pop("y"),
-                    screen_bottom=meta.pop("screen_bottom"),
-                    screen_top=meta.pop("screen_top"),
-                    ground_level=meta.pop("ground_level"),
-                    metadata_available=meta.pop("metadata_available"),
-                    monitoring_well=meta.pop("monitoring_well"),
-                    tube_nr=meta.pop("tube_nr"),
-                    tube_top=meta.pop('tube_top')
-                )
-        
-        
+            measurements,
+            meta=meta,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+        )
 
     @classmethod
     def from_dino(

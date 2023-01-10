@@ -1,31 +1,33 @@
 # import os
 import pandas as pd
 import pytest
-from hydropandas import obs_collection as oc
-from hydropandas import observation as obs
+import hydropandas as hpd
 
 
 #%% BRO
 
+
 def test_bro_gld():
     # single observation
-    bro_id = 'GLD000000012893'
-    gw = obs.GroundwaterObs.from_bro(bro_id)
+    bro_id = "GLD000000012893"
+    gw = hpd.GroundwaterObs.from_bro(bro_id)
     return gw
+
 
 def test_bro_gmn():
     # single observation
-    bro_id = 'GMN000000000163'
-    gw = oc.ObsCollection.from_bro(bro_id=bro_id, only_metadata=True)
+    bro_id = "GMN000000000163"
+    gw = hpd.read_bro(bro_id=bro_id, only_metadata=True)
     return gw
 
 
 def test_bro_extent():
-    extent = (213260, 213550, 473890, 473920) # extent skip duplicates
-    extent = (102395, 103121, 434331, 434750) # 4 observations within extent
-    
-    gw = oc.ObsCollection.from_bro(extent=extent, only_metadata=True)
+    extent = (213260, 213550, 473890, 473920)  # extent skip duplicates
+    extent = (102395, 103121, 434331, 434750)  # 4 observations within extent
+
+    gw = hpd.read_bro(extent=extent, only_metadata=True)
     return gw
+
 
 # %% DINO
 
@@ -35,39 +37,39 @@ dinozip = "./tests/data/2019-Dino-test/dino.zip"
 def test_observation_gwq():
     # single observation
     fname = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
-    ogq = obs.GroundwaterQualityObs.from_dino(fname)
+    ogq = hpd.GroundwaterQualityObs.from_dino(fname)
     return ogq
 
 
 def test_observation_wl():
     fname = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
-    wl = obs.WaterlvlObs.from_dino(fname)
+    wl = hpd.WaterlvlObs.from_dino(fname)
     return wl
 
 
 def test_observation_gw():
     fname = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
-    gw = obs.GroundwaterObs.from_dino(fname=fname)
+    gw = hpd.GroundwaterObs.from_dino(fname=fname)
     return gw
 
 
 def test_obscollection_from_list():
-    dino_gw = oc.ObsCollection.from_dino(
+    dino_gw = hpd.read_dino(
         dirname=dinozip,
-        ObsClass=obs.GroundwaterObs,
+        ObsClass=hpd.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
         keep_all_obs=True,
     )
     obs_list = [o for o in dino_gw.obs.values]
-    oc_list = oc.ObsCollection.from_list(obs_list)
+    oc_list = hpd.ObsCollection.from_list(obs_list)
     return oc_list
 
 
 def test_obscollection_from_df():
     df = pd.DataFrame(index=["pb1", "pb2"], data={"tube_nr": [1, 1]})
 
-    df_oc = oc.ObsCollection.from_dataframe(df)
+    df_oc = hpd.ObsCollection.from_dataframe(df)
 
     return df_oc
 
@@ -75,9 +77,9 @@ def test_obscollection_from_df():
 # read dino directories
 def test_obscollection_dinozip_gw():
     # groundwater quantity
-    dino_gw = oc.ObsCollection.from_dino(
+    dino_gw = hpd.read_dino(
         dirname=dinozip,
-        ObsClass=obs.GroundwaterObs,
+        ObsClass=hpd.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
         keep_all_obs=False,
@@ -87,9 +89,9 @@ def test_obscollection_dinozip_gw():
 
 def test_obscollection_dinozip_gw_keep_all_obs():
     # do not delete empty dataframes
-    dino_gw = oc.ObsCollection.from_dino(
+    dino_gw = hpd.read_dino(
         dirname=dinozip,
-        ObsClass=obs.GroundwaterObs,
+        ObsClass=hpd.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
         keep_all_obs=True,
@@ -99,17 +101,19 @@ def test_obscollection_dinozip_gw_keep_all_obs():
 
 def test_obscollection_dinozip_wl():
     # surface water
-    dino_ps = oc.ObsCollection.from_dino(
-        dirname=dinozip, ObsClass=obs.WaterlvlObs, subdir="Peilschaal", suffix=".csv"
+    dino_ps = hpd.read_dino(
+        dirname=dinozip, ObsClass=hpd.WaterlvlObs, subdir="Peilschaal", 
+        suffix=".csv"
     )
+    
     return dino_ps
 
 
 def test_obscollection_dinozip_gwq():
     # groundwater quality
-    dino_gwq = oc.ObsCollection.from_dino(
+    dino_gwq = hpd.read_dino(
         dirname=dinozip,
-        ObsClass=obs.GroundwaterQualityObs,
+        ObsClass=hpd.GroundwaterQualityObs,
         subdir="Grondwatersamenstellingen_Put",
         suffix=".txt",
     )
@@ -119,13 +123,13 @@ def test_obscollection_dinozip_gwq():
 def test_obscollection_dino_download_bbox_empty():
     # download DINO from bbox
     bbox = [88596.63500000164, 407224.8449999988, 89623.4149999991, 407804.27800000086]
-    dino_gw_bbox = oc.ObsCollection.from_dino(bbox=bbox, ObsClass=obs.GroundwaterObs)
+    dino_gw_bbox = hpd.read_dino(bbox=bbox, ObsClass=hpd.GroundwaterObs)
     return dino_gw_bbox
 
 
 # %% FEWS
 def test_obscollection_fews_highmemory():
-    fews_gw_prod = oc.ObsCollection.from_fews_xml(
+    fews_gw_prod = hpd.read_fews(
         "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
         to_mnap=False,
         remove_nan=False,
@@ -135,7 +139,7 @@ def test_obscollection_fews_highmemory():
 
 
 def test_obscollection_fews_lowmemory():
-    fews_gw_prod = oc.ObsCollection.from_fews_xml(
+    fews_gw_prod = hpd.read_fews(
         "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
@@ -144,7 +148,7 @@ def test_obscollection_fews_lowmemory():
 
 
 def test_obscollection_fews_selection():
-    fews_gw_prod = oc.ObsCollection.from_fews_xml(
+    fews_gw_prod = hpd.read_fews(
         "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
         locations=("MPN-N-2",),
     )
@@ -154,7 +158,7 @@ def test_obscollection_fews_selection():
 # %% WISKI
 @pytest.mark.slow
 def test_observation_wiskicsv_gw():
-    wiski_gw = obs.GroundwaterObs.from_wiski(
+    wiski_gw = hpd.GroundwaterObs.from_wiski(
         "./tests/data/2019-WISKI-test/1016_PBF.csv",
         sep=r"\s+",
         header_sep=":",
@@ -169,7 +173,7 @@ def test_observation_wiskicsv_gw():
 
 @pytest.mark.slow
 def test_obscollection_wiskizip_gw():
-    wiski_col = oc.ObsCollection.from_wiski(
+    wiski_col = hpd.read_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.zip",
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
         sep=r"\s+",
@@ -196,46 +200,44 @@ def test_to_pastastore():
 
 
 def test_evap_obs_from_stn():
-    return obs.EvaporationObs.from_knmi(260, et_type="EV24")
+    return hpd.EvaporationObs.from_knmi(260, et_type="EV24")
 
 
 def test_evap_obs_from_stn_makkink():
-    return obs.EvaporationObs.from_knmi(260, et_type="makkink")
+    return hpd.EvaporationObs.from_knmi(260, et_type="makkink")
 
 
 def test_evap_obs_from_stn_penman():
-    return obs.EvaporationObs.from_knmi(260, et_type="penman")
+    return hpd.EvaporationObs.from_knmi(260, et_type="penman")
 
 
 def test_evap_obs_from_stn_hargreaves():
-    return obs.EvaporationObs.from_knmi(260, et_type="hargreaves")
+    return hpd.EvaporationObs.from_knmi(260, et_type="hargreaves")
 
 
 def test_evap_obs_from_xy_interpolate():
-    return obs.EvaporationObs.from_xy((117000, 439000), method="interpolation")
+    return hpd.EvaporationObs.from_xy((117000, 439000), method="interpolation")
 
 
 def test_evap_obs_collection_from_xy_interpolate():
     xy = [[x, y] for x in [117000, 117500] for y in [439000, 439500]]
-    return oc.ObsCollection.from_knmi(
-        xy=xy, meteo_vars=("EV24",), method="interpolation"
-    )
+    return hpd.read_knmi(xy=xy, meteo_vars=("EV24",), method="interpolation")
 
 
 #%% Precipitation
 
 
 def test_precip_obs_from_stn():
-    return obs.PrecipitationObs.from_knmi(233, "precipitation")
+    return hpd.PrecipitationObs.from_knmi(233, "precipitation")
 
 
 def test_knmi_obs_from_stn_no_api():
-    return obs.PrecipitationObs.from_knmi(233, "precipitation", use_api=False)
+    return hpd.PrecipitationObs.from_knmi(233, "precipitation", use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
 
-    obs.EvaporationObs.from_knmi(
+    hpd.EvaporationObs.from_knmi(
         210, startdate="19500101", enddate="19600101", fill_missing_obs=False
     )
 
@@ -243,21 +245,21 @@ def test_knmi_obs_from_stn_without_any_data():
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    return obs.PrecipitationObs.from_knmi("441", "precipitation", startdate="2010-1-2")
+    return hpd.PrecipitationObs.from_knmi("441", "precipitation", startdate="2010-1-2")
 
 
 def test_knmi_obs_from_xy():
-    return obs.PrecipitationObs.from_nearest_xy((100000, 350000))
+    return hpd.PrecipitationObs.from_nearest_xy((100000, 350000))
 
 
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
-    return obs.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
+    return hpd.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
 
 
 def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
-    oc_knmi = oc.ObsCollection.from_knmi(
+    oc_knmi = hpd.read_knmi(
         locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
     )
     return oc_knmi
@@ -265,7 +267,7 @@ def test_knmi_collection_from_locations():
 
 def test_knmi_collection_from_stns():
     stns = [344, 260]  # Rotterdam en de Bilt
-    oc_knmi = oc.ObsCollection.from_knmi(
+    oc_knmi = hpd.read_knmi(
         stns=stns,
         meteo_vars=["EV24", "RH"],
         starts=["2010", "2010"],
@@ -277,9 +279,7 @@ def test_knmi_collection_from_stns():
 def test_knmi_collection_from_grid():
     # somewhere in Noord-Holland (near Castricum)
     xy = [[104150.0, 510150.0], [104550.0, 510550.0]]
-    oc_knmi = oc.ObsCollection.from_knmi(
-        xy=xy, meteo_vars=["RH"], starts=["2010"], ends=["2015"],
-    )
+    oc_knmi = hpd.read_knmi(xy=xy, meteo_vars=["RH"], starts=["2010"], ends=["2015"],)
     return oc_knmi
 
 
@@ -288,7 +288,7 @@ def test_knmi_collection_from_grid():
 
 def test_waterinfo_from_dir():
     path = "./tests/data/waterinfo-test"
-    wi = oc.ObsCollection.from_waterinfo(path)
+    wi = hpd.read_waterinfo(path)
     return wi
 
 

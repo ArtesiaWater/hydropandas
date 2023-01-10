@@ -107,7 +107,7 @@ def read_wiski_file(
             data = None
 
         # translate some header keys
-        metadata = {"source":'wiski'}
+        metadata = {"source": "wiski"}
         for key, val in header.items():
             if key == "Station Site":
                 metadata["monitoring_well"] = val

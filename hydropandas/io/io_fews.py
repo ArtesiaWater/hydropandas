@@ -465,11 +465,12 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             name=header["monitoring_well"],
             monitoring_well=header["monitoring_well"],
             metadata_available=metadata_available,
-            source='FEWS',
+            source="FEWS",
         )
     else:
-        o = ObsClass(ts, x=x, y=y, meta=header, name=header["monitoring_well"],
-                     source='FEWS')
+        o = ObsClass(
+            ts, x=x, y=y, meta=header, name=header["monitoring_well"], source="FEWS"
+        )
 
     return o, header
 
