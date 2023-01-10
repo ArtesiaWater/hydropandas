@@ -62,7 +62,7 @@ Or for a zipfile:
 import hydropandas as hpd
 dinozip = './tests/data/2019-Dino-test/dino.zip'
 dino_gw = hpd.read_dino(dirname=dinozip,
-					    subdir='Grondwaterstanden_Put',
+			subdir='Grondwaterstanden_Put',
                         suffix='1.csv',
                         ObsClass=hpd.GroundwaterObs,
                         keep_all_obs=False)
