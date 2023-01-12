@@ -27,12 +27,12 @@ class StatsAccessor:
     def obs_periods(self):
         return self._obj.dates_last_obs - self._obj.dates_first_obs
 
-    def obs_per_year(self, col="stand_m_tov_nap"):
+    def obs_per_year(self, col=None):
         pblist = {o.name: o.stats.obs_per_year(col=col) for o in self._obj.obs}
         df = pd.DataFrame.from_dict(pblist)
         return df
 
-    def consecutive_obs_years(self, min_obs=12, col="stand_m_tov_nap"):
+    def consecutive_obs_years(self, min_obs=12, col=None):
         """get the number of consecutive years with more than a minimum of
         observations.
 
@@ -43,8 +43,9 @@ class StatsAccessor:
             per year. If min_obs is a string it is the column name of the
             obs_collection with minimum number of observation per year per
             observation.
-        col : str, optional
-            the column of the obs dataframe to get measurements from.
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
 
         Returns
         -------
@@ -68,7 +69,7 @@ class StatsAccessor:
         df = pd.DataFrame.from_dict(pblist)
         return df
 
-    def mean_in_period(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
+    def mean_in_period(self, tmin=None, tmax=None, col=None):
         """get the mean value of one column (col) in all observations within a
         period defined by tmin and tmax. If both tmin and tmax are None the
         whole period in which there are observations is used.
@@ -79,8 +80,9 @@ class StatsAccessor:
             start of averaging period. The default is None.
         tmax : datetime, optional
             end of averaging period. The default is None.
-        col : str, optional
-            name of the column in the obs object. The default is "stand_m_tov_nap".
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
 
         Returns
         -------
@@ -92,21 +94,30 @@ class StatsAccessor:
         if tmax is None:
             tmax = self._obj.stats.dates_last_obs.max()
 
-        return self._obj.obs.apply(lambda o: o.loc[tmin:tmax, col].mean())
+        def get_mean_obs(o, col=col, tmin=tmin, tmax=tmax):
+            if col is None:
+                col = o._get_first_numeric_col_name()
+            try:
+                return o.loc[tmin:tmax, col].mean()
+            except KeyError:
+                return np.nan
 
-    def get_no_of_observations(
-        self, column_name="stand_m_tov_nap", after_date=None, before_date=None
-    ):
+        return self._obj.obs.apply(get_mean_obs)
+
+    def get_no_of_observations(self, tmin=None, tmax=None, col=None):
         """get number of non-nan values of a column in the observation df.
 
         Parameters
         ----------
-        column_name : str, optional
-            column name of the  observation data you want to count
-        after_date : dt.datetime, optional
-            get the number of observations after this date
-        before_date : dt.datetime, optional
-            get the number of observations before this date
+        tmin : dt.datetime, optional
+            get the number of observations after this date. If None all
+            observations are used.
+        tmax : dt.datetime, optional
+            get the number of observations before this date. If None all
+            observations are used.
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
 
         Returns
         -------
@@ -114,11 +125,11 @@ class StatsAccessor:
         collection.
         """
 
-        def get_num_obs(
-            o, column_name=column_name, after_date=after_date, before_date=before_date
-        ):
+        def get_num_obs(o, col=col, tmin=tmin, tmax=tmax):
+            if col is None:
+                col = o._get_first_numeric_col_name()
             try:
-                return o[after_date:before_date][column_name].dropna().count()
+                return o[tmin:tmax][col].dropna().count()
             except KeyError:
                 return 0
 
@@ -126,7 +137,7 @@ class StatsAccessor:
 
     def get_seasonal_stat(
         self,
-        column_name="stand_m_tov_nap",
+        col=None,
         stat="mean",
         winter_months=(1, 2, 3, 4, 11, 12),
         summer_months=(5, 6, 7, 8, 9, 10),
@@ -135,8 +146,9 @@ class StatsAccessor:
 
         Parameters
         ----------
-        column_name : str, optional
-            column name of the  observation data you want stats for
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
         stat : str, optional
             type of statistics, all statisics from df.describe() are available
         winter_months : tuple of int, optional
@@ -153,9 +165,7 @@ class StatsAccessor:
         df_list = []
         for o in self._obj.obs.values:
             df_list.append(
-                o.stats.get_seasonal_stat(
-                    column_name, stat, winter_months, summer_months
-                )
+                o.stats.get_seasonal_stat(col, stat, winter_months, summer_months)
             )
 
         return pd.concat(df_list)
@@ -182,17 +192,20 @@ class StatsAccessor:
 
         return first_last_obs
 
-    def get_min(self, column_name="stand_m_tov_nap", after_date=None, before_date=None):
+    def get_min(self, tmin=None, tmax=None, col=None):
         """get the minimum value of every obs object.
 
         Parameters
         ----------
-        column_name: str, optional
-            column name for which min is calculated
-        after_date : dt.datetime, optional
-            get the min value after this date
-        before_date : dt.datetime, optional
-            get the min value before this date
+        tmin : dt.datetime, optional
+            get the minimum value after this date. If None all
+            observations are used.
+        tmax : dt.datetime, optional
+            get the minimum value before this date. If None all
+            observations are used.
+        col : str or None, optional
+            the column of the obs dataframe to get minimum from. The
+            first numeric column is used if col is None, by default None.
 
         Returns
         -------
@@ -200,27 +213,30 @@ class StatsAccessor:
         collection.
         """
 
-        def get_min_obs(
-            o, column_name=column_name, after_date=after_date, before_date=before_date
-        ):
+        def get_min_obs(o, col=col, tmin=tmin, tmax=tmax):
+            if col is None:
+                col = o._get_first_numeric_col_name()
             try:
-                return o[after_date:before_date][column_name].dropna().min()
+                return o[tmin:tmax][col].dropna().min()
             except KeyError:
                 return np.nan
 
         return self._obj.obs.apply(get_min_obs)
 
-    def get_max(self, column_name="stand_m_tov_nap", after_date=None, before_date=None):
+    def get_max(self, tmin=None, tmax=None, col=None):
         """get the maximum value of every obs object.
 
         Parameters
         ----------
-        column_name: str, optional
-            column name for which max is calculated
-        after_date : dt.datetime, optional
-            get the max value after this date
-        before_date : dt.datetime, optional
-            get the max value before this date
+        tmin : dt.datetime, optional
+            get the maximum value after this date. If None all
+            observations are used.
+        tmax : dt.datetime, optional
+            get the maximum value before this date. If None all
+            observations are used.
+        col : str or None, optional
+            the column of the obs dataframe to get maximum from. The
+            first numeric column is used if col is None, by default None.
 
         Returns
         -------
@@ -228,11 +244,11 @@ class StatsAccessor:
         collection.
         """
 
-        def get_max_obs(
-            o, column_name=column_name, after_date=after_date, before_date=before_date
-        ):
+        def get_max_obs(o, tmin=tmin, tmax=tmax, col=col):
+            if col is None:
+                col = o._get_first_numeric_col_name()
             try:
-                return o[after_date:before_date][column_name].dropna().max()
+                return o[tmin:tmax][col].dropna().max()
             except KeyError:
                 return np.nan
 
@@ -246,7 +262,7 @@ class StatsAccessorObs:
 
     def get_seasonal_stat(
         self,
-        column_name="stand_m_tov_nap",
+        col=None,
         stat="mean",
         winter_months=(1, 2, 3, 4, 11, 12),
         summer_months=(5, 6, 7, 8, 9, 10),
@@ -255,8 +271,9 @@ class StatsAccessorObs:
 
         Parameters
         ----------
-        column_name : str, optional
-            column name of the  observation data you want stats for
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
         stat : str, optional
             type of statistics, all statisics from df.describe() are available
         winter_months : tuple of int, optional
@@ -279,35 +296,61 @@ class StatsAccessorObs:
                     "summer_{}".format(stat): [np.nan],
                 },
             )
-        else:
-            winter_stat = (
-                self._obj.loc[self._obj.index.month.isin(winter_months)]
-                .describe()
-                .loc[stat, column_name]
-            )
-            summer_stat = (
-                self._obj.loc[self._obj.index.month.isin(summer_months)]
-                .describe()
-                .loc[stat, column_name]
-            )
-            df = pd.DataFrame(
-                index=[self._obj.name],
-                data={
-                    "winter_{}".format(stat): [winter_stat],
-                    "summer_{}".format(stat): [summer_stat],
-                },
-            )
+            return df
+
+        if col is None:
+            col = self._obj._get_first_numeric_col_name()
+
+        winter_stat = (
+            self._obj.loc[self._obj.index.month.isin(winter_months)]
+            .describe()
+            .loc[stat, col]
+        )
+        summer_stat = (
+            self._obj.loc[self._obj.index.month.isin(summer_months)]
+            .describe()
+            .loc[stat, col]
+        )
+        df = pd.DataFrame(
+            index=[self._obj.name],
+            data={
+                "winter_{}".format(stat): [winter_stat],
+                "summer_{}".format(stat): [summer_stat],
+            },
+        )
 
         return df
 
-    def obs_per_year(self, col):
+    def obs_per_year(self, col=None):
+        """get number of observations per year 
+        
+        Parameters
+        ----------
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
         if self._obj.empty:
             return pd.Series(dtype=float)
-        else:
-            return self._obj.groupby(self._obj.index.year).count()[col]
 
-    def consecutive_obs_years(self, col, min_obs=12):
+        if col is None:
+            col = self._obj._get_first_numeric_col_name()
+
+        return self._obj.groupby(self._obj.index.year).count()[col]
+
+    def consecutive_obs_years(self, col=None, min_obs=12):
+
+        if col is None:
+            col = self._obj._get_first_numeric_col_name()
+
         obs_per_year = self._obj.stats.obs_per_year(col=col)
+
         return consecutive_obs_years(obs_per_year, min_obs=min_obs)
 
 

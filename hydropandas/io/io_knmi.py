@@ -290,7 +290,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                     URL_DAILY_NEERSLAG, 550, "RD", start=start, end=end, inseason=False
                 )
             except (RuntimeError, requests.ConnectionError):
-                logger.info("KNMI API failed, switching to non-API method")
+                logger.warning("KNMI API failed, switching to non-API method")
                 knmi_df, _ = get_knmi_daily_rainfall_url(
                     550, "DE-BILT", "RD", start, end, inseason=False
                 )
@@ -310,7 +310,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                     inseason=False,
                 )
             except (RuntimeError, requests.ConnectionError):
-                logger.info("KNMI API failed, switching to non-API method")
+                logger.warning("KNMI API failed, switching to non-API method")
                 knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
         else:
             knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
@@ -620,6 +620,7 @@ def get_knmi_daily_rainfall_url(
                 df.loc[:, meteo_var] = df[meteo_var].astype(float)
 
         df, variables = _transform_variables(df, variables)
+        variables["unit"] = "m"
 
     return df.loc[start:end, [meteo_var]], variables
 
@@ -721,7 +722,6 @@ def _transform_variables(df, variables):
 
             df[key] = df[key] * 0.001
             value = value.replace(" millimeters", " m")
-
         if "08.00 UTC" in value:
             logger.debug(f"transform {key}, {value} from UTC to UTC+1")
 
@@ -762,6 +762,7 @@ def read_knmi_daily_rainfall(f, meteo_var):
             df.loc[:, meteo_var] = df[meteo_var].astype(float)
 
     df, variables = _transform_variables(df, variables)
+    variables["unit"] = "m"
 
     return df, variables
 
@@ -943,6 +944,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
                 df = df.loc[start:end, [meteo_var]]
                 df = df.dropna()
                 df, variables = _transform_variables(df, variables)
+                variables["unit"] = ""
                 break
 
             line = f.readline()
@@ -971,6 +973,7 @@ def read_knmi_daily_meteo(f):
     df.index = df.index + pd.to_timedelta(1, unit="h")
 
     df, variables = _transform_variables(df, variables)
+    variables["unit"] = ""
 
     return df, variables, stations
 
@@ -1019,6 +1022,7 @@ def read_knmi_hourly(f):
     df = df.drop(["YYYYMMDD", "H"], axis=1)
 
     df, variables = _transform_variables(df, variables)
+    variables["unit"] = ""
 
     return df, variables
 
@@ -1897,6 +1901,8 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
             "Provide valid argument evaporation type \
                          'hargreaves', 'makkink' or 'penman'"
         )
+
+    meta["unit"] = "m"
 
     return et, meta
 

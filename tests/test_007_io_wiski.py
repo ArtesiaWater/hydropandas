@@ -76,6 +76,5 @@ def test_rijnenijssel_wiski_format():
         index_col=[0],
         infer_datetime_format=True,
         tz_localize=False,
-        to_mnap=False,
     )
     return o

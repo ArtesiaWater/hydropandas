@@ -280,8 +280,7 @@ def measurements_from_gld(
 
     # to dataframe
     df = pd.DataFrame(
-        index=pd.to_datetime(times),
-        data={"stand_m_tov_nap": values, "qualifier": qualifiers},
+        index=pd.to_datetime(times), data={"values": values, "qualifier": qualifiers},
     )
 
     # wintertime
@@ -300,7 +299,7 @@ def measurements_from_gld(
 
     df = df.sort_index()
 
-    # add metedata from gmw
+    # add metadata from gmw
     meta.update(get_metadata_from_gmw(meta["monitoring_well"], meta["tube_nr"]))
 
     return df, meta
@@ -455,6 +454,7 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     mv = vert_pos.find("gmwcommon:groundLevelPosition", ns)
     datum = vert_pos.find("gmwcommon:verticalDatum", ns)
     if datum.text == "NAP" and mv.attrib["uom"] == "m":
+        meta["unit"] = "m NAP"
         meta["ground_level"] = float(mv.text)
     else:
         raise ValueError("invalid ground_level datum or unit")

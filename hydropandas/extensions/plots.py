@@ -293,7 +293,7 @@ class ObsPlots:
     def interactive_plot(
         self,
         savedir=None,
-        plot_columns=("stand_m_tov_nap",),
+        cols=(None,),
         markers=("line",),
         p=None,
         plot_legend_names=("",),
@@ -302,7 +302,7 @@ class ObsPlots:
         tmax=None,
         hoover_names=("Peil",),
         hoover_date_format="%Y-%m-%d",
-        ylabel="m NAP",
+        ylabel=None,
         plot_colors=("blue",),
         add_screen_to_legend=False,
         return_filename=False,
@@ -317,8 +317,9 @@ class ObsPlots:
         ----------
         savedir : str, optional
             directory used for the folium map and bokeh plots
-        plot_columns : list of str, optional
-            name of the column in the obs df that will be plotted with bokeh
+        cols : tuple of str or None, optional
+            the columns of the observation to plot. The first numeric column
+            is used if cols is None, by default None.
         markers : list of str, optional
             type of markers that can be used for plot, 'line' and 'circle' are
             supported
@@ -333,12 +334,13 @@ class ObsPlots:
         tmax : dt.datetime, optional
             end date for timeseries plot
         hoover_names : list of str, optional
-            names will be displayed together with the plot_column value
+            names will be displayed together with the cols values
             when hoovering over plot
         hoover_date_format : str, optional
             date format to use when hoovering over a plot
-        ylabel : str, optional
-            label on the y-axis
+        ylabel : str or None, optional
+            label on the y-axis. If None the unit attribute of the observation
+            is used.
         plot_colors : list of str, optional
             plot_colors used for the plots
         add_screen_to_legend : boolean, optional
@@ -358,10 +360,15 @@ class ObsPlots:
         from bokeh.plotting import save
         from bokeh.resources import CDN
 
+        cols = list(cols)
+        for i, col in enumerate(cols):
+            if col is None:
+                cols[i] = self._obj._get_first_numeric_col_name()
+
         # create plot dataframe
         plot_df = self._obj[tmin:tmax].copy()
         plot_df["date"] = plot_df.index.strftime(hoover_date_format)
-        if plot_df.empty or plot_df[list(plot_columns)].isna().all().all():
+        if plot_df.empty or plot_df[cols].isna().all().all():
             raise ValueError(
                 "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
             )
@@ -371,6 +378,8 @@ class ObsPlots:
             p = figure(
                 plot_width=600, plot_height=400, x_axis_type="datetime", title=""
             )
+            if ylabel is None:
+                ylabel = self._obj.unit
             p.yaxis.axis_label = ylabel
 
         # get x axis
@@ -379,8 +388,8 @@ class ObsPlots:
             xcol = "index"
 
         # get color
-        if len(plot_colors) < len(plot_columns):
-            plot_colors = list(plot_colors) * len(plot_columns)
+        if len(plot_colors) < len(cols):
+            plot_colors = list(plot_colors) * len(cols)
 
         # get base for hoover tooltips
         plots = []
@@ -388,7 +397,7 @@ class ObsPlots:
         tooltips.append(("date", "@date"))
 
         # plot multiple columns
-        for i, column in enumerate(plot_columns):
+        for i, column in enumerate(cols):
             # legend name
             if add_screen_to_legend:
                 lname = "{} {} (NAP {:.2f} - {:.2f})".format(

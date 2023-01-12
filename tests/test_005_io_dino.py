@@ -59,11 +59,3 @@ def test_dino_metadata3():
     assert not meta["metadata_available"]
 
     return meta
-
-
-def test_get_dino_locations():
-    bbox = [130988.58668351, 386465.80657847, 135922.01739107, 391922.4284911]
-
-    gdf = io_dino.get_dino_locations(bbox=bbox, layer="grondwatermonitoring")
-
-    return gdf

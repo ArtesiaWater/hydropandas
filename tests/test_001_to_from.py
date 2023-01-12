@@ -102,10 +102,9 @@ def test_obscollection_dinozip_gw_keep_all_obs():
 def test_obscollection_dinozip_wl():
     # surface water
     dino_ps = hpd.read_dino(
-        dirname=dinozip, ObsClass=hpd.WaterlvlObs, subdir="Peilschaal", 
-        suffix=".csv"
+        dirname=dinozip, ObsClass=hpd.WaterlvlObs, subdir="Peilschaal", suffix=".csv"
     )
-    
+
     return dino_ps
 
 
@@ -118,13 +117,6 @@ def test_obscollection_dinozip_gwq():
         suffix=".txt",
     )
     return dino_gwq
-
-
-def test_obscollection_dino_download_bbox_empty():
-    # download DINO from bbox
-    bbox = [88596.63500000164, 407224.8449999988, 89623.4149999991, 407804.27800000086]
-    dino_gw_bbox = hpd.read_dino(bbox=bbox, ObsClass=hpd.GroundwaterObs)
-    return dino_gw_bbox
 
 
 # %% FEWS

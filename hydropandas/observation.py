@@ -21,6 +21,7 @@ import pandas as pd
 from _io import StringIO
 from pandas._config import get_option
 from pandas.io.formats import console
+from pandas.api.types import is_numeric_dtype
 
 import logging
 
@@ -28,12 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 class Obs(pd.DataFrame):
-    """class for point observations.
+    """generic class for a time series with measurements at a certain location.
+    
+    Unless specified explicitly the first numeric column in the observation is
+    used for analysis and plotting.
 
     An Obs object is a subclass of a pandas.DataFrame and allows for additional
-    attributes and methods.
-    More information about subclassing pandas DataFrames pandas can be
-    found here:
+    attributes and methods. More information about subclassing pandas
+    DataFrames pandas can be found here:
     http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 
     Parameters
@@ -50,6 +53,8 @@ class Obs(pd.DataFrame):
         filename with data of observation point
     source : str
         source of the observation e.g. BRO or KNMI
+    unit : str
+        unit of the first numerical column in the observation
     """
 
     # temporary properties
@@ -57,7 +62,7 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ["name", "x", "y", "meta", "filename", "source"]
+    _metadata = ["name", "x", "y", "meta", "filename", "source", "unit"]
 
     def __init__(self, *args, **kwargs):
         """constructor of Obs class.
@@ -72,6 +77,7 @@ class Obs(pd.DataFrame):
         self.meta = kwargs.pop("meta", {})
         self.filename = kwargs.pop("filename", "")
         self.source = kwargs.pop("source", "")
+        self.unit = kwargs.pop("unit", "")
 
         super(Obs, self).__init__(*args, **kwargs)
 
@@ -117,6 +123,24 @@ class Obs(pd.DataFrame):
     @property
     def _constructor(self):
         return Obs
+
+    def _get_first_numeric_col_name(self):
+        """get the first numeric column name of the observations
+
+        Returns
+        -------
+        col : str or int
+            column name.
+
+        """
+        if self.empty:
+            return None
+
+        for col in self.columns:
+            if is_numeric_dtype(self[col]):
+                break
+
+        return col
 
     def copy(self, deep=True):
         """create a copy of the observation.
@@ -440,10 +464,6 @@ class GroundwaterObs(Obs):
         *args must be input for the pandas.DataFrame constructor,
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
-
-        if the pandas.DataFrame has a column 'stand_m_tov_nap' a lot of
-        plotting and other methods will work automatically without changing
-        the default arguments.
         """
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
@@ -516,6 +536,8 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
             screen_bottom=meta.pop("screen_bottom"),
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
@@ -529,8 +551,6 @@ class GroundwaterObs(Obs):
     def from_dino(
         cls,
         fname=None,
-        location=None,
-        tube_nr=1.0,
         tmin="1900-01-01",
         tmax="2040-01-01",
         split_cluster=True,
@@ -560,111 +580,10 @@ class GroundwaterObs(Obs):
         """
         from .io import io_dino
 
-        if fname is not None:
-            # read dino csv file
-            measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
+        # read dino csv file
+        measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
 
-            return cls(measurements, meta=meta, **meta)
-
-        elif location is not None:
-            measurements, meta = io_dino.download_dino_groundwater(
-                location, tube_nr, tmin, tmax, split_cluster, **kwargs
-            )
-
-            if meta["metadata_available"]:
-                return cls(
-                    measurements,
-                    meta=meta,
-                    x=meta.pop("x"),
-                    y=meta.pop("y"),
-                    screen_bottom=meta.pop("screen_bottom"),
-                    screen_top=meta.pop("screen_top"),
-                    name=meta.pop("name"),
-                    metadata_available=meta.pop("metadata_available"),
-                    monitoring_well=meta.pop("monitoring_well"),
-                    ground_level=meta.pop("ground_level"),
-                    tube_nr=meta.pop("tube_nr"),
-                )
-            else:
-                return cls(measurements, meta=meta)
-        else:
-            raise ValueError("specify fname or location to obtain groundwater heads")
-
-    @classmethod
-    def from_dino_server(
-        cls, location, tube_nr=1.0, tmin="1900-01-01", tmax="2040-01-01", **kwargs
-    ):
-        """download dino data from the server.
-
-        Parameters
-        ----------
-        location : str
-            location of the peilbuis, i.e. B57F0077
-        tube_nr : float
-            filter_nr of the peilbuis, i.e. 1.0
-        tmin : str
-            start date in format YYYY-MM-DD
-        tmax : str
-            end date in format YYYY-MM-DD
-        kwargs : key-word arguments
-            these arguments are passed to dino.findMeetreeks functie
-        """
-        warnings.warning(
-            "this method will be removed in future versions, use from_dino instead",
-            DeprecationWarning,
-        )
-
-        from .io import io_dino
-
-        measurements, meta = io_dino.download_dino_groundwater(
-            location, tube_nr, tmin, tmax, **kwargs
-        )
-
-        if meta["metadata_available"]:
-            return cls(
-                measurements,
-                meta=meta,
-                x=meta.pop("x"),
-                y=meta.pop("y"),
-                screen_bottom=meta.pop("screen_bottom"),
-                screen_top=meta.pop("screen_top"),
-                name=meta.pop("name"),
-                monitoring_well=meta.pop("monitoring_well"),
-                ground_level=meta.pop("ground_level"),
-                tube_nr=meta.pop("tube_nr"),
-            )
-        else:
-            return cls(measurements, meta=meta)
-
-    @classmethod
-    def from_dino_file(cls, fname=None, **kwargs):
-        """read a dino csv file.
-
-        Parameters
-        ----------
-        name : str, optional
-            name of the peilbuis, i.e. B57F0077
-        fname : str, optional
-            dino csv filename
-        kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_csv
-        """
-        warnings.warning(
-            "this method will be removed in future versions, use from_dino instead",
-            DeprecationWarning,
-        )
-
-        from .io import io_dino
-
-        if fname is not None:
-            # read dino csv file
-            measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
-
-            return cls(measurements, meta=meta, **meta)
-        else:
-            raise ValueError(
-                "specify either the name or the filename of the measurement point"
-            )
+        return cls(measurements, meta=meta, **meta)
 
     @classmethod
     def from_artdino_file(cls, fname=None, **kwargs):
@@ -672,8 +591,6 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        name : str, optional
-            name of the peilbuis, i.e. B57F0077
         fname : str, optional
             dino csv filename
         kwargs : key-word arguments
@@ -681,19 +598,14 @@ class GroundwaterObs(Obs):
         """
         from .io import io_dino
 
-        if fname is not None:
-            # read dino csv file
-            measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
+        # read artdino csv file
+        measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
 
-            return cls(measurements, meta=meta, **meta)
-        else:
-            raise ValueError(
-                "specify either the name or the filename of the " "measurement point!"
-            )
+        return cls(measurements, meta=meta, **meta)
 
     @classmethod
     def from_wiski(cls, fname, **kwargs):
-        """[summary]
+        """ read wiski file
 
         Parameters
         ----------
@@ -1027,6 +939,7 @@ class MeteoObs(Obs):
             y=meta["y"],
             name=meta["name"],
             source=meta["source"],
+            unit=meta["unit"],
             meteo_var=meteo_var,
         )
 
@@ -1103,6 +1016,7 @@ class MeteoObs(Obs):
             y=meta["y"],
             name=meta["name"],
             source=meta["source"],
+            unit=meta["unit"],
             meteo_var=meteo_var,
         )
 
@@ -1287,6 +1201,7 @@ class MeteoObs(Obs):
             y=meta["y"],
             name=meta["name"],
             source=meta["source"],
+            unit=meta["unit"],
             meteo_var=meteo_var,
         )
 
@@ -1449,6 +1364,8 @@ class EvaporationObs(MeteoObs):
                 x=meta["x"],
                 y=meta["y"],
                 name=meta["name"],
+                source=meta["source"],
+                unit=meta["unit"],
                 meteo_var=et_type,
             )
 
@@ -1545,6 +1462,8 @@ class EvaporationObs(MeteoObs):
             y=meta["y"],
             name=meta["name"],
             meteo_var=et_type,
+            source=meta["source"],
+            unit=meta["unit"],
         )
 
 

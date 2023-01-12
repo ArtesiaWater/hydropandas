@@ -8,7 +8,7 @@ from .obs_collection import (
     read_menyanthes,
     read_modflow,
     read_wiski,
-    read_waterinfo
+    read_waterinfo,
 )
 from .observation import (
     Obs,

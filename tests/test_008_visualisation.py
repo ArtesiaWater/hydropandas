@@ -13,7 +13,7 @@ def test_interactive_plot():
     gw = ttf.test_observation_gw()
     gw.plots.interactive_plot(
         savedir=plot_dir,
-        plot_columns=("stand_m_tov_nap",),
+        cols=("stand_m_tov_nap",),
         hoover_date_format="{%F}",
         add_screen_to_legend=True,
     )
@@ -25,7 +25,7 @@ def test_obscollection_dino_to_imap():
     dino_gw.geo.set_lat_lon()
     dino_gw.plots.interactive_map(
         plot_dir,
-        plot_columns=("stand_m_tov_nap",),
+        cols=("stand_m_tov_nap",),
         fname="imap.html",
         legend_name="grondwater DINO",
         add_screen_to_legend=True,

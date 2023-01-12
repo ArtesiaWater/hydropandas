@@ -137,9 +137,6 @@ def read_dino(
 
     oc = ObsCollection.from_dino(
         dirname=dirname,
-        extent=extent,
-        bbox=bbox,
-        locations=locations,
         ObsClass=ObsClass,
         subdir=subdir,
         suffix=suffix,
@@ -162,7 +159,6 @@ def read_fews(
     translate_dic=None,
     filterdict=None,
     locations=None,
-    to_mnap=True,
     remove_nan=True,
     low_memory=True,
     unpackdir=None,
@@ -197,9 +193,6 @@ def read_fews(
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
@@ -224,7 +217,6 @@ def read_fews(
         translate_dic=translate_dic,
         filterdict=filterdict,
         locations=locations,
-        to_mnap=to_mnap,
         remove_nan=remove_nan,
         low_memory=low_memory,
         unpackdir=unpackdir,
@@ -548,11 +540,10 @@ def read_modflow(
 
     return oc
 
-def read_waterinfo(file_or_dir, 
-                   name="", 
-                   ObsClass=obs.WaterlvlObs, 
-                   progressbar=True, 
-                   **kwargs):
+
+def read_waterinfo(
+    file_or_dir, name="", ObsClass=obs.WaterlvlObs, progressbar=True, **kwargs
+):
     """Read waterinfo file or directory.
 
     Parameters
@@ -571,22 +562,27 @@ def read_waterinfo(file_or_dir,
     ObsCollection
         ObsCollection containing data
     """
-    oc = ObsCollection.from_waterinfo(file_or_dir=file_or_dir, 
-                                      name=name, 
-                                      ObsClass=ObsClass, 
-                                      progressbar=progressbar, 
-                                      **kwargs)
-    
+    oc = ObsCollection.from_waterinfo(
+        file_or_dir=file_or_dir,
+        name=name,
+        ObsClass=ObsClass,
+        progressbar=progressbar,
+        **kwargs,
+    )
+
     return oc
 
-def read_wiski(dirname,
-               ObsClass=obs.GroundwaterObs,
-               suffix=".csv",
-               unpackdir=None,
-               force_unpack=False,
-               preserve_datetime=False,
-               keep_all_obs=True,
-               **kwargs):
+
+def read_wiski(
+    dirname,
+    ObsClass=obs.GroundwaterObs,
+    suffix=".csv",
+    unpackdir=None,
+    force_unpack=False,
+    preserve_datetime=False,
+    keep_all_obs=True,
+    **kwargs,
+):
     """
 
     Parameters
@@ -615,16 +611,19 @@ def read_wiski(dirname,
         ObsCollection containing observation data
     """
 
-    oc = ObsCollection.from_wiski(dirname=dirname,
-                                  ObsClass=ObsClass,
-                                  suffix=suffix,
-                                  unpackdir=unpackdir,
-                                  force_unpack=force_unpack,
-                                  preserve_datetime=preserve_datetime,
-                                  keep_all_obs=keep_all_obs,
-                                  **kwargs)
-    
+    oc = ObsCollection.from_wiski(
+        dirname=dirname,
+        ObsClass=ObsClass,
+        suffix=suffix,
+        unpackdir=unpackdir,
+        force_unpack=force_unpack,
+        preserve_datetime=preserve_datetime,
+        keep_all_obs=keep_all_obs,
+        **kwargs,
+    )
+
     return oc
+
 
 class ObsCollection(pd.DataFrame):
     """class for a collection of point observations.
@@ -1042,9 +1041,6 @@ class ObsCollection(pd.DataFrame):
     def from_dino(
         cls,
         dirname=None,
-        extent=None,
-        bbox=None,
-        locations=None,
         ObsClass=obs.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
@@ -1089,199 +1085,6 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             the name of the observation collection
         kwargs:
-            kwargs are passed to the io_dino.download_dino_within_extent() or
-            the io_dino.read_dino_dir() function
-
-        Returns
-        -------
-        cls(obs_df) : ObsCollection
-            collection of multiple point observations
-        """
-        from .io.io_dino import (
-            read_dino_dir,
-            download_dino_within_extent,
-            download_dino_groundwater_bulk,
-        )
-
-        if dirname is not None:
-            # read dino directory
-            if name is None:
-                name = subdir
-
-            meta = {
-                "dirname": dirname,
-                "type": ObsClass,
-                "suffix": suffix,
-                "unpackdir": unpackdir,
-                "force_unpack": force_unpack,
-                "preserve_datetime": preserve_datetime,
-                "keep_all_obs": keep_all_obs,
-            }
-
-            obs_list = read_dino_dir(
-                dirname,
-                ObsClass,
-                subdir,
-                suffix,
-                unpackdir,
-                force_unpack,
-                preserve_datetime,
-                keep_all_obs,
-                **kwargs,
-            )
-
-        elif extent is not None or bbox is not None:
-            # read dino data within extent
-            if ObsClass == obs.GroundwaterObs:
-                layer = "grondwatermonitoring"
-            else:
-                raise NotImplementedError(
-                    "cannot download {} from Dino".format(ObsClass)
-                )
-
-            if name is None:
-                name = "{} from DINO".format(layer)
-
-            meta = kwargs.copy()
-            meta.update(
-                {
-                    "extent": extent,
-                    "bbox": bbox,
-                    "layer": layer,
-                    "keep_all_obs": keep_all_obs,
-                }
-            )
-
-            obs_list = download_dino_within_extent(
-                extent=extent,
-                bbox=bbox,
-                ObsClass=ObsClass,
-                layer=layer,
-                keep_all_obs=keep_all_obs,
-                **kwargs,
-            )
-
-        elif locations is not None:
-            name = "DINO"
-
-            meta = {"dirname": dirname, "type": ObsClass}
-
-            obs_list = download_dino_groundwater_bulk(
-                locations, ObsClass=ObsClass, **kwargs
-            )
-        else:
-            raise ValueError("No data source provided!")
-
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name, meta=meta)
-
-    @classmethod
-    def from_dino_server(
-        cls,
-        extent=None,
-        bbox=None,
-        ObsClass=obs.GroundwaterObs,
-        name=None,
-        keep_all_obs=True,
-        **kwargs,
-    ):
-        """Read dino data from a server.
-
-        Parameters
-        ----------
-        extent : list, tuple or numpy-array (user must specify extent or bbox)
-            The extent, in RD-coordinates, for which you want to retreive locations
-            [xmin, xmax, ymin, ymax]
-        bbox : list, tuple or numpy-array (user must specify extent or bbox)
-            The bounding box, in RD-coordinates, for which you want to retreive locations
-            [xmin, ymin, xmax, ymax]
-        ObsClass : type
-            class of the observations, so far only GroundwaterObs is supported
-        name : str, optional
-            the name of the observation collection
-        keep_all_obs : boolean, optional
-            add all observation points to the collection, even without data or
-            metadata
-        kwargs:
-            kwargs are passed to the io_dino.download_dino_within_extent() function
-
-        Returns
-        -------
-        cls(obs_df) : ObsCollection
-            collection of multiple point observations
-        """
-
-        warnings.warn(
-            "this method will be removed in future versions," " use from_bro instead",
-            DeprecationWarning,
-        )
-
-        from .io.io_dino import download_dino_within_extent
-
-        if ObsClass == obs.GroundwaterObs:
-            layer = "grondwatermonitoring"
-        else:
-            raise NotImplementedError("cannot download {} from Dino".format(ObsClass))
-
-        if name is None:
-            name = "{} from DINO".format(layer)
-
-        meta = kwargs.copy()
-
-        obs_list = download_dino_within_extent(
-            extent=extent,
-            bbox=bbox,
-            ObsClass=ObsClass,
-            layer=layer,
-            keep_all_obs=keep_all_obs,
-            **kwargs,
-        )
-
-        obs_df = util._obslist_to_frame(obs_list)
-
-        if bbox is None:
-            bbox = [extent[0], extent[2], extent[1], extent[3]]
-
-        return cls(obs_df, name=name, meta=meta)
-
-    @classmethod
-    def from_dino_dir(
-        cls,
-        dirname=None,
-        ObsClass=obs.GroundwaterObs,
-        subdir="Grondwaterstanden_Put",
-        suffix="1.csv",
-        unpackdir=None,
-        force_unpack=False,
-        preserve_datetime=False,
-        keep_all_obs=True,
-        name=None,
-        **kwargs,
-    ):
-        """Read a dino directory.
-
-        Parameters
-        ----------
-        dirname : str, optional
-            directory name, can be a .zip file or the parent directory of subdir
-        ObsClass : type
-            class of the observations, e.g. GroundwaterObs or WaterlvlObs
-        subdir : str
-            subdirectory of dirname with data files
-        suffix : str
-            suffix of files in subdir that will be read
-        unpackdir : str
-            destination directory of the unzipped file
-        force_unpack : boolean, optional
-            force unpack if dst already exists
-        preserve_datetime : boolean, optional
-            use date of the zipfile for the destination file
-        keep_all_obs : boolean, optional
-            add all observation points to the collection, even without data or
-            metadata
-        name : str, optional
-            the name of the observation collection
-        kwargs:
             kwargs are passed to the io_dino.read_dino_dir() function
 
         Returns
@@ -1289,14 +1092,9 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-
-        warnings.warn(
-            "this method will be removed in future " "versions, use from_dino instead",
-            DeprecationWarning,
-        )
-
         from .io.io_dino import read_dino_dir
 
+        # read dino directory
         if name is None:
             name = subdir
 
@@ -1323,7 +1121,6 @@ class ObsCollection(pd.DataFrame):
         )
 
         obs_df = util._obslist_to_frame(obs_list)
-
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
@@ -1415,7 +1212,6 @@ class ObsCollection(pd.DataFrame):
         translate_dic=None,
         filterdict=None,
         locations=None,
-        to_mnap=True,
         remove_nan=True,
         low_memory=True,
         unpackdir=None,
@@ -1450,9 +1246,6 @@ class ObsCollection(pd.DataFrame):
         low_memory : bool, optional
             whether to use xml-parsing method with lower memory footprint,
             default is True
-        to_mnap : boolean, optional
-            if True a column with 'stand_m_tov_nap' is added to the dataframe,
-            only used if low_memory=False
         remove_nan : boolean, optional
             remove nan values from measurements, flag information about the
             nan values is also lost, only used if low_memory=False
@@ -1493,7 +1286,6 @@ class ObsCollection(pd.DataFrame):
                 translate_dic=translate_dic,
                 filterdict=filterdict,
                 locations=locations,
-                to_mnap=to_mnap,
                 remove_nan=remove_nan,
                 low_memory=low_memory,
                 **kwargs,
@@ -1510,7 +1302,6 @@ class ObsCollection(pd.DataFrame):
                 filterdict=filterdict,
                 locationIds=locations,
                 low_memory=low_memory,
-                to_mnap=to_mnap,
                 remove_nan=remove_nan,
                 **kwargs,
             )
@@ -2017,7 +1808,7 @@ class ObsCollection(pd.DataFrame):
         self,
         pstore=None,
         pstore_name="",
-        obs_column="stand_m_tov_nap",
+        col=None,
         kind="oseries",
         add_metadata=True,
         conn=None,
@@ -2031,8 +1822,9 @@ class ObsCollection(pd.DataFrame):
             Existing pastastore, if None a new pastastore is created
         pstore_name : str, optional
             Name of the pastastore only used if pstore is None
-        obs_column : str, optional
-            Name of the column in the Obs dataframe to be used
+        col : str, optional
+            Name of the column in the Obs dataframe to be used. If None the
+            first numeric column in the Obs Dataframe is used.
         kind : str, optional
             The kind of series that is added to the pastastore
         add_metadata : boolean, optional
@@ -2056,7 +1848,7 @@ class ObsCollection(pd.DataFrame):
             pstore_name,
             add_metadata=add_metadata,
             kind=kind,
-            obs_column=obs_column,
+            col=col,
             conn=conn,
             overwrite=overwrite,
         )
@@ -2113,9 +1905,34 @@ class ObsCollection(pd.DataFrame):
             o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
         ]
 
-    def get_series(self, tmin=None, tmax=None, col="stand_m_tov_nap"):
+    def get_series(self, tmin=None, tmax=None, col=None):
+        """        
+
+        Parameters
+        ----------
+        tmin : datetime, optional
+            start time for series. The default is None.
+        tmax : datetime, optional
+            end time for series. The default is None.
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
+
+        Returns
+        -------
+        series of Series
+            series of a series of observations within a time frame.
+
+        """
+
         if tmin is None:
-            tmin = self.dates_first_obs.min()
+            tmin = self.stats.dates_first_obs.min()
         if tmax is None:
-            tmax = self.dates_last_obs.max()
+            tmax = self.stats.dates_last_obs.max()
+
+        def get_s(o, tmin=tmin, tmax=tmax, col=col):
+            if col is None:
+                col = o._get_first_numeric_col_name()
+            return o.loc[tmin:tmax, col]
+
         return self.obs.apply(lambda o: o.loc[tmin:tmax, col])

@@ -38,6 +38,8 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             "name",
             "x",
             "y",
+            "source",
+            "unit",
             "monitoring_well",
             "tube_nr",
             "metadata_available",
@@ -46,17 +48,18 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             "screen_top",
             "screen_bottom",
         ]
-
+        unit = "m NAP"
     elif ObsClass == WaterlvlObs:
         _rename_dic = {"xcoord": "x", "ycoord": "y", "measpointlev": "tube_top"}
-
-        _keys_o = ["name", "x", "y", "source", "monitoring_well"]
+        _keys_o = ["name", "x", "y", "source", "unit", "monitoring_well"]
+        unit = "m NAP"
     else:
         _rename_dic = {
             "xcoord": "x",
             "ycoord": "y",
         }
-        _keys_o = ["name", "x", "y", "source"]
+        _keys_o = ["name", "x", "y", "source", "unit"]
+        unit = ""
 
     # Check if file is present
     if not (os.path.isfile(fname)):
@@ -75,9 +78,9 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
             metadata["source"] = "Menyanthes"
+            metadata["unit"] = unit
 
-            s = metadata.pop("values")
-            df = DataFrame(s, columns=["stand_m_tov_nap"])
+            df = DataFrame(s=metadata.pop("values"), columns=["values"])
             for key in _rename_dic.keys():
                 if key in metadata.keys():
                     metadata[_rename_dic[key]] = metadata.pop(key)
@@ -96,8 +99,9 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
             metadata["source"] = "Menyanthes"
+            metadata["unit"] = unit
             s = metadata.pop("values")
-            df = DataFrame(s, columns=[stress])
+            df = DataFrame(s, columns=["values"])
             for key in _rename_dic.keys():
                 if key in metadata.keys():
                     metadata[_rename_dic[key]] = metadata.pop(key)
@@ -108,6 +112,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
                 x=metadata["x"],
                 y=metadata["y"],
                 source=metadata["source"],
+                unit=metadata["unit"],
             )
             obs_list.append(o)
 

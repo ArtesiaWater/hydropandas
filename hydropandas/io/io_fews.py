@@ -25,7 +25,6 @@ def read_xml_fname(
     return_df=False,
     tags=("series", "header", "event"),
     skip_errors=True,
-    to_mnap=False,
     remove_nan=False,
     **kwargs,
 ):
@@ -61,9 +60,6 @@ def read_xml_fname(
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
@@ -97,7 +93,6 @@ def read_xml_fname(
             ObsClass,
             translate_dic=translate_dic,
             locationIds=locationIds,
-            to_mnap=to_mnap,
             remove_nan=remove_nan,
         )
 
@@ -281,7 +276,6 @@ def read_xmlstring(
     filterdict=None,
     locationIds=None,
     low_memory=True,
-    to_mnap=False,
     remove_nan=False,
 ):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
@@ -302,9 +296,6 @@ def read_xmlstring(
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
@@ -332,7 +323,6 @@ def read_xmlstring(
             ObsClass,
             translate_dic=translate_dic,
             locationIds=locationIds,
-            to_mnap=to_mnap,
             remove_nan=remove_nan,
         )
 
@@ -340,12 +330,7 @@ def read_xmlstring(
 
 
 def read_xml_root(
-    root,
-    ObsClass,
-    translate_dic=None,
-    locationIds=None,
-    to_mnap=False,
-    remove_nan=False,
+    root, ObsClass, translate_dic=None, locationIds=None, remove_nan=False,
 ):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
@@ -361,8 +346,6 @@ def read_xml_root(
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
@@ -405,8 +388,7 @@ def read_xml_root(
 
             if remove_nan and (not ts.empty):
                 ts.dropna(subset=["value"], inplace=True)
-            if to_mnap and (not ts.empty):
-                ts["stand_m_tov_nap"] = ts["value"]
+                header["unit"] = "m NAP"
 
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             if locationIds is not None:
@@ -581,7 +563,6 @@ def read_xml_filelist(
     locations=None,
     translate_dic=None,
     filterdict=None,
-    to_mnap=False,
     remove_nan=False,
     low_memory=True,
     **kwargs,
@@ -606,9 +587,6 @@ def read_xml_filelist(
         dictionary with tag name to apply filter to as keys, and list of
         accepted names as dictionary values to keep in final result,
         i.e. {"locationId": ["B001", "B002"]}
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
