@@ -80,7 +80,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
             metadata["source"] = "Menyanthes"
             metadata["unit"] = unit
 
-            df = DataFrame(s=metadata.pop("values"), columns=["values"])
+            df = DataFrame(metadata.pop("values"), columns=["values"])
             for key in _rename_dic.keys():
                 if key in metadata.keys():
                     metadata[_rename_dic[key]] = metadata.pop(key)
