@@ -403,6 +403,9 @@ def read_knmi(
         (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
         PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
         was measured
+        P     = Luchtdruk (in 0.1 hPa) herleid tot zeeniveau, op het moment
+        van meten / Air pressure (in 0.1 hPa) reduced to mean sea level, at
+        the time of observation 
         VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
         1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
         56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
@@ -944,6 +947,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=True,
         epsg=28992,
+        ignore_max_obs=False
     ):
         """ get all the observations within an extent or within a
         groundwatermonitoring net.
@@ -970,6 +974,10 @@ class ObsCollection(pd.DataFrame):
             measurements
         epsg : int, optional
             epsg code of the extent. The default is 28992 (RD).
+        ignore_max_obs : bool, optional
+            by default you get a prompt if you want to download over a 1000
+            observations at once. if ignore_max_obs is True you won't get the
+            prompt. The default is False
 
         Returns
         -------
@@ -989,6 +997,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
+                ignore_max_obs=ignore_max_obs
             )
             meta = {}
         elif bro_id is not None:

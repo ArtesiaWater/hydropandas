@@ -1221,6 +1221,7 @@ class EvaporationObs(MeteoObs):
         cls,
         stn,
         et_type="EV24",
+        meteo_var=None,
         startdate=None,
         enddate=None,
         fill_missing_obs=True,
@@ -1239,6 +1240,8 @@ class EvaporationObs(MeteoObs):
             type of evapotranspiration to get from KNMI. Choice between
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
+        meteo_var : None
+            not used in this method.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1478,7 +1481,7 @@ class PrecipitationObs(MeteoObs):
         return PrecipitationObs
 
     @classmethod
-    def from_knmi(cls, stn, stn_type="meteo", **kwargs):
+    def from_knmi(cls, stn, stn_type="meteo", meteo_var=None, **kwargs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for.
 
@@ -1509,6 +1512,8 @@ class PrecipitationObs(MeteoObs):
         stn_type : str, optional
             type of measurements station. Can be 'meteo' or 'precipitation'.
             Default is 'meteo'.
+        meteo_var : None
+            not used.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.

@@ -45,6 +45,19 @@ def test_get_knmi_precip_meteostation_hourly():
     return ts3, meta3
 
 
+def test_get_pressure_hourly():
+
+    # De Bilt meteostation uurlijks
+    ts3, meta3 = io_knmi.get_knmi_timeseries_stn(
+        310,
+        "P",
+        start="2010-1-1",
+        end="2010-1-10",
+        settings={"interval": "hourly", "fill_missing_obs": False},
+    )
+    return ts3, meta3
+
+
 def test_get_knmi_precip_neerslagstation_no_api():
     # De Bilt neerslagstation
     ts4, meta4 = io_knmi.get_knmi_timeseries_stn(

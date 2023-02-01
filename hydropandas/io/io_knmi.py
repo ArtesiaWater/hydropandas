@@ -1430,6 +1430,7 @@ def get_knmi_obslist(
             for stn in _stns:
                 o = ObsClass.from_knmi(
                     stn,
+                    meteo_var=meteo_var,
                     startdate=start,
                     enddate=end,
                     fill_missing_obs=settings["fill_missing_obs"],
@@ -1851,7 +1852,7 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
     """
     if et_type == "EV24":
         et, meta = get_knmi_timeseries_stn(
-            stn, meteo_var="EV24", start=start, end=end, settings=settings
+            stn, meteo_var=et_type, start=start, end=end, settings=settings
         )
     elif et_type == "hargreaves":
         d = {}

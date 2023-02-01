@@ -22,11 +22,19 @@ def test_bro_gmn():
 
 
 def test_bro_extent():
+    extent = (210260, 213550, 459890, 473920)  # extent more than 1000 observations
     extent = (213260, 213550, 473890, 473920)  # extent skip duplicates
     extent = (102395, 103121, 434331, 434750)  # 4 observations within extent
-
+    
     gw = hpd.read_bro(extent=extent, only_metadata=True)
     return gw
+
+
+def test_bro_extent_too_big():
+    extent = (102395, 213550, 334331, 473920)  # to many observations in extent
+    
+    with pytest.raises(RuntimeError):
+        gw = hpd.read_bro(extent=extent, only_metadata=True)
 
 
 # %% DINO
@@ -187,6 +195,18 @@ def test_to_pastastore():
 
     return pstore
 
+#%% Meteo
+
+def test_pressure_obs_from_stn():
+    return hpd.MeteoObs.from_knmi(310, meteo_var='P', interval='hourly',
+                                  fill_missing_obs=False)
+
+def test_pressure_read_knmi():
+    return hpd.read_knmi(stns=(310,), meteo_vars=('P',), 
+                         settings={'interval':'hourly', 
+                                   'fill_missing_obs':False, 
+                                   'inseason':False, 
+                                   'normalize_index':True})
 
 #%% Evaporation
 

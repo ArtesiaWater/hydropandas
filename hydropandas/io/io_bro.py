@@ -4,6 +4,7 @@ https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleverancie
 
 import requests
 import pandas as pd
+import numpy as np
 import xml.etree.ElementTree
 import logging
 import json
@@ -190,9 +191,14 @@ def get_gld_id_from_gmw(bro_id, tube_nr):
 
     for tube in d["monitoringTubeReferences"]:
         if tube["tubeNumber"] == tube_nr:
-            if len(tube["gldReferences"]) != 1:
+            if len(tube["gldReferences"]) == 1:
+                return tube["gldReferences"][0]["broId"]
+            elif len(tube["gldReferences"]) == 0:
+                logger.info(f"no groundwater level dossier for {bro_id} and tube number {tube_nr}")
+                return None
+            else:
                 raise RuntimeError("unexpected number of gld references")
-            return tube["gldReferences"][0]["broId"]
+            
 
 
 def measurements_from_gld(
@@ -455,7 +461,10 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     datum = vert_pos.find("gmwcommon:verticalDatum", ns)
     if datum.text == "NAP" and mv.attrib["uom"] == "m":
         meta["unit"] = "m NAP"
-        meta["ground_level"] = float(mv.text)
+        if mv.text is None:
+            meta["ground_level"] = np.nan
+        else:
+            meta["ground_level"] = float(mv.text)
     else:
         raise ValueError("invalid ground_level datum or unit")
 
@@ -493,6 +502,7 @@ def get_obs_list_from_extent(
     only_metadata=False,
     keep_all_obs=True,
     epsg=28992,
+    ignore_max_obs=False,
 ):
     """ get a list of gmw observations within an extent.
     
@@ -513,6 +523,10 @@ def get_obs_list_from_extent(
         is False.
     epsg : int, optional
         epsg code of the extent. The default is 28992 (RD).
+    ignore_max_obs : bool, optional
+        by default you get a prompt if you want to download over a 1000
+        observations at once. if ignore_max_obs is True you won't get the
+        prompt. The default is False
 
     Raises
     ------
@@ -558,8 +572,16 @@ def get_obs_list_from_extent(
         "gml": "http://www.opengis.net/gml/3.2",
         "brocom": "http://www.broservices.nl/xsd/brocommon/3.0",
     }
+    
+    if tree.find(".//brocom:responseType", ns).text == 'rejection':
+        raise RuntimeError(tree.find(".//brocom:rejectionReason", ns).text)
 
     gmws = tree.findall(".//dsgmw:GMW_C", ns)
+    
+    if len(gmws) > 1000:
+        ans = input(f'You requested to download {len(gmws)} observations, this can take a while. Are you sure you want to continue [Y/n]? ')
+        if ans not in ['Y', 'y','yes','Yes', 'YES']:
+            return []
 
     obs_list = []
     gmw_list = []
