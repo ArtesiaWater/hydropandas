@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class Obs(pd.DataFrame):
     """generic class for a time series with measurements at a certain location.
-    
+
     Unless specified explicitly the first numeric column in the observation is
     used for analysis and plotting.
 
@@ -491,7 +491,7 @@ class GroundwaterObs(Obs):
         only_metadata=False,
     ):
         """download BRO groundwater observations from the server.
-        
+
 
         Parameters
         ----------
@@ -605,7 +605,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_wiski(cls, fname, **kwargs):
-        """ read wiski file
+        """read wiski file
 
         Parameters
         ----------
@@ -1536,7 +1536,7 @@ class PrecipitationObs(MeteoObs):
 
         Returns
         -------
-        PrecipitationObs object with an evaporation time series and attributes
+        PrecipitationObs object with a precipitation time series and attributes
         """
         if stn_type == "meteo":
             meteo_var = "RH"
@@ -1597,7 +1597,7 @@ class PrecipitationObs(MeteoObs):
 
     @classmethod
     def from_obs(cls, obs, stn_type="meteo", **kwargs):
-        """Get a PrecipitationObs object with evaporation measurements from the
+        """Get a PrecipitationObs object with precipitation measurements from the
         the meteo or precipitation station closest to the given observation.
         Uses the x and y coördinates of the observation to obtain the nearest
         KNMI precipitation time series. Uses the start- and enddate of the
