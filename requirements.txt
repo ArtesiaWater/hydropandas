@@ -18,4 +18,5 @@ xarray
 zeep
 nbconvert
 ipykernel
+colorama
 netCDF4==1.5.7
