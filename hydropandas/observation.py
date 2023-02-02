@@ -1288,6 +1288,7 @@ class EvaporationObs(MeteoObs):
             y=meta["y"],
             name=meta["name"],
             source=meta["source"],
+            unit=meta["unit"],
             meteo_var=et_type,
         )
 
