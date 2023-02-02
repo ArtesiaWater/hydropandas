@@ -5,6 +5,7 @@
 """
 
 import os
+import sys
 import tempfile
 import time
 import zipfile
@@ -12,6 +13,9 @@ import logging
 
 import numpy as np
 import pandas as pd
+
+from typing import Dict, Optional
+from colorama import Back, Fore, Style
 import scipy.spatial.qhull as qhull
 from pandas import Timedelta, Timestamp
 
@@ -292,3 +296,54 @@ def show_versions():
     )
 
     return print(msg)
+
+
+class ColoredFormatter(logging.Formatter):
+    """Colored log formatter.
+
+    Taken from
+    https://gist.github.com/joshbode/58fac7ababc700f51e2a9ecdebe563ad
+    """
+
+    def __init__(
+        self, *args, colors: Optional[Dict[str, str]] = None, **kwargs
+    ) -> None:
+        """Initialize the formatter with specified format strings."""
+
+        super().__init__(*args, **kwargs)
+
+        self.colors = colors if colors else {}
+
+    def format(self, record) -> str:
+        """Format the specified record as text."""
+
+        record.color = self.colors.get(record.levelname, "")
+        record.reset = Style.RESET_ALL
+
+        return super().format(record)
+
+
+def get_color_logger(level="INFO"):
+    formatter = ColoredFormatter(
+        "{color}{levelname}:{name}:{message}{reset}",
+        style="{",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        colors={
+            "DEBUG": Fore.CYAN,
+            "INFO": Fore.GREEN,
+            "WARNING": Fore.YELLOW,
+            "ERROR": Fore.RED,
+            "CRITICAL": Fore.RED + Back.WHITE + Style.BRIGHT,
+        },
+    )
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.handlers[:] = []
+    logger.addHandler(handler)
+    logger.setLevel(getattr(logging, level))
+
+    logging.captureWarnings(True)
+    return logger

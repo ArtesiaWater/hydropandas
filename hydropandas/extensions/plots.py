@@ -22,7 +22,7 @@ class CollectionPlots:
         self._obj = oc_obj
 
     def interactive_plots(
-        self, savedir, tmin=None, tmax=None, per_location=True, **kwargs
+        self, savedir, tmin=None, tmax=None, per_monitoring_well=True, **kwargs
     ):
         """Create interactive plots of the observations using bokeh.
 
@@ -34,8 +34,9 @@ class CollectionPlots:
             start date for timeseries plot
         tmax : dt.datetime, optional
             end date for timeseries plot
-        per_location : bool, optional
-            if True plot multiple filters on the same location in one figure
+        per_monitoring_well : bool, optional
+            if True plot multiple tubes at the same monitoring_well in one
+            figure
         **kwargs :
             will be passed to the Obs.to_interactive_plot method, options
             include:
@@ -64,15 +65,17 @@ class CollectionPlots:
             "tan",
         )
 
-        if per_location:
-            plot_names = self._obj.groupby("locatie").count().index
+        if per_monitoring_well:
+            plot_names = self._obj.groupby("monitoring_well").count().index
         else:
             plot_names = self._obj.index
 
         for name in plot_names:
 
-            if per_location:
-                oc = self._obj.loc[self._obj.locatie == name, "obs"].sort_index()
+            if per_monitoring_well:
+                oc = self._obj.loc[
+                    self._obj.monitoring_well == name, "obs"
+                ].sort_index()
             else:
                 oc = self._obj.loc[[name], "obs"]
 
@@ -103,7 +106,7 @@ class CollectionPlots:
         m=None,
         tiles="OpenStreetMap",
         fname=None,
-        per_location=True,
+        per_monitoring_well=True,
         color="blue",
         legend_name=None,
         add_legend=True,
@@ -126,7 +129,7 @@ class CollectionPlots:
           the last one should have add_legend = True to create a correct legend
         - the color of the observation point on the map is now the same color
           as the line of the observation measurements. Also a built-in color
-          cycle is used for different measurements on the same location.
+          cycle is used for different measurements at the same monitoring_well.
 
         Parameters
         ----------
@@ -138,8 +141,9 @@ class CollectionPlots:
             background tiles, default is openstreetmap
         fname : str, optional
             name of the folium map
-        per_location : bool, optional
-            if True plot multiple filters on the same location in one figure
+        per_monitoring_well : bool, optional
+            if True plot multiple tubes at the same monitoring well in one
+            figure
         color : str, optional
             color of the observation points on the map
         legend_name : str, optional
@@ -147,7 +151,7 @@ class CollectionPlots:
         add_legend : boolean, optional
             add a legend to a plot
         map_label : str, optional
-            add a label to the obs locations on the map, this label is
+            add a label to the monitoring wells on the map, this label is
             picked from the meta attribute of the obs points.
         map_label_size : int, optional
             label size of the map_label in pt.
@@ -189,7 +193,7 @@ class CollectionPlots:
         # create interactive bokeh plots
         if create_interactive_plots:
             self._obj.plots.interactive_plots(
-                savedir=plot_dir, per_location=per_location, **kwargs
+                savedir=plot_dir, per_monitoring_well=per_monitoring_well, **kwargs
             )
 
         # check if observation collection has lat and lon values
@@ -214,14 +218,16 @@ class CollectionPlots:
         group_name = '<span style=\\"color: {};\\">{}</span>'.format(color, legend_name)
         group = folium.FeatureGroup(name=group_name)
 
-        if per_location:
-            plot_names = self._obj.groupby("locatie").count().index
+        if per_monitoring_well:
+            plot_names = self._obj.groupby("monitoring_well").count().index
         else:
             plot_names = self._obj.index
 
         for name in plot_names:
-            if per_location:
-                oc = self._obj.loc[self._obj.locatie == name, "obs"].sort_index()
+            if per_monitoring_well:
+                oc = self._obj.loc[
+                    self._obj.monitoring_well == name, "obs"
+                ].sort_index()
                 o = oc.iloc[-1]
                 name = o.name
             else:
@@ -287,7 +293,7 @@ class ObsPlots:
     def interactive_plot(
         self,
         savedir=None,
-        plot_columns=("stand_m_tov_nap",),
+        cols=(None,),
         markers=("line",),
         p=None,
         plot_legend_names=("",),
@@ -296,9 +302,9 @@ class ObsPlots:
         tmax=None,
         hoover_names=("Peil",),
         hoover_date_format="%Y-%m-%d",
-        ylabel="m NAP",
+        ylabel=None,
         plot_colors=("blue",),
-        add_filter_to_legend=False,
+        add_screen_to_legend=False,
         return_filename=False,
     ):
         """Create an interactive plot of the observations using bokeh.
@@ -311,8 +317,9 @@ class ObsPlots:
         ----------
         savedir : str, optional
             directory used for the folium map and bokeh plots
-        plot_columns : list of str, optional
-            name of the column in the obs df that will be plotted with bokeh
+        cols : tuple of str or None, optional
+            the columns of the observation to plot. The first numeric column
+            is used if cols is None, by default None.
         markers : list of str, optional
             type of markers that can be used for plot, 'line' and 'circle' are
             supported
@@ -327,16 +334,17 @@ class ObsPlots:
         tmax : dt.datetime, optional
             end date for timeseries plot
         hoover_names : list of str, optional
-            names will be displayed together with the plot_column value
+            names will be displayed together with the cols values
             when hoovering over plot
         hoover_date_format : str, optional
             date format to use when hoovering over a plot
-        ylabel : str, optional
-            label on the y-axis
+        ylabel : str or None, optional
+            label on the y-axis. If None the unit attribute of the observation
+            is used.
         plot_colors : list of str, optional
             plot_colors used for the plots
-        add_filter_to_legend : boolean, optional
-            if True the attributes bovenkant_filter and onderkant_filter
+        add_screen_to_legend : boolean, optional
+            if True the attributes screen_top and screen_bottom
             are added to the legend name
         return_filename : boolean, optional
             if True filename will be returned
@@ -352,10 +360,15 @@ class ObsPlots:
         from bokeh.plotting import save
         from bokeh.resources import CDN
 
+        cols = list(cols)
+        for i, col in enumerate(cols):
+            if col is None:
+                cols[i] = self._obj._get_first_numeric_col_name()
+
         # create plot dataframe
         plot_df = self._obj[tmin:tmax].copy()
         plot_df["date"] = plot_df.index.strftime(hoover_date_format)
-        if plot_df.empty or plot_df[list(plot_columns)].isna().all().all():
+        if plot_df.empty or plot_df[cols].isna().all().all():
             raise ValueError(
                 "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
             )
@@ -365,6 +378,8 @@ class ObsPlots:
             p = figure(
                 plot_width=600, plot_height=400, x_axis_type="datetime", title=""
             )
+            if ylabel is None:
+                ylabel = self._obj.unit
             p.yaxis.axis_label = ylabel
 
         # get x axis
@@ -373,8 +388,8 @@ class ObsPlots:
             xcol = "index"
 
         # get color
-        if len(plot_colors) < len(plot_columns):
-            plot_colors = list(plot_colors) * len(plot_columns)
+        if len(plot_colors) < len(cols):
+            plot_colors = list(plot_colors) * len(cols)
 
         # get base for hoover tooltips
         plots = []
@@ -382,14 +397,14 @@ class ObsPlots:
         tooltips.append(("date", "@date"))
 
         # plot multiple columns
-        for i, column in enumerate(plot_columns):
+        for i, column in enumerate(cols):
             # legend name
-            if add_filter_to_legend:
+            if add_screen_to_legend:
                 lname = "{} {} (NAP {:.2f} - {:.2f})".format(
                     plot_legend_names[i],
                     self._obj.name,
-                    self._obj.onderkant_filter,
-                    self._obj.bovenkant_filter,
+                    self._obj.screen_bottom,
+                    self._obj.screen_top,
                 )
             else:
                 lname = "{} {}".format(plot_legend_names[i], self._obj.name)

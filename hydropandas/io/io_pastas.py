@@ -56,7 +56,7 @@ def create_pastastore(
     pstore_name="",
     conn=None,
     add_metadata=True,
-    obs_column="stand_m_tov_nap",
+    col=None,
     kind="oseries",
     overwrite=False,
 ):
@@ -72,8 +72,9 @@ def create_pastastore(
         Name of the pastastore only used if pstore is None
     conn : pastastore.connectors
         connector for database
-    obs_column : str, optional
-        Name of the column in the Obs dataframe to be used
+    col : str or None, optional
+        the column of the obs dataframe to use in pastas. The first numeric
+        column is used if col is None, by default None.
     kind : str, optional
         The kind of series that is added to the pastastore
     add_metadata : boolean, optional
@@ -102,13 +103,14 @@ def create_pastastore(
         else:
             meta = dict()
 
+        if col is None:
+            col = o._get_first_numeric_col_name()
+
         if kind == "oseries":
-            pstore.conn.add_oseries(
-                o[obs_column], o.name, metadata=meta, overwrite=overwrite
-            )
+            pstore.conn.add_oseries(o[col], o.name, metadata=meta, overwrite=overwrite)
         else:
             pstore.conn.add_stress(
-                o[obs_column], o.name, kind, metadata=meta, overwrite=overwrite
+                o[col], o.name, kind, metadata=meta, overwrite=overwrite
             )
 
     return pstore

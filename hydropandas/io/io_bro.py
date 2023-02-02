@@ -1,0 +1,613 @@
+"""
+https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleveranciers/url-s-publieke-rest-services
+"""
+
+import requests
+import pandas as pd
+import numpy as np
+import xml.etree.ElementTree
+import logging
+import json
+from tqdm import tqdm
+
+from pyproj import Transformer
+
+logger = logging.getLogger(__name__)
+
+
+def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
+    """
+
+    Parameters
+    ----------
+    bro_id : str
+        starts with 'GMN' e.g. 'GMN000000000163'.
+    ObsClass : type
+        class of the observations, so far only GroundwaterObs is supported
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    keep_all_obs : boolean, optional
+        add all observation points to the collection, even without
+        measurements
+
+    Raises
+    ------
+    ValueError
+        DESCRIPTION.
+
+    Returns
+    -------
+    obs_list : list
+        list with observation objects.
+    meta : dict
+        metadata of the groundwater monitoring net.
+
+    """
+
+    if not bro_id.startswith("GMN"):
+        raise ValueError("bro id should start with GMN")
+
+    url = f"https://publiek.broservices.nl/gm/gmn/v1/objects/{bro_id}"
+    req = requests.get(url)
+
+    if req.status_code > 200:
+        print(req.json()["errors"][0]["message"])
+
+    ns = {"xmlns": "http://www.broservices.nl/xsd/dsgmn/1.0"}
+
+    tree = xml.etree.ElementTree.fromstring(req.text)
+    gmn = tree.find(".//xmlns:GMN_PO", ns)
+    gmws = gmn.findall("xmlns:measuringPoint", ns)
+
+    logger.info(f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
+
+    obs_list = []
+    for gmw in tqdm(gmws):
+        tags = ["MeasuringPoint", "monitoringTube", "GroundwaterMonitoringTube"]
+        tube = gmw.find(f".//xmlns:{'//xmlns:'.join(tags)}", ns)
+        gmw_id = tube.find("xmlns:broId", ns).text
+        tube_nr = int(tube.find("xmlns:tubeNumber", ns).text)
+
+        o = ObsClass.from_bro(
+            bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata
+        )
+        if o.empty:
+            logger.warning(
+                f"no measurements found for gmw_id {gmw_id} and tube number {tube_nr}"
+            )
+            if keep_all_obs:
+                obs_list.append(o)
+        else:
+            obs_list.append(o)
+        obs_list.append(o)
+
+    meta = {}
+    meta["name"] = gmn.find("xmlns:name", ns).text
+    meta["doel"] = gmn.find("xmlns:monitoringPurpose", ns).text
+    meta["bro_id"] = bro_id
+
+    return obs_list, meta
+
+
+def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
+    """ get bro groundwater measurement from a GLD id or a GMW id with a
+    filter number. 
+    
+
+    Parameters
+    ----------
+    bro_id : str
+        starts with 'GLD' or 'GMW' e.g. 'GLD000000012893'.
+    tube_nr : int or None, optional
+        tube number, required if bro_id starts with 'GMW'. The default is
+        None.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    **kwargs :
+        passes to measurements_from_gld.
+
+    Raises
+    ------
+    ValueError
+        DESCRIPTION.
+
+    Returns
+    -------
+    dataframe
+        measurements.
+    dictionary
+        metadata.
+
+    """
+    logger.info(f"reading bro_id {bro_id}")
+
+    if bro_id.startswith("GLD"):
+        if only_metadata:
+            raise ValueError("cannot get metadata from gld id")
+        return measurements_from_gld(bro_id, **kwargs)
+
+    elif bro_id.startswith("GMW"):
+        if tube_nr is None:
+            raise ValueError("if bro_id is GMW a filternumber should be specified")
+
+        meta = get_metadata_from_gmw(bro_id, tube_nr)
+        gld_id = get_gld_id_from_gmw(bro_id, tube_nr)
+
+        if gld_id is None:
+            meta["name"] = f"{bro_id}_{tube_nr}"
+            only_metadata = True  # cannot get time series without gld id
+        else:
+            meta["name"] = gld_id
+
+        if only_metadata:
+            empty_df = pd.DataFrame()
+            return empty_df, meta
+
+        return measurements_from_gld(gld_id, **kwargs)
+
+
+def get_gld_id_from_gmw(bro_id, tube_nr):
+    """ get bro_id of a grondwterstandendossier (gld) from a bro_id of a 
+    grondwatermonitoringsput (gmw).
+
+    Parameters
+    ----------
+    bro_id : str
+        starts with 'GLD' or 'GMW' e.g. 'GMW000000036287'.
+    tube_nr : int
+        tube number.
+
+    Raises
+    ------
+    ValueError
+        DESCRIPTION.
+    RuntimeError
+        DESCRIPTION.
+
+    Returns
+    -------
+    str
+        bro_id of a grondwaterstandonderzoek (gld).
+
+    """
+    if not bro_id.startswith("GMW"):
+        raise ValueError("bro id should start with GMW")
+
+    url = f"https://publiek.broservices.nl/gm/v1/gmw-relations/{bro_id}"
+    req = requests.get(url)
+
+    if req.status_code > 200:
+        print(req.json()["errors"][0]["message"])
+
+    d = json.loads(req.text)
+
+    if len(d["monitoringTubeReferences"]) == 0:
+        logger.info(
+            f"no groundwater level dossier for {bro_id} and tube number {tube_nr}"
+        )
+        return None
+
+    for tube in d["monitoringTubeReferences"]:
+        if tube["tubeNumber"] == tube_nr:
+            if len(tube["gldReferences"]) == 1:
+                return tube["gldReferences"][0]["broId"]
+            elif len(tube["gldReferences"]) == 0:
+                logger.info(f"no groundwater level dossier for {bro_id} and tube number {tube_nr}")
+                return None
+            else:
+                raise RuntimeError("unexpected number of gld references")
+            
+
+
+def measurements_from_gld(
+    bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True
+):
+    """ get measurements and metadata from a grondwaterstandonderzoek (gld)
+    bro_id
+    
+
+    Parameters
+    ----------
+    bro_id : str
+        e.g. 'GLD000000012893'.
+    tmin : str or None, optional
+        start date in format YYYY-MM-DD
+    tmax : str or None, optional
+        end date in format YYYY-MM-DD
+    to_wintertime : bool, optional
+        if True the time index is converted to Dutch winter time. The default
+        is True.
+    drop_duplicate_times : bool, optional
+        if True rows with a duplicate time stamp are removed keeping only the
+        first row. The default is True.
+    add_registration_history : bool, optional
+        if True the registration history is added to the metadata. The defualt
+        is True.
+
+    Raises
+    ------
+    ValueError
+        if bro_id is invalid.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        measurements.
+    meta : dict
+        metadata.
+
+    """
+    if not bro_id.startswith("GLD"):
+        raise ValueError("can only get observations if bro id starts with GLD")
+
+    url = "https://publiek.broservices.nl/gm/gld/v1/objects/{}"
+    params = {}
+    if tmin is not None:
+        tmin = pd.to_datetime(tmin)
+        params["observationPeriodBeginDate"] = tmin.strftime("%Y-%m-%d")
+    if tmax is not None:
+        tmax = pd.to_datetime(tmax)
+        params["observationPeriodEndDate"] = tmax.strftime("%Y-%m-%d")
+    req = requests.get(url.format(bro_id), params=params)
+
+    if req.status_code > 200:
+        print(req.json()["errors"][0]["message"])
+
+    ns = {
+        "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
+        "gldcommon": "http://www.broservices.nl/xsd/gldcommon/1.0",
+        "waterml": "http://www.opengis.net/waterml/2.0",
+        "swe": "http://www.opengis.net/swe/2.0",
+        "om": "http://www.opengis.net/om/2.0",
+    }
+
+    tree = xml.etree.ElementTree.fromstring(req.text)
+    glds = tree.findall(".//ns11:GLD_O", ns)
+    if len(glds) != 1:
+        raise (Exception("Only one gld supported"))
+    gld = glds[0]
+
+    meta = {"name": bro_id, "source": "BRO"}
+    meta["monitoring_well"] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
+    meta["tube_nr"] = int(
+        gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
+    )
+    meta["monitoringsnet"] = gld.find(
+        "ns11:groundwaterMonitoringNet//gldcommon:broId", ns
+    ).text
+
+    # get observations
+    msts = "ns11:observation//om:result//waterml:MeasurementTimeseries"
+    times = [time.text for time in gld.findall(f"{msts}//waterml:time", ns)]
+    values = [float(value.text) for value in gld.findall(f"{msts}//waterml:value", ns)]
+    qualifiers = [q.text for q in gld.findall(f"{msts}//swe:value", ns)]
+
+    # to dataframe
+    df = pd.DataFrame(
+        index=pd.to_datetime(times), data={"values": values, "qualifier": qualifiers},
+    )
+
+    # wintertime
+    if to_wintertime:
+        # remove time zone information by transforming to dutch winter time
+        df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(
+            1, unit="H"
+        )
+
+    # duplicates
+    if df.index.has_duplicates and drop_duplicate_times:
+        duplicates = df.index.duplicated(keep="first")
+        message = "{} contains {} duplicates (of {}). Keeping only first values."
+        logger.warning(message.format(bro_id, duplicates.sum(), len(df)))
+        df = df[~duplicates]
+
+    df = df.sort_index()
+
+    # add metadata from gmw
+    meta.update(get_metadata_from_gmw(meta["monitoring_well"], meta["tube_nr"]))
+
+    return df, meta
+
+
+def get_full_metadata_from_gmw(bro_id, tube_nr):
+    """ get metadata for a groundwater monitoring well.
+    
+
+    Parameters
+    ----------
+    bro_id : str
+        bro id of groundwater monitoring well e.g. 'GMW000000036287'.
+    tube_nr : int
+        filter number you want metadata for.
+
+    Raises
+    ------
+    ValueError
+        if bro_id is invalid.
+
+    Returns
+    -------
+    meta : dict
+        dictionary with metadata.
+
+    """
+
+    if not bro_id.startswith("GMW"):
+        raise ValueError("can only get metadata if bro id starts with GMW")
+
+    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    req = requests.get(url)
+
+    # read results
+    tree = xml.etree.ElementTree.fromstring(req.text)
+    ns = "{http://www.broservices.nl/xsd/dsgmw/1.1}"
+
+    gmws = tree.findall(f".//{ns}GMW_PO")
+    if len(gmws) != 1:
+        raise (Exception("Only one gmw supported"))
+    gmw = gmws[0]
+    meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
+    for child in gmw:
+        key = child.tag.split("}", 1)[1]
+        if len(child) == 0:
+            meta[key] = child.text
+        elif key == "deliveredLocation":
+            ns = "{http://www.broservices.nl/xsd/gmwcommon/1.1}"
+            point = child.find(f"{ns}location")
+            ns = "{http://www.opengis.net/gml/3.2}"
+            xy = [float(x) for x in point.find(f"{ns}pos").text.split()]
+            meta["x"], meta["y"] = xy
+        elif key in ["wellConstructionDate"]:
+            meta[key] = child[0].text
+        elif key == "wellHistory":
+            for grandchild in child:
+                key = grandchild.tag.split("}", 1)[1]
+                meta[key] = grandchild[0].text
+        elif key in ["deliveredVerticalPosition", "registrationHistory"]:
+            for grandchild in child:
+                key = grandchild.tag.split("}", 1)[1]
+                meta[key] = grandchild.text
+        elif key in ["monitoringTube"]:
+            tube = False
+            tube_dic = {}
+            for grandchild in child:
+                if len(grandchild) == 0:
+                    tube_key = grandchild.tag.split("}", 1)[1]
+                    if tube_key == "tubeNumber":
+                        if int(grandchild.text) == tube_nr:
+                            tube = True
+                    else:
+                        tube_dic[tube_key] = grandchild.text
+
+                else:
+                    for greatgrandchild in grandchild:
+                        tube_key = greatgrandchild.tag.split("}", 1)[1]
+                        tube_dic[tube_key] = greatgrandchild.text
+            if tube:
+                meta.update(tube_dic)
+
+    rename_dic = {
+        "groundLevelPosition": "ground_level",
+        "screenTopPosition": "screen_top",
+        "screenBottomPosition": "screen_bottom",
+        "tubeTopPosition": "tube_top",
+    }
+
+    for key, val in rename_dic.items():
+        meta[val] = meta.pop(key)
+
+    return meta
+
+
+def get_metadata_from_gmw(bro_id, tube_nr):
+    """ get selection of metadata for a groundwater monitoring well.
+    coordinates, ground_level, tube_top and tube screen
+    
+
+    Parameters
+    ----------
+    bro_id : str
+        bro id of groundwater monitoring well e.g. 'GMW000000036287'.
+    tube_nr : int
+        tube number you want metadata for.
+
+    Raises
+    ------
+    ValueError
+        if bro_id is invalid.
+    TypeError
+        if tube_nr is not an int
+
+    Returns
+    -------
+    meta : dict
+        dictionary with metadata.
+
+    """
+    ns = {
+        "dsgmw": "http://www.broservices.nl/xsd/dsgmw/1.1",
+        "gmwcommon": "http://www.broservices.nl/xsd/gmwcommon/1.1",
+        "gml": "http://www.opengis.net/gml/3.2",
+    }
+
+    if not bro_id.startswith("GMW"):
+        raise ValueError("can only get metadata if bro id starts with GMW")
+
+    if not isinstance(tube_nr, int):
+        raise TypeError(f"expected integer got {type(tube_nr)}")
+
+    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    req = requests.get(url)
+
+    # read results
+    tree = xml.etree.ElementTree.fromstring(req.text)
+
+    gmws = tree.findall(".//dsgmw:GMW_PO", ns)
+    if len(gmws) != 1:
+        raise (Exception("Only one gmw supported"))
+    gmw = gmws[0]
+
+    meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
+
+    # x and y
+    xy = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
+    meta["x"], meta["y"] = [float(val) for val in xy.text.split()]
+
+    # ground_level
+    vert_pos = gmw.find("dsgmw:deliveredVerticalPosition", ns)
+    mv = vert_pos.find("gmwcommon:groundLevelPosition", ns)
+    datum = vert_pos.find("gmwcommon:verticalDatum", ns)
+    if datum.text == "NAP" and mv.attrib["uom"] == "m":
+        meta["unit"] = "m NAP"
+        if mv.text is None:
+            meta["ground_level"] = np.nan
+        else:
+            meta["ground_level"] = float(mv.text)
+    else:
+        raise ValueError("invalid ground_level datum or unit")
+
+    # buis eigenschappen
+    tubes = gmw.findall("dsgmw:monitoringTube", ns)
+    for tube in tubes:
+        if int(tube.find("dsgmw:tubeNumber", ns).text) == tube_nr:
+            break
+
+    # tube_top
+    mp = tube.find("dsgmw:tubeTopPosition", ns)
+    if mp.attrib["uom"] == "m":
+        meta["tube_top"] = float(mp.text)
+
+    # bovenkant filter
+    bkf = tube.find("dsgmw:screen//dsgmw:screenTopPosition", ns)
+    if bkf.attrib["uom"] == "m":
+        meta["screen_top"] = float(bkf.text)
+
+    # onderkant filter
+    okf = tube.find("dsgmw:screen//dsgmw:screenBottomPosition", ns)
+    if okf.attrib["uom"] == "m":
+        meta["screen_bottom"] = float(okf.text)
+
+    meta["metadata_available"] = True
+
+    return meta
+
+
+def get_obs_list_from_extent(
+    extent,
+    ObsClass,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=True,
+    epsg=28992,
+    ignore_max_obs=False,
+):
+    """ get a list of gmw observations within an extent.
+    
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get groundwater monitoring wells within this extent
+        [xmin, xmax, ymin, ymax]
+    ObsClass : type
+        class of the observations, e.g. GroundwaterObs or WaterlvlObs
+    tmin : str or None, optional
+        start time of observations. The default is None.
+    tmax : str or None, optional
+        end time of observations. The default is None.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    epsg : int, optional
+        epsg code of the extent. The default is 28992 (RD).
+    ignore_max_obs : bool, optional
+        by default you get a prompt if you want to download over a 1000
+        observations at once. if ignore_max_obs is True you won't get the
+        prompt. The default is False
+
+    Raises
+    ------
+    
+        DESCRIPTION.
+
+    Returns
+    -------
+    obs_list : TYPE
+        DESCRIPTION.
+
+    """
+    url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
+
+    data = {}
+    if tmin is None or tmax is None:
+        data["registrationPeriod"] = {}
+        if tmin is not None:
+            beginDate = pd.to_datetime(tmin).strftime("%Y-%m-%d")
+            data["registrationPeriod"]["beginDate"] = beginDate
+        if tmax is not None:
+            endDate = pd.to_datetime(tmax).strftime("%Y-%m-%d")
+            data["registrationPeriod"]["endDate"] = endDate
+
+    transformer = Transformer.from_crs(epsg, 4326)
+    data["area"] = {}
+    if extent is not None:
+        lat1, lon1 = transformer.transform(extent[0], extent[2])
+        lat2, lon2 = transformer.transform(extent[1], extent[3])
+        data["area"]["boundingBox"] = {
+            "lowerCorner": {"lat": lat1, "lon": lon1},
+            "upperCorner": {"lat": lat2, "lon": lon2},
+        }
+    req = requests.post(url, json=data)
+    if req.status_code > 200:
+        print(req.json()["errors"][0]["message"])
+
+    # read results
+    tree = xml.etree.ElementTree.fromstring(req.text)
+
+    ns = {
+        "dsgmw": "http://www.broservices.nl/xsd/dsgmw/1.1",
+        "gml": "http://www.opengis.net/gml/3.2",
+        "brocom": "http://www.broservices.nl/xsd/brocommon/3.0",
+    }
+    
+    if tree.find(".//brocom:responseType", ns).text == 'rejection':
+        raise RuntimeError(tree.find(".//brocom:rejectionReason", ns).text)
+
+    gmws = tree.findall(".//dsgmw:GMW_C", ns)
+    
+    if len(gmws) > 1000:
+        ans = input(f'You requested to download {len(gmws)} observations, this can take a while. Are you sure you want to continue [Y/n]? ')
+        if ans not in ['Y', 'y','yes','Yes', 'YES']:
+            return []
+
+    obs_list = []
+    gmw_list = []
+    for gmw in tqdm(gmws):
+        gmw_id = gmw.find("brocom:broId", ns).text
+        if gmw_id in gmw_list:
+            logger.debug(f"gmw_id {gmw_id} already read, skipping")
+            continue
+
+        ntubes = int(gmw.find("dsgmw:numberOfMonitoringTubes", ns).text)
+        for tube_nr in range(1, ntubes + 1):
+            o = ObsClass.from_bro(
+                gmw_id,
+                tube_nr=tube_nr,
+                tmin=tmin,
+                tmax=tmax,
+                only_metadata=only_metadata,
+            )
+            if o.empty:
+                logger.warning(
+                    f"no measurements found for gmw_id {gmw_id} and tube number {tube_nr}"
+                )
+                if keep_all_obs:
+                    obs_list.append(o)
+            else:
+                obs_list.append(o)
+        gmw_list.append(gmw_id)
+
+    return obs_list

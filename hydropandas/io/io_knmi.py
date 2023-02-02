@@ -290,7 +290,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                     URL_DAILY_NEERSLAG, 550, "RD", start=start, end=end, inseason=False
                 )
             except (RuntimeError, requests.ConnectionError):
-                logger.info("KNMI API failed, switching to non-API method")
+                logger.warning("KNMI API failed, switching to non-API method")
                 knmi_df, _ = get_knmi_daily_rainfall_url(
                     550, "DE-BILT", "RD", start, end, inseason=False
                 )
@@ -310,7 +310,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                     inseason=False,
                 )
             except (RuntimeError, requests.ConnectionError):
-                logger.info("KNMI API failed, switching to non-API method")
+                logger.warning("KNMI API failed, switching to non-API method")
                 knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
         else:
             knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
@@ -620,6 +620,7 @@ def get_knmi_daily_rainfall_url(
                 df.loc[:, meteo_var] = df[meteo_var].astype(float)
 
         df, variables = _transform_variables(df, variables)
+        variables["unit"] = "m"
 
     return df.loc[start:end, [meteo_var]], variables
 
@@ -721,7 +722,6 @@ def _transform_variables(df, variables):
 
             df[key] = df[key] * 0.001
             value = value.replace(" millimeters", " m")
-
         if "08.00 UTC" in value:
             logger.debug(f"transform {key}, {value} from UTC to UTC+1")
 
@@ -762,6 +762,7 @@ def read_knmi_daily_rainfall(f, meteo_var):
             df.loc[:, meteo_var] = df[meteo_var].astype(float)
 
     df, variables = _transform_variables(df, variables)
+    variables["unit"] = "m"
 
     return df, variables
 
@@ -785,7 +786,7 @@ def _read_station_location(f):
             stations.set_index(["STN"], inplace=True)
             for col in stations.columns:
                 try:
-                    stations.loc[:, col] = stations[col].astype(float)
+                    stations[col] = stations[col].astype(float)
                 except ValueError:
                     pass
 
@@ -943,6 +944,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
                 df = df.loc[start:end, [meteo_var]]
                 df = df.dropna()
                 df, variables = _transform_variables(df, variables)
+                variables["unit"] = ""
                 break
 
             line = f.readline()
@@ -971,6 +973,7 @@ def read_knmi_daily_meteo(f):
     df.index = df.index + pd.to_timedelta(1, unit="h")
 
     df, variables = _transform_variables(df, variables)
+    variables["unit"] = ""
 
     return df, variables, stations
 
@@ -1019,6 +1022,7 @@ def read_knmi_hourly(f):
     df = df.drop(["YYYYMMDD", "H"], axis=1)
 
     df, variables = _transform_variables(df, variables)
+    variables["unit"] = ""
 
     return df, variables
 
@@ -1279,7 +1283,15 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
     # set metadata
     x = stations.loc[stn, "x"]
     y = stations.loc[stn, "y"]
-    meta.update({"x": x, "y": y, "station": stn, "name": f"{meteo_var}_{stn_name}"})
+    meta.update(
+        {
+            "x": x,
+            "y": y,
+            "station": stn,
+            "name": f"{meteo_var}_{stn_name}",
+            "source": "KNMI",
+        }
+    )
 
     return knmi_df, meta
 
@@ -1418,6 +1430,7 @@ def get_knmi_obslist(
             for stn in _stns:
                 o = ObsClass.from_knmi(
                     stn,
+                    meteo_var=meteo_var,
                     startdate=start,
                     enddate=end,
                     fill_missing_obs=settings["fill_missing_obs"],
@@ -1839,7 +1852,7 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
     """
     if et_type == "EV24":
         et, meta = get_knmi_timeseries_stn(
-            stn, meteo_var="EV24", start=start, end=end, settings=settings
+            stn, meteo_var=et_type, start=start, end=end, settings=settings
         )
     elif et_type == "hargreaves":
         d = {}
@@ -1889,6 +1902,8 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
             "Provide valid argument evaporation type \
                          'hargreaves', 'makkink' or 'penman'"
         )
+
+    meta["unit"] = "m"
 
     return et, meta
 

@@ -73,23 +73,23 @@ def check_if_var_is_invalid(var):
     return False
 
 
-def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
+def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
     """
 
 
     Parameters
     ----------
     ftop : int or float
-        top of filter.
+        top of screen.
     fbot : int or float
-        bottom of filter, has to be lower than ftop.
+        bottom of screen, has to be lower than ftop.
     zvec : list or np.array
-        elevations of the modellayers at the location of the filter.
+        elevations of the modellayers at the location of the tube.
     left : int, optional
-        value to return if filter is below the modellayers.
+        value to return if tube screen is below the modellayers.
         The default is -999.
     right : int, optional
-        value to return if filter is above the modellayers.
+        value to return if tube screen is above the modellayers.
         The default is-999.
 
     Raises
@@ -105,37 +105,37 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
     examples
     --------
     >>> zvec = [0, -10, -20, -30, -40]
-    >>> get_modellayer_from_filter(-5, -7, zvec)
+    >>> get_modellayer_from_screen_depth(-5, -7, zvec)
     0
 
-    >>> get_modellayer_from_filter(-25, -27, zvec)
+    >>> get_modellayer_from_screen_depth(-25, -27, zvec)
     2
 
-    >>> get_modellayer_from_filter(-15, -27, zvec)
+    >>> get_modellayer_from_screen_depth(-15, -27, zvec)
     2
 
-    >>> get_modellayer_from_filter(-5, -27, zvec)
+    >>> get_modellayer_from_screen_depth(-5, -27, zvec)
     1
 
-    >>> get_modellayer_from_filter(-5, -37, zvec)
+    >>> get_modellayer_from_screen_depth(-5, -37, zvec)
     1
 
-    >>> get_modellayer_from_filter(15, -5, zvec)
+    >>> get_modellayer_from_screen_depth(15, -5, zvec)
     0
 
-    >>> get_modellayer_from_filter(15, 5, zvec)
+    >>> get_modellayer_from_screen_depth(15, 5, zvec)
     999
 
-    >>> get_modellayer_from_filter(-55, -65, zvec)
+    >>> get_modellayer_from_screen_depth(-55, -65, zvec)
     -999
 
-    >>> get_modellayer_from_filter(15, -65, zvec)
+    >>> get_modellayer_from_screen_depth(15, -65, zvec)
     nan
 
-    >>> get_modellayer_from_filter(None, -7, zvec)
+    >>> get_modellayer_from_screen_depth(None, -7, zvec)
     0
 
-    >>> get_modellayer_from_filter(None, None, zvec)
+    >>> get_modellayer_from_screen_depth(None, None, zvec)
     nan
 
     """
@@ -156,7 +156,7 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
         return lay_fbot
 
     if ftop < fbot:
-        logger.warning("- filter top below filter bot, switch top and bot")
+        logger.warning("- tube screen top below tube screen bot, switch top and bot")
         fbot, ftop = ftop, fbot
 
     lay_ftop = get_model_layer_z(ftop, zvec, left=left, right=right)
@@ -169,31 +169,33 @@ def get_modellayer_from_filter(ftop, fbot, zvec, left=-999, right=999):
 
     else:
         if lay_fbot == left and lay_ftop == right:
-            logger.info("- filter spans all layers. " "return nan")
+            logger.info("- tube screen spans all layers. " "return nan")
             return np.nan
         elif lay_ftop == right:
             logger.info(
-                "- filter top higher than top layer. " f"selected layer {lay_fbot}"
+                "- tube screen top higher than top layer. " f"selected layer {lay_fbot}"
             )
             return lay_fbot
 
         elif lay_fbot == left:
             logger.info(
-                "- filter bot lower than bottom layer. " f"selected layer {lay_ftop}"
+                "- tube screen bot lower than bottom layer. "
+                f"selected layer {lay_ftop}"
             )
             return lay_ftop
 
         logger.info(
-            "- filter crosses layer boundary:\n" f"  - layers: {lay_ftop}, {lay_fbot}"
+            "- tube screen crosses layer boundary:\n"
+            f"  - layers: {lay_ftop}, {lay_fbot}"
         )
 
         logger.info(
-            f"- piezometer filter spans {lay_fbot - lay_ftop +1} layers."
+            f"- tube screen spans {lay_fbot - lay_ftop +1} layers."
             " checking length per layer\n"
             "  - length per layer:"
         )
 
-        # check which layer has the biggest length of the filter
+        # check which layer has the biggest length of the tube screen
         length_layers = np.zeros(lay_fbot - lay_ftop + 1)
         for i in range(len(length_layers)):
             if i == 0:
@@ -294,13 +296,13 @@ class GwObsAccessor:
     def __init__(self, oc_obj):
         self._obj = oc_obj
 
-    def set_filter_num(
+    def set_tube_nr(
         self, radius=1, xcol="x", ycol="y", if_exists="error", add_to_meta=False
     ):
-        """This method computes the filternumbers based on the location of the
+        """This method computes the tube numbers based on the location of the
         observations.
 
-        Then it sets the value of the filternumber:
+        Then it sets the value of the tube number:
 
         - in the ObsCollection dataframe
         - as the attribute of an Obs object
@@ -310,9 +312,9 @@ class GwObsAccessor:
 
         This method is useful for groundwater observations. If two or more
         observation points are close to each other they will be seen as one
-        location with multiple filters. The filternr is based on the
-        'onderkant_filter' attribute of the observations in such a way that
-        the deepest filter has the highest filter number.
+        monitoring_well with multiple tubes. The tube_nr is based on the
+        'screen_bottom' attribute of the observations in such a way that
+        the deepest tube has the highest tube number.
 
         Parameters
         ----------
@@ -323,58 +325,58 @@ class GwObsAccessor:
         ycol : str, optional
             column name with y coordinates, by default 'y'
         if_exists : str, optional
-            what to do if an observation point already has a filternr, options:
+            what to do if an observation point already has a tube_nr, options:
             'error', 'replace' or 'keep', by default 'error'
         add_to_meta : bool, optional
-            if True the filternr is added to the meta dictionary
+            if True the tube_nr is added to the meta dictionary
             of an observation. The default is False.
 
         Raises
         ------
         RuntimeError
-            if the column filternr exists and if_exists='error' an error is
+            if the column tube_nr exists and if_exists='error' an error is
             raised
         """
 
         # check if column exists in obscollection
-        if "filternr" in self._obj.columns:
+        if "tube_nr" in self._obj.columns:
             # set type to numeric
-            if self._obj["filternr"].dtype != np.number:
-                self._obj["filternr"] = pd.to_numeric(
-                    self._obj["filternr"], errors="coerce"
+            if self._obj["tube_nr"].dtype != np.number:
+                self._obj["tube_nr"] = pd.to_numeric(
+                    self._obj["tube_nr"], errors="coerce"
                 )
 
             # check if name should be replaced
             if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'filternr' already exist, set if_exists='replace' to replace the current values"
+                    "the column 'tube_nr' already exist, set if_exists='replace' to replace the current values"
                 )
             elif if_exists == "replace":
-                self._obj["filternr"] = np.nan
+                self._obj["tube_nr"] = np.nan
         else:
-            self._obj["filternr"] = np.nan
+            self._obj["tube_nr"] = np.nan
 
-        # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
+        # apply tube numbers to tubes that are close to eachother
         for name in self._obj.index:
-            if np.isnan(self._obj.loc[name, "filternr"]):
+            if np.isnan(self._obj.loc[name, "tube_nr"]):
                 x = self._obj.loc[name, xcol]
                 y = self._obj.loc[name, ycol]
-                distance_to_other_filters = np.sqrt(
+                distance_to_other_tubes = np.sqrt(
                     (self._obj[xcol] - x) ** 2 + (self._obj[ycol] - y) ** 2
                 )
-                dup_x = self._obj.loc[distance_to_other_filters < radius]
+                dup_x = self._obj.loc[distance_to_other_tubes < radius]
                 if dup_x.shape[0] == 1:
                     self._obj._set_metadata_value(
-                        name, "filternr", 1, add_to_meta=add_to_meta
+                        name, "tube_nr", 1, add_to_meta=add_to_meta
                     )
                 else:
-                    dup_x2 = dup_x.sort_values("onderkant_filter", ascending=False)
+                    dup_x2 = dup_x.sort_values("screen_bottom", ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
                         self._obj._set_metadata_value(
-                            pb_dub, "filternr", i + 1, add_to_meta=add_to_meta
+                            pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
 
-    def set_filter_num_location(
+    def set_tube_nr_monitoring_well(
         self,
         loc_col,
         radius=1,
@@ -383,14 +385,14 @@ class GwObsAccessor:
         if_exists="error",
         add_to_meta=False,
     ):
-        """This method sets the filternr and locatie name of an observation
+        """This method sets the tube_nr and monitoring_well name of an observation
         point based on the location of the observations.
 
-        When two or more filters are close to another, as defined by radius,
-        they are set to the same `locatie` and an increasing `filternr` based
+        When two or more tubes are close to another, as defined by radius,
+        they are set to the same `monitoring_well` and an increasing `tube_nr` based
         on depth.
 
-        The value of the filternumber and the location are set:
+        The value of the tube_nr and the monitoring_well are set:
 
         - in the ObsCollection dataframe
         - as the attribute of an Obs object
@@ -399,16 +401,16 @@ class GwObsAccessor:
 
         This method is useful for groundwater observations. If two or more
         observation points are close to each other they will be seen as one
-        location with multiple filters. The filternr is based on the
-        'onderkant_filter' attribute of the observations in such a way that
-        the deepest filter has the highest filter number. The locatie is
-        based on the named of the loc_col of the filter with the lowest
-        filternr.
+        monitoring_well with multiple tubes. The tube_nr is based on the
+        'screen_bottom' attribute of the observations in such a way that
+        the deepest tube has the highest tube number. The monitoring_well is
+        based on the named of the loc_col of the screen with the lowest
+        tube_nr.
 
         Parameters
         ----------
         loc_col : str
-            the column name with the names to use for the locatie
+            the column name with the names to use for the monitoring_well
         radius : int, optional
             max distance between two observations to be seen as one location, by default 1
         xcol : str, optional
@@ -416,59 +418,65 @@ class GwObsAccessor:
         ycol : str, optional
             column name with y coordinates, by default 'y'
         if_exists : str, optional
-            what to do if an observation point already has a filternr, options:
+            what to do if an observation point already has a tube_nr, options:
             'error', 'replace' or 'keep', by default 'error'
         add_to_meta : bool, optional
-            if True the filternr and location are added to the meta dictionary
+            if True the tube_nr and location are added to the meta dictionary
             of an observation. The default is False.
 
         Raises
         ------
         RuntimeError
-            if the column filternr exists and if_exists='error' an error
+            if the column tube_nr exists and if_exists='error' an error
             is raised
         """
 
         # check if columns exists in obscollection
-        if "filternr" in self._obj.columns or "locatie" in self._obj.columns:
+        if "tube_nr" in self._obj.columns or "monitoring_well" in self._obj.columns:
             if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'filternr or locatie' already exist, set if_exists='replace' to replace the current values"
+                    "the column 'tube_nr or monitoring_well' already exist, set if_exists='replace' to replace the current values"
                 )
             elif if_exists == "replace":
-                self._obj["filternr"] = np.nan
-                self._obj["locatie"] = np.nan
+                self._obj["tube_nr"] = np.nan
+                self._obj["monitoring_well"] = np.nan
         else:
-            self._obj["filternr"] = np.nan
-            self._obj["locatie"] = np.nan
+            self._obj["tube_nr"] = np.nan
+            self._obj["monitoring_well"] = np.nan
 
-        # ken filternummers toe aan peilbuizen die dicht bij elkaar staan
+        # apply tube numbers to tubes that are close to eachother
         for name in self._obj.index:
-            if np.isnan(self._obj.loc[name, "filternr"]):
+            if np.isnan(self._obj.loc[name, "tube_nr"]):
                 x = self._obj.loc[name, xcol]
                 y = self._obj.loc[name, ycol]
-                distance_to_other_filters = np.sqrt(
+                distance_to_other_tubes = np.sqrt(
                     (self._obj[xcol] - x) ** 2 + (self._obj[ycol] - y) ** 2
                 )
-                dup_x = self._obj.loc[distance_to_other_filters < radius]
+                dup_x = self._obj.loc[distance_to_other_tubes < radius]
                 if dup_x.shape[0] == 1:
                     self._obj._set_metadata_value(
-                        name, "filternr", 1, add_to_meta=add_to_meta
+                        name, "tube_nr", 1, add_to_meta=add_to_meta
                     )
-                    locatie = self._obj.loc[name, loc_col]
+                    monitoring_well = self._obj.loc[name, loc_col]
                     self._obj._set_metadata_value(
-                        name, "locatie", locatie, add_to_meta=add_to_meta
+                        name,
+                        "monitoring_well",
+                        monitoring_well,
+                        add_to_meta=add_to_meta,
                     )
                 else:
-                    dup_x2 = dup_x.sort_values("onderkant_filter", ascending=False)
+                    dup_x2 = dup_x.sort_values("screen_bottom", ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
                         if i == 0:
-                            locatie = self._obj.loc[pb_dub, loc_col]
+                            monitoring_well = self._obj.loc[pb_dub, loc_col]
                         self._obj._set_metadata_value(
-                            pb_dub, "filternr", i + 1, add_to_meta=add_to_meta
+                            pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
                         self._obj._set_metadata_value(
-                            pb_dub, "locatie", locatie, add_to_meta=add_to_meta
+                            pb_dub,
+                            "monitoring_well",
+                            monitoring_well,
+                            add_to_meta=add_to_meta,
                         )
 
     def get_modellayers(self, gwf=None, ds=None):
@@ -541,9 +549,9 @@ class GeoAccessorObs:
         if np.all(np.isnan(zvec)):
             return np.nan
         else:
-            modellayer = get_modellayer_from_filter(
-                self._obj.bovenkant_filter,
-                self._obj.onderkant_filter,
+            modellayer = get_modellayer_from_screen_depth(
+                self._obj.screen_top,
+                self._obj.screen_bottom,
                 zvec,
                 left=left,
                 right=right,
@@ -551,7 +559,7 @@ class GeoAccessorObs:
             return modellayer
 
     def get_regis_layer(self):
-        """find the name of the REGIS layer based on the filter depth.
+        """find the name of the REGIS layer based on the tube screen depth.
 
         Parameters
         ----------
@@ -564,7 +572,7 @@ class GeoAccessorObs:
         """
         import xarray as xr
 
-        if np.isnan(self._obj.bovenkant_filter) or np.isnan(self._obj.onderkant_filter):
+        if np.isnan(self._obj.screen_top) or np.isnan(self._obj.screen_bottom):
             return "nan"
 
         # connect to regis netcdf
@@ -586,12 +594,8 @@ class GeoAccessorObs:
         zvec = np.concatenate([[ztop.values], z.values])
 
         # get index of regis model layer
-        layer_i = get_modellayer_from_filter(
-            self._obj.bovenkant_filter,
-            self._obj.onderkant_filter,
-            zvec,
-            left=-999,
-            right=999,
+        layer_i = get_modellayer_from_screen_depth(
+            self._obj.screen_top, self._obj.screen_bottom, zvec, left=-999, right=999,
         )
 
         if layer_i == 999:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """run notebooks in the examples directory."""
 import os
 
@@ -32,7 +31,7 @@ def test_run_notebook_02_knmi_observations():
 
 
 @pytest.mark.notebooks
-def test_run_notebook_03_pastastore_from_observations():
+def test_run_notebook_03_hydropandas_and_pastas():
     _run_notebook(nbdir, "03_hydropandas_and_pastas.ipynb")
 
 

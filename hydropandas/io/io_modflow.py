@@ -86,6 +86,7 @@ def read_imod_results(
             model=modelname,
             x=obs_collection.loc[name, "x"],
             y=obs_collection.loc[name, "y"],
+            source="modflow",
             meta=obs_collection.loc[name, "obs"].meta,
         )
         mo_list.append(mo)
@@ -181,6 +182,7 @@ def read_modflow_results(
             x=obs_collection.loc[name, "x"],
             y=obs_collection.loc[name, "y"],
             meta=obs_collection.loc[name, "obs"].meta,
+            source="modflow",
         )
         mo_list.append(mo)
 

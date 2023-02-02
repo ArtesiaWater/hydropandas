@@ -21,6 +21,7 @@ import pandas as pd
 from _io import StringIO
 from pandas._config import get_option
 from pandas.io.formats import console
+from pandas.api.types import is_numeric_dtype
 
 import logging
 
@@ -28,12 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 class Obs(pd.DataFrame):
-    """class for point observations.
+    """generic class for a time series with measurements at a certain location.
+
+    Unless specified explicitly the first numeric column in the observation is
+    used for analysis and plotting.
 
     An Obs object is a subclass of a pandas.DataFrame and allows for additional
-    attributes and methods.
-    More information about subclassing pandas DataFrames pandas can be
-    found here:
+    attributes and methods. More information about subclassing pandas
+    DataFrames pandas can be found here:
     http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 
     Parameters
@@ -48,6 +51,10 @@ class Obs(pd.DataFrame):
         metadata
     filename : str
         filename with data of observation point
+    source : str
+        source of the observation e.g. BRO or KNMI
+    unit : str
+        unit of the first numerical column in the observation
     """
 
     # temporary properties
@@ -55,7 +62,7 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ["name", "x", "y", "meta", "filename"]
+    _metadata = ["name", "x", "y", "meta", "filename", "source", "unit"]
 
     def __init__(self, *args, **kwargs):
         """constructor of Obs class.
@@ -69,25 +76,28 @@ class Obs(pd.DataFrame):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
         self.filename = kwargs.pop("filename", "")
+        self.source = kwargs.pop("source", "")
+        self.unit = kwargs.pop("unit", "")
 
         super(Obs, self).__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
         buf = StringIO("")
-        
+
         buf.write(f"{type(self).__name__} {self.name}\n")
 
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._metadata:
-            buf.write(f"{att} : {getattr(self, att)} \n")
+            if not att == "meta":
+                buf.write(f"{att} : {getattr(self, att)} \n")
         buf.write("\n")
 
         if self._info_repr():
             self.info(buf=buf)
             return buf.getvalue()
-        
+
         buf.write("-----time series------\n")
         max_rows = get_option("display.max_rows")
         min_rows = get_option("display.min_rows")
@@ -113,6 +123,24 @@ class Obs(pd.DataFrame):
     @property
     def _constructor(self):
         return Obs
+
+    def _get_first_numeric_col_name(self):
+        """get the first numeric column name of the observations
+
+        Returns
+        -------
+        col : str or int
+            column name.
+
+        """
+        if self.empty:
+            return None
+
+        for col in self.columns:
+            if is_numeric_dtype(self[col]):
+                break
+
+        return col
 
     def copy(self, deep=True):
         """create a copy of the observation.
@@ -183,7 +211,7 @@ class Obs(pd.DataFrame):
 
         return d
 
-    def merge_metadata(self, right, overlap='error'):
+    def merge_metadata(self, right, overlap="error"):
         """Merge the metadata of an Obs object with new metadata.
 
         Parameters
@@ -250,11 +278,10 @@ class Obs(pd.DataFrame):
                     new_metadata[key] = v2
         if same_metadata:
             logger.info("new and existing observation have the same metadata")
-            
+
         return new_metadata
-    
-    
-    def _merge_timeseries(self, right, overlap='error'):
+
+    def _merge_timeseries(self, right, overlap="error"):
         """merge two timeseries.
 
         Parameters
@@ -281,7 +308,7 @@ class Obs(pd.DataFrame):
         Observation object.
         """
         o = self.iloc[0:0, 0:0]
-        
+
         # check if time series are the same
         if self.equals(right):
             logger.info("new and existing observation have the same time series")
@@ -339,9 +366,8 @@ class Obs(pd.DataFrame):
                 o = pd.concat([o, self[[col]]], axis=1)
 
         o.sort_index(inplace=True)
-        
+
         return o
-        
 
     def merge_observation(self, right, overlap="error", merge_metadata=True):
         """Merge with another observation of the same type.
@@ -391,7 +417,7 @@ class Obs(pd.DataFrame):
             raise TypeError(
                 f"existing observation has a different type {type(self)} than new observation {type(right)}"
             )
-            
+
         # merge timeseries
         o = self._merge_timeseries(right, overlap=overlap)
 
@@ -401,7 +427,7 @@ class Obs(pd.DataFrame):
             new_metadata = self.merge_metadata(metadata, overlap=overlap)
         else:
             new_metadata = {key: getattr(self, key) for key in self._metadata}
-        
+
         for key, item in new_metadata.items():
             setattr(o, key, item)
 
@@ -413,24 +439,23 @@ class GroundwaterObs(Obs):
 
     Subclass of the Obs class. Has the following attributes:
 
-    - locatie: 2 filters at one piezometer should have the same 'locatie'
-    - filternr: 2 filters at one piezometer should have a different 'filternr'.
-      a higher filter number is preferably deeper than a lower filter number.
-    - bovenkant_filter: top op the filter in m NAP
-    - onderkant_filter: bottom of the filter in m NAP
-    - maaiveld: surface level in m NAP
-    - meetpunt: ? in m NAP
+    - monitoring_well: 2 tubes at one piezometer should have the same 'monitoring_well'
+    - tube_nr: 2 tubes at one piezometer should have a different 'tube_nr'.
+    - screen_top: top op the filter in m above date (NAP)
+    - screen_bottom: bottom of the filter in m above date (NAP)
+    - ground_level: surface level in m above date (NAP) (maaiveld in Dutch)
+    - tube_top: top of the tube in m above date (NAP)
     - metadata_available: boolean indicating if metadata is available for
       the measurement point.
     """
 
     _metadata = Obs._metadata + [
-        "locatie",
-        "filternr",
-        "bovenkant_filter",
-        "onderkant_filter",
-        "maaiveld",
-        "meetpunt",
+        "monitoring_well",
+        "tube_nr",
+        "screen_top",
+        "screen_bottom",
+        "ground_level",
+        "tube_top",
         "metadata_available",
     ]
 
@@ -439,17 +464,13 @@ class GroundwaterObs(Obs):
         *args must be input for the pandas.DataFrame constructor,
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
-
-        if the pandas.DataFrame has a column 'stand_m_tov_nap' a lot of
-        plotting and other methods will work automatically without changing
-        the default arguments.
         """
-        self.locatie = kwargs.pop("locatie", "")
-        self.filternr = kwargs.pop("filternr", "")
-        self.maaiveld = kwargs.pop("maaiveld", np.nan)
-        self.meetpunt = kwargs.pop("meetpunt", np.nan)
-        self.bovenkant_filter = kwargs.pop("bovenkant_filter", np.nan)
-        self.onderkant_filter = kwargs.pop("onderkant_filter", np.nan)
+        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        self.tube_nr = kwargs.pop("tube_nr", "")
+        self.ground_level = kwargs.pop("ground_level", np.nan)
+        self.tube_top = kwargs.pop("tube_top", np.nan)
+        self.screen_top = kwargs.pop("screen_top", np.nan)
+        self.screen_bottom = kwargs.pop("screen_bottom", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(GroundwaterObs, self).__init__(*args, **kwargs)
@@ -459,11 +480,77 @@ class GroundwaterObs(Obs):
         return GroundwaterObs
 
     @classmethod
+    def from_bro(
+        cls,
+        bro_id,
+        tube_nr=None,
+        tmin="1900-01-01",
+        tmax="2040-01-01",
+        to_wintertime=True,
+        drop_duplicate_times=True,
+        only_metadata=False,
+    ):
+        """download BRO groundwater observations from the server.
+
+
+        Parameters
+        ----------
+        bro_id : str
+            can be a GLD id or GMW id. If a GMW id is given a tube number is
+            required as well. e.g. 'GLD000000012893'.
+        tube_nr : str or None, optional
+            if the bro_id is a GMW object the tube number should be given.
+        tmin : str or None, optional
+            start date in format YYYY-MM-DD
+        tmax : str or None, optional
+            end date in format YYYY-MM-DD
+        to_wintertime : bool, optional
+            if True the time index is converted to Dutch winter time. The default
+            is True.
+        drop_duplicate_times : bool, optional
+            if True rows with a duplicate time stamp are removed keeping only the
+            first row. The default is True.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+
+        from .io import io_bro
+
+        measurements, meta = io_bro.get_bro_groundwater(
+            bro_id,
+            tube_nr,
+            tmin=tmin,
+            tmax=tmax,
+            to_wintertime=to_wintertime,
+            drop_duplicate_times=drop_duplicate_times,
+            only_metadata=only_metadata,
+        )
+
+        return cls(
+            measurements,
+            meta=meta,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+        )
+
+    @classmethod
     def from_dino(
         cls,
         fname=None,
-        location=None,
-        filternr=1.0,
         tmin="1900-01-01",
         tmax="2040-01-01",
         split_cluster=True,
@@ -477,7 +564,7 @@ class GroundwaterObs(Obs):
             dino csv filename
         location : str, optional
             location of the peilbuis, i.e. B57F0077
-        filternr : float, optional
+        tube_nr : float, optional
             filter_nr of the peilbuis, i.e. 1.
         tmin : str
             start date in format YYYY-MM-DD
@@ -493,111 +580,10 @@ class GroundwaterObs(Obs):
         """
         from .io import io_dino
 
-        if fname is not None:
-            # read dino csv file
-            measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
+        # read dino csv file
+        measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
 
-            return cls(measurements, meta=meta, **meta)
-
-        elif location is not None:
-            measurements, meta = io_dino.download_dino_groundwater(
-                location, filternr, tmin, tmax, split_cluster, **kwargs
-            )
-
-            if meta["metadata_available"]:
-                return cls(
-                    measurements,
-                    meta=meta,
-                    x=meta.pop("x"),
-                    y=meta.pop("y"),
-                    onderkant_filter=meta.pop("onderkant_filter"),
-                    bovenkant_filter=meta.pop("bovenkant_filter"),
-                    name=meta.pop("name"),
-                    metadata_available=meta.pop("metadata_available"),
-                    locatie=meta.pop("locatie"),
-                    maaiveld=meta.pop("maaiveld"),
-                    filternr=meta.pop("filternr"),
-                )
-            else:
-                return cls(measurements, meta=meta)
-        else:
-            raise ValueError("specify fname or location to obtain groundwater heads")
-
-    @classmethod
-    def from_dino_server(
-        cls, location, filternr=1.0, tmin="1900-01-01", tmax="2040-01-01", **kwargs
-    ):
-        """download dino data from the server.
-
-        Parameters
-        ----------
-        location : str
-            location of the peilbuis, i.e. B57F0077
-        filternr : float
-            filter_nr of the peilbuis, i.e. 1.0
-        tmin : str
-            start date in format YYYY-MM-DD
-        tmax : str
-            end date in format YYYY-MM-DD
-        kwargs : key-word arguments
-            these arguments are passed to dino.findMeetreeks functie
-        """
-        warnings.warning(
-            "this method will be removed in future versions, use from_dino instead",
-            DeprecationWarning,
-        )
-
-        from .io import io_dino
-
-        measurements, meta = io_dino.download_dino_groundwater(
-            location, filternr, tmin, tmax, **kwargs
-        )
-
-        if meta["metadata_available"]:
-            return cls(
-                measurements,
-                meta=meta,
-                x=meta.pop("x"),
-                y=meta.pop("y"),
-                onderkant_filter=meta.pop("onderkant_filter"),
-                bovenkant_filter=meta.pop("bovenkant_filter"),
-                name=meta.pop("name"),
-                locatie=meta.pop("locatie"),
-                maaiveld=meta.pop("maaiveld"),
-                filternr=meta.pop("filternr"),
-            )
-        else:
-            return cls(measurements, meta=meta)
-
-    @classmethod
-    def from_dino_file(cls, fname=None, **kwargs):
-        """read a dino csv file.
-
-        Parameters
-        ----------
-        name : str, optional
-            name of the peilbuis, i.e. B57F0077
-        fname : str, optional
-            dino csv filename
-        kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_csv
-        """
-        warnings.warning(
-            "this method will be removed in future versions, use from_dino instead",
-            DeprecationWarning,
-        )
-
-        from .io import io_dino
-
-        if fname is not None:
-            # read dino csv file
-            measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
-
-            return cls(measurements, meta=meta, **meta)
-        else:
-            raise ValueError(
-                "specify either the name or the filename of the measurement point"
-            )
+        return cls(measurements, meta=meta, **meta)
 
     @classmethod
     def from_artdino_file(cls, fname=None, **kwargs):
@@ -605,8 +591,6 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        name : str, optional
-            name of the peilbuis, i.e. B57F0077
         fname : str, optional
             dino csv filename
         kwargs : key-word arguments
@@ -614,19 +598,14 @@ class GroundwaterObs(Obs):
         """
         from .io import io_dino
 
-        if fname is not None:
-            # read dino csv file
-            measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
+        # read artdino csv file
+        measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
 
-            return cls(measurements, meta=meta, **meta)
-        else:
-            raise ValueError(
-                "specify either the name or the filename of the " "measurement point!"
-            )
+        return cls(measurements, meta=meta, **meta)
 
     @classmethod
     def from_wiski(cls, fname, **kwargs):
-        """[summary]
+        """read wiski file
 
         Parameters
         ----------
@@ -653,17 +632,17 @@ class GroundwaterQualityObs(Obs):
     """
 
     _metadata = Obs._metadata + [
-        "locatie",
-        "filternr",
-        "maaiveld",
+        "monitoring_well",
+        "tube_nr",
+        "ground_level",
         "metadata_available",
     ]
 
     def __init__(self, *args, **kwargs):
 
-        self.locatie = kwargs.pop("locatie", "")
-        self.filternr = kwargs.pop("filternr", "")
-        self.maaiveld = kwargs.pop("maaiveld", np.nan)
+        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        self.tube_nr = kwargs.pop("tube_nr", "")
+        self.ground_level = kwargs.pop("ground_level", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(GroundwaterQualityObs, self).__init__(*args, **kwargs)
@@ -696,11 +675,11 @@ class WaterlvlObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ["locatie", "metadata_available"]
+    _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
 
-        self.locatie = kwargs.pop("locatie", "")
+        self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super(WaterlvlObs, self).__init__(*args, **kwargs)
@@ -959,6 +938,8 @@ class MeteoObs(Obs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
             meteo_var=meteo_var,
         )
 
@@ -1034,6 +1015,8 @@ class MeteoObs(Obs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
             meteo_var=meteo_var,
         )
 
@@ -1217,6 +1200,8 @@ class MeteoObs(Obs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
             meteo_var=meteo_var,
         )
 
@@ -1236,6 +1221,7 @@ class EvaporationObs(MeteoObs):
         cls,
         stn,
         et_type="EV24",
+        meteo_var=None,
         startdate=None,
         enddate=None,
         fill_missing_obs=True,
@@ -1254,6 +1240,8 @@ class EvaporationObs(MeteoObs):
             type of evapotranspiration to get from KNMI. Choice between
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
+        meteo_var : None
+            not used in this method.
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1299,6 +1287,7 @@ class EvaporationObs(MeteoObs):
             x=meta["x"],
             y=meta["y"],
             name=meta["name"],
+            source=meta["source"],
             meteo_var=et_type,
         )
 
@@ -1378,6 +1367,8 @@ class EvaporationObs(MeteoObs):
                 x=meta["x"],
                 y=meta["y"],
                 name=meta["name"],
+                source=meta["source"],
+                unit=meta["unit"],
                 meteo_var=et_type,
             )
 
@@ -1474,6 +1465,8 @@ class EvaporationObs(MeteoObs):
             y=meta["y"],
             name=meta["name"],
             meteo_var=et_type,
+            source=meta["source"],
+            unit=meta["unit"],
         )
 
 
@@ -1488,7 +1481,7 @@ class PrecipitationObs(MeteoObs):
         return PrecipitationObs
 
     @classmethod
-    def from_knmi(cls, stn, stn_type="meteo", **kwargs):
+    def from_knmi(cls, stn, stn_type="meteo", meteo_var=None, **kwargs):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for.
 
@@ -1519,6 +1512,8 @@ class PrecipitationObs(MeteoObs):
         stn_type : str, optional
             type of measurements station. Can be 'meteo' or 'precipitation'.
             Default is 'meteo'.
+        meteo_var : None
+            not used.
         **kwargs:
             startdate : str, datetime or None, optional
                 start date of observations. The default is None.
@@ -1541,7 +1536,7 @@ class PrecipitationObs(MeteoObs):
 
         Returns
         -------
-        PrecipitationObs object with an evaporation time series and attributes
+        PrecipitationObs object with a precipitation time series and attributes
         """
         if stn_type == "meteo":
             meteo_var = "RH"
@@ -1602,7 +1597,7 @@ class PrecipitationObs(MeteoObs):
 
     @classmethod
     def from_obs(cls, obs, stn_type="meteo", **kwargs):
-        """Get a PrecipitationObs object with evaporation measurements from the
+        """Get a PrecipitationObs object with precipitation measurements from the
         the meteo or precipitation station closest to the given observation.
         Uses the x and y coördinates of the observation to obtain the nearest
         KNMI precipitation time series. Uses the start- and enddate of the

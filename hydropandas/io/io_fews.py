@@ -25,7 +25,6 @@ def read_xml_fname(
     return_df=False,
     tags=("series", "header", "event"),
     skip_errors=True,
-    to_mnap=False,
     remove_nan=False,
     **kwargs,
 ):
@@ -39,7 +38,7 @@ def read_xml_fname(
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
-        {'locationId': 'locatie'}.
+        {'locationId': 'monitoring_well'}.
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
@@ -61,9 +60,6 @@ def read_xml_fname(
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
@@ -74,7 +70,7 @@ def read_xml_fname(
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {"locationId": "locatie"}
+        translate_dic = {"locationId": "monitoring_well"}
 
     if low_memory is True:
         obs_list = iterparse_pi_xml(
@@ -97,7 +93,6 @@ def read_xml_fname(
             ObsClass,
             translate_dic=translate_dic,
             locationIds=locationIds,
-            to_mnap=to_mnap,
             remove_nan=remove_nan,
         )
 
@@ -126,7 +121,7 @@ def iterparse_pi_xml(
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
-        {'locationId': 'locatie'}.
+        {'locationId': 'monitoring_well'}.
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
@@ -155,7 +150,7 @@ def iterparse_pi_xml(
         list of timeseries if 'return_df' is False
     """
     if translate_dic is None:
-        translate_dic = {"locationId": "locatie"}
+        translate_dic = {"locationId": "monitoring_well"}
 
     tags = ["{{http://www.wldelft.nl/fews/PI}}{}".format(tag) for tag in tags]
 
@@ -281,7 +276,6 @@ def read_xmlstring(
     filterdict=None,
     locationIds=None,
     low_memory=True,
-    to_mnap=False,
     remove_nan=False,
 ):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
@@ -295,16 +289,13 @@ def read_xmlstring(
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
-        {'locationId': 'locatie'}.
+        {'locationId': 'monitoring_well'}.
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
@@ -315,7 +306,7 @@ def read_xmlstring(
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {"locationId": "locatie"}
+        translate_dic = {"locationId": "monitoring_well"}
 
     if low_memory:
         obs_list = iterparse_pi_xml(
@@ -332,7 +323,6 @@ def read_xmlstring(
             ObsClass,
             translate_dic=translate_dic,
             locationIds=locationIds,
-            to_mnap=to_mnap,
             remove_nan=remove_nan,
         )
 
@@ -340,12 +330,7 @@ def read_xmlstring(
 
 
 def read_xml_root(
-    root,
-    ObsClass,
-    translate_dic=None,
-    locationIds=None,
-    to_mnap=False,
-    remove_nan=False,
+    root, ObsClass, translate_dic=None, locationIds=None, remove_nan=False,
 ):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
@@ -357,12 +342,10 @@ def read_xml_root(
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
-        {'locationId': 'locatie'}.
+        {'locationId': 'monitoring_well'}.
     locationIds : tuple or list of str, optional
         list of locationId's to read from XML file, others are skipped.
         If None (default) all locations are read.
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
@@ -373,7 +356,7 @@ def read_xml_root(
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {"locationId": "locatie"}
+        translate_dic = {"locationId": "monitoring_well"}
 
     obs_list = []
     for item in root:
@@ -405,12 +388,11 @@ def read_xml_root(
 
             if remove_nan and (not ts.empty):
                 ts.dropna(subset=["value"], inplace=True)
-            if to_mnap and (not ts.empty):
-                ts["stand_m_tov_nap"] = ts["value"]
+                header["unit"] = "m NAP"
 
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             if locationIds is not None:
-                if header["locatie"] in locationIds:
+                if header["monitoring_well"] in locationIds:
                     obs_list.append(o)
             else:
                 obs_list.append(o)
@@ -462,12 +444,15 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             x=x,
             y=y,
             meta=header,
-            name=header["locatie"],
-            locatie=header["locatie"],
+            name=header["monitoring_well"],
+            monitoring_well=header["monitoring_well"],
             metadata_available=metadata_available,
+            source="FEWS",
         )
     else:
-        o = ObsClass(ts, x=x, y=y, meta=header, name=header["locatie"])
+        o = ObsClass(
+            ts, x=x, y=y, meta=header, name=header["monitoring_well"], source="FEWS"
+        )
 
     return o, header
 
@@ -578,7 +563,6 @@ def read_xml_filelist(
     locations=None,
     translate_dic=None,
     filterdict=None,
-    to_mnap=False,
     remove_nan=False,
     low_memory=True,
     **kwargs,
@@ -598,14 +582,11 @@ def read_xml_filelist(
         If None (default) all locations are read.
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
-        {'locationId': 'locatie'}.
+        {'locationId': 'monitoring_well'}.
     filterdict : dict, optional
         dictionary with tag name to apply filter to as keys, and list of
         accepted names as dictionary values to keep in final result,
         i.e. {"locationId": ["B001", "B002"]}
-    to_mnap : boolean, optional
-        if True a column with 'stand_m_tov_nap' is added to the dataframe,
-        only used if low_memory=False
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
@@ -619,7 +600,7 @@ def read_xml_filelist(
         list of timeseries stored in ObsClass objects
     """
     if translate_dic is None:
-        translate_dic = {"locationId": "locatie"}
+        translate_dic = {"locationId": "monitoring_well"}
 
     obs_list = []
     nfiles = len(fnames)

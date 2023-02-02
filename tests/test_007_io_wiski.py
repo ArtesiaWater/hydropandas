@@ -4,13 +4,8 @@
 @author: oebbe
 """
 
-from hydropandas import observation as obs
+import hydropandas as hpd
 from hydropandas.io import io_wiski
-
-# TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-# PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
-# sys.path.insert(0, PROJECT_DIR)
-# os.chdir(TEST_DIR)
 
 
 def test_read_wiski_csv():
@@ -56,7 +51,7 @@ def test_read_wiski_csv2():
 def test_read_wiski_zip():
     obs_df = io_wiski.read_wiski_dir(
         "./tests/data/2019-WISKI-test/1016_PBF.zip",
-        ObsClass=obs.GroundwaterObs,
+        ObsClass=hpd.GroundwaterObs,
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
@@ -70,7 +65,7 @@ def test_read_wiski_zip():
 
 
 def test_rijnenijssel_wiski_format():
-    o = obs.GroundwaterObs.from_wiski(
+    o = hpd.GroundwaterObs.from_wiski(
         (
             "./tests/data/2019-WISKI-test/"
             "Zwiepse Horstweg Barchem_1024_FT1_WNS9040_MomentaanO.csv"
@@ -81,6 +76,5 @@ def test_rijnenijssel_wiski_format():
         index_col=[0],
         infer_datetime_format=True,
         tz_localize=False,
-        to_mnap=False,
     )
     return o

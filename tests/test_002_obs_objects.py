@@ -6,8 +6,7 @@
 
 import numpy as np
 import pandas as pd
-from hydropandas import obs_collection as oc
-from hydropandas import observation as obs
+import hydropandas as hpd
 
 # import sys
 # sys.path.insert(1, "..")
@@ -19,28 +18,30 @@ from hydropandas import observation as obs
 # os.chdir(TEST_DIR)
 
 
-def test_groundwater_obs(name="grondwaterobs_001", filternr=2):
+def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"),
-        data={"Stand_m_tov_NAP": np.random.rand(10)},
+        data={"values": np.random.rand(10)},
     )
-    maaiveld = np.random.random()
+    ground_level = np.random.random()
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    gwo = obs.GroundwaterObs(
+    gwo = hpd.GroundwaterObs(
         df,
         name=name,
-        locatie=name.split("_")[0],
+        monitoring_well=name.split("_")[0],
         x=x,
         y=y,
-        maaiveld=maaiveld,
-        meetpunt=maaiveld - 0.2,
-        onderkant_filter=maaiveld - 10.0,
-        bovenkant_filter=maaiveld - 9.0,
+        source="generated",
+        unit="m NAP",
+        ground_level=ground_level,
+        tube_top=ground_level - 0.2,
+        screen_bottom=ground_level - 10.0,
+        screen_top=ground_level - 9.0,
         metadata_available=True,
-        filternr=filternr,
+        tube_nr=tube_nr,
         filename="",
-        meta={"info": "in deze dictionary " "kan je extra informatie kwijt"},
+        meta={"info": "you can store additional information in this dictionary"},
     )
     return gwo
 
@@ -48,18 +49,18 @@ def test_groundwater_obs(name="grondwaterobs_001", filternr=2):
 def test_waterlvl_obs():
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"),
-        data={"Stand_m_tov_NAP": np.random.rand(10)},
+        data={"values": np.random.rand(10)},
     )
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    wlvl = obs.WaterlvlObs(
+    wlvl = hpd.WaterlvlObs(
         df,
         name="waterlvl_obs1",
-        locatie="obs1",
+        monitoring_well="obs1",
         x=x,
         y=y,
         filename="",
-        meta={"info": "in deze dictionary kan je extra informatie kwijt"},
+        meta={"info": "you can store additional information in this dictionary"},
     )
     return wlvl
 
@@ -68,14 +69,14 @@ def test_groundwater_quality_obs():
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"), data={"pH": np.random.rand(10)}
     )
-    gwq = obs.WaterlvlObs(
+    gwq = hpd.WaterlvlObs(
         df,
         name="waterquality_obs1",
-        locatie="waterquality",
+        monitoring_well="waterquality",
         x=3,
         y=4,
         filename="",
-        meta={"info": "in deze dictionary " "kan je extra informatie kwijt"},
+        meta={"info": "you can store additional information in this dictionary"},
     )
     return gwq
 
@@ -83,16 +84,16 @@ def test_groundwater_quality_obs():
 def test_obscollection_from_list():
     o_list = []
     for i in range(10):
-        o_list.append(test_groundwater_obs(name=f"grondwaterobs_00{i}", filternr=i))
+        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
 
-    obs_col = oc.ObsCollection.from_list(o_list)
+    obs_col = hpd.ObsCollection.from_list(o_list)
 
     return obs_col
 
 
 def test_copy_obs():
 
-    o = test_groundwater_obs(name="grondwaterobs_001", filternr=2)
+    o = test_groundwater_obs(name="groundwaterobs_001", tube_nr=2)
     o2 = o.copy()
 
     o.meta["hello"] = "world"
@@ -109,10 +110,10 @@ def test_copy_obs():
 
 def test_merge_observations_same_timeseries():
     # base
-    o = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
+    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with different metadata, same time series
-    o2 = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
+    o2 = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
     o2.iloc[:, 0] = o.iloc[:, 0]
 
     omerged = o.merge_observation(o2, merge_metadata=False)
@@ -122,12 +123,12 @@ def test_merge_observations_same_timeseries():
 
 def test_merge_observations_different_timeseries():
     # base
-    o = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
+    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with different time series
     o2 = o.copy()
     o2.index = pd.date_range("2020-1-11", "2020-1-20")
-    o2["Stand_m_tov_NAP"] = np.random.rand(10)
+    o2["values"] = np.random.rand(10)
 
     omerged = o.merge_observation(o2)
 
@@ -141,14 +142,14 @@ def test_merge_observations_different_timeseries():
 
 def test_merge_overlapping():
     # base
-    o = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
+    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with partially overlapping time series and extra columns
     o2 = o.copy()
     o2.index = pd.date_range("2020-1-6", "2020-1-15")
-    o2["Stand_m_tov_NAP"].iloc[:5] = o["Stand_m_tov_NAP"].iloc[-5:]
+    o2["values"].iloc[:5] = o["values"].iloc[-5:]
     o2["valid"] = np.random.randint(0, 2, 10)
-    o2["Opmerking"] = "test"
+    o2["qualifier"] = "test"
 
     omerged = o.merge_observation(o2)
 
@@ -162,7 +163,7 @@ def test_merge_overlapping():
 
 def test_merge_errors():
     # base
-    o = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
+    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with partially overlapping time series and extra columns
     o2 = test_waterlvl_obs()
@@ -178,6 +179,6 @@ def test_merge_errors():
 def test_add_observation_to_oc():
     oc = test_obscollection_from_list()
 
-    o = test_groundwater_obs(name="grondwaterobs_010", filternr=10)
+    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     oc.add_observation(o)

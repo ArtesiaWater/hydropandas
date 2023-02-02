@@ -38,7 +38,7 @@ def read_wiski_file(
     infer_datetime_format=True,
     translate_dic=None,
     tz_localize=True,
-    to_mnap=True,
+    unit="",
     **kwargs,
 ):
     logger.info("reading -> {}".format(os.path.split(fname)[-1]))
@@ -100,17 +100,14 @@ def read_wiski_file(
             col = [icol for icol in data.columns if icol.lower().startswith("value")][0]
 
             data[col] = pd.to_numeric(data[col], errors="coerce")
-
-            if to_mnap:
-                data.rename(columns={col: "stand_m_tov_nap"}, inplace=True)
         else:
             data = None
 
         # translate some header keys
-        metadata = {}
+        metadata = {"source": "wiski", "unit": unit}
         for key, val in header.items():
             if key == "Station Site":
-                metadata["locatie"] = val
+                metadata["monitoring_well"] = val
             elif key == "x":
                 metadata["x"] = val
             elif key == "y":
