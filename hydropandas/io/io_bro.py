@@ -293,8 +293,7 @@ def measurements_from_gld(
     if to_wintertime:
         # remove time zone information by transforming to dutch winter time
         df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(
-            1, unit="H"
-        )
+            1, unit="H")
 
     # duplicates
     if df.index.has_duplicates and drop_duplicate_times:
@@ -304,6 +303,9 @@ def measurements_from_gld(
         df = df[~duplicates]
 
     df = df.sort_index()
+    
+    # slice to tmin and tmax
+    df = df.loc[tmin:tmax]
 
     # add metadata from gmw
     meta.update(get_metadata_from_gmw(meta["monitoring_well"], meta["tube_nr"]))
