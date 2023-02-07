@@ -65,6 +65,16 @@ class CollectionPlots:
             "tan",
         )
 
+        # check if observations consist of monitoring wells
+        if per_monitoring_well:
+            otype = self._obj._infer_otype()
+            if isinstance(otype, (list, np.ndarray)):
+                per_monitoring_well = False
+            elif otype.__name__ == "GroundwaterObs":
+                pass
+            else:
+                per_monitoring_well = False
+
         if per_monitoring_well:
             plot_names = self._obj.groupby("monitoring_well").count().index
         else:
@@ -214,9 +224,23 @@ class CollectionPlots:
         if m is None:
             m = folium.Map([northing, easting], zoom_start=zoom_start)
 
+        # get oc name if no legend name is given
+        if legend_name is None:
+            legend_name = self._obj.name
+
         # add the point observations with plots to the map
         group_name = '<span style=\\"color: {};\\">{}</span>'.format(color, legend_name)
         group = folium.FeatureGroup(name=group_name)
+
+        # check if observations consist of monitoring wells
+        if per_monitoring_well:
+            otype = self._obj._infer_otype()
+            if isinstance(otype, (list, np.ndarray)):
+                per_monitoring_well = False
+            elif otype.__name__ == "GroundwaterObs":
+                pass
+            else:
+                per_monitoring_well = False
 
         if per_monitoring_well:
             plot_names = self._obj.groupby("monitoring_well").count().index
