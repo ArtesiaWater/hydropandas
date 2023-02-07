@@ -1204,6 +1204,51 @@ class MeteoObs(Obs):
             unit=meta["unit"],
             meteo_var=meteo_var,
         )
+    
+    @classmethod
+    def from_knmi_file(
+        cls,
+        fname,
+        meteo_var="RH",
+        startdate=None,
+        enddate=None
+        ):
+        """Get a MeteoObs timeseries from the KNMI meteo data.
+
+        Parameters
+        ----------
+        fname : str
+            full path of a knmi .txt file
+        meteo_var : str,
+            meteo variable e.g. "RH" or "EV24".
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        
+        Returns
+        -------
+        MeteoObs object with meteorological observations
+        """
+        from .io import io_knmi
+        
+        if not fname.endswith('.txt'):
+            fname += '.txt'
+
+        knmi_df, meta = io_knmi.read_knmi_timeseries_file(fname, meteo_var, 
+                                                          startdate, enddate)
+
+        return cls(
+            knmi_df,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
+            meteo_var=meteo_var,
+        )
 
 
 class EvaporationObs(MeteoObs):
@@ -1469,6 +1514,50 @@ class EvaporationObs(MeteoObs):
             source=meta["source"],
             unit=meta["unit"],
         )
+    
+    
+    @classmethod
+    def from_knmi_file(
+        cls,
+        fname,
+        startdate=None,
+        enddate=None
+        ):
+        """Get a EvaporationObs timeseries from the KNMI meteo data.
+
+        Parameters
+        ----------
+        fname : str
+            full path of a knmi .txt file
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        
+        Returns
+        -------
+        MeteoObs object with meteorological observations
+        """
+        from .io import io_knmi
+        
+        if not fname.endswith('.txt'):
+            fname += '.txt'
+
+        knmi_df, meta = io_knmi.read_knmi_timeseries_file(fname, "EV24", 
+                                                          startdate, enddate)
+
+        return cls(
+            knmi_df,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
+            meteo_var="EV24",
+        )
+
 
 
 class PrecipitationObs(MeteoObs):
@@ -1645,3 +1734,46 @@ class PrecipitationObs(MeteoObs):
             raise ValueError(f"invalid measurement station type -> {stn_type}")
 
         return super().from_obs(obs, meteo_var=meteo_var, **kwargs)
+    
+    
+    @classmethod
+    def from_knmi_file(
+        cls,
+        fname,
+        startdate=None,
+        enddate=None
+        ):
+        """Get a PrecipitationObs timeseries from the KNMI meteo data.
+
+        Parameters
+        ----------
+        fname : str
+            full path of a knmi .txt file
+        startdate : str, datetime or None, optional
+            start date of observations. The default is None.
+        enddate : str, datetime or None, optional
+            end date of observations. The default is None.
+        
+        Returns
+        -------
+        PrecipitationObs object with precipitation observations
+        """
+        from .io import io_knmi
+        
+        if not fname.endswith('.txt'):
+            fname += '.txt'
+
+        knmi_df, meta = io_knmi.read_knmi_timeseries_file(fname, "RD", 
+                                                          startdate, enddate)
+
+        return cls(
+            knmi_df,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
+            meteo_var="RD",
+        )

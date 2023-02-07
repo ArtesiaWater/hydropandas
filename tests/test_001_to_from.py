@@ -191,6 +191,8 @@ def test_obscollection_wiskizip_gw():
 def test_to_pastastore():
 
     dino_gw = test_obscollection_dinozip_gw()
+    # drop duplicate
+    dino_gw.drop('B22D0155-001', inplace=True)
     pstore = dino_gw.to_pastastore()
 
     return pstore
@@ -210,6 +212,9 @@ def test_pressure_read_knmi():
 
 #%% Evaporation
 
+def test_evap_obs_from_file():
+    fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
+    return hpd.EvaporationObs.from_knmi_file(fname)
 
 def test_evap_obs_from_stn():
     return hpd.EvaporationObs.from_knmi(260, et_type="EV24")
@@ -238,6 +243,9 @@ def test_evap_obs_collection_from_xy_interpolate():
 
 #%% Precipitation
 
+def test_precip_obs_from_file():
+    fname = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
+    return hpd.PrecipitationObs.from_knmi_file(fname)
 
 def test_precip_obs_from_stn():
     return hpd.PrecipitationObs.from_knmi(233, "precipitation")
