@@ -194,11 +194,12 @@ def get_gld_id_from_gmw(bro_id, tube_nr):
             if len(tube["gldReferences"]) == 1:
                 return tube["gldReferences"][0]["broId"]
             elif len(tube["gldReferences"]) == 0:
-                logger.info(f"no groundwater level dossier for {bro_id} and tube number {tube_nr}")
+                logger.info(
+                    f"no groundwater level dossier for {bro_id} and tube number {tube_nr}"
+                )
                 return None
             else:
                 raise RuntimeError("unexpected number of gld references")
-            
 
 
 def measurements_from_gld(
@@ -293,7 +294,8 @@ def measurements_from_gld(
     if to_wintertime:
         # remove time zone information by transforming to dutch winter time
         df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(
-            1, unit="H")
+            1, unit="H"
+        )
 
     # duplicates
     if df.index.has_duplicates and drop_duplicate_times:
@@ -303,7 +305,7 @@ def measurements_from_gld(
         df = df[~duplicates]
 
     df = df.sort_index()
-    
+
     # slice to tmin and tmax
     df = df.loc[tmin:tmax]
 
@@ -574,15 +576,17 @@ def get_obs_list_from_extent(
         "gml": "http://www.opengis.net/gml/3.2",
         "brocom": "http://www.broservices.nl/xsd/brocommon/3.0",
     }
-    
-    if tree.find(".//brocom:responseType", ns).text == 'rejection':
+
+    if tree.find(".//brocom:responseType", ns).text == "rejection":
         raise RuntimeError(tree.find(".//brocom:rejectionReason", ns).text)
 
     gmws = tree.findall(".//dsgmw:GMW_C", ns)
-    
+
     if len(gmws) > 1000:
-        ans = input(f'You requested to download {len(gmws)} observations, this can take a while. Are you sure you want to continue [Y/n]? ')
-        if ans not in ['Y', 'y','yes','Yes', 'YES']:
+        ans = input(
+            f"You requested to download {len(gmws)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
+        )
+        if ans not in ["Y", "y", "yes", "Yes", "YES"]:
             return []
 
     obs_list = []

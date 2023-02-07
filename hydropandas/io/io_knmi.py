@@ -295,9 +295,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                     550, "DE-BILT", "RD", start, end
                 )
         else:
-            knmi_df, _ = get_knmi_daily_rainfall_url(
-                550, "DE-BILT", "RD", start, end
-            )
+            knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT", "RD", start, end)
     else:
         if use_api:
             try:
@@ -522,7 +520,7 @@ def get_knmi_daily_rainfall_api(
 
 @lru_cache()
 def get_knmi_daily_rainfall_url(
-    stn, stn_name, meteo_var='RD', start=None, end=None, use_cache=True
+    stn, stn_name, meteo_var="RD", start=None, end=None, use_cache=True
 ):
     """download and read knmi daily rainfall.
 
@@ -580,14 +578,11 @@ def get_knmi_daily_rainfall_url(
 
         # unzip file
         util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
-        
-        
-    return read_knmi_daily_rainfall_file(fname_txt, meteo_var, start=None, 
-                                         end=None)
+
+    return read_knmi_daily_rainfall_file(fname_txt, meteo_var, start=None, end=None)
 
 
-def read_knmi_daily_rainfall_file(fname_txt, meteo_var='RD',
-                                  start=None, end=None):
+def read_knmi_daily_rainfall_file(fname_txt, meteo_var="RD", start=None, end=None):
     """read a knmi file with daily rainfall data.
     
     Parameters
@@ -647,12 +642,12 @@ def read_knmi_daily_rainfall_file(fname_txt, meteo_var='RD',
 
         df, variables = _transform_variables(df, variables)
         variables["unit"] = "m"
-        
+
         # add station to variables
-        if len(df['STN'].unique())!=1:
-            raise ValueError('multiple stations in single file')
+        if len(df["STN"].unique()) != 1:
+            raise ValueError("multiple stations in single file")
         else:
-            variables['station'] = df['STN'].iloc[0]
+            variables["station"] = df["STN"].iloc[0]
 
     return df.loc[start:end, [meteo_var]], variables
 
@@ -938,13 +933,11 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
 
         # unzip file
         util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
-        
-    return read_knmi_daily_meteo_file(fname_txt, meteo_var,
-                                      start=None, end=None)
+
+    return read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None)
 
 
-def read_knmi_daily_meteo_file(fname_txt, meteo_var,
-                               start=None, end=None):
+def read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None):
     """read knmi daily meteo data from a file
     
     Parameters
@@ -1006,13 +999,13 @@ def read_knmi_daily_meteo_file(fname_txt, meteo_var,
 
                 # from UT to UT+1 (standard-time in the Netherlands)
                 df.index = df.index + pd.to_timedelta(1, unit="h")
-                
+
                 # add station to variables
-                if len(df['STN'].unique())!=1:
-                    raise ValueError('multiple stations in single file')
+                if len(df["STN"].unique()) != 1:
+                    raise ValueError("multiple stations in single file")
                 else:
-                    station = df['STN'].iloc[0]
-            
+                    station = df["STN"].iloc[0]
+
                 df = df.loc[start:end, [meteo_var]]
                 df = df.dropna()
                 df, variables = _transform_variables(df, variables)
@@ -1192,39 +1185,28 @@ def _get_default_settings(settings):
 
 
 def read_knmi_timeseries_file(fname, meteo_var, start, end):
-    
-    
-    
+
     if meteo_var == "RD":
-        knmi_df, meta = read_knmi_daily_rainfall_file(fname, 
-                                                 meteo_var='RD',
-                                                 start=start,
-                                                 end=end)
+        knmi_df, meta = read_knmi_daily_rainfall_file(
+            fname, meteo_var="RD", start=start, end=end
+        )
     else:
-        knmi_df, meta, _ = read_knmi_daily_meteo_file(fname, 
-                                                 meteo_var,
-                                                 start=start,
-                                                 end=end)
-    
-    
+        knmi_df, meta, _ = read_knmi_daily_meteo_file(
+            fname, meteo_var, start=start, end=end
+        )
+
     # get stations
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(meta['station'], stations)
-    
+    stn_name = get_station_name(meta["station"], stations)
+
     # set metadata
-    x = stations.loc[meta['station'], "x"]
-    y = stations.loc[meta['station'], "y"]
+    x = stations.loc[meta["station"], "x"]
+    y = stations.loc[meta["station"], "y"]
     meta.update(
-        {
-            "x": x,
-            "y": y,
-            "name": f"{meteo_var}_{stn_name}",
-            "source": "KNMI",
-        }
+        {"x": x, "y": y, "name": f"{meteo_var}_{stn_name}", "source": "KNMI",}
     )
 
     return knmi_df, meta
-    
 
 
 def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):

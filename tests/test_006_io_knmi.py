@@ -16,26 +16,26 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def test_read_knmi_file1():
-    # De Bilt neerslagstation 
+    # De Bilt neerslagstation
     fname = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
     ts, meta = io_knmi.read_knmi_daily_rainfall_file(fname)
-    
-    return ts, meta
 
+    return ts, meta
 
 
 def test_read_knmi_file2():
-    # De Bilt neerslagstation 
+    # De Bilt neerslagstation
     fname = "./tests/data/2023-KNMI-test/neerslaggeg_VILSTEREN_342.txt"
     ts, meta = io_knmi.read_knmi_daily_rainfall_file(fname)
-    
+
     return ts, meta
 
+
 def test_read_knmi_file3():
-    # De Bilt neerslagstation 
+    # De Bilt neerslagstation
     fname = "./tests/data/2023-KNMI-test/precipitation_st_anthonis.txt"
     ts, meta = io_knmi.read_knmi_daily_rainfall_file(fname)
-    
+
     return ts, meta
 
 
@@ -50,9 +50,10 @@ def test_get_knmi_precip_neerslagstation():
 def test_read_knmi_meteostation_file():
 
     fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
-    ts, meta, _  = io_knmi.read_knmi_daily_meteo_file(fname, 'EV24')
-    
+    ts, meta, _ = io_knmi.read_knmi_daily_meteo_file(fname, "EV24")
+
     return ts, meta
+
 
 def test_get_knmi_precip_meteostation_fill_missing():
 

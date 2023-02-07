@@ -64,17 +64,16 @@ class CollectionPlots:
             "salmon",
             "tan",
         )
-        
+
         # check if observations consist of monitoring wells
         if per_monitoring_well:
             otype = self._obj._infer_otype()
-            if isinstance(otype,(list, np.ndarray)):
+            if isinstance(otype, (list, np.ndarray)):
                 per_monitoring_well = False
-            elif otype.__name__ == 'GroundwaterObs':
+            elif otype.__name__ == "GroundwaterObs":
                 pass
             else:
                 per_monitoring_well = False
-        
 
         if per_monitoring_well:
             plot_names = self._obj.groupby("monitoring_well").count().index
@@ -224,7 +223,7 @@ class CollectionPlots:
         # create map if no map is given
         if m is None:
             m = folium.Map([northing, easting], zoom_start=zoom_start)
-            
+
         # get oc name if no legend name is given
         if legend_name is None:
             legend_name = self._obj.name
@@ -236,13 +235,13 @@ class CollectionPlots:
         # check if observations consist of monitoring wells
         if per_monitoring_well:
             otype = self._obj._infer_otype()
-            if isinstance(otype,(list, np.ndarray)):
+            if isinstance(otype, (list, np.ndarray)):
                 per_monitoring_well = False
-            elif otype.__name__ == 'GroundwaterObs':
+            elif otype.__name__ == "GroundwaterObs":
                 pass
             else:
                 per_monitoring_well = False
-                
+
         if per_monitoring_well:
             plot_names = self._obj.groupby("monitoring_well").count().index
         else:

@@ -947,7 +947,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=True,
         epsg=28992,
-        ignore_max_obs=False
+        ignore_max_obs=False,
     ):
         """ get all the observations within an extent or within a
         groundwatermonitoring net.
@@ -997,7 +997,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
-                ignore_max_obs=ignore_max_obs
+                ignore_max_obs=ignore_max_obs,
             )
             meta = {}
         elif bro_id is not None:
