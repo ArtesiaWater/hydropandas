@@ -27,7 +27,7 @@ def read_bro(
     tmin=None,
     tmax=None,
     only_metadata=False,
-    keep_all_obs=True,
+    keep_all_obs=False,
     epsg=28992,
 ):
     """ get all the observations within an extent or within a
