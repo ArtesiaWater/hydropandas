@@ -584,7 +584,7 @@ def get_knmi_daily_rainfall_url(
 
 def read_knmi_daily_rainfall_file(fname_txt, meteo_var="RD", start=None, end=None):
     """read a knmi file with daily rainfall data.
-    
+
     Parameters
     ----------
     fname_txt : str
