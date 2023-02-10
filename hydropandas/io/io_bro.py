@@ -282,8 +282,8 @@ def measurements_from_gld(
     # get observations
     msts = "ns11:observation//om:result//waterml:MeasurementTimeseries"
     times = [time.text for time in gld.findall(f"{msts}//waterml:time", ns)]
-    values = [float(value.text) for value in gld.findall(f"{msts}//waterml:value", ns)]
-    qualifiers = [q.text for q in gld.findall(f"{msts}//swe:value", ns)]
+    values = [np.nan if value.text is None else float(value.text) for value in gld.findall(f"{msts}//waterml:value", ns)]
+    qualifiers = [q.text for q in gld.findall(f"{msts}//swe:Category//swe:value", ns)]
 
     # to dataframe
     df = pd.DataFrame(

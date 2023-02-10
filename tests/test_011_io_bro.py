@@ -39,6 +39,18 @@ def test_groundwater_observations():
     return measurements
 
 
+def test_groundwater_observations2():
+    bro_id = "GLD000000008061"
+    measurements, meta = io_bro.get_bro_groundwater(
+        bro_id, tube_nr=None, only_metadata=False
+    )
+    
+    ax = measurements['values'].plot(color='blue', marker='.')
+    measurements.loc[measurements['qualifier']=='goedgekeurd', 'values'].plot(color='green', marker='.')
+
+    return measurements
+
+
 def test_get_gld_id_from_gmw():
 
     bro_id = "GMW000000036287"
