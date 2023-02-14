@@ -307,6 +307,212 @@ class CollectionPlots:
             m.save(os.path.join(plot_dir, fname))
 
         return m
+    
+    def section_plot(
+        self, tmin=None, tmax=None,
+        obs_plot_col='stand_m_tov_nap',
+        section_colname_x=None,
+        section_label_x=None,
+        fn_save=None):
+        """Create plot with well layout (left) en observations (right).
+
+        Parameters
+        ----------
+        tmin : dt.datetime, optional
+            start date for timeseries plot
+        tmax : dt.datetime, optional
+            end date for timeseries plot
+        obs_plot_col : str, optional
+            column in observation dataframe to plot
+        section_colname_x : str, optional
+            column used for x position on section plot, when None order collection is used
+        section_label_x : str, optional
+            label applied to x-axis in section plot
+        fn_save : str, optional
+            filename to save plot
+
+        TODO:
+            - use **kwargs for plotting
+            - speficy colors
+            - add horizontal line when maximum observation is close to or above ground level
+            - include some interactive Bokeh fancy
+            - add tube_bottom to section plot, when sand trap is below screen. Tube bottom is not a standard parameter
+        """
+        
+        import matplotlib.pyplot as plt
+        from matplotlib.gridspec import GridSpec
+
+        # prepare column for x location in section plot
+        if section_colname_x is None:
+            # use order in ObsCollection
+            plot_x = np.arange(len(self._obj))
+        else:
+            plot_x = self._obj[section_colname_x]
+
+        # create figure
+        fig = plt.figure(figsize=(15, 5))
+        gs = GridSpec(1, 2, width_ratios=[1, 3],)
+        ax_section = fig.add_subplot(gs[0])
+        ax_obs = fig.add_subplot(gs[1])
+
+        # plot well layout via markers
+        # DISCUSS: apply these parameters as keyword arguments?
+        color_well_layout = 'gray'
+        markersize = 100
+
+        ax_section.scatter(plot_x,
+                           self._obj.tube_top.values,
+                           markersize,
+                           label='tube top',
+                           marker='o',
+                           facecolors='none',
+                           color=color_well_layout,
+                           )
+        ax_section.scatter(plot_x,
+                           self._obj.ground_level.values,
+                           markersize,
+                           label='ground level',
+                           marker='_',
+                           color=color_well_layout,
+                           )
+        ax_section.scatter(plot_x,
+                           self._obj.screen_top.values,
+                           markersize/2,
+                           label='screen top',
+                           marker='x',
+                           color=color_well_layout,
+                           )
+        ax_section.scatter(plot_x,
+                           self._obj.screen_bottom.values,
+                           markersize,
+                           label='screen bottom',
+                           marker='+',
+                           color=color_well_layout,
+                           )
+
+        # loop over all wells, and plot observations and lines in section plot
+        for counter, name in enumerate(self._obj.index):
+            oc = self._obj.loc[[name], "obs"]
+
+            for i, o in enumerate(oc.values):
+                try:
+                    # create plot dataframe
+                    plot_df = o[tmin:tmax][obs_plot_col].copy()
+                    if plot_df.empty:
+                        raise ValueError(
+                            "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
+                        )
+
+                    # PART 1: plot timeseries of observations
+                    p = ax_obs.plot(plot_df, label=name)
+
+                    # add horizonal line to plot when minimum observation is close to bottom of screen
+                    offset = 0.1
+                    if (o.screen_bottom > plot_df.min()-offset) * (obs_plot_col=='stand_m_tov_nap') :
+                        ax_obs.axhline(y=o.screen_bottom,
+                                       ls='--',
+                                       lw=4,
+                                       alpha=0.5,
+                                       label=f'bottom of {name}\nis close to minimum observation',
+                                       color=p[0].get_color()
+                                       )
+
+                    # PART 2: fancy section plot with lines along tube
+
+                    # highlight filter on section plot
+                    # DISCUSS: o.plot_x does not work. Why?
+                    ax_section.plot([plot_x[counter]]*2,
+                                    [o.screen_top, o.screen_bottom],
+                                    color='k',
+                                    lw=3,
+                                    ls=':',
+                                    )
+
+                    # highlight blind tube on section plot
+                    ax_section.plot([plot_x[counter]]*2,
+                                    [o.screen_top, o.tube_top],
+                                    color=p[0].get_color(),
+                                    lw=3,
+                                    )
+
+                    # PART 3: fancy section plot with bandwith of observations
+                    ax_section.scatter(plot_x[counter],
+                                       plot_df.quantile(q=0.95),
+                                       markersize,
+                                       marker=(3, 0, 0),
+                                       color='blue',
+                                       alpha=0.5,
+                                       label='95% observation',
+                                       )
+                    ax_section.scatter(plot_x[counter],
+                                       plot_df.median(),
+                                       markersize,
+                                       marker=(4, 0, 90),
+                                       color='green',
+                                       alpha=0.5,
+                                       label='median',
+                                       )
+                    ax_section.scatter(plot_x[counter],
+                                       plot_df.quantile(q=0.05),
+                                       markersize,
+                                       marker=(3, 0, 180),
+                                       color='red',
+                                       alpha=0.5,
+                                       label='5% observation',
+                                       )
+
+                    logger.info(f"created sectionplot -> {o.name}")
+
+                except ValueError:
+                    logger.error(f"{o.name} has no data between {tmin} and {tmax}")
+                    o.iplot_fname = None
+
+        # layout
+        ax_section.set_ylabel('m NAP')
+        if obs_plot_col == 'stand_m_tov_nap':
+            ax_obs.set_ylabel('m NAP')
+        elif obs_plot_col == 'temperatuur':
+            ax_obs.set_ylabel('temperatuur (oC)')
+        else:
+            logger.error(f"{o.name} has no ylabel on plot because value of obs_plot_col ({obs_plot_col}) is not supported.")
+
+        if section_label_x is None:
+            # use name as xtick and rotate
+            ax_section.set_xticks(plot_x,
+                                  self._obj.index,
+                                  rotation='vertical',
+                                  fontsize='small',
+                                  )
+        else:
+            ax_section.set_xlabel(section_label_x)
+
+        # rotate labels on observation axis
+        ax_obs.set_xticks(ax_obs.get_xticks(),
+                          ax_obs.get_xticklabels(),
+                          rotation='vertical',
+                          fontsize='small',
+                          )
+
+        # add grid and legend to each plot
+        axes = [ax_section, ax_obs]
+        for ax in axes:
+            ax.grid()
+
+            # simple legend
+            handles, labels = ax.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            ax.legend(by_label.values(), by_label.keys())
+
+        fig.suptitle(self._obj.name)
+
+        if fn_save is not None:
+            try: 
+                fig.savefig(fn_save, dpi=250, bbox_inches='tight',)
+            except:
+                logger.error(f"Save of figure {o.name} failed ({fn_save}).")
+                
+        return fig, axes
+
 
 
 @accessor.register_obs_accessor("plots")
@@ -493,3 +699,4 @@ class ObsPlots:
             return self._obj.iplot_fname
         else:
             return p
+
