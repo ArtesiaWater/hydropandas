@@ -3,6 +3,7 @@ import os
 import warnings
 
 import numpy as np
+import xarray as xr
 from scipy.interpolate import griddata
 
 from .. import util
@@ -131,6 +132,9 @@ def read_modflow_results(
             warnings.warn(
                 "you probably want to set the xll " "and/or yll attributes in DIS!"
             )
+            
+    if isinstance(hds_arr, xr.DataArray):
+        hds_arr = hds_arr.values
 
     if nlay is None:
         nlay = ml.modelgrid.nlay

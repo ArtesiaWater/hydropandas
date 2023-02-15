@@ -265,6 +265,7 @@ def measurements_from_gld(
     }
 
     tree = xml.etree.ElementTree.fromstring(req.text)
+    
     glds = tree.findall(".//ns11:GLD_O", ns)
     if len(glds) != 1:
         raise (Exception("Only one gld supported"))
@@ -275,9 +276,11 @@ def measurements_from_gld(
     meta["tube_nr"] = int(
         gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
     )
-    meta["monitoringsnet"] = gld.find(
-        "ns11:groundwaterMonitoringNet//gldcommon:broId", ns
-    ).text
+    gmn = gld.find("ns11:groundwaterMonitoringNet//gldcommon:broId", ns)
+    if gmn is None:
+        meta["monitoringsnet"] = None
+    else:
+        meta["monitoringsnet"] = gmn.text
 
     # get observations
     msts = "ns11:observation//om:result//waterml:MeasurementTimeseries"
@@ -301,7 +304,7 @@ def measurements_from_gld(
     if df.index.has_duplicates and drop_duplicate_times:
         duplicates = df.index.duplicated(keep="first")
         message = "{} contains {} duplicates (of {}). Keeping only first values."
-        logger.warning(message.format(bro_id, duplicates.sum(), len(df)))
+        logger.info(message.format(bro_id, duplicates.sum(), len(df)))
         df = df[~duplicates]
 
     df = df.sort_index()
@@ -580,22 +583,22 @@ def get_obs_list_from_extent(
     if tree.find(".//brocom:responseType", ns).text == "rejection":
         raise RuntimeError(tree.find(".//brocom:rejectionReason", ns).text)
 
-    gmws = tree.findall(".//dsgmw:GMW_C", ns)
+    gmws_ids = np.unique([gmw.text for gmw in tree.findall(".//dsgmw:GMW_C//brocom:broId", ns)])
 
-    if len(gmws) > 1000:
+    if len(gmws_ids) > 1000:
         ans = input(
-            f"You requested to download {len(gmws)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
+            f"You requested to download {len(gmws_ids)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
         )
         if ans not in ["Y", "y", "yes", "Yes", "YES"]:
             return []
 
     obs_list = []
-    gmw_list = []
-    for gmw in tqdm(gmws):
-        gmw_id = gmw.find("brocom:broId", ns).text
-        if gmw_id in gmw_list:
-            logger.debug(f"gmw_id {gmw_id} already read, skipping")
-            continue
+    for gmw_id in tqdm(gmws_ids):
+        gmws = tree.findall(f'.//*[brocom:broId="{gmw_id}"]', ns)
+        if len(gmws)<1:
+            raise RuntimeError('unexpected')
+        else:
+            gmw = gmws[0]
 
         ntubes = int(gmw.find("dsgmw:numberOfMonitoringTubes", ns).text)
         for tube_nr in range(1, ntubes + 1):
@@ -614,6 +617,5 @@ def get_obs_list_from_extent(
                     obs_list.append(o)
             else:
                 obs_list.append(o)
-        gmw_list.append(gmw_id)
-
+        
     return obs_list

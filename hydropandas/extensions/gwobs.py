@@ -228,8 +228,8 @@ def get_zvec(x, y, gwf=None, ds=None):
     gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
         modflow model with top and bottoms
     ds : xarray.Dataset
-        xarray Dataset with with top and bottoms, must have
-        dimensions 'x' and 'y' and variables 'top' and 'bot'
+        xarray Dataset typically create in nlmod. Must have
+        dimensions 'x' and 'y' and variables 'top' and 'botm'.
 
     Raises
     ------
@@ -277,10 +277,20 @@ def get_zvec(x, y, gwf=None, ds=None):
         xmin, xmax, ymin, ymax = ds.attrs["extent"]
         if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
             zvec = np.nan
+        elif ds.gridtype == 'vertex':
+            import nlmod
+            cid = nlmod.dims.xy_to_icell2d((x,y), ds)
+            sel = ds.sel(icell2d=cid)
+            first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
+            zvec = np.concatenate(([sel["top"].data], sel["botm"].data))
+            mask = np.isnan(zvec)
+            idx = np.where(~mask, np.arange(mask.size), 0)
+            np.maximum.accumulate(idx, axis=0, out=idx)
+            zvec[mask] = zvec[idx[mask]]
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
             first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
-            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["bot"].data])
+            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["botm"].data])
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)

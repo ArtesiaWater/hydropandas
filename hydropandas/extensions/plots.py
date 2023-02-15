@@ -41,7 +41,7 @@ class CollectionPlots:
             will be passed to the Obs.to_interactive_plot method, options
             include:
 
-            - plot_columns : list of str
+            - cols : list of str or None
             - hoover_names : list of str
             - plot_freq : list of str
             - plot_legend_names : list of str
@@ -178,7 +178,7 @@ class CollectionPlots:
         **kwargs :
             will be passed to the to_interactive_plots method options are:
 
-            - plot_columns : list of str
+            - cols : list of str or None
             - hoover_names : list of str
             - plot_legend_names : list of str
             - plot_freq : list of str

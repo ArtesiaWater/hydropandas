@@ -29,6 +29,7 @@ def read_bro(
     only_metadata=False,
     keep_all_obs=False,
     epsg=28992,
+    ignore_max_obs=False,
 ):
     """ get all the observations within an extent or within a
     groundwatermonitoring net.
@@ -55,6 +56,10 @@ def read_bro(
         measurements
     epsg : int, optional
         epsg code of the extent. The default is 28992 (RD).
+    ignore_max_obs : bool, optional
+        by default you get a prompt if you want to download over a 1000
+        observations at once. if ignore_max_obs is True you won't get the
+        prompt. The default is False
 
     Returns
     -------
@@ -72,6 +77,7 @@ def read_bro(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         epsg=epsg,
+        ignore_max_obs=ignore_max_obs
     )
 
     return oc

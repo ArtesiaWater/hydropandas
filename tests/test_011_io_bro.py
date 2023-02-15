@@ -35,7 +35,13 @@ def test_groundwater_observations():
     measurements, meta = io_bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
+    return measurements
 
+def test_gld_no_monitoringnet():
+    bro_id = "GLD000000013128"
+    measurements, meta = io_bro.get_bro_groundwater(
+        bro_id, tube_nr=None, only_metadata=False
+    )
     return measurements
 
 
@@ -55,6 +61,7 @@ def test_get_gld_id_from_gmw():
 
     bro_id = "GMW000000036287"
     bro_id = "GMW000000055372"
+    bro_id = "GMW000000059186"
     gld = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1)
 
     return gld
@@ -63,6 +70,7 @@ def test_get_gld_id_from_gmw():
 def test_obs_list_from_extent():
 
     extent = (102395, 103121, 434331, 434750)
+    extent = [116500, 120000, 439000, 442000]
     obs_list = io_bro.get_obs_list_from_extent(
         extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992
     )
