@@ -313,6 +313,7 @@ class CollectionPlots:
         obs_plot_col='stand_m_tov_nap',
         section_colname_x=None,
         section_label_x=None,
+        ylabel='auto',
         fn_save=None):
         """Create plot with well layout (left) en observations (right).
 
@@ -328,6 +329,9 @@ class CollectionPlots:
             column used for x position on section plot, when None order collection is used
         section_label_x : str, optional
             label applied to x-axis in section plot
+        ylabel: str or list, optional
+            when 'auto' column unit in collection is ylabel, otherwise first
+            element of list is label of section plot, second element of observation plot
         fn_save : str, optional
             filename to save plot
 
@@ -337,6 +341,8 @@ class CollectionPlots:
             - add horizontal line when maximum observation is close to or above ground level
             - include some interactive Bokeh fancy
             - add tube_bottom to section plot, when sand trap is below screen. Tube bottom is not a standard parameter
+            - the standard colname 'stand_m_tov_nap' is only used for DINO. BRO has colname 'values'. Discuss about this isse.
+              Plot standard first columns, except when a colname is provided?
         """
         
         import matplotlib.pyplot as plt
@@ -354,6 +360,7 @@ class CollectionPlots:
         gs = GridSpec(1, 2, width_ratios=[1, 3],)
         ax_section = fig.add_subplot(gs[0])
         ax_obs = fig.add_subplot(gs[1])
+        axes = [ax_section, ax_obs]
 
         # plot well layout via markers
         # DISCUSS: apply these parameters as keyword arguments?
@@ -468,14 +475,6 @@ class CollectionPlots:
                     o.iplot_fname = None
 
         # layout
-        ax_section.set_ylabel('m NAP')
-        if obs_plot_col == 'stand_m_tov_nap':
-            ax_obs.set_ylabel('m NAP')
-        elif obs_plot_col == 'temperatuur':
-            ax_obs.set_ylabel('temperatuur (oC)')
-        else:
-            logger.error(f"{o.name} has no ylabel on plot because value of obs_plot_col ({obs_plot_col}) is not supported.")
-
         if section_label_x is None:
             # use name as xtick and rotate
             ax_section.set_xticks(plot_x,
@@ -493,8 +492,25 @@ class CollectionPlots:
                           fontsize='small',
                           )
 
-        # add grid and legend to each plot
-        axes = [ax_section, ax_obs]
+       
+        if ylabel == 'auto':
+            # has collection uniform unit?
+            if len(self._obj.unit.unique()) == 1:
+                ylabel = self._obj.unit.unique()[0]
+            else:
+                logger.error(f"Collection has more than one unit. Plot has both on one y-axis.")
+                ylabel = ', '.join(map(str,self._obj.unit.unique()))
+            for ax in axes: 
+                ax.set_ylabel(ylabel)
+        else :
+            try:
+                ax_section.set_ylabel(ylabel[0])
+                ax_obs.set_ylabel(ylabel[1])
+            except:
+                logger.error(f"Invalid value for ylabel {ylabel}. Plot has no ylabels.")
+            
+            
+         # add layout to both plots
         for ax in axes:
             ax.grid()
 
@@ -506,11 +522,11 @@ class CollectionPlots:
         fig.suptitle(self._obj.name)
 
         if fn_save is not None:
-            try: 
+            try:
                 fig.savefig(fn_save, dpi=250, bbox_inches='tight',)
             except:
                 logger.error(f"Save of figure {o.name} failed ({fn_save}).")
-                
+
         return fig, axes
 
 
@@ -606,7 +622,7 @@ class ObsPlots:
         # create plot
         if p is None:
             p = figure(
-                plot_width=600, plot_height=400, x_axis_type="datetime", title=""
+                width=600, height=400, x_axis_type="datetime", title=""
             )
             if ylabel is None:
                 ylabel = self._obj.unit
