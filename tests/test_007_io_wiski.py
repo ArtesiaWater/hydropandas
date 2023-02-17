@@ -11,7 +11,7 @@ from hydropandas.io import io_wiski
 def test_read_wiski_csv():
     # download single file
 
-    header, data = io_wiski.read_wiski_file(
+    io_wiski.read_wiski_file(
         "./tests/data/2019-WISKI-test/1016_PBF.csv",
         sep=r"\s+",
         header_sep=":",
@@ -23,13 +23,13 @@ def test_read_wiski_csv():
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
-    return header, data
+    return
 
 
 def test_read_wiski_csv2():
     # download single file
 
-    header, data = io_wiski.read_wiski_file(
+    io_wiski.read_wiski_file(
         "./tests/data/2019-WISKI-test/8137_PBF.csv",
         sep=r"\s+",
         header_sep=":",
@@ -42,14 +42,12 @@ def test_read_wiski_csv2():
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
-    return header, data
+    return
 
-
-# %%
 
 
 def test_read_wiski_zip():
-    obs_df = io_wiski.read_wiski_dir(
+    io_wiski.read_wiski_dir(
         "./tests/data/2019-WISKI-test/1016_PBF.zip",
         ObsClass=hpd.GroundwaterObs,
         sep=r"\s+",
@@ -61,11 +59,11 @@ def test_read_wiski_zip():
         verbose=True,
     )
 
-    return obs_df
+    return
 
 
 def test_rijnenijssel_wiski_format():
-    o = hpd.GroundwaterObs.from_wiski(
+    hpd.GroundwaterObs.from_wiski(
         (
             "./tests/data/2019-WISKI-test/"
             "Zwiepse Horstweg Barchem_1024_FT1_WNS9040_MomentaanO.csv"
@@ -77,4 +75,4 @@ def test_rijnenijssel_wiski_format():
         infer_datetime_format=True,
         tz_localize=False,
     )
-    return o
+    return
