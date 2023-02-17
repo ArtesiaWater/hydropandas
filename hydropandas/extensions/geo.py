@@ -418,14 +418,11 @@ class GeoAccessorObs:
         lon, lat : longitude and lattitude of x, y coordinates
         """
 
-        from pyproj import Proj, transform
-
-        inProj = Proj(in_epsg)
-        outProj = Proj(out_epsg)
+        from pyproj import Transformer
+        
+        transformer = Transformer.from_crs(in_epsg, out_epsg)
 
         if np.isnan(self._obj.x) or np.isnan(self._obj.y):
-            lat, lon = np.nan, np.nan
-        else:
-            lat, lon = transform(inProj, outProj, self._obj.x, self._obj.y)
-
-        return lat, lon
+            return np.nan, np.nan
+        
+        return transformer.transform(self._obj.x,  self._obj.y)
