@@ -394,7 +394,8 @@ def read_xml_root(
             index = pd.to_datetime(
                 [d + " " + t for d, t in zip(date, time)], errors="coerce"
             )
-            ts = pd.DataFrame(events, index=index, dtype=float)
+            ts = pd.DataFrame(events, index=index)
+            ts.loc[:, "value"] = ts.loc[:, "value"].astype(float)
 
             if remove_nan and (not ts.empty):
                 ts.dropna(subset=["value"], inplace=True)
