@@ -419,10 +419,10 @@ class GeoAccessorObs:
         """
 
         from pyproj import Transformer
-        
+
         transformer = Transformer.from_crs(in_epsg, out_epsg)
 
         if np.isnan(self._obj.x) or np.isnan(self._obj.y):
             return np.nan, np.nan
-        
-        return transformer.transform(self._obj.x,  self._obj.y)
+
+        return transformer.transform(self._obj.x, self._obj.y)

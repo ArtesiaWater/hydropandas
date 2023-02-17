@@ -210,7 +210,10 @@ def iterparse_pi_xml(
 
             if filterdict is not None:
                 skip = False
-                for k, v, in filterdict.items():
+                for (
+                    k,
+                    v,
+                ) in filterdict.items():
                     if header.get(k, None) not in v:
                         skip = True
                 if skip:
@@ -227,7 +230,10 @@ def iterparse_pi_xml(
 
             if filterdict is not None:
                 skip = False
-                for k, v, in filterdict.items():
+                for (
+                    k,
+                    v,
+                ) in filterdict.items():
                     if header.get(k, None) not in v:
                         skip = True
                 if skip:
@@ -330,7 +336,11 @@ def read_xmlstring(
 
 
 def read_xml_root(
-    root, ObsClass, translate_dic=None, locationIds=None, remove_nan=False,
+    root,
+    ObsClass,
+    translate_dic=None,
+    locationIds=None,
+    remove_nan=False,
 ):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 

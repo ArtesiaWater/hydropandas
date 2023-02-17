@@ -132,7 +132,7 @@ def read_modflow_results(
             warnings.warn(
                 "you probably want to set the xll " "and/or yll attributes in DIS!"
             )
-            
+
     if isinstance(hds_arr, xr.DataArray):
         hds_arr = hds_arr.values
 
@@ -191,7 +191,6 @@ def read_modflow_results(
         mo_list.append(mo)
 
     return mo_list
-
 
 
 def interp_weights(xy, uv, d=2):

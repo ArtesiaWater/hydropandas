@@ -277,9 +277,10 @@ def get_zvec(x, y, gwf=None, ds=None):
         xmin, xmax, ymin, ymax = ds.attrs["extent"]
         if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
             zvec = np.nan
-        elif ds.gridtype == 'vertex':
+        elif ds.gridtype == "vertex":
             import nlmod
-            cid = nlmod.dims.xy_to_icell2d((x,y), ds)
+
+            cid = nlmod.dims.xy_to_icell2d((x, y), ds)
             sel = ds.sel(icell2d=cid)
             zvec = np.concatenate(([sel["top"].data], sel["botm"].data))
             mask = np.isnan(zvec)
@@ -604,7 +605,11 @@ class GeoAccessorObs:
 
         # get index of regis model layer
         layer_i = get_modellayer_from_screen_depth(
-            self._obj.screen_top, self._obj.screen_bottom, zvec, left=-999, right=999,
+            self._obj.screen_top,
+            self._obj.screen_bottom,
+            zvec,
+            left=-999,
+            right=999,
         )
 
         if layer_i == 999:

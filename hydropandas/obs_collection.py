@@ -31,9 +31,9 @@ def read_bro(
     epsg=28992,
     ignore_max_obs=False,
 ):
-    """ get all the observations within an extent or within a
+    """get all the observations within an extent or within a
     groundwatermonitoring net.
-    
+
 
     Parameters
     ----------
@@ -77,7 +77,7 @@ def read_bro(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         epsg=epsg,
-        ignore_max_obs=ignore_max_obs
+        ignore_max_obs=ignore_max_obs,
     )
 
     return oc
@@ -264,7 +264,7 @@ def read_imod(
         modelname
     exclude_layers : int
         exclude modellayers from being read from imod
-        
+
     Returns
     -------
     ObsCollection
@@ -411,7 +411,7 @@ def read_knmi(
         was measured
         P     = Luchtdruk (in 0.1 hPa) herleid tot zeeniveau, op het moment
         van meten / Air pressure (in 0.1 hPa) reduced to mean sea level, at
-        the time of observation 
+        the time of observation
         VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
         1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
         56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
@@ -439,7 +439,7 @@ def read_knmi(
         was measured
         EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
         Potential evapotranspiration (Makkink) (in 0.1 mm)
-    
+
     Returns
     -------
     ObsCollection
@@ -465,7 +465,7 @@ def read_knmi(
 def read_menyanthes(
     fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
 ):
-    """ read a Menyanthes file    
+    """read a Menyanthes file
 
     Parameters
     ----------
@@ -955,9 +955,9 @@ class ObsCollection(pd.DataFrame):
         epsg=28992,
         ignore_max_obs=False,
     ):
-        """ get all the observations within an extent or within a
+        """get all the observations within an extent or within a
         groundwatermonitoring net.
-        
+
 
         Parameters
         ----------
@@ -1921,7 +1921,7 @@ class ObsCollection(pd.DataFrame):
         ]
 
     def get_series(self, tmin=None, tmax=None, col=None):
-        """        
+        """
 
         Parameters
         ----------

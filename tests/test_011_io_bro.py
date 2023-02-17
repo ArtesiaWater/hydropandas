@@ -37,6 +37,7 @@ def test_groundwater_observations():
     )
     return measurements
 
+
 def test_gld_no_monitoringnet():
     bro_id = "GLD000000013128"
     measurements, meta = io_bro.get_bro_groundwater(
@@ -50,9 +51,11 @@ def test_groundwater_observations2():
     measurements, meta = io_bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
-    
-    ax = measurements['values'].plot(color='blue', marker='.')
-    measurements.loc[measurements['qualifier']=='goedgekeurd', 'values'].plot(color='green', marker='.')
+
+    ax = measurements["values"].plot(color="blue", marker=".")
+    measurements.loc[measurements["qualifier"] == "goedgekeurd", "values"].plot(
+        color="green", marker="."
+    )
 
     return measurements
 

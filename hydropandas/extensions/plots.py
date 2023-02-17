@@ -22,7 +22,12 @@ class CollectionPlots:
         self._obj = oc_obj
 
     def interactive_plots(
-        self, savedir='figures', tmin=None, tmax=None, per_monitoring_well=True, **kwargs
+        self,
+        savedir="figures",
+        tmin=None,
+        tmax=None,
+        per_monitoring_well=True,
+        **kwargs,
     ):
         """Create interactive plots of the observations using bokeh.
 
@@ -112,7 +117,7 @@ class CollectionPlots:
 
     def interactive_map(
         self,
-        plot_dir='figures',
+        plot_dir="figures",
         m=None,
         tiles="OpenStreetMap",
         fname=None,
