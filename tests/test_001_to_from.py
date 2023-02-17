@@ -313,7 +313,12 @@ def test_knmi_collection_from_stns():
 def test_knmi_collection_from_grid():
     # somewhere in Noord-Holland (near Castricum)
     xy = [[104150.0, 510150.0], [104550.0, 510550.0]]
-    oc_knmi = hpd.read_knmi(xy=xy, meteo_vars=["RH"], starts=["2010"], ends=["2015"],)
+    oc_knmi = hpd.read_knmi(
+        xy=xy,
+        meteo_vars=["RH"],
+        starts=["2010"],
+        ends=["2015"],
+    )
     return oc_knmi
 
 

@@ -939,7 +939,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
 
 def read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None):
     """read knmi daily meteo data from a file
-    
+
     Parameters
     ----------
     fname_txt : str
@@ -1203,7 +1203,12 @@ def read_knmi_timeseries_file(fname, meteo_var, start, end):
     x = stations.loc[meta["station"], "x"]
     y = stations.loc[meta["station"], "y"]
     meta.update(
-        {"x": x, "y": y, "name": f"{meteo_var}_{stn_name}", "source": "KNMI",}
+        {
+            "x": x,
+            "y": y,
+            "name": f"{meteo_var}_{stn_name}",
+            "source": "KNMI",
+        }
     )
 
     return knmi_df, meta

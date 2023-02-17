@@ -1219,7 +1219,7 @@ class MeteoObs(Obs):
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
             end date of observations. The default is None.
-        
+
         Returns
         -------
         MeteoObs object with meteorological observations
@@ -1522,7 +1522,7 @@ class EvaporationObs(MeteoObs):
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
             end date of observations. The default is None.
-        
+
         Returns
         -------
         MeteoObs object with meteorological observations
@@ -1736,7 +1736,7 @@ class PrecipitationObs(MeteoObs):
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
             end date of observations. The default is None.
-        
+
         Returns
         -------
         PrecipitationObs object with precipitation observations
