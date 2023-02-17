@@ -105,7 +105,7 @@ class CollectionPlots:
                         return_filename=False,
                         **kwargs,
                     )
-                    logger.info(f"created iplot -> {o.name}")
+                    logger.debug(f"created iplot -> {o.name}")
                 except ValueError:
                     logger.error(f"{o.name} has no data between {tmin} and {tmax}")
                     o.iplot_fname = None

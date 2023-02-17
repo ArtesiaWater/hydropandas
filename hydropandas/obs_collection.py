@@ -688,10 +688,10 @@ class ObsCollection(pd.DataFrame):
         """
         otypes = self.obs.apply(lambda x: type(x)).unique()
         if otypes.shape[0] == 1:
-            logger.info("inferred observation type: {}".format(otypes[0]))
+            logger.debug("inferred observation type: {}".format(otypes[0]))
             return otypes[0]
         elif otypes.shape[0] > 1:
-            logger.info("inferred multiple otypes, types: {}".format(otypes))
+            logger.debug("inferred multiple otypes, types: {}".format(otypes))
             return otypes
         else:
             raise TypeError("could not infer observation type")
