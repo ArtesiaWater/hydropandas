@@ -1,10 +1,9 @@
+import logging
 import os
 
 import numpy as np
 
 from . import accessor
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,6 @@ class CollectionPlots:
             plot_names = self._obj.index
 
         for name in plot_names:
-
             if per_monitoring_well:
                 oc = self._obj.loc[
                     self._obj.monitoring_well == name, "obs"
@@ -384,9 +382,8 @@ class ObsPlots:
             filename of the bokeh plot or reference to bokeh plot
         """
 
-        from bokeh.plotting import figure
         from bokeh.models import ColumnDataSource, HoverTool
-        from bokeh.plotting import save
+        from bokeh.plotting import figure, save
         from bokeh.resources import CDN
 
         cols = list(cols)
