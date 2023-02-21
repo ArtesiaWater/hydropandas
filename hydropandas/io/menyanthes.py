@@ -11,9 +11,8 @@ import numpy as np
 from pandas import DataFrame, Series
 from scipy.io import loadmat
 
-from ..util import matlab2datetime
 from ..observation import GroundwaterObs, WaterlvlObs
-
+from ..util import matlab2datetime
 
 logger = logging.getLogger(__name__)
 

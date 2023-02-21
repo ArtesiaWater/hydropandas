@@ -6,7 +6,6 @@
 import logging
 import numbers
 
-
 logger = logging.getLogger(__name__)
 
 

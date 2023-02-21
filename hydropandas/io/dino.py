@@ -64,7 +64,6 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 
 def _read_dino_groundwater_metadata(f, line):
-
     _translate_dic_float = {
         "x-coordinaat": "x",
         "y-coordinaat": "y",
@@ -200,7 +199,6 @@ def read_dino_groundwater_quality_txt(fname):
     """
     logger.info("reading -> {}".format(os.path.split(fname)[-1]))
     with open(fname, "r") as f:
-
         # LOCATIE gegevens
         line = f.readline().rstrip("\n")
         assert line == "LOCATIE gegevens"
