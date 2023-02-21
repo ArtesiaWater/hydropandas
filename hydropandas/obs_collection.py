@@ -7,15 +7,14 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
-import warnings
+import logging
 import numbers
+
 import numpy as np
 import pandas as pd
 
 from . import observation as obs
 from . import util
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -308,7 +307,7 @@ def read_knmi(
     stns : list of str or None
         list of knmi stations. The default is None
     xy : list or numpy array, optional
-        xy coördinates of the locations. e.g. [[10,25], [5,25]]
+        xy coordinates of the locations. e.g. [[10,25], [5,25]]
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
         See list of all possible variables below
@@ -992,7 +991,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from .io.io_bro import get_obs_list_from_gmn, get_obs_list_from_extent
+        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
 
         if bro_id is None and (extent is not None):
             obs_list = get_obs_list_from_extent(
@@ -1107,7 +1106,7 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_dino import read_dino_dir
+        from .io.dino import read_dino_dir
 
         # read dino directory
         if name is None:
@@ -1186,7 +1185,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        from .io.io_dino import read_artdino_dir
+        from .io.dino import read_artdino_dir
 
         if name is None:
             name = subdir
@@ -1276,7 +1275,7 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_fews import read_xml_filelist, read_xmlstring
+        from .io.fews import read_xml_filelist, read_xmlstring
 
         if translate_dic is None:
             translate_dic = {"locationId": "monitoring_well"}
@@ -1359,7 +1358,7 @@ class ObsCollection(pd.DataFrame):
         exclude_layers : int
             exclude modellayers from being read from imod
         """
-        from .io.io_modflow import read_imod_results
+        from .io.modflow import read_imod_results
 
         mo_list = read_imod_results(
             obs_collection,
@@ -1399,7 +1398,7 @@ class ObsCollection(pd.DataFrame):
         stns : list of str or None
             list of knmi stations. The default is None
         xy : list or numpy array, optional
-            xy coördinates of the locations. e.g. [[10,25], [5,25]]
+            xy coordinates of the locations. e.g. [[10,25], [5,25]]
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
@@ -1529,7 +1528,7 @@ class ObsCollection(pd.DataFrame):
             Potential evapotranspiration (Makkink) (in 0.1 mm)
         """
 
-        from .io.io_knmi import get_knmi_obslist
+        from .io.knmi import get_knmi_obslist
 
         # obtain ObsClass
         if ObsClasses is None:
@@ -1549,13 +1548,15 @@ class ObsCollection(pd.DataFrame):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
                 TypeError(
-                    "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
+                    "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
+                    "list or tuple"
                 )
         elif isinstance(ObsClasses, (list, tuple)):
             pass
         else:
             TypeError(
-                "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
+                "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
+                "list or tuple"
             )
 
         meta = {}
@@ -1599,8 +1600,7 @@ class ObsCollection(pd.DataFrame):
     def from_menyanthes(
         cls, fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
     ):
-
-        from .io.io_menyanthes import read_file
+        from .io.menyanthes import read_file
 
         menyanthes_meta = {"filename": fname, "type": ObsClass}
 
@@ -1645,7 +1645,7 @@ class ObsCollection(pd.DataFrame):
             interpolation method, either 'linear' or 'nearest',
             default is linear
         """
-        from .io.io_modflow import read_modflow_results
+        from .io.modflow import read_modflow_results
 
         mo_list = read_modflow_results(
             obs_collection,
@@ -1683,11 +1683,11 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             ObsCollection containing data
         """
-        from .io import io_waterinfo
+        from .io import waterinfo
 
         meta = {"name": name, "type": ObsClass, "filename": file_or_dir}
 
-        obs_list = io_waterinfo.read_waterinfo_obs(
+        obs_list = waterinfo.read_waterinfo_obs(
             file_or_dir, ObsClass, progressbar=progressbar, **kwargs
         )
         obs_df = util._obslist_to_frame(obs_list)
@@ -1706,8 +1706,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         **kwargs,
     ):
-
-        from .io.io_wiski import read_wiski_dir
+        from .io.wiski import read_wiski_dir
 
         meta = {
             "dirname": dirname,
@@ -1779,9 +1778,9 @@ class ObsCollection(pd.DataFrame):
                 o.to_excel(writer, sheetname)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
-        from .io import io_fews
+        from .io import fews
 
-        io_fews.write_pi_xml(self, fname, timezone=timezone, version=version)
+        fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
     def to_gdf(self, xcol="x", ycol="y"):
         """convert ObsCollection to GeoDataFrame.
@@ -1809,7 +1808,6 @@ class ObsCollection(pd.DataFrame):
             "# measurements",
         ),
     ):
-
         if "startdate" in columns:
             self["startdate"] = self.obs.apply(lambda x: x.index[0])
         if "enddate" in columns:
@@ -1855,7 +1853,7 @@ class ObsCollection(pd.DataFrame):
         pstore : pastastore.PastaStore
             the pastastore with the series from the ObsCollection
         """
-        from .io.io_pastas import create_pastastore
+        from .io.pastas import create_pastastore
 
         pstore = create_pastastore(
             self,

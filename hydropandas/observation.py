@@ -14,16 +14,14 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
-import warnings
+import logging
+
 import numpy as np
 import pandas as pd
-
 from _io import StringIO
 from pandas._config import get_option
-from pandas.io.formats import console
 from pandas.api.types import is_numeric_dtype
-
-import logging
+from pandas.io.formats import console
 
 logger = logging.getLogger(__name__)
 
@@ -518,9 +516,9 @@ class GroundwaterObs(Obs):
 
         """
 
-        from .io import io_bro
+        from .io import bro
 
-        measurements, meta = io_bro.get_bro_groundwater(
+        measurements, meta = bro.get_bro_groundwater(
             bro_id,
             tube_nr,
             tmin=tmin,
@@ -578,10 +576,10 @@ class GroundwaterObs(Obs):
             these arguments are passed to io_dino.read_dino_groundwater_csv if
             fname is not None and otherwise to io_dino.findMeetreeks
         """
-        from .io import io_dino
+        from .io import dino
 
         # read dino csv file
-        measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -596,10 +594,10 @@ class GroundwaterObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_csv
         """
-        from .io import io_dino
+        from .io import dino
 
         # read artdino csv file
-        measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_artdino_groundwater_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -617,9 +615,9 @@ class GroundwaterObs(Obs):
         [type]
             [description]
         """
-        from .io import io_wiski
+        from .io import wiski
 
-        data, metadata = io_wiski.read_wiski_file(fname, **kwargs)
+        data, metadata = wiski.read_wiski_file(fname, **kwargs)
 
         return cls(data, meta=metadata, **metadata)
 
@@ -639,7 +637,6 @@ class GroundwaterQualityObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
-
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
@@ -662,9 +659,9 @@ class GroundwaterQualityObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_groundwater_quality_txt
         """
-        from .io import io_dino
+        from .io import dino
 
-        measurements, meta = io_dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -678,7 +675,6 @@ class WaterlvlObs(Obs):
     _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
-
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
@@ -699,9 +695,9 @@ class WaterlvlObs(Obs):
         kwargs : key-word arguments
             these arguments are passed to io_dino.read_dino_waterlvl_csv
         """
-        from .io import io_dino
+        from .io import dino
 
-        measurements, meta = io_dino.read_dino_waterlvl_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_waterlvl_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -724,9 +720,9 @@ class WaterlvlObs(Obs):
         ValueError
             if file contains data for more than one location
         """
-        from .io import io_waterinfo
+        from .io import waterinfo
 
-        df, metadata = io_waterinfo.read_waterinfo_file(
+        df, metadata = waterinfo.read_waterinfo_file(
             fname, return_metadata=True, **kwargs
         )
         return cls(df, meta=metadata, **metadata)
@@ -741,7 +737,6 @@ class ModelObs(Obs):
     _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
-
         self.model = kwargs.pop("model", "")
 
         super(ModelObs, self).__init__(*args, **kwargs)
@@ -760,7 +755,6 @@ class MeteoObs(Obs):
     _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
-
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
 
@@ -912,11 +906,14 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
+
+        if fill_missing_obs and interval == "hourly":
+            fill_missing_obs = False
 
         if interval == "hourly" and meteo_var == "RD":
             raise NotImplementedError(
-                "hourly values not (yet) available for precipitation stations"
+                "hourly values are not available for precipitation stations"
             )
 
         settings = {
@@ -927,7 +924,7 @@ class MeteoObs(Obs):
             "raise_exceptions": raise_exceptions,
         }
 
-        ts, meta = io_knmi.get_knmi_timeseries_stn(
+        ts, meta = knmi.get_knmi_timeseries_stn(
             stn, meteo_var, startdate, enddate, settings=settings
         )
 
@@ -958,12 +955,12 @@ class MeteoObs(Obs):
         raise_exceptions=False,
     ):
         """Get a MeteoObs object from the KNMI station closest to the given
-        (x,y) coördinates.
+        (x,y) coordinates.
 
         Parameters
         ----------
         xy : list. tuple or numpy array of int or floats
-            xy coördinates. e.g. [10.1,25.05]
+            xy coordinates. e.g. [10.1,25.05]
         meteo_var : str,
             meteo variable e.g. "RH" or "EV24". See list with al options below.
         startdate : str, datetime or None, optional
@@ -993,7 +990,7 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1004,7 +1001,7 @@ class MeteoObs(Obs):
             "use_precipitation_stn": use_precipitation_stn,
         }
 
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
+        ts, meta = knmi.get_knmi_timeseries_xy(
             xy, meteo_var, startdate, enddate, settings=settings
         )
 
@@ -1035,7 +1032,7 @@ class MeteoObs(Obs):
         raise_exceptions=False,
     ):
         """Get a MeteoObs object with measurements from the KNMI station
-        closest to the given observation. Uses the x and y coördinates of the
+        closest to the given observation. Uses the x and y coordinates of the
         observation to obtain the nearest KNMI station. Uses the start- and
         enddate of the observation as start- and enddate of the meteo time
         series (unless startdate and enddatet are specified explicitly).
@@ -1171,7 +1168,7 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1189,7 +1186,7 @@ class MeteoObs(Obs):
         if enddate is None:
             enddate = obs.index[-1]
 
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
+        ts, meta = knmi.get_knmi_timeseries_xy(
             xy, meteo_var, startdate, enddate, settings=settings
         )
 
@@ -1224,12 +1221,12 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = io_knmi.read_knmi_timeseries_file(
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
             fname, meteo_var, startdate, enddate
         )
 
@@ -1306,7 +1303,10 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
+        from .io import knmi
+
+        if interval == "hourly":
+            fill_missing_obs = False
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1316,7 +1316,7 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        ts, meta = io_knmi.get_evaporation(
+        ts, meta = knmi.get_evaporation(
             stn, et_type, start=startdate, end=enddate, settings=settings
         )
 
@@ -1347,12 +1347,12 @@ class EvaporationObs(MeteoObs):
         raise_exceptions=False,
     ):
         """Get an EvaporationObs object with evaporation measurements from the
-        KNMI station closest to the given (x,y) coördinates.
+        KNMI station closest to the given (x,y) coordinates.
 
         Parameters
         ----------
         xy : list. tuple or numpy array of int or floats
-            xy coördinates. e.g. (10.1,25.05)
+            xy coordinates. e.g. (10.1,25.05)
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
@@ -1385,7 +1385,7 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1396,8 +1396,8 @@ class EvaporationObs(MeteoObs):
         }
 
         if method == "nearest":
-            stn = io_knmi.get_nearest_stations_xy(xy, "EV24")[0]
-            ts, meta = io_knmi.get_evaporation(
+            stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
+            ts, meta = knmi.get_evaporation(
                 stn, et_type, start=startdate, end=enddate, settings=settings
             )
 
@@ -1414,7 +1414,7 @@ class EvaporationObs(MeteoObs):
             )
 
         elif method == "interpolation":
-            obs_list = io_knmi.get_knmi_obslist(
+            obs_list = knmi.get_knmi_obslist(
                 xy=[xy],
                 meteo_vars=(et_type,),
                 starts=startdate,
@@ -1445,7 +1445,7 @@ class EvaporationObs(MeteoObs):
     ):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
-        coördinates of the observation to obtain the nearest KNMI evaporation
+        coordinates of the observation to obtain the nearest KNMI evaporation
         time series. Uses the start- and enddate of the observation as start-
         and enddate of the evaporation time series (unless startdate and
         enddatet are specified explicitly).
@@ -1481,7 +1481,7 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1493,8 +1493,8 @@ class EvaporationObs(MeteoObs):
 
         xy = (obs.x, obs.y)
 
-        stn = io_knmi.get_nearest_stations_xy(xy, "EV24")[0]
-        ts, meta = io_knmi.get_evaporation(
+        stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
+        ts, meta = knmi.get_evaporation(
             stn, et_type, start=startdate, end=enddate, settings=settings
         )
 
@@ -1527,12 +1527,12 @@ class EvaporationObs(MeteoObs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = io_knmi.read_knmi_timeseries_file(
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
             fname, "EV24", startdate, enddate
         )
 
@@ -1632,12 +1632,12 @@ class PrecipitationObs(MeteoObs):
     def from_nearest_xy(cls, xy, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y)
-        coördinates.
+        coordinates.
 
         Parameters
         ----------
         xy : list. tuple or numpy array of ints or floats
-            xy coördinates. e.g. [10.1,25.05]
+            xy coordinates. e.g. [10.1,25.05]
         stn_type : str, optional
             type of measurements station. Can be 'meteo' or 'precipitation'.
             Default is 'meteo'.
@@ -1678,7 +1678,7 @@ class PrecipitationObs(MeteoObs):
     def from_obs(cls, obs, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from the
         the meteo or precipitation station closest to the given observation.
-        Uses the x and y coördinates of the observation to obtain the nearest
+        Uses the x and y coordinates of the observation to obtain the nearest
         KNMI precipitation time series. Uses the start- and enddate of the
         observation as start- and enddate of the time series (unless startdate
         and enddate are specified explicitly).
@@ -1741,14 +1741,12 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with precipitation observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = io_knmi.read_knmi_timeseries_file(
-            fname, "RD", startdate, enddate
-        )
+        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
 
         return cls(
             knmi_df,
