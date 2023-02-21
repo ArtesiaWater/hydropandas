@@ -73,7 +73,6 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
 
         locations = d_h.keys()
         for location in locations:
-            logger.info(f"reading oseries -> {location}")
             metadata = d_h[location]
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
@@ -94,7 +93,6 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
         d_in = read_stresses(mat)
         stresses = d_in.keys()
         for stress in stresses:
-            logger.info(f"reading stress -> {stress}")
             metadata = d_in[stress]
             metadata["projection"] = "epsg:28992"
             metadata["metadata_available"] = True
@@ -122,12 +120,21 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
 def read_oseries(mat):
     """Read the oseries from a mat file from menyanthes."""
     d_h = {}
+
     # Check if more then one time series model is present
     if not isinstance(mat["H"], np.ndarray):
         mat["H"] = [mat["H"]]
 
     # Read all the time series models
     for i, H in enumerate(mat["H"]):
+        if not hasattr(H, "Name") and not hasattr(H, "name"):
+            H.Name = "H" + str(i)  # Give it the index name
+        if hasattr(H, "name"):
+            H.Name = H.name
+        if len(H.Name) == 0:
+            H.Name = H.tnocode
+        logger.info(f"reading oseries -> {H.Name}")
+
         data = {}
 
         for name in H._fieldnames:
@@ -146,13 +153,6 @@ def read_oseries(mat):
                 data["values"] = series
 
         # add to self.H
-        if not hasattr(H, "Name") and not hasattr(H, "name"):
-            H.Name = "H" + str(i)  # Give it the index name
-        if hasattr(H, "name"):
-            H.Name = H.name
-        if len(H.Name) == 0:
-            H.Name = H.tnocode
-
         d_h[H.Name] = data
 
     return d_h
@@ -167,8 +167,16 @@ def read_stresses(mat):
 
     # Read all the time series
     for i, IN in enumerate(mat["IN"]):
-        data = {}
+        if not hasattr(IN, "Name") and not hasattr(IN, "name"):
+            IN.Name = "IN" + str(i)  # Give it the index name
+        if hasattr(IN, "name"):
+            IN.Name = IN.name
+        if len(IN.Name) == 0:
+            IN.Name = IN.tnocode
 
+        logger.info(f"reading stress -> {IN.Name}")
+
+        data = {}
         for name in IN._fieldnames:
             if name != "values":
                 data[name.lower()] = getattr(IN, name)
@@ -185,13 +193,6 @@ def read_stresses(mat):
                 data["values"] = series
 
         # add to self.H
-        if not hasattr(IN, "Name") and not hasattr(IN, "name"):
-            IN.Name = "IN" + str(i)  # Give it the index name
-        if hasattr(IN, "name"):
-            IN.Name = IN.name
-        if len(IN.Name) == 0:
-            IN.Name = IN.tnocode
-
         d_in[IN.Name] = data
 
     return d_in

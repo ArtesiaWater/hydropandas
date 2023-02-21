@@ -428,9 +428,10 @@ def download_knmi_data(
                         end,
                         settings["inseason"],
                     )
-        except (RuntimeError, requests.ConnectionError):
+        except (RuntimeError, requests.ConnectionError) as e:
             settings["use_api"] = False
             logger.info("KNMI API failed, switching to non-API method")
+            raise e
 
         if not settings["use_api"]:
             end = end + dt.timedelta(days=1)
