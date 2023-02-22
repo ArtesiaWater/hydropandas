@@ -57,8 +57,8 @@ def test_obscollection_to_map():
         from art_tools import hpd_extension
 
         fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
-        ax = fews_gw_prod.art.plot_mapfig()
-        return ax
+        fews_gw_prod.art.plot_mapfig()
+        return
     except ModuleNotFoundError as e:
         print(e)
         return
@@ -78,7 +78,7 @@ def test_obscollection_to_imap():
         "monitoring_well", if_exists="replace"
     )
 
-    m = fews_gw_prod.plots.interactive_map(
+    fews_gw_prod.plots.interactive_map(
         plot_dir,
         plot_columns=("value",),
         fname=fname,
@@ -88,4 +88,3 @@ def test_obscollection_to_imap():
         map_label_size=10,
     )
     return m
-

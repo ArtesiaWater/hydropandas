@@ -15,22 +15,22 @@ dirname, fnames = hpd.util.get_files(
 
 def test_fews_highmemory():
 
-    obs_list = io_fews.read_xml_fname(
+    io_fews.read_xml_fname(
         os.path.join(dirname, fnames[0]), low_memory=False, ObsClass=hpd.WaterlvlObs
     )
 
-    return obs_list
+    return
 
 
 def test_fews_lowmemory():
-    obs_list = io_fews.read_xml_fname(
+    io_fews.read_xml_fname(
         os.path.join(dirname, fnames[0]), low_memory=True, ObsClass=hpd.WaterlvlObs
     )
 
-    return obs_list
+    return
 
 
 def test_obscollection_fews_selection():
-    obs_list = io_fews.read_xml_filelist(fnames, hpd.WaterlvlObs, dirname)
+    io_fews.read_xml_filelist(fnames, hpd.WaterlvlObs, dirname)
 
-    return obs_list
+    return

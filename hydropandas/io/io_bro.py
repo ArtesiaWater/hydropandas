@@ -91,9 +91,9 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
 
 
 def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
-    """ get bro groundwater measurement from a GLD id or a GMW id with a
-    filter number. 
-    
+    """get bro groundwater measurement from a GLD id or a GMW id with a
+    filter number.
+
 
     Parameters
     ----------
@@ -149,7 +149,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
 
 
 def get_gld_id_from_gmw(bro_id, tube_nr):
-    """ get bro_id of a grondwterstandendossier (gld) from a bro_id of a 
+    """get bro_id of a grondwterstandendossier (gld) from a bro_id of a
     grondwatermonitoringsput (gmw).
 
     Parameters
@@ -205,9 +205,9 @@ def get_gld_id_from_gmw(bro_id, tube_nr):
 def measurements_from_gld(
     bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True
 ):
-    """ get measurements and metadata from a grondwaterstandonderzoek (gld)
+    """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
-    
+
 
     Parameters
     ----------
@@ -265,6 +265,7 @@ def measurements_from_gld(
     }
 
     tree = xml.etree.ElementTree.fromstring(req.text)
+
     glds = tree.findall(".//ns11:GLD_O", ns)
     if len(glds) != 1:
         raise (Exception("Only one gld supported"))
@@ -275,19 +276,25 @@ def measurements_from_gld(
     meta["tube_nr"] = int(
         gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
     )
-    meta["monitoringsnet"] = gld.find(
-        "ns11:groundwaterMonitoringNet//gldcommon:broId", ns
-    ).text
+    gmn = gld.find("ns11:groundwaterMonitoringNet//gldcommon:broId", ns)
+    if gmn is None:
+        meta["monitoringsnet"] = None
+    else:
+        meta["monitoringsnet"] = gmn.text
 
     # get observations
     msts = "ns11:observation//om:result//waterml:MeasurementTimeseries"
     times = [time.text for time in gld.findall(f"{msts}//waterml:time", ns)]
-    values = [np.nan if value.text is None else float(value.text) for value in gld.findall(f"{msts}//waterml:value", ns)]
+    values = [
+        np.nan if value.text is None else float(value.text)
+        for value in gld.findall(f"{msts}//waterml:value", ns)
+    ]
     qualifiers = [q.text for q in gld.findall(f"{msts}//swe:Category//swe:value", ns)]
 
     # to dataframe
     df = pd.DataFrame(
-        index=pd.to_datetime(times), data={"values": values, "qualifier": qualifiers},
+        index=pd.to_datetime(times),
+        data={"values": values, "qualifier": qualifiers},
     )
 
     # wintertime
@@ -301,7 +308,7 @@ def measurements_from_gld(
     if df.index.has_duplicates and drop_duplicate_times:
         duplicates = df.index.duplicated(keep="first")
         message = "{} contains {} duplicates (of {}). Keeping only first values."
-        logger.warning(message.format(bro_id, duplicates.sum(), len(df)))
+        logger.info(message.format(bro_id, duplicates.sum(), len(df)))
         df = df[~duplicates]
 
     df = df.sort_index()
@@ -316,8 +323,8 @@ def measurements_from_gld(
 
 
 def get_full_metadata_from_gmw(bro_id, tube_nr):
-    """ get metadata for a groundwater monitoring well.
-    
+    """get metadata for a groundwater monitoring well.
+
 
     Parameters
     ----------
@@ -406,9 +413,9 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
 
 
 def get_metadata_from_gmw(bro_id, tube_nr):
-    """ get selection of metadata for a groundwater monitoring well.
+    """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
-    
+
 
     Parameters
     ----------
@@ -508,8 +515,8 @@ def get_obs_list_from_extent(
     epsg=28992,
     ignore_max_obs=False,
 ):
-    """ get a list of gmw observations within an extent.
-    
+    """get a list of gmw observations within an extent.
+
 
     Parameters
     ----------
@@ -534,7 +541,7 @@ def get_obs_list_from_extent(
 
     Raises
     ------
-    
+
         DESCRIPTION.
 
     Returns
@@ -580,22 +587,24 @@ def get_obs_list_from_extent(
     if tree.find(".//brocom:responseType", ns).text == "rejection":
         raise RuntimeError(tree.find(".//brocom:rejectionReason", ns).text)
 
-    gmws = tree.findall(".//dsgmw:GMW_C", ns)
+    gmws_ids = np.unique(
+        [gmw.text for gmw in tree.findall(".//dsgmw:GMW_C//brocom:broId", ns)]
+    )
 
-    if len(gmws) > 1000:
+    if len(gmws_ids) > 1000:
         ans = input(
-            f"You requested to download {len(gmws)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
+            f"You requested to download {len(gmws_ids)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
         )
         if ans not in ["Y", "y", "yes", "Yes", "YES"]:
             return []
 
     obs_list = []
-    gmw_list = []
-    for gmw in tqdm(gmws):
-        gmw_id = gmw.find("brocom:broId", ns).text
-        if gmw_id in gmw_list:
-            logger.debug(f"gmw_id {gmw_id} already read, skipping")
-            continue
+    for gmw_id in tqdm(gmws_ids):
+        gmws = tree.findall(f'.//*[brocom:broId="{gmw_id}"]', ns)
+        if len(gmws) < 1:
+            raise RuntimeError("unexpected")
+        else:
+            gmw = gmws[0]
 
         ntubes = int(gmw.find("dsgmw:numberOfMonitoringTubes", ns).text)
         for tube_nr in range(1, ntubes + 1):
@@ -614,6 +623,5 @@ def get_obs_list_from_extent(
                     obs_list.append(o)
             else:
                 obs_list.append(o)
-        gmw_list.append(gmw_id)
 
     return obs_list

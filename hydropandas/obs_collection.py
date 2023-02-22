@@ -29,10 +29,11 @@ def read_bro(
     only_metadata=False,
     keep_all_obs=False,
     epsg=28992,
+    ignore_max_obs=False,
 ):
-    """ get all the observations within an extent or within a
+    """get all the observations within an extent or within a
     groundwatermonitoring net.
-    
+
 
     Parameters
     ----------
@@ -55,6 +56,10 @@ def read_bro(
         measurements
     epsg : int, optional
         epsg code of the extent. The default is 28992 (RD).
+    ignore_max_obs : bool, optional
+        by default you get a prompt if you want to download over a 1000
+        observations at once. if ignore_max_obs is True you won't get the
+        prompt. The default is False
 
     Returns
     -------
@@ -72,6 +77,7 @@ def read_bro(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         epsg=epsg,
+        ignore_max_obs=ignore_max_obs,
     )
 
     return oc
@@ -258,7 +264,7 @@ def read_imod(
         modelname
     exclude_layers : int
         exclude modellayers from being read from imod
-        
+
     Returns
     -------
     ObsCollection
@@ -405,7 +411,7 @@ def read_knmi(
         was measured
         P     = Luchtdruk (in 0.1 hPa) herleid tot zeeniveau, op het moment
         van meten / Air pressure (in 0.1 hPa) reduced to mean sea level, at
-        the time of observation 
+        the time of observation
         VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
         1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
         56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
@@ -433,7 +439,7 @@ def read_knmi(
         was measured
         EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
         Potential evapotranspiration (Makkink) (in 0.1 mm)
-    
+
     Returns
     -------
     ObsCollection
@@ -459,7 +465,7 @@ def read_knmi(
 def read_menyanthes(
     fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
 ):
-    """ read a Menyanthes file    
+    """read a Menyanthes file
 
     Parameters
     ----------
@@ -682,10 +688,10 @@ class ObsCollection(pd.DataFrame):
         """
         otypes = self.obs.apply(lambda x: type(x)).unique()
         if otypes.shape[0] == 1:
-            logger.info("inferred observation type: {}".format(otypes[0]))
+            logger.debug("inferred observation type: {}".format(otypes[0]))
             return otypes[0]
         elif otypes.shape[0] > 1:
-            logger.info("inferred multiple otypes, types: {}".format(otypes))
+            logger.debug("inferred multiple otypes, types: {}".format(otypes))
             return otypes
         else:
             raise TypeError("could not infer observation type")
@@ -949,9 +955,9 @@ class ObsCollection(pd.DataFrame):
         epsg=28992,
         ignore_max_obs=False,
     ):
-        """ get all the observations within an extent or within a
+        """get all the observations within an extent or within a
         groundwatermonitoring net.
-        
+
 
         Parameters
         ----------
@@ -1915,7 +1921,7 @@ class ObsCollection(pd.DataFrame):
         ]
 
     def get_series(self, tmin=None, tmax=None, col=None):
-        """        
+        """
 
         Parameters
         ----------

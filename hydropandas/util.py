@@ -16,7 +16,6 @@ import pandas as pd
 
 from typing import Dict, Optional
 from colorama import Back, Fore, Style
-import scipy.spatial.qhull as qhull
 from pandas import Timedelta, Timestamp
 
 logger = logging.getLogger(__name__)
@@ -198,73 +197,6 @@ def get_files(
         raise NotImplementedError("Cannot parse 'file_or_dir': " f"{file_or_dir}!")
 
     return dirname, unzip_fnames
-
-
-def interp_weights(xy, uv, d=2):
-    """Calculate interpolation weights [1]_.
-
-    Parameters
-    ----------
-    xy : np.array
-        array containing x-coordinates in first column and y-coordinates
-        in second column
-    uv : np.array
-        array containing coordinates at which interpolation weights should
-        be calculated, x-data in first column and y-data in second column
-    d : int, optional
-        dimension of data? (the default is 2, which works for 2D data)
-
-    Returns
-    -------
-    vertices: np.array
-        array containing interpolation vertices
-    weights: np.array
-        array containing interpolation weights per point
-
-
-    References
-    ----------
-    .. [1] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
-    """
-
-    tri = qhull.Delaunay(xy)
-    simplex = tri.find_simplex(uv)
-    vertices = np.take(tri.simplices, simplex, axis=0)
-    temp = np.take(tri.transform, simplex, axis=0)
-    delta = uv - temp[:, d]
-    bary = np.einsum("njk,nk->nj", temp[:, :d, :], delta)
-    return vertices, np.hstack((bary, 1 - bary.sum(axis=1, keepdims=True)))
-
-
-def interpolate(values, vtx, wts, fill_value=np.nan):
-    """Interpolate values at locations defined by vertices and points [2]_, as
-    calculated by interp_weights function.
-
-    Parameters
-    ----------
-    values : np.array
-        array containing values to interpolate
-    vtx : np.array
-        array containing interpolation vertices, see interp_weights()
-    wts : np.array
-        array containing interpolation weights, see interp_weights()
-    fill_value : float
-        fill value for points that have to be extrapolated (e.g. at or
-        beyond edges of the known points)
-
-    Returns
-    -------
-    arr: np.array
-        array containing interpolated values at locations as given by
-        vtx and wts
-
-    References
-    ----------
-    .. [2] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
-    """
-    ret = np.einsum("nj,nj->n", np.take(values, vtx), wts)
-    ret[np.any(wts < 0, axis=1)] = fill_value
-    return ret
 
 
 def df2gdf(df, xcol="x", ycol="y"):
