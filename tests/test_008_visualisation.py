@@ -87,4 +87,4 @@ def test_obscollection_to_imap():
         map_label="locationId",
         map_label_size=10,
     )
-    return m
+    return
