@@ -361,6 +361,8 @@ class CollectionPlots:
             - include some interactive Bokeh fancy
             - apply an offset when two wells are at same location
             - limit y-axis of section plot to observations only
+            - remove the checking (if obs are near bottom) from this function
+            - moving the legend outside the plot
         """
 
         # prepare column for x location in section plot
@@ -459,7 +461,7 @@ class CollectionPlots:
                             color=p[0].get_color(),
                             lw=3,
                             )
-            
+
             # add sandtrap when present
             if 'tube_bottom' in self._obj.columns:
                 ax_section.plot([plot_x[counter]]*2,
@@ -467,7 +469,7 @@ class CollectionPlots:
                                 color=p[0].get_color(),
                                 lw=3,
                                 )
-                
+
 
             # PART 3: fancy section plot with bandwith of observations
             ax_section.scatter(plot_x[counter],
@@ -543,12 +545,13 @@ class CollectionPlots:
             handles, labels = ax.get_legend_handles_labels()
             by_label = dict(zip(labels, handles))
             ax.legend(by_label.values(), by_label.keys())
-
+           
         fig.suptitle(self._obj.name)
 
         if fn_save is not None:
             try:
-                fig.savefig(fn_save, dpi=250, bbox_inches='tight',)
+                fig.tight_layout()
+                fig.savefig(fn_save, dpi=250,)
             except:
                 logger.error(f"Save of figure {name} failed ({fn_save}).")
 
