@@ -131,8 +131,8 @@ def read_dino(
     name : str, optional
         the name of the observation collection
     kwargs:
-        kwargs are passed to the io_dino.download_dino_within_extent() or
-        the io_dino.read_dino_dir() function
+        kwargs are passed to the hydropandas.io.dino.download_dino_within_extent() or
+        the hydropandas.io.dino.read_dino_dir() function
 
     Returns
     -------
@@ -338,7 +338,7 @@ def read_knmi(
         meteo station (fast) or interpolated using thin plate spline (slow).
         Choiche betweeen 'nearest' or 'interpolation'
     **kwargs :
-        kwargs are passed to the io_knmi.get_knmi_obslist function
+        kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
     List of possible variables:
         neerslagstations:
@@ -1099,7 +1099,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             the name of the observation collection
         kwargs:
-            kwargs are passed to the io_dino.read_dino_dir() function
+            kwargs are passed to the hydropandas.io.dino.read_dino_dir() function
 
         Returns
         -------
@@ -1177,7 +1177,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             the name of the observation collection
         kwargs:
-            kwargs are passed to the io_dino.read_dino_dir() function
+            kwargs are passed to the hydropandas.io.dino.read_dino_dir() function
 
         Returns
         -------
@@ -1429,7 +1429,7 @@ class ObsCollection(pd.DataFrame):
             meteo station (fast) or interpolated using thin plate spline (slow).
             Choiche betweeen 'nearest' or 'interpolation'
         **kwargs :
-            kwargs are passed to the io_knmi.get_knmi_obslist function
+            kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
 
         List of possible variables:
             neerslagstations:

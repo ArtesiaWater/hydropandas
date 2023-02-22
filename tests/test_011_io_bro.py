@@ -1,5 +1,5 @@
 import hydropandas as hpd
-from hydropandas.io import io_bro
+from hydropandas.io import bro
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -8,21 +8,21 @@ logging.basicConfig(level=logging.DEBUG)
 def test_metadata():
     # single observation
     bro_id = "GMW000000036287"
-    io_bro.get_metadata_from_gmw(bro_id, 1)
+    bro.get_metadata_from_gmw(bro_id, 1)
 
     return
 
 def test_metadata_full():
     # single observation
     bro_id = "GMW000000036287"
-    io_bro.get_full_metadata_from_gmw(bro_id, 1)
+    bro.get_full_metadata_from_gmw(bro_id, 1)
 
     return
 
 
 def test_groundwater_monitoring_net_metadata():
     bro_id = "GMN000000000163"
-    io_bro.get_obs_list_from_gmn(
+    bro.get_obs_list_from_gmn(
         bro_id, hpd.GroundwaterObs, only_metadata=True
     )
 
@@ -31,7 +31,7 @@ def test_groundwater_monitoring_net_metadata():
 
 def test_groundwater_observations():
     bro_id = "GLD000000012893"
-    io_bro.get_bro_groundwater(
+    bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
     return
@@ -39,7 +39,7 @@ def test_groundwater_observations():
 
 def test_gld_no_monitoringnet():
     bro_id = "GLD000000013128"
-    io_bro.get_bro_groundwater(
+    bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
     return
@@ -47,7 +47,7 @@ def test_gld_no_monitoringnet():
 
 def test_groundwater_observations2():
     bro_id = "GLD000000008061"
-    measurements, meta = io_bro.get_bro_groundwater(
+    measurements, meta = bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
 
@@ -64,7 +64,7 @@ def test_get_gld_id_from_gmw():
     bro_id = "GMW000000036287"
     bro_id = "GMW000000055372"
     bro_id = "GMW000000059186"
-    io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1)
+    bro.get_gld_id_from_gmw(bro_id, tube_nr=1)
 
     return
 
@@ -73,7 +73,7 @@ def test_obs_list_from_extent():
 
     extent = (102395, 103121, 434331, 434750)
     extent = [116500, 120000, 439000, 442000]
-    io_bro.get_obs_list_from_extent(
+    bro.get_obs_list_from_extent(
         extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992
     )
 

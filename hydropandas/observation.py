@@ -573,8 +573,8 @@ class GroundwaterObs(Obs):
             time series of the cluster is used. if True the indvidual time
             series of each piezometer is used. Default is True
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_csv if
-            fname is not None and otherwise to io_dino.findMeetreeks
+            these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
+            if fname is not None and otherwise to hydropandas.io.dino.findMeetreeks
         """
         from .io import dino
 
@@ -592,7 +592,7 @@ class GroundwaterObs(Obs):
         fname : str, optional
             dino csv filename
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_csv
+            these arguments are passed to hydropandas.io._dino.read_dino_groundwater_csv
         """
         from .io import dino
 
@@ -657,7 +657,8 @@ class GroundwaterQualityObs(Obs):
         fname : str
             dino txt filename
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_quality_txt
+            these arguments are passed to 
+            hydropandas.io.dino.read_dino_groundwater_quality_txt
         """
         from .io import dino
 
@@ -693,7 +694,7 @@ class WaterlvlObs(Obs):
         fname : str
             dino csv filename
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_waterlvl_csv
+            these arguments are passed to hydropandas.io.dino.read_dino_waterlvl_csv
         """
         from .io import dino
 

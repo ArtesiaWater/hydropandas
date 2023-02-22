@@ -1,90 +1,90 @@
 hydropandas.io package
 ======================
 
-hydropandas.io.io\_arctic module
+hydropandas.io.arctic module
 --------------------------------
 
-.. automodule:: hydropandas.io.io_arctic
+.. automodule:: hydropandas.io.arctic
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_dino module
+hydropandas.io.dino module
 ------------------------------
 
-.. automodule:: hydropandas.io.io_dino
+.. automodule:: hydropandas.io.dino
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_fieldlogger module
+hydropandas.io.fieldlogger module
 -------------------------------------
 
-.. automodule:: hydropandas.io.io_fieldlogger
+.. automodule:: hydropandas.io.fieldlogger
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_knmi module
+hydropandas.io.knmi module
 ------------------------------
 
-.. automodule:: hydropandas.io.io_knmi
+.. automodule:: hydropandas.io.knmi
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_menyanthes module
+hydropandas.io.menyanthes module
 ------------------------------------
 
-.. automodule:: hydropandas.io.io_menyanthes
+.. automodule:: hydropandas.io.menyanthes
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_modflow module
+hydropandas.io.modflow module
 ---------------------------------
 
-.. automodule:: hydropandas.io.io_modflow
+.. automodule:: hydropandas.io.modflow
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_pastas module
+hydropandas.io.pastas module
 --------------------------------
 
-.. automodule:: hydropandas.io.io_pastas
+.. automodule:: hydropandas.io.pastas
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_pystore module
+hydropandas.io.pystore module
 ---------------------------------
 
-.. automodule:: hydropandas.io.io_pystore
+.. automodule:: hydropandas.io.pystore
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_waterinfo module
+hydropandas.io.waterinfo module
 -----------------------------------
 
-.. automodule:: hydropandas.io.io_waterinfo
+.. automodule:: hydropandas.io.waterinfo
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_wiski module
+hydropandas.io.wiski module
 -------------------------------
 
-.. automodule:: hydropandas.io.io_wiski
+.. automodule:: hydropandas.io.wiski
    :members:
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.io\_fews module
+hydropandas.io.fews module
 ------------------------------
 
-.. automodule:: hydropandas.io.io_fews
+.. automodule:: hydropandas.io.fews
    :members:
    :undoc-members:
    :show-inheritance:
