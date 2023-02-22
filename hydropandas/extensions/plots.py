@@ -1,6 +1,8 @@
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 
 from . import accessor
 
@@ -318,6 +320,7 @@ class CollectionPlots:
         ylabel='auto',
         fn_save=None,
         check_obs_close_to_screen_bottom=True,
+        plot_well_layout_markers=True,
         ):
         
         """Create plot with well layout (left) en observations (right).
@@ -346,6 +349,8 @@ class CollectionPlots:
             filename to save plot
         check_obs_close_to_screen_bottom : bool, optional
             plots a horizontal line when minimum observation is close to screen_bottom
+        plot_well_layout_markers : bool, optional
+            plots ground level, top tube, screen levels and sandtrap via makers. Default is True
 
         TODO:
             - speficy colors via extra column in ObsCollection
@@ -357,9 +362,6 @@ class CollectionPlots:
             - apply an offset when two wells are at same location
             - limit y-axis of section plot to observations only
         """
-        
-        import matplotlib.pyplot as plt
-        from matplotlib.gridspec import GridSpec
 
         # prepare column for x location in section plot
         if section_colname_x is None:
@@ -375,36 +377,37 @@ class CollectionPlots:
         ax_obs = fig.add_subplot(gs[1])
         axes = [ax_section, ax_obs]
 
-        # plot well layout via markers
-        ax_section.scatter(plot_x,
-                           self._obj.tube_top.values,
-                           section_markersize,
-                           label='tube top',
-                           marker='o',
-                           facecolors='none',
-                           color=section_well_layout_color,
-                           )
-        ax_section.scatter(plot_x,
-                           self._obj.ground_level.values,
-                           section_markersize,
-                           label='ground level',
-                           marker='_',
-                           color=section_well_layout_color,
-                           )
-        ax_section.scatter(plot_x,
-                           self._obj.screen_top.values,
-                           section_markersize/2,
-                           label='screen top',
-                           marker='x',
-                           color=section_well_layout_color,
-                           )
-        ax_section.scatter(plot_x,
-                           self._obj.screen_bottom.values,
-                           section_markersize,
-                           label='screen bottom',
-                           marker='+',
-                           color=section_well_layout_color,
-                           )
+        if plot_well_layout_markers:
+            # plot well layout via markers
+            ax_section.scatter(plot_x,
+                               self._obj.tube_top.values,
+                               section_markersize,
+                               label='tube top',
+                               marker='*',
+                               facecolors='none',
+                               color=section_well_layout_color,
+                               )
+            ax_section.scatter(plot_x,
+                               self._obj.ground_level.values,
+                               section_markersize,
+                               label='ground level',
+                               marker='_',
+                               color=section_well_layout_color,
+                               )
+            ax_section.scatter(plot_x,
+                               self._obj.screen_top.values,
+                               section_markersize/2,
+                               label='screen top',
+                               marker='x',
+                               color=section_well_layout_color,
+                               )
+            ax_section.scatter(plot_x,
+                               self._obj.screen_bottom.values,
+                               section_markersize,
+                               label='screen bottom',
+                               marker='+',
+                               color=section_well_layout_color,
+                               )
 
         # loop over all wells, plot observations and details in section plot
         for counter, name in enumerate(self._obj.index):
@@ -447,7 +450,7 @@ class CollectionPlots:
                             [self._obj.loc[name, "screen_top"], self._obj.loc[name, "screen_bottom"]],
                             color='k',
                             lw=3,
-                            ls=':',
+                            ls='-',
                             )
 
             # highlight blind tube on section plot
@@ -474,6 +477,7 @@ class CollectionPlots:
                                color='blue',
                                alpha=0.5,
                                label='95% observation',
+                               zorder=100,
                                )
             ax_section.scatter(plot_x[counter],
                                plot_df.median(),
@@ -482,6 +486,7 @@ class CollectionPlots:
                                color='green',
                                alpha=0.5,
                                label='median',
+                               zorder=100,
                                )
             ax_section.scatter(plot_x[counter],
                                plot_df.quantile(q=0.05),
@@ -490,6 +495,7 @@ class CollectionPlots:
                                color='red',
                                alpha=0.5,
                                label='5% observation',
+                               zorder=100,
                                )
 
         logger.info(f"created sectionplot -> {name}")
@@ -544,7 +550,7 @@ class CollectionPlots:
             try:
                 fig.savefig(fn_save, dpi=250, bbox_inches='tight',)
             except:
-                logger.error(f"Save of figure {o.name} failed ({fn_save}).")
+                logger.error(f"Save of figure {name} failed ({fn_save}).")
 
         return fig, axes
 
