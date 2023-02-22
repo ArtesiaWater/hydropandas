@@ -91,7 +91,7 @@ def create_pastastore(
 
     if pstore is None:
         if conn is None:
-            conn = pst.DictConnector()
+            conn = pst.DictConnector(name="my_db")
         pstore = pst.PastaStore(name=pstore_name, connector=conn)
 
     for o in oc.obs.values:
