@@ -98,12 +98,10 @@ def _read_dino_groundwater_metadata(f, line):
                 if meta[key] == "":
                     meta_tsi[_translate_dic_div_100[key]] = np.nan
                 else:
-                    meta_tsi[_translate_dic_div_100[key]
-                             ] = float(meta[key]) / 100.0
+                    meta_tsi[_translate_dic_div_100[key]] = float(meta[key]) / 100.0
             if i == 0:
                 for key in meta_tsi.keys():
-                    meta_ts[key] = pd.Series(
-                        name=key, dtype=type(meta_tsi[key]))
+                    meta_ts[key] = pd.Series(name=key, dtype=type(meta_tsi[key]))
 
             for key in meta_tsi.keys():
                 meta_ts[key].loc[start_date] = meta_tsi[key]
@@ -315,8 +313,7 @@ def read_dino_groundwater_csv(
                     measurements = pd.DataFrame(data=s.copy(), columns=[s.name])
                 else:
                     measurements = measurements.join(s, how="outer")
-                measurements.loc[:,
-                                 s.name] = measurements.loc[:, s.name].ffill()
+                measurements.loc[:, s.name] = measurements.loc[:, s.name].ffill()
 
         else:
             measurements = None
@@ -342,8 +339,7 @@ def _read_artdino_groundwater_metadata(f, line):
     if metalist:
         meta["monitoring_well"] = metalist[-1]["locatie"]
         meta["tube_nr"] = int(float(metalist[-1]["filternummer"]))
-        meta["name"] = "-".join([meta["monitoring_well"],
-                                metalist[-1]["filternummer"]])
+        meta["name"] = "-".join([meta["monitoring_well"], metalist[-1]["filternummer"]])
         meta["x"] = float(metalist[-1]["x-coordinaat"])
         meta["y"] = float(metalist[-1]["y-coordinaat"])
         meetpunt = metalist[-1]["meetpunt nap"]
@@ -644,8 +640,7 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
     p_meta = re.compile(
         "Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum"
     )
-    p_data = re.compile(
-        r"Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid")
+    p_data = re.compile(r"Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid")
 
     with open(fname, "r") as f:
         line = f.readline()

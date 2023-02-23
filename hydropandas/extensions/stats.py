@@ -360,7 +360,8 @@ def consecutive_obs_years(obs_per_year, min_obs=12):
         obs_per_year_all = pd.Series(index=[dt.datetime.now().year], data=0)
     else:
         obs_per_year_all = pd.Series(
-            dtype=float, index=range(obs_per_year.index[0], obs_per_year.index[-1] + 1),
+            dtype=float,
+            index=range(obs_per_year.index[0], obs_per_year.index[-1] + 1),
         )
         obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 

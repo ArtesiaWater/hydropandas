@@ -4,7 +4,7 @@ import pytest
 import hydropandas as hpd
 
 
-#%% BRO
+# %% BRO
 
 
 def test_bro_gld():
@@ -189,7 +189,6 @@ def test_obscollection_wiskizip_gw():
 
 # %% PASTASTORE
 def test_to_pastastore():
-
     dino_gw = test_obscollection_dinozip_gw()
     # drop duplicate
     dino_gw.drop("B22D0155-001", inplace=True)
@@ -198,11 +197,10 @@ def test_to_pastastore():
     return
 
 
-#%% Meteo
+# %% Meteo
 
 
 def test_pressure_obs_from_stn():
-
     hpd.MeteoObs.from_knmi(
         310, meteo_var="P", interval="hourly", fill_missing_obs=False
     )
@@ -211,7 +209,6 @@ def test_pressure_obs_from_stn():
 
 
 def test_pressure_read_knmi():
-
     hpd.read_knmi(
         stns=(310,),
         meteo_vars=("P",),
@@ -226,7 +223,7 @@ def test_pressure_read_knmi():
     return
 
 
-#%% Evaporation
+# %% Evaporation
 
 
 def test_evap_obs_from_file():
@@ -267,7 +264,7 @@ def test_evap_obs_collection_from_xy_interpolate():
     return
 
 
-#%% Precipitation
+# %% Precipitation
 
 
 def test_precip_obs_from_file():
@@ -287,7 +284,6 @@ def test_knmi_obs_from_stn_no_api():
 
 
 def test_knmi_obs_from_stn_without_any_data():
-
     hpd.EvaporationObs.from_knmi(
         210, startdate="19500101", enddate="19600101", fill_missing_obs=False
     )
@@ -311,6 +307,10 @@ def test_knmi_obs_from_obs():
     return o
 
 
+@pytest.xfail(
+    "Station HEIBLOEM 967 not available. See issue"
+    " https://github.com/ArtesiaWater/hydropandas/issues/103"
+)
 def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
     hpd.read_knmi(locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015")
@@ -332,7 +332,10 @@ def test_knmi_collection_from_grid():
     # somewhere in Noord-Holland (near Castricum)
     xy = [[104150.0, 510150.0], [104550.0, 510550.0]]
     hpd.read_knmi(
-        xy=xy, meteo_vars=["RH"], starts=["2010"], ends=["2015"],
+        xy=xy,
+        meteo_vars=["RH"],
+        starts=["2010"],
+        ends=["2015"],
     )
     return
 

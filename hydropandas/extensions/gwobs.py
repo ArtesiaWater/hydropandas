@@ -605,7 +605,11 @@ class GeoAccessorObs:
 
         # get index of regis model layer
         layer_i = get_modellayer_from_screen_depth(
-            self._obj.screen_top, self._obj.screen_bottom, zvec, left=-999, right=999,
+            self._obj.screen_top,
+            self._obj.screen_bottom,
+            zvec,
+            left=-999,
+            right=999,
         )
 
         if layer_i == 999:

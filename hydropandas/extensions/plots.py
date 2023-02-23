@@ -1,8 +1,8 @@
 import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.gridspec import GridSpec
 
 from . import accessor
@@ -112,8 +112,7 @@ class CollectionPlots:
                     )
                     logger.debug(f"created iplot -> {o.name}")
                 except ValueError:
-                    logger.error(
-                        f"{o.name} has no data between {tmin} and {tmax}")
+                    logger.error(f"{o.name} has no data between {tmin} and {tmax}")
                     o.iplot_fname = None
 
     def interactive_map(
@@ -235,8 +234,7 @@ class CollectionPlots:
             legend_name = self._obj.name
 
         # add the point observations with plots to the map
-        group_name = '<span style=\\"color: {};\\">{}</span>'.format(
-            color, legend_name)
+        group_name = '<span style=\\"color: {};\\">{}</span>'.format(color, legend_name)
         group = folium.FeatureGroup(name=group_name)
 
         # check if observations consist of monitoring wells
@@ -268,8 +266,7 @@ class CollectionPlots:
                 with open(o.iplot_fname, "r") as f:
                     bokeh_html = f.read()
 
-                iframe = branca.element.IFrame(
-                    html=bokeh_html, width=620, height=420)
+                iframe = branca.element.IFrame(html=bokeh_html, width=620, height=420)
                 popup = folium.Popup(iframe, max_width=620)
 
                 folium.CircleMarker(
@@ -381,7 +378,11 @@ class CollectionPlots:
 
         # create figure
         fig = plt.figure(figsize=(15, 5))
-        gs = GridSpec(1, 2, width_ratios=[1, 3],)
+        gs = GridSpec(
+            1,
+            2,
+            width_ratios=[1, 3],
+        )
         ax_section = fig.add_subplot(gs[0])
         ax_obs = fig.add_subplot(gs[1])
         axes = [ax_section, ax_obs]
@@ -428,8 +429,7 @@ class CollectionPlots:
             cols = list(cols)
             for i, col in enumerate(cols):
                 if col is None:
-                    cols[i] = self._obj.loc[name,
-                                            "obs"]._get_first_numeric_col_name()
+                    cols[i] = self._obj.loc[name, "obs"]._get_first_numeric_col_name()
 
             # create plot dataframe
             plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
@@ -477,8 +477,7 @@ class CollectionPlots:
             # highlight blind tube on section plot
             ax_section.plot(
                 [plot_x[counter]] * 2,
-                [self._obj.loc[name, "screen_top"],
-                    self._obj.loc[name, "tube_top"]],
+                [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
                 color=p[0].get_color(),
                 lw=3,
             )
@@ -533,7 +532,10 @@ class CollectionPlots:
         if section_label_x is None:
             # use name as xtick and rotate
             ax_section.set_xticks(
-                plot_x, self._obj.index, rotation="vertical", fontsize="small",
+                plot_x,
+                self._obj.index,
+                rotation="vertical",
+                fontsize="small",
             )
         else:
             ax_section.set_xlabel(section_label_x)
@@ -562,8 +564,7 @@ class CollectionPlots:
                 ax_section.set_ylabel(ylabel[0])
                 ax_obs.set_ylabel(ylabel[1])
             except:
-                logger.error(
-                    f"Invalid value for ylabel {ylabel}. Plot has no ylabels.")
+                logger.error(f"Invalid value for ylabel {ylabel}. Plot has no ylabels.")
 
         # add layout to both plots
         for ax in axes:
@@ -580,7 +581,8 @@ class CollectionPlots:
             try:
                 fig.tight_layout()
                 fig.savefig(
-                    fn_save, dpi=250,
+                    fn_save,
+                    dpi=250,
                 )
             except:
                 logger.error(f"Save of figure {name} failed ({fn_save}).")
@@ -672,8 +674,7 @@ class ObsPlots:
         plot_df["date"] = plot_df.index.strftime(hoover_date_format)
         if plot_df.empty or plot_df[cols].isna().all().all():
             raise ValueError(
-                "{} has no data between {} and {}".format(
-                    self._obj.name, tmin, tmax)
+                "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
             )
 
         # create plot
@@ -753,8 +754,7 @@ class ObsPlots:
             # add columns to hoover tooltips
             tooltips_p = tooltips.copy()
             tooltips_p.append((hoover_names[i], "@{}".format(column)))
-            hover = HoverTool(renderers=[plots[i]],
-                              tooltips=tooltips_p, mode="vline")
+            hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode="vline")
             p.add_tools(hover)
 
         p.legend.location = "top_left"
@@ -764,8 +764,7 @@ class ObsPlots:
         if savedir is not None:
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
-            self._obj.iplot_fname = os.path.join(
-                savedir, self._obj.name + ".html")
+            self._obj.iplot_fname = os.path.join(savedir, self._obj.name + ".html")
             save(p, self._obj.iplot_fname, resources=CDN, title=self._obj.name)
 
         if return_filename:

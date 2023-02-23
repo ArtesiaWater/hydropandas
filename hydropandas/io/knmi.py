@@ -438,7 +438,7 @@ def download_knmi_data(
                     )
         except (RuntimeError, requests.ConnectionError) as e:
             settings["use_api"] = False
-            logger.info("KNMI API failed, switching to non-API method")
+            logger.info("KNMI API failed, try non-API method")
             raise e
 
         if not settings["use_api"]:
@@ -1229,7 +1229,12 @@ def read_knmi_timeseries_file(fname, meteo_var, start, end, interval="daily"):
     x = stations.loc[meta["station"], "x"]
     y = stations.loc[meta["station"], "y"]
     meta.update(
-        {"x": x, "y": y, "name": f"{meteo_var}_{stn_name}", "source": "KNMI",}
+        {
+            "x": x,
+            "y": y,
+            "name": f"{meteo_var}_{stn_name}",
+            "source": "KNMI",
+        }
     )
 
     return knmi_df, meta

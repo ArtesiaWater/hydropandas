@@ -293,7 +293,8 @@ def measurements_from_gld(
 
     # to dataframe
     df = pd.DataFrame(
-        index=pd.to_datetime(times), data={"values": values, "qualifier": qualifiers},
+        index=pd.to_datetime(times),
+        data={"values": values, "qualifier": qualifiers},
     )
 
     # wintertime
