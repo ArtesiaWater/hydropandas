@@ -84,11 +84,12 @@ def test_groundwater_quality_obs():
 def test_obscollection_from_list():
     o_list = []
     for i in range(10):
-        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
+        o_list.append(test_groundwater_obs(
+            name=f"groundwaterobs_00{i}", tube_nr=i))
 
-    hpd.ObsCollection.from_list(o_list)
+    oc = hpd.ObsCollection.from_list(o_list)
 
-    return
+    return oc
 
 
 def test_copy_obs():
