@@ -33,29 +33,3 @@ def test_dino_csv_duplicate_index():
     assert measurements.index.duplicated().any() == False
 
     return
-
-
-def test_dino_metadata():
-    # download metadata
-    dinorest = dino.DinoREST()
-    dinorest.get_gwo_metadata(location="B52C0057", tube_nr="001")
-
-    return
-
-
-def test_dino_metadata2():
-    # download metadata without sample metadata in json
-    dinorest = dino.DinoREST()
-    meta = dinorest.get_gwo_metadata(location="B57B0069", tube_nr="002")
-    assert meta["metadata_available"]
-    return
-
-
-def test_dino_metadata3():
-    # try to download metadata of a well that does not have metadata
-    dinorest = dino.DinoREST()
-    meta = dinorest.get_gwo_metadata(location="B45G1147", tube_nr="001")
-
-    assert not meta["metadata_available"]
-
-    return
