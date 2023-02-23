@@ -98,4 +98,4 @@ def test_get_modellayers_mf6_structured():
 def test_get_regis_layer():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.gwobs.get_regis_layers()
-    return 
+    return

@@ -45,7 +45,6 @@ def test_read_wiski_csv2():
     return
 
 
-
 def test_read_wiski_zip():
     wiski.read_wiski_dir(
         "./tests/data/2019-WISKI-test/1016_PBF.zip",

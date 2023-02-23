@@ -179,24 +179,18 @@ def test_download_ev24_210_no_api():
 
 def test_get_knmi_daily_meteo_ev24_empty():
     start, end = knmi._start_end_to_datetime("1959", "1963")
-    knmi.get_knmi_daily_meteo_api(
-        knmi.URL_DAILY_METEO, 265, "EV24", start, end, False
-    )
+    knmi.get_knmi_daily_meteo_api(knmi.URL_DAILY_METEO, 265, "EV24", start, end, False)
 
     return
 
 
 def test_fill_missing_measurements_ev24_278():
-    knmi.fill_missing_measurements(
-        278, meteo_var="EV24", start="1959", end="1963"
-    )
+    knmi.fill_missing_measurements(278, meteo_var="EV24", start="1959", end="1963")
     return
 
 
 def test_fill_missing_measurements_rh_273():
-    knmi.fill_missing_measurements(
-        273, meteo_var="RH", start="1995", end="2000"
-    )
+    knmi.fill_missing_measurements(273, meteo_var="RH", start="1995", end="2000")
     return
 
 

@@ -12,6 +12,7 @@ def test_metadata():
 
     return
 
+
 def test_metadata_full():
     # single observation
     bro_id = "GMW000000036287"
@@ -22,26 +23,20 @@ def test_metadata_full():
 
 def test_groundwater_monitoring_net_metadata():
     bro_id = "GMN000000000163"
-    bro.get_obs_list_from_gmn(
-        bro_id, hpd.GroundwaterObs, only_metadata=True
-    )
+    bro.get_obs_list_from_gmn(bro_id, hpd.GroundwaterObs, only_metadata=True)
 
     return
 
 
 def test_groundwater_observations():
     bro_id = "GLD000000012893"
-    bro.get_bro_groundwater(
-        bro_id, tube_nr=None, only_metadata=False
-    )
+    bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False)
     return
 
 
 def test_gld_no_monitoringnet():
     bro_id = "GLD000000013128"
-    bro.get_bro_groundwater(
-        bro_id, tube_nr=None, only_metadata=False
-    )
+    bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False)
     return
 
 

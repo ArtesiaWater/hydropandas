@@ -11,14 +11,14 @@ def test_bro_gld():
     # single observation
     bro_id = "GLD000000012893"
     hpd.GroundwaterObs.from_bro(bro_id)
-    return 
+    return
 
 
 def test_bro_gmn():
     # single observation
     bro_id = "GMN000000000163"
     hpd.read_bro(bro_id=bro_id, only_metadata=True)
-    return 
+    return
 
 
 def test_bro_extent():
@@ -27,7 +27,7 @@ def test_bro_extent():
     extent = (102395, 103121, 434331, 434750)  # 4 observations within extent
 
     hpd.read_bro(extent=extent, only_metadata=True)
-    return 
+    return
 
 
 def test_bro_extent_too_big():
@@ -46,13 +46,13 @@ def test_observation_gwq():
     # single observation
     fname = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
     hpd.GroundwaterQualityObs.from_dino(fname)
-    return 
+    return
 
 
 def test_observation_wl():
     fname = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
     hpd.WaterlvlObs.from_dino(fname)
-    return 
+    return
 
 
 def test_observation_gw():
@@ -202,16 +202,16 @@ def test_to_pastastore():
 
 
 def test_pressure_obs_from_stn():
-    
+
     hpd.MeteoObs.from_knmi(
         310, meteo_var="P", interval="hourly", fill_missing_obs=False
     )
-    
-    return 
+
+    return
 
 
 def test_pressure_read_knmi():
-    
+
     hpd.read_knmi(
         stns=(310,),
         meteo_vars=("P",),
@@ -223,7 +223,8 @@ def test_pressure_read_knmi():
         },
     )
 
-    return 
+    return
+
 
 #%% Evaporation
 
@@ -231,8 +232,8 @@ def test_pressure_read_knmi():
 def test_evap_obs_from_file():
     fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
     hpd.EvaporationObs.from_knmi_file(fname)
-    
-    return 
+
+    return
 
 
 def test_evap_obs_from_stn():
@@ -242,26 +243,29 @@ def test_evap_obs_from_stn():
 
 def test_evap_obs_from_stn_makkink():
     hpd.EvaporationObs.from_knmi(260, et_type="makkink")
-    return 
+    return
 
 
 def test_evap_obs_from_stn_penman():
     hpd.EvaporationObs.from_knmi(260, et_type="penman")
     return
 
+
 def test_evap_obs_from_stn_hargreaves():
     hpd.EvaporationObs.from_knmi(260, et_type="hargreaves")
-    return 
+    return
 
 
 def test_evap_obs_from_xy_interpolate():
     hpd.EvaporationObs.from_xy((117000, 439000), method="interpolation")
     return
 
+
 def test_evap_obs_collection_from_xy_interpolate():
     xy = [[x, y] for x in [117000, 117500] for y in [439000, 439500]]
     hpd.read_knmi(xy=xy, meteo_vars=("EV24",), method="interpolation")
-    return 
+    return
+
 
 #%% Precipitation
 
@@ -276,9 +280,11 @@ def test_precip_obs_from_stn():
     hpd.PrecipitationObs.from_knmi(233, "precipitation")
     return
 
+
 def test_knmi_obs_from_stn_no_api():
     hpd.PrecipitationObs.from_knmi(233, "precipitation", use_api=False)
     return
+
 
 def test_knmi_obs_from_stn_without_any_data():
 
@@ -293,20 +299,21 @@ def test_knmi_obs_from_stn_with_missing_data_in_time_period():
     hpd.PrecipitationObs.from_knmi("441", "precipitation", startdate="2010-1-2")
     return
 
+
 def test_knmi_obs_from_xy():
     hpd.PrecipitationObs.from_nearest_xy((100000, 350000))
     return
+
 
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
     o = hpd.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
     return o
 
+
 def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
-    hpd.read_knmi(
-        locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
-    )
+    hpd.read_knmi(locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015")
     return
 
 
@@ -325,10 +332,7 @@ def test_knmi_collection_from_grid():
     # somewhere in Noord-Holland (near Castricum)
     xy = [[104150.0, 510150.0], [104550.0, 510550.0]]
     hpd.read_knmi(
-        xy=xy,
-        meteo_vars=["RH"],
-        starts=["2010"],
-        ends=["2015"],
+        xy=xy, meteo_vars=["RH"], starts=["2010"], ends=["2015"],
     )
     return
 
