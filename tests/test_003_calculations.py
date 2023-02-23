@@ -15,7 +15,7 @@ def test_within_extent():
 def test_obscollection_consecutive_obs_years():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.consecutive_obs_years()
-    return 
+    return
 
 
 def test_obscollection_get_number_of_obs():

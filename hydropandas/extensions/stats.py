@@ -345,7 +345,6 @@ class StatsAccessorObs:
         return self._obj.groupby(self._obj.index.year).count()[col]
 
     def consecutive_obs_years(self, col=None, min_obs=12):
-
         if col is None:
             col = self._obj._get_first_numeric_col_name()
 

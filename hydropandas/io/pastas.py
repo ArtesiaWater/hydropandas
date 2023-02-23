@@ -6,7 +6,6 @@
 import logging
 import numbers
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -92,8 +91,8 @@ def create_pastastore(
 
     if pstore is None:
         if conn is None:
-            conn = pst.DictConnector("my_conn")
-        pstore = pst.PastaStore(pstore_name, connector=conn)
+            conn = pst.DictConnector(name="my_db")
+        pstore = pst.PastaStore(name=pstore_name, connector=conn)
 
     for o in oc.obs.values:
         logger.info("add to pastastore -> {}".format(o.name))

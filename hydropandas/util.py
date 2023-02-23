@@ -4,17 +4,15 @@
 @author: Artesia
 """
 
+import logging
 import os
 import sys
 import tempfile
 import time
 import zipfile
-import logging
-
-import numpy as np
-import pandas as pd
-
 from typing import Dict, Optional
+
+import pandas as pd
 from colorama import Back, Fore, Style
 from pandas import Timedelta, Timestamp
 
@@ -213,11 +211,12 @@ def df2gdf(df, xcol="x", ycol="y"):
 
 def show_versions():
     """Method to print the version of dependencies."""
-    from pandas import __version__ as pd_version
-    from numpy import __version__ as np_version
-    from scipy import __version__ as sc_version
-    from matplotlib import __version__ as mpl_version
     from sys import version as os_version
+
+    from matplotlib import __version__ as mpl_version
+    from numpy import __version__ as np_version
+    from pandas import __version__ as pd_version
+    from scipy import __version__ as sc_version
 
     msg = (
         f"Python version    : {os_version}\n"

@@ -1,25 +1,27 @@
-"""Module with functions to read time series with observations from knmi.
+"""Module with functions to read or download time series with observations from knmi.
 
-The main function to obtain a time series are:
+The main function to download time series are:
 
 - get_knmi_timeseries_xy: obtain a knmi station based on the xy location
 - get_knmi_timeseries_stn: obtain a knmi station based on the station number
 
-There is some ugly code involved if you want to obtain precipitation data.
-This code combines the data from the meteo_stations and the neerslagstations.
+The main function to read time series txt files is:
+
+ - read_knmi_timeseries_file: read a knmi txt file
+
 """
-from functools import lru_cache
 import datetime as dt
 import logging
 import os
 import re
 import tempfile
+from functools import lru_cache
 from io import StringIO
 
 import numpy as np
 import pandas as pd
-from scipy.interpolate import RBFInterpolator
 import requests
+from scipy.interpolate import RBFInterpolator
 
 from .. import util
 
@@ -51,7 +53,7 @@ def get_stations(meteo_var="RH"):
     stations = pd.read_json(os.path.join(dir_path, fname))
 
     if meteo_var == "RD":
-        # read preciptiation station data only
+        # read precipitation station data only
         fname = "../data/knmi_neerslagstation.json"
         stations = pd.read_json(os.path.join(dir_path, fname))
 
@@ -68,7 +70,7 @@ def get_stations(meteo_var="RH"):
     return stations
 
 
-def get_station_name(stn, stations):
+def get_station_name(stn, stations=None):
     """Returns the station name from a KNMI station.
 
     Modifies the station name in such a way that a valid url can be obtained.
@@ -85,6 +87,8 @@ def get_station_name(stn, stations):
     str
         Name of the station.
     """
+    if stations is None:
+        stations = pd.concat([get_stations("RD"), get_stations("EV24")], axis=0)
 
     stn_name = stations.loc[stn, "naam"]
     stn_name = stn_name.upper().replace(" ", "-")
@@ -93,53 +97,16 @@ def get_station_name(stn, stations):
     return stn_name
 
 
-def get_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
-    """find the KNMI stations that measure 'variable' closest to the x, y
-    coordinates.
-
-    Parameters
-    ----------
-    xy : list. tuple or numpy array of int or floats
-        xy coördinates. e.g.(0.1, 25.05)
-    meteo_var : str
-        measurement variable e.g. 'RH' or 'EV24'
-    n : int, optional
-        number of stations you want to return. The default is 1.
-    stations : pandas DataFrame, optional
-        if None stations will be obtained using the get_stations function.
-        The default is None.
-    ignore : list, optional
-        list of stations to ignore. The default is None.
-
-    Returns
-    -------
-    list
-        station numbers.
-    """
-
-    if stations is None:
-        stations = get_stations(meteo_var=meteo_var)
-    if ignore is not None:
-        stations.drop(ignore, inplace=True)
-        if stations.empty:
-            return None
-
-    distance = np.sqrt((stations.x - xy[0]) ** 2 + (stations.y - xy[1]) ** 2)
-    stns = distance.nsmallest(n).index.to_list()
-
-    return stns
-
-
 def get_nearest_station_df(
     locations, xcol="x", ycol="y", stations=None, meteo_var="RH", ignore=None
 ):
-    """find the KNMI stations that measure 'meteo_var' closest to the
+    """Find the KNMI stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
 
     Parameters
     ----------
-    locations : pandas DataFrame
-        x and y coordinates
+    locations : pandas.DataFrame
+        DataFrame containing x and y coordinates
     xcol : str
         name of the column in the locations dataframe with the x values
     ycol : str
@@ -185,12 +152,12 @@ def get_nearest_station_df(
 
 def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
     """find the KNMI stations that measure 'meteo_var' closest to the given
-    x and y coördinates.
+    x and y coordinates.
 
     Parameters
     ----------
     xy : list or numpy array, optional
-        xy coördinates of the locations. e.g. [[10,25], [5,25]]
+        xy coordinates of the locations. e.g. [[10,25], [5,25]]
     stations : pandas DataFrame, optional
         if None stations will be obtained using the get_stations function.
         The default is None.
@@ -219,6 +186,43 @@ def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
         meteo_var=meteo_var,
         ignore=ignore,
     )
+
+    return stns
+
+
+def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
+    """Find the N nearest KNMI stations that measure variable 'meteo_var' to
+    the x, y coordinates.
+
+    Parameters
+    ----------
+    xy : list, tuple or numpy.array of int or float
+        sinlge pair of xy coordinates. e.g. (150_000., 400_000.)
+    meteo_var : str
+        measurement variable e.g. 'RH' or 'EV24'
+    n : int, optional
+        number of stations you want to return. The default is 1.
+    stations : pandas DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
+    ignore : list, optional
+        list of stations to ignore. The default is None.
+
+    Returns
+    -------
+    list
+        station numbers.
+    """
+
+    if stations is None:
+        stations = get_stations(meteo_var=meteo_var)
+    if ignore is not None:
+        stations.drop(ignore, inplace=True)
+        if stations.empty:
+            return None
+
+    distance = np.sqrt((stations.x - xy[0]) ** 2 + (stations.y - xy[1]) ** 2)
+    stns = distance.nsmallest(n).index.to_list()
 
     return stns
 
@@ -380,8 +384,12 @@ def download_knmi_data(
 
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
-        message = 'No hourly precipitation data available at precipitation station, use meteo_var "RH" to obtain hourly precipitation data from meteo stations'
-        raise (ValueError(message))
+        message = (
+            "No hourly precipitation data available at precipitation station, "
+            "use meteo_var 'RH' to obtain hourly precipitation data from "
+            "meteo stations."
+        )
+        raise ValueError(message)
 
     # convert stn to string
     stn = str(stn)
@@ -428,9 +436,10 @@ def download_knmi_data(
                         end,
                         settings["inseason"],
                     )
-        except (RuntimeError, requests.ConnectionError):
+        except (RuntimeError, requests.ConnectionError) as e:
             settings["use_api"] = False
-            logger.info("KNMI API failed, switching to non-API method")
+            logger.info("KNMI API failed, try non-API method")
+            raise e
 
         if not settings["use_api"]:
             end = end + dt.timedelta(days=1)
@@ -653,7 +662,6 @@ def read_knmi_daily_rainfall_file(fname_txt, meteo_var="RD", start=None, end=Non
 
 
 def _read_knmi_header(f):
-
     variables = {}
     line = f.readline()
     if "DOCTYPE HTML PUBLIC" in line:
@@ -767,7 +775,6 @@ def _transform_variables(df, variables):
 
 
 def read_knmi_daily_rainfall(f, meteo_var):
-
     f, variables, header = _read_knmi_header(f)
 
     df = pd.read_csv(f, header=None, names=header, na_values="     ")
@@ -795,7 +802,6 @@ def read_knmi_daily_rainfall(f, meteo_var):
 
 
 def _read_station_location(f):
-
     stations = None
 
     line = f.readline()
@@ -937,12 +943,12 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     return read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None)
 
 
-def read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None):
+def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
     """read knmi daily meteo data from a file
 
     Parameters
     ----------
-    fname_txt : str
+    fname : str
         file path.
     meteo_var : str
         e.g. 'EV24'.
@@ -966,7 +972,7 @@ def read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None):
         additional data about the measurement station
     """
     variables = None
-    with open(fname_txt, "r") as f:
+    with open(fname, "r") as f:
         line = f.readline()
         # get meteo var
         for _ in range(50):
@@ -977,7 +983,7 @@ def read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None):
             line = f.readline()
 
         if variables is None:
-            raise ValueError(f"could not find {meteo_var} in file {fname_txt}")
+            raise ValueError(f"could not find {meteo_var} in file {fname}")
 
         # get dataframe
         for _ in range(50):
@@ -1019,7 +1025,6 @@ def read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None):
 
 
 def read_knmi_daily_meteo(f):
-
     f, stations = _read_station_location(f)
     f, variables, header = _read_knmi_header(f)
     header[0] = header[0].lstrip("# ")
@@ -1046,7 +1051,6 @@ def read_knmi_daily_meteo(f):
 
 @lru_cache()
 def get_knmi_hourly_api(url, stn, meteo_var, start, end):
-
     data = {
         "start": start.strftime("%Y%m%d") + "01",
         "end": end.strftime("%Y%m%d") + "24",
@@ -1071,9 +1075,31 @@ def get_knmi_hourly_api(url, stn, meteo_var, start, end):
 
 
 def read_knmi_hourly(f):
+    """Read hourly KNMI file.
+
+    Parameters
+    ----------
+    f : str or filelike object
+        path to file or filelike object
+
+    Returns
+    -------
+    df : pd.DataFrame
+        DataFrame containing data
+    variables : dict
+        dictionary containing metadata about the variables
+    """
+
+    ispath = False
+    if isinstance(f, str):
+        f = open(f, "r")
+        ispath = True
 
     f, variables, header = _read_knmi_header(f)
     df = pd.read_csv(f, header=None, names=header, na_values="     ")
+
+    if ispath:
+        f.close()
 
     # convert 24 to 0
     df.loc[df["H"] == 24, "H"] = 0
@@ -1093,22 +1119,20 @@ def read_knmi_hourly(f):
     return df, variables
 
 
-def get_knmi_timeseries_xy(xy, meteo_var, start, end, stn_name=None, settings=None):
+def get_knmi_timeseries_xy(xy, meteo_var, start, end, settings=None):
     """Get timeseries with measurements from station closest to the given (x,y)
-    coördinates.
+    coordinates.
 
     Parameters
     ----------
     xy : list. tuple or numpy array of int or floats
-        xy coördinates. e.g. [10.1,25.05]
+        xy coordinates. e.g. [10.1,25.05]
     meteo_var : str
         e.g. 'EV24'.
     start : pd.TimeStamp
         start time of observations.
     end : pd.TimeStamp
         end time of observations.
-    stn_name : str
-        name of the KNMI station
     settings : dict or None
         settings to obtain data
 
@@ -1123,7 +1147,7 @@ def get_knmi_timeseries_xy(xy, meteo_var, start, end, stn_name=None, settings=No
 
     # get station
     stations = get_stations(meteo_var=meteo_var)
-    stn = get_nearest_stations_xy(xy, meteo_var, stations=stations)[0]
+    stn = get_n_nearest_stations_xy(xy, meteo_var, stations=stations)[0]
 
     knmi_df, meta = get_knmi_timeseries_stn(
         stn, meteo_var, start, end, settings=settings
@@ -1147,8 +1171,9 @@ def _get_default_settings(settings):
         flag to obtain inseason data. Not implemented very well yet.
     use_api : bool, optional
         if True the api is used to obtain the data, API documentation is here:
-            https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-        if False a text file is downloaded into a temporary folder and the data is read from there.
+        https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+        if False a text file is downloaded into a temporary folder and the data is read
+        from that file
         Default is True since the api is back online (July 2021).
     raise_exceptions : bool, optional
         if True you get errors when no data is returned. The default is False.
@@ -1184,16 +1209,17 @@ def _get_default_settings(settings):
     return settings
 
 
-def read_knmi_timeseries_file(fname, meteo_var, start, end):
-
-    if meteo_var == "RD":
+def read_knmi_timeseries_file(fname, meteo_var, start, end, interval="daily"):
+    if meteo_var == "RD" and interval == "daily":
         knmi_df, meta = read_knmi_daily_rainfall_file(
             fname, meteo_var="RD", start=start, end=end
         )
-    else:
+    elif interval == "daily":
         knmi_df, meta, _ = read_knmi_daily_meteo_file(
             fname, meteo_var, start=start, end=end
         )
+    elif interval == "hourly":
+        knmi_df, meta = read_knmi_hourly(fname)
 
     # get stations
     stations = get_stations(meteo_var=meteo_var)
@@ -1370,7 +1396,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
             stn, stn_name, meteo_var, start, end, settings
         )
 
-    if not station_meta is None:
+    if station_meta is not None:
         meta = station_meta.to_dict()
     else:
         meta = {}
@@ -1414,7 +1440,7 @@ def get_knmi_obslist(
     stns : list of str or None
         list of knmi stations. The default is None
     xy : list or numpy array, optional
-        xy coördinates of the locations. e.g. [[10,25], [5,25]]
+        xy coordinates of the locations. e.g. [[10,25], [5,25]]
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RH", "EV24"]. The default is ("RH")
     starts : None, str, datetime or list, optional
@@ -1460,8 +1486,7 @@ def get_knmi_obslist(
         collection of multiple point observations
     """
 
-    if settings is None:
-        settings = _get_default_settings(settings)
+    settings = _get_default_settings(settings)
     settings["raise_exceptions"] = raise_exceptions
 
     if starts is None:
@@ -1578,7 +1603,7 @@ def get_knmi_obslist(
 
 
 def add_missing_indices(knmi_df, stn, start, end):
-    """when downloading KNMI data you don't always get a DataFrame with the
+    """When downloading KNMI data you don't always get a DataFrame with the
     periods that you provided in your request. Thus the index does not cover
     the complete period that you are interested in. This function adds the
     missing period to the index of the DataFrame.
@@ -1943,7 +1968,7 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
 
     Returns
     ------
-    pandas DataFrame
+    pandas.DataFrame
 
     """
     if et_type == "EV24":
@@ -1995,8 +2020,8 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
         ).to_frame(name=et_type)
     else:
         raise ValueError(
-            "Provide valid argument evaporation type \
-                         'hargreaves', 'makkink' or 'penman'"
+            "Provide valid argument evaporation type "
+            "'hargreaves', 'makkink' or 'penman'"
         )
 
     meta["unit"] = "m"
@@ -2018,7 +2043,7 @@ def interpolate(
     Parameters
     ----------
     xy : list or numpy array, optional
-        xy coördinates in m RD of the locations. e.g. [[10,25], [5,25]]
+        xy coordinates in m RD of the locations. e.g. [[10,25], [5,25]]
     stations : pandas DataFrame
         Dataframe containing the observation locations at the index
         and the x and y coordinates as a column 'x' and 'y' respectively.
@@ -2042,7 +2067,7 @@ def interpolate(
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame with the interpolated observations.
     """
 
