@@ -26,7 +26,7 @@ def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
     ground_level = np.random.random()
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    return hpd.GroundwaterObs(
+    o = hpd.GroundwaterObs(
         df,
         name=name,
         monitoring_well=name.split("_")[0],
@@ -43,6 +43,7 @@ def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
+    return o
 
 
 def test_waterlvl_obs():
@@ -83,7 +84,8 @@ def test_groundwater_quality_obs():
 def test_obscollection_from_list():
     o_list = []
     for i in range(10):
-        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
+        o_list.append(test_groundwater_obs(
+            name=f"groundwaterobs_00{i}", tube_nr=i))
 
     hpd.ObsCollection.from_list(o_list)
 

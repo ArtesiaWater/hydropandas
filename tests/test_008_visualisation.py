@@ -46,6 +46,11 @@ def test_obscollection_dino_to_mapgraph():
         print(e)
         return
 
+def test_obscollection_dino_to_section_plot():
+    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw.plots.section_plot()
+    return
+
 
 def test_obscollection_to_map():
     try:
