@@ -1760,6 +1760,9 @@ class ObsCollection(pd.DataFrame):
 
         if main_sheet_name is None:
             main_sheet_name = self.name
+            
+        if main_sheet_name == '':
+            main_sheet_name = 'metadata'
 
         if not self._is_consistent():
             raise RuntimeError("inconsistent observation collection")
