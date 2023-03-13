@@ -166,8 +166,11 @@ class CollectionPlots:
         add_legend : boolean, optional
             add a legend to a plot
         map_label : str, optional
-            add a label to the monitoring wells on the map, this label is
-            picked from the meta attribute of the obs points.
+            add a label to the monitoring wells on the map, the label should be
+            1. the attribute of an observation
+            2. the key in the meta attribute of the observation
+            3. a generic label for each observation in this collection.
+            A label is only added if map_label is not ''. The default is ''.
         map_label_size : int, optional
             label size of the map_label in pt.
         col_name_lat : str, optional
@@ -281,6 +284,12 @@ class CollectionPlots:
                 ).add_to(group)
 
                 if map_label != "":
+                    if map_label in o._metadata:
+                        map_label_val = getattr(o, map_label)
+                    elif map_label in o.meta.keys():
+                        map_label_val = o.meta[map_label]
+                    else:
+                        map_label_val = map_label
                     folium.map.Marker(
                         [
                             self._obj.loc[name, col_name_lat],
@@ -290,7 +299,7 @@ class CollectionPlots:
                             icon_size=(150, 36),
                             icon_anchor=(0, 0),
                             html='<div style="font-size: %ipt">%s</div>'
-                            % (map_label_size, o.meta[map_label]),
+                            % (map_label_size, map_label_val),
                         ),
                     ).add_to(group)
             else:
