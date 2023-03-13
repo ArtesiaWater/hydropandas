@@ -9,9 +9,11 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 import logging
 import numbers
+from typing import Optional, List
 
 import numpy as np
 import pandas as pd
+from scipy.interpolate import RBFInterpolator
 
 from . import observation as obs
 from . import util
@@ -293,7 +295,6 @@ def read_knmi(
     starts=None,
     ends=None,
     ObsClasses=None,
-    method="nearest",
     **kwargs,
 ):
     """Get knmi observations from a list of locations or a list of
@@ -333,10 +334,6 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
-    method : str, optional
-        specify whether EvaporationObs should be collected from the nearest
-        meteo station (fast) or interpolated using thin plate spline (slow).
-        Choiche betweeen 'nearest' or 'interpolation'
     **kwargs :
         kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
@@ -454,7 +451,6 @@ def read_knmi(
         starts=starts,
         ends=ends,
         ObsClasses=ObsClasses,
-        method=method,
         **kwargs,
     )
 
@@ -1384,7 +1380,6 @@ class ObsCollection(pd.DataFrame):
         starts=None,
         ends=None,
         ObsClasses=None,
-        method="nearest",
         **kwargs,
     ):
         """Get knmi observations from a list of locations or a list of
@@ -1424,10 +1419,6 @@ class ObsCollection(pd.DataFrame):
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
-        method : str, optional
-            specify whether EvaporationObs should be collected from the nearest
-            meteo station (fast) or interpolated using thin plate spline (slow).
-            Choiche betweeen 'nearest' or 'interpolation'
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
 
@@ -1574,7 +1565,6 @@ class ObsCollection(pd.DataFrame):
             ObsClasses=ObsClasses,
             starts=starts,
             ends=ends,
-            method=method,
             **kwargs,
         )
 
@@ -1760,9 +1750,9 @@ class ObsCollection(pd.DataFrame):
 
         if main_sheet_name is None:
             main_sheet_name = self.name
-            
-        if main_sheet_name == '':
-            main_sheet_name = 'metadata'
+
+        if main_sheet_name == "":
+            main_sheet_name = "metadata"
 
         if not self._is_consistent():
             raise RuntimeError("inconsistent observation collection")
@@ -1952,3 +1942,87 @@ class ObsCollection(pd.DataFrame):
             return o.loc[tmin:tmax, col]
 
         return self.obs.apply(lambda o: o.loc[tmin:tmax, col])
+
+    def interpolate(
+        self,
+        xy: List[List[float]],
+        kernel: str = "thin_plate_spline",
+        kernel2: str = "linear",
+        epsilon: Optional[int] = None,
+    ):
+        """Interpolation method using the Scipy radial basis function (RBF)
+
+        Parameters
+        ----------
+        xy : list or numpy array, optional
+            xy coordinates in m RD of the locations. e.g. [[10,25], [5,25]]
+        oc : pandas DataFrame
+            Dataframe containing the observation locations as columns and
+            the observations at a measurement time in each row.
+        kernel : str, optional
+            Type of radial basis funtion, by default thin_plate_spline.
+            Other options are linear, gaussian, inverse_quadratic,
+            multiquadric, inverse_multiquadric, cubic or quintic.
+        kernel2 : str, optional
+            Kernel in case there are not enough observations (3 or 6) for
+            time step, by default linear. Other options are gaussian,
+            inverse_quadratic, multiquadric, or inverse_multiquadric.
+        epsilon : float, optional
+            Shape parameter that scales the input to the RBF. If kernel is
+            linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
+            Otherwise this must be specified.
+
+        Returns
+        -------
+        ObsCollection
+        """
+
+        if (kernel == "thin_plate_spline") or (kernel == "cubic"):
+            min_val = 3
+        elif kernel == "quintic":
+            min_val = 6
+        else:
+            min_val = len(self.index)
+
+        xy_oc = self.loc[:, ["x", "y"]]
+        obsdf = util.oc_to_df(self)
+        fill_df = (
+            pd.DataFrame(
+                index=obsdf.index,
+                columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
+            )
+            .sort_index()
+            .astype(float)
+        )
+
+        for idx in obsdf.index:
+            # get all stations with values for this date
+            val = obsdf.loc[idx].dropna()
+            # get stations for this date
+            coor = xy_oc.loc[val.index]
+
+            if len(val) >= min_val:
+                kernel = kernel
+            else:
+                kernel = kernel2
+
+            # create an scipy interpolator
+            rbf = RBFInterpolator(
+                coor.to_numpy(), val.to_numpy(), epsilon=epsilon, kernel=kernel
+            )
+
+            val_rbf = rbf(xy)
+            fill_df.loc[idx] = val_rbf
+
+        obs_list = []
+        for i, col in enumerate(fill_df.columns):
+            o = obs.Obs(
+                fill_df.loc[:, [col]].copy(),
+                x=xy[i][0],
+                y=xy[i][1],
+                name=col,
+                source=f"interpolation {kernel}",
+            )
+            obs_list.append(o)
+
+        return self.from_list(obs_list)

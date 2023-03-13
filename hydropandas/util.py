@@ -12,9 +12,10 @@ import time
 import zipfile
 from typing import Dict, Optional
 
-import pandas as pd
+from numpy import unique, full, nan
 from colorama import Back, Fore, Style
-from pandas import Timedelta, Timestamp
+from pandas import Timedelta, Timestamp, DatetimeIndex, DataFrame
+
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def _obslist_to_frame(obs_list):
         DataFrame containing all data
     """
     if len(obs_list) > 0:
-        obs_df = pd.DataFrame(
+        obs_df = DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
@@ -41,7 +42,7 @@ def _obslist_to_frame(obs_list):
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
-        obs_df = pd.DataFrame()
+        obs_df = DataFrame()
 
     return obs_df
 
@@ -278,3 +279,14 @@ def get_color_logger(level="INFO"):
 
     logging.captureWarnings(True)
     return logger
+
+
+def oc_to_df(oc) -> DataFrame:
+
+    obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
+    df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
+    for obs in oc.obs:
+        if not obs.empty:
+            df.loc[obs.index, obs.name] = obs.iloc[:, 0].values
+
+    return df

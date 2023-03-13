@@ -1195,7 +1195,7 @@ def _get_default_settings(settings):
         "inseason": False,
         "use_api": True,
         "raise_exceptions": True,
-        "normalize_index": True,
+        "normalize_index": False,
     }
 
     if settings is None:
