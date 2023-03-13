@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 import pandas as pd
 
@@ -64,7 +65,6 @@ def get_model_layer_z(z, zvec, left=-999, right=999):
 
 
 def check_if_var_is_invalid(var):
-
     if var is None:
         return True
     elif np.isnan(var):
@@ -222,7 +222,7 @@ def get_zvec(x, y, gwf=None, ds=None):
     Parameters
     ----------
     x : int or float
-        x coördinate.
+        x coordinate.
     y : int or float
         y coordinate.
     gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
@@ -241,8 +241,8 @@ def get_zvec(x, y, gwf=None, ds=None):
     zvec : list
         list of vertical layer boundaries. length is nlay + 1.
     """
-    from shapely.geometry import Point
     import flopy
+    from shapely.geometry import Point
 
     if gwf and not ds:
         ix = flopy.utils.GridIntersect(gwf.modelgrid)

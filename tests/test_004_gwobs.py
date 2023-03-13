@@ -11,7 +11,7 @@ import test_001_to_from as ttf
 def test_set_tube_nr():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.gwobs.set_tube_nr(if_exists="replace")
-    return dino_gw
+    return
 
 
 def test_set_tube_nr_monitoring_well():
@@ -19,7 +19,7 @@ def test_set_tube_nr_monitoring_well():
     fews_gw_prod.gwobs.set_tube_nr_monitoring_well(
         "monitoring_well", if_exists="replace"
     )
-    return fews_gw_prod
+    return
 
 
 def test_get_modellayers_mf2005():
@@ -37,10 +37,9 @@ def test_get_modellayers_mf2005():
     ncol = 30
     delr = Lx / ncol
     delc = Ly / nrow
-    delv = (ztop - zbot) / nlay
     botm = np.linspace(ztop, zbot, nlay + 1)
     # Create the discretization object
-    dis = flopy.modflow.ModflowDis(
+    flopy.modflow.ModflowDis(
         ml,
         nlay,
         nrow,
@@ -54,9 +53,9 @@ def test_get_modellayers_mf2005():
     )
 
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    modellayers = dino_gw.gwobs.get_modellayers(ml)
+    dino_gw.gwobs.get_modellayers(ml)
 
-    return modellayers
+    return
 
 
 def test_get_modellayers_mf6_structured():
@@ -76,12 +75,9 @@ def test_get_modellayers_mf6_structured():
     nlay = 4
     nrow = 40
     ncol = 30
-    delr = Lx / ncol
-    delc = Ly / nrow
-    delv = (ztop - zbot) / nlay
     botm = np.linspace(ztop, zbot, nlay + 1)
 
-    dis = flopy.mf6.ModflowGwfdis(
+    flopy.mf6.ModflowGwfdis(
         gwf,
         xorigin=0,
         yorigin=300000,
@@ -94,12 +90,12 @@ def test_get_modellayers_mf6_structured():
         botm=botm[1:],
     )
     dino_gw = ttf.test_obscollection_dinozip_gw()
-    modellayers = dino_gw.gwobs.get_modellayers(gwf)
+    dino_gw.gwobs.get_modellayers(gwf)
 
-    return modellayers
+    return
 
 
 def test_get_regis_layer():
     dino_gw = ttf.test_obscollection_dinozip_gw()
-
-    return dino_gw.gwobs.get_regis_layers()
+    dino_gw.gwobs.get_regis_layers()
+    return

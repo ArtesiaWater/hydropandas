@@ -2,15 +2,15 @@
 https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleveranciers/url-s-publieke-rest-services
 """
 
-import requests
-import pandas as pd
-import numpy as np
-import xml.etree.ElementTree
-import logging
 import json
-from tqdm import tqdm
+import logging
+import xml.etree.ElementTree
 
+import numpy as np
+import pandas as pd
+import requests
 from pyproj import Transformer
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

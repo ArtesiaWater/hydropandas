@@ -133,7 +133,6 @@ def read_wiski_dir(
     keep_all_obs=True,
     **kwargs,
 ):
-
     # get files
     dirname, unzip_fnames = get_files(
         dirname,

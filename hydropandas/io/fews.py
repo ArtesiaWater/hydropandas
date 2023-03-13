@@ -616,7 +616,6 @@ def read_xml_filelist(
     obs_list = []
     nfiles = len(fnames)
     for j, ixml in enumerate(fnames):
-
         # print message
         logger.info(f"{j+1}/{nfiles} read {ixml}")
 

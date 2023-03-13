@@ -1,3 +1,9 @@
+import logging
+
+from .extensions import geo as _geo
+from .extensions import gwobs as _gwobs
+from .extensions import plots as _plots
+from .extensions import stats as _stats
 from .obs_collection import (
     ObsCollection,
     read_bro,
@@ -7,25 +13,19 @@ from .obs_collection import (
     read_knmi,
     read_menyanthes,
     read_modflow,
-    read_wiski,
     read_waterinfo,
+    read_wiski,
 )
 from .observation import (
-    Obs,
+    EvaporationObs,
     GroundwaterObs,
     GroundwaterQualityObs,
-    PrecipitationObs,
-    EvaporationObs,
     MeteoObs,
     ModelObs,
+    Obs,
+    PrecipitationObs,
     WaterlvlObs,
 )
-from .extensions import geo as _geo
-from .extensions import gwobs as _gwobs
-from .extensions import plots as _plots
-from .extensions import stats as _stats
 from .version import __version__
-
-import logging
 
 logging.getLogger("hydropandas").addHandler(logging.NullHandler())
