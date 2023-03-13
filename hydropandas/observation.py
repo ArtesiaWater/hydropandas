@@ -1338,7 +1338,6 @@ class EvaporationObs(MeteoObs):
         cls,
         xy,
         et_type="EV24",
-        method="nearest",
         startdate=None,
         enddate=None,
         fill_missing_obs=True,
@@ -1358,10 +1357,6 @@ class EvaporationObs(MeteoObs):
             type of evapotranspiration to get from KNMI. Choice between
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
-        method: str
-            specify whether evaporation should be collected from the nearest
-            meteo station (fast) or interpolated using thin plate spline (slow).
-            Choiche betweeen 'nearest' or 'interpolation'
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1396,40 +1391,22 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        if method == "nearest":
-            stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
-            ts, meta = knmi.get_evaporation(
-                stn, et_type, start=startdate, end=enddate, settings=settings
-            )
+        stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
+        ts, meta = knmi.get_evaporation(
+            stn, et_type, start=startdate, end=enddate, settings=settings
+        )
 
-            return cls(
-                ts,
-                meta=meta,
-                station=meta["station"],
-                x=meta["x"],
-                y=meta["y"],
-                name=meta["name"],
-                source=meta["source"],
-                unit=meta["unit"],
-                meteo_var=et_type,
-            )
-
-        elif method == "interpolation":
-            obs_list = knmi.get_knmi_obslist(
-                xy=[xy],
-                meteo_vars=(et_type,),
-                starts=startdate,
-                ends=enddate,
-                ObsClasses=(cls,),
-                settings=settings,
-                method=method,
-            )
-
-            return obs_list[0]
-        else:
-            raise ValueError(
-                "Please provide either 'nearest' or 'interpolation' as method"
-            )
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
+            meteo_var=et_type,
+        )
 
     @classmethod
     def from_obs(

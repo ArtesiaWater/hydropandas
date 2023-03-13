@@ -21,7 +21,6 @@ from io import StringIO
 import numpy as np
 import pandas as pd
 import requests
-from scipy.interpolate import RBFInterpolator
 
 from .. import util
 
@@ -1428,7 +1427,6 @@ def get_knmi_obslist(
     ObsClasses=None,
     settings=None,
     raise_exceptions=False,
-    method="nearest",
 ):
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
@@ -1524,7 +1522,7 @@ def get_knmi_obslist(
         start, end = _start_end_to_datetime(start, end)
 
         # get stations
-        if (stns is None) and (method == "nearest"):
+        if stns is None:
             stations = get_stations(meteo_var=meteo_var)
             if (locations is None) and (xy is not None):
                 _stns = get_nearest_station_xy(
@@ -1539,65 +1537,29 @@ def get_knmi_obslist(
                     "stns, location and x are both None" "please specify one of these"
                 )
             _stns = np.unique(_stns)
-        elif (stns is None) and (method == "interpolation"):
-            _stns = get_stations(meteo_var=meteo_var)
 
             if locations is not None:
                 xy = locations[["x", "y"]].values
         else:
             _stns = stns
 
-        if method == "nearest":
-            for stn in _stns:
-                o = ObsClass.from_knmi(
-                    stn,
-                    meteo_var=meteo_var,
-                    startdate=start,
-                    enddate=end,
-                    fill_missing_obs=settings["fill_missing_obs"],
-                    interval=settings["interval"],
-                    inseason=settings["inseason"],
-                    raise_exceptions=raise_exceptions,
-                    **obs_kwargs,
-                )
-
-                if settings["normalize_index"]:
-                    o.index = o.index.normalize()
-
-                obs_list.append(o)
-
-        elif method == "interpolation":
-            settings["fill_missing_obs"] = False  # dont fill missing obs
-
-            # get dataframe with data from all knmi stations
-            df = pd.DataFrame(
-                index=pd.date_range(start="1900", end=end, freq="H"),
-                columns=_stns.index,
+        for stn in _stns:
+            o = ObsClass.from_knmi(
+                stn,
+                meteo_var=meteo_var,
+                startdate=start,
+                enddate=end,
+                fill_missing_obs=settings["fill_missing_obs"],
+                interval=settings["interval"],
+                inseason=settings["inseason"],
+                raise_exceptions=raise_exceptions,
+                **obs_kwargs,
             )
-            for stn in _stns.index:  # fill dataframe with measurements
-                et, meta = get_evaporation(
-                    stn, meteo_var, start=start, end=end, settings=settings
-                )
-                df[stn] = et
 
-            ts = interpolate(
-                np.asarray(xy), _stns, df.dropna(how="all"), meteo_var=meteo_var
-            )
-            ts[ts < 0] = 0
+            if settings["normalize_index"]:
+                o.index = o.index.normalize()
 
-            for i, col in enumerate(ts.columns):
-                meta = {
-                    "station": "interpolation thin plate sline",
-                    "x": xy[i][0],
-                    "y": xy[i][1],
-                    "name": col,
-                    "meteo_var": meteo_var,
-                }
-                o = ObsClass(ts.loc[:, [col]].copy(), **meta)
-
-                if settings["normalize_index"]:
-                    o.index = o.index.normalize()
-                obs_list.append(o)
+            obs_list.append(o)
 
     return obs_list
 
@@ -2027,81 +1989,3 @@ def get_evaporation(stn=260, et_type="EV24", start=None, end=None, settings=None
     meta["unit"] = "m"
 
     return et, meta
-
-
-def interpolate(
-    xy,
-    stations,
-    obs,
-    meteo_var="EV24",
-    kernel="thin_plate_spline",
-    kernel2="linear",
-    epsilon=None,
-):
-    """Interpolation method using the Scipy radial basis function (RBF)
-
-    Parameters
-    ----------
-    xy : list or numpy array, optional
-        xy coordinates in m RD of the locations. e.g. [[10,25], [5,25]]
-    stations : pandas DataFrame
-        Dataframe containing the observation locations at the index
-        and the x and y coordinates as a column 'x' and 'y' respectively.
-    obs : pandas DataFrame
-        Dataframe containing the observation locations as columns and
-        the observations at a measurement time in each row.
-    meteo_var : str, optional
-        Kind of observation to put in the column name DataFrame
-    kernel : str, optional
-        Type of radial basis funtion, by default thin_plate_spline.
-        Other options are linear, gaussian, inverse_quadratic,
-        multiquadric, inverse_multiquadric, cubic or quintic
-    kernel2 : str, optional
-        Kernel in case there are not enough observations (3 or 6) for
-        time step, by default linear. Other options are gaussian,
-        inverse_quadratic, multiquadric, or inverse_multiquadric.
-    epsilon : float, optional
-        Shape parameter that scales the input to the RBF. If kernel is
-        linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
-        Otherwise this must be specified.
-
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame with the interpolated observations.
-    """
-
-    if (kernel == "thin_plate_spline") or (kernel == "cubic"):
-        min_val = 3
-    elif kernel == "quintic":
-        min_val = 6
-    else:
-        min_val = len(obs.columns)
-
-    xy_obs = stations.loc[obs.columns, ["x", "y"]]
-
-    df = pd.DataFrame(
-        index=obs.index,
-        columns=[f"{meteo_var}_{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
-    )
-
-    for idx in obs.index:
-        # get all stations with values for this date
-        val = obs.loc[idx].dropna()
-        # get stations for this date
-        coor = xy_obs.loc[val.index]
-
-        if len(val) >= min_val:
-            kernel = kernel
-        else:
-            kernel = kernel2
-
-        # create an scipy interpolator
-        rbf = RBFInterpolator(
-            coor.to_numpy(), val.to_numpy(), epsilon=epsilon, kernel=kernel
-        )
-
-        val_rbf = rbf(xy)
-        df.loc[idx] = val_rbf
-
-    return df.astype(float)
