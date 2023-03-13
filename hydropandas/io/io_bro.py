@@ -148,7 +148,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
         return measurements_from_gld(gld_id, **kwargs)
 
 
-def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime='IMBRO/A'):
+def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
     """get bro_id of a grondwterstandendossier (gld) from a bro_id of a
     grondwatermonitoringsput (gmw).
 
@@ -160,7 +160,7 @@ def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime='IMBRO/A'):
         tube number.
     quality_regime : str
         either choose 'IMBRO/A' or 'IMBRO'.
-        
+
     Raises
     ------
     ValueError
@@ -201,20 +201,25 @@ def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime='IMBRO/A'):
                 )
                 return None
             elif len(tube["gldReferences"]) == 2:
-                url2 = tube["gldReferences"][0]["url"]
-                req2 = requests.get(url2)
-                ns = {
-                    "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
-                    "brocom" : "http://www.broservices.nl/xsd/brocommon/3.0"
-                }
-                tree = xml.etree.ElementTree.fromstring(req2.text)
-                glds = tree.findall(".//ns11:GLD_O", ns)
-                gld = glds[0]
-                qualityRegime =  gld.find("brocom:qualityRegime", ns).text
-                if qualityRegime == quality_regime:
-                    return tube["gldReferences"][0]["broId"]
-                else:
-                    return tube["gldReferences"][1]["broId"]
+                logger.info(
+                    f"two gld references found for GMW {bro_id} and tube nr {tube_nr}, using {quality_regime} quality regime"
+                )
+                for gldref in tube["gldReferences"]:
+                    url2 = gldref["url"]
+                    req2 = requests.get(url2)
+                    ns = {
+                        "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
+                        "brocom": "http://www.broservices.nl/xsd/brocommon/3.0",
+                    }
+                    tree = xml.etree.ElementTree.fromstring(req2.text)
+                    gld = tree.findall(".//ns11:GLD_O", ns)[0]
+                    qualityRegime = gld.find("brocom:qualityRegime", ns).text
+                    if qualityRegime == quality_regime:
+                        return gldref["broId"]
+                logger.info(
+                    f"no gld reference with quality regime {quality_regime} was found"
+                )
+                return None
             else:
                 raise RuntimeError("unexpected number of gld references")
 
