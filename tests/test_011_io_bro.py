@@ -70,7 +70,7 @@ def test_get_gld_id_from_gmw():
 
 
 def test_get_gld_id_from_gmw_quality_regime():
-    bro_id = "GMW000000063853"
+    bro_id = "GMW000000063853"  # bro id with two gld's with a different quality regime, both gld's have no measurements 13-3-2023
     gld1 = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO/A")
 
     gld2 = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO")
