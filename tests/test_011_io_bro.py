@@ -55,7 +55,6 @@ def test_groundwater_observations2():
 
 
 def test_get_gld_id_from_gmw():
-
     bro_id = "GMW000000036287"
     bro_id = "GMW000000055372"
     bro_id = "GMW000000059186"
@@ -64,8 +63,19 @@ def test_get_gld_id_from_gmw():
     return
 
 
-def test_obs_list_from_extent():
+def test_get_gld_id_from_gmw_quality_regime():
+    bro_id = "GMW000000063853"  # bro id with two gld's with a different quality regime, both gld's have no measurements 13-3-2023
+    gld1 = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO/A")
 
+    gld2 = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO")
+    assert (
+        gld1 != gld2
+    ), "different quality regimes should return different gld id's for this gmw id"
+
+    return
+
+
+def test_obs_list_from_extent():
     extent = (102395, 103121, 434331, 434750)
     extent = [116500, 120000, 439000, 442000]
     bro.get_obs_list_from_extent(
