@@ -301,6 +301,38 @@ def interpolate(
     kernel2: str = "linear",
     epsilon: Optional[int] = None,
 ) -> DataFrame:
+    """Interpolation method using the Scipy radial basis function (RBF)
+
+
+    Parameters
+    ----------
+    xy : List[List[float]]
+        xy coordinates of locations of interest e.g. [[10,25], [5,25]]
+    obsdf : DataFrame
+        Dataframe containing the observation locations as columns and
+        the observations at a measurement time in each row.
+    obsloc : DataFrame
+        Dataframe containing the observation locations coordinates
+        with observation locations as index and columns ["x", "y"]
+    kernel : str, optional
+        Type of radial basis funtion, by default thin_plate_spline.
+        Other options are linear, gaussian, inverse_quadratic,
+        multiquadric, inverse_multiquadric, cubic or quintic.
+    kernel2 : str, optional
+        Kernel in case there are not enough observations (3 or 6) for
+        time step, by default linear. Other options are gaussian,
+        inverse_quadratic, multiquadric, or inverse_multiquadric.
+    epsilon : Optional[int], optional
+        Shape parameter that scales the input to the RBF. If kernel is
+        linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
+        Otherwise this must be specified.
+
+    Returns
+    -------
+    DataFrame
+        DataFrame with locations of interest as columns and interpolated values
+        at a measurement time in each row.
+    """
 
     if (kernel == "thin_plate_spline") or (kernel == "cubic"):
         min_val = 3

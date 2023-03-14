@@ -1954,15 +1954,13 @@ class ObsCollection(pd.DataFrame):
         kernel2: str = "linear",
         epsilon: Optional[int] = None,
     ):
-        """Interpolation method using the Scipy radial basis function (RBF)
+        """Interpolation method for ObsCollections using the Scipy radial basis
+        function (RBF)
 
         Parameters
         ----------
-        xy : list or numpy array, optional
-            xy coordinates in m RD of the locations. e.g. [[10,25], [5,25]]
-        oc : pandas DataFrame
-            Dataframe containing the observation locations as columns and
-            the observations at a measurement time in each row.
+        xy : List[List[float]]
+            xy coordinates of locations of interest e.g. [[10,25], [5,25]]
         kernel : str, optional
             Type of radial basis funtion, by default thin_plate_spline.
             Other options are linear, gaussian, inverse_quadratic,
