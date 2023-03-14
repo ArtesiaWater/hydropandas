@@ -9,11 +9,10 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 import logging
 import numbers
-from typing import Optional, List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
-from scipy.interpolate import RBFInterpolator
 
 from . import observation as obs
 from . import util
@@ -792,18 +791,23 @@ class ObsCollection(pd.DataFrame):
 
                                 # otherwise return Nan
                                 logger.warning(
-                                    f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                    f"observation collection -> {self.name} not"
+                                    f"consistent with observation -> {o.name}"
+                                    f"{att} value"
                                 )
                                 return False
                         except TypeError:
                             logger.warning(
-                                f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                f"observation collection -> {self.name} not"
+                                f"consistent with observation -> {o.name} {att}"
+                                "value"
                             )
                             return False
                     elif att == "name":
                         if o.name not in self.index:
                             logger.warning(
-                                f"observation collection -> {self.name} not consistent with observation -> {o.name} name"
+                                f"observation collection -> {self.name} not"
+                                f"consistent with observation -> {o.name} name"
                             )
                             return False
 
@@ -1977,42 +1981,12 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
         """
 
-        if (kernel == "thin_plate_spline") or (kernel == "cubic"):
-            min_val = 3
-        elif kernel == "quintic":
-            min_val = 6
-        else:
-            min_val = len(self.index)
-
         xy_oc = self.loc[:, ["x", "y"]]
         obsdf = util.oc_to_df(self)
-        fill_df = (
-            pd.DataFrame(
-                index=obsdf.index,
-                columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
-            )
-            .sort_index()
-            .astype(float)
+
+        fill_df = util.interpolate(
+            xy, obsdf, xy_oc, kernel=kernel, kernel2=kernel2, epsilon=epsilon
         )
-
-        for idx in obsdf.index:
-            # get all stations with values for this date
-            val = obsdf.loc[idx].dropna()
-            # get stations for this date
-            coor = xy_oc.loc[val.index]
-
-            if len(val) >= min_val:
-                kernel = kernel
-            else:
-                kernel = kernel2
-
-            # create an scipy interpolator
-            rbf = RBFInterpolator(
-                coor.to_numpy(), val.to_numpy(), epsilon=epsilon, kernel=kernel
-            )
-
-            val_rbf = rbf(xy)
-            fill_df.loc[idx] = val_rbf
 
         obs_list = []
         for i, col in enumerate(fill_df.columns):

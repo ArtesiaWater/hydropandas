@@ -10,12 +10,12 @@ import sys
 import tempfile
 import time
 import zipfile
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from numpy import unique, full, nan
 from colorama import Back, Fore, Style
-from pandas import Timedelta, Timestamp, DatetimeIndex, DataFrame
-
+from numpy import unique
+from pandas import DataFrame, DatetimeIndex, Timedelta, Timestamp
+from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     if os.path.exists(dst):
         if not force:
             print(
-                "File not unzipped. Destination already exists. Use 'force=True' to unzip."
+                "File not unzipped. Destination already exists. Use"
+                "'force=True' to unzip."
             )
             return
     if preserve_datetime:
@@ -290,3 +291,50 @@ def oc_to_df(oc) -> DataFrame:
             df.loc[obs.index, obs.name] = obs.iloc[:, 0].values
 
     return df
+
+
+def interpolate(
+    xy: List[List[float]],
+    obsdf: DataFrame,
+    obsloc: DataFrame,
+    kernel: str = "thin_plate_spline",
+    kernel2: str = "linear",
+    epsilon: Optional[int] = None,
+) -> DataFrame:
+
+    if (kernel == "thin_plate_spline") or (kernel == "cubic"):
+        min_val = 3
+    elif kernel == "quintic":
+        min_val = 6
+    else:
+        min_val = len(obsdf.index)
+
+    fill_df = (
+        DataFrame(
+            index=obsdf.index,
+            columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
+        )
+        .sort_index()
+        .astype(float)
+    )
+
+    for idx in obsdf.index:
+        # get all stations with values for this date
+        val = obsdf.loc[idx].dropna()
+        # get stations for this date
+        coor = obsloc.loc[val.index]
+
+        if len(val) >= min_val:
+            kernel = kernel
+        else:
+            kernel = kernel2
+
+        # create an scipy interpolator
+        rbf = RBFInterpolator(
+            coor.to_numpy(), val.to_numpy(), epsilon=epsilon, kernel=kernel
+        )
+
+        val_rbf = rbf(xy)
+        fill_df.loc[idx] = val_rbf
+
+    return fill_df
