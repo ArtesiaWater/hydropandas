@@ -248,24 +248,3 @@ def test_obslist_from_stns_single_startdate():
     )
 
     return
-
-
-def test_interpolate():
-    stations = knmi.get_stations(meteo_var="EV24")
-    settings = knmi._get_default_settings(None)
-    settings["fill_missing_obs"] = False  # dont fill missing obs
-    # get dataframe with data from all knmi stations
-    df = pd.DataFrame(
-        index=pd.date_range(start="1900", end="2021", freq="H"), columns=stations.index
-    )
-
-    for stn in stations.index:  # fill dataframe with measurements
-        et, meta = knmi.get_evaporation(
-            stn, "EV24", start="2020", end="2021", settings=settings
-        )
-        df[stn] = et
-
-    xy = [[x, y] for x in [117000, 117500] for y in [439000, 439500]]
-
-    knmi.interpolate(xy=xy, stations=stations, obs=df.dropna(how="all"))
-    return

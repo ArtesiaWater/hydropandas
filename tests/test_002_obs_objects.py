@@ -84,8 +84,7 @@ def test_groundwater_quality_obs():
 def test_obscollection_from_list():
     o_list = []
     for i in range(10):
-        o_list.append(test_groundwater_obs(
-            name=f"groundwaterobs_00{i}", tube_nr=i))
+        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
 
     oc = hpd.ObsCollection.from_list(o_list)
 
@@ -183,3 +182,10 @@ def test_add_observation_to_oc():
     o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     oc.add_observation(o)
+
+
+def test_interpolate_obscollection():
+    oc = test_obscollection_from_list()
+
+    xy = [[500, 11000], [9000, 18000]]
+    oc.interpolate(xy)
