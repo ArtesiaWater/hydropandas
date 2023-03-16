@@ -1953,6 +1953,7 @@ class ObsCollection(pd.DataFrame):
         kernel: str = "thin_plate_spline",
         kernel2: str = "linear",
         epsilon: Optional[int] = None,
+        col: Optional[str] = None,
     ):
         """Interpolation method for ObsCollections using the Scipy radial basis
         function (RBF)
@@ -1973,14 +1974,24 @@ class ObsCollection(pd.DataFrame):
             Shape parameter that scales the input to the RBF. If kernel is
             linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
             Otherwise this must be specified.
+        col : str, optional
+            Name of the column in the Obs dataframe to be used. If None the
+            first numeric column in the Obs Dataframe is used.
 
         Returns
         -------
         ObsCollection
         """
 
+        otype = self._infer_otype()
+        if isinstance(otype, (list, np.ndarray)):
+            raise TypeError(
+                "Please make sure that all Obs are of the same type. Currently"
+                f" found {', '.join([x.__name__ for x in otype])}."
+            )
+
         xy_oc = self.loc[:, ["x", "y"]]
-        obsdf = util.oc_to_df(self)
+        obsdf = util.oc_to_df(self, col=col)
 
         fill_df = util.interpolate(
             xy, obsdf, xy_oc, kernel=kernel, kernel2=kernel2, epsilon=epsilon
@@ -1988,12 +1999,14 @@ class ObsCollection(pd.DataFrame):
 
         obs_list = []
         for i, col in enumerate(fill_df.columns):
-            o = obs.Obs(
+            o = otype(
                 fill_df.loc[:, [col]].copy(),
                 x=xy[i][0],
                 y=xy[i][1],
                 name=col,
-                source=f"interpolation {kernel}",
+                source=f"interpolation {self.name}",
+                unit=self.obs.iloc[0].unit,
+                meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
             )
             obs_list.append(o)
 
