@@ -1988,8 +1988,9 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        for att in set(otype._metadata) - set(["x", "y", "name", "source", "meta"]):
-            if self.loc[:, att] == self.iloc[0].loc[att]:
+        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
+        for att in meta_att:
+            if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
 
         obs_list = []
