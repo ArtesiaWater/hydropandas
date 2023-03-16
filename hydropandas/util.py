@@ -283,7 +283,6 @@ def get_color_logger(level="INFO"):
 
 
 def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
-
     obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
     df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
     for obs in oc.obs:

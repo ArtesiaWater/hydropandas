@@ -14,7 +14,6 @@ dirname, fnames = hpd.util.get_files(
 
 
 def test_fews_highmemory():
-
     fews.read_xml_fname(
         os.path.join(dirname, fnames[0]), low_memory=False, ObsClass=hpd.WaterlvlObs
     )

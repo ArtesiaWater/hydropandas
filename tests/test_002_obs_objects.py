@@ -92,7 +92,6 @@ def test_obscollection_from_list():
 
 
 def test_copy_obs():
-
     o = test_groundwater_obs(name="groundwaterobs_001", tube_nr=2)
     o2 = o.copy()
 

@@ -85,9 +85,6 @@ def read_bro(
 
 def read_dino(
     dirname=None,
-    extent=None,
-    bbox=None,
-    locations=None,
     ObsClass=obs.GroundwaterObs,
     subdir="Grondwaterstanden_Put",
     suffix="1.csv",
@@ -106,14 +103,6 @@ def read_dino(
     dirname : str, optional
         directory name, can be a .zip file or the parent directory
         of subdir
-    extent : list, tuple or numpy-array (user must specify extent or bbox)
-        get dinodata online within this extent [xmin, xmax, ymin, ymax]
-    bbox : list, tuple or numpy-array (user must specify extent or bbox)
-        The bounding box, in RD-coordinates, for which you want to
-        retrieve locations [xmin, ymin, xmax, ymax]
-    locations : list of str, optional
-        list of names with location and filter number, separated by
-        'filtersep'
     ObsClass : type
         class of the observations, so far only GroundwaterObs is supported
     subdir : str
@@ -1997,6 +1986,12 @@ class ObsCollection(pd.DataFrame):
             xy, obsdf, xy_oc, kernel=kernel, kernel2=kernel2, epsilon=epsilon
         )
 
+        # add all metadata that is equal for all observations
+        kwargs = {}
+        for att in set(otype._metadata) - set(["x", "y", "name", "source", "meta"]):
+            if self.loc[:, att] == self.iloc[0].loc[att]:
+                kwargs[att] = self.iloc[0].loc[att]
+
         obs_list = []
         for i, col in enumerate(fill_df.columns):
             o = otype(
@@ -2005,8 +2000,8 @@ class ObsCollection(pd.DataFrame):
                 y=xy[i][1],
                 name=col,
                 source=f"interpolation {self.name}",
-                unit=self.obs.iloc[0].unit,
                 meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
+                **kwargs,
             )
             obs_list.append(o)
 
