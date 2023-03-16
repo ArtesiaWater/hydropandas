@@ -1,0 +1,121 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydropandas"
+dynamic = ["version"]
+description = "Module by Artesia for loading observation data into custom DataFrames."
+license = { file = "LICENSE" }
+readme = "readme.md"
+authors = [{ name = "Onno Ebbens", email = "o.ebbens@artesia-water.nl" }]
+maintainers = [
+    { name = "O. Ebbens", email = "o.ebbens@artesia-water.nl" },
+    { name = "R. Calje", email = "r.calje@artesia-water.nl" },
+    { name = "D.A. Brakenhoff", email = "d.brakenhoff@artesia-water.nl" },
+    { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
+]
+requires-python = ">=3.7"
+dependencies = [
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "tqdm",
+    "requests",
+    "zeep",
+    "colorama",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Other Audience",
+    "License :: OSI Approved :: MIT License",
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+homepage = "https://www.artesia-water.nl"
+repository = "https://github.com/artesiawater/hydropandas"
+
+[project.optional-dependencies]
+full = [
+    "geopandas",
+    "pastastore",
+    "bokeh",
+    "branca",
+    "folium",
+    "flopy",
+    "xarray",
+    "shapely",
+    "pyproj",
+]
+rtd = [
+    "hydropandas[full]",
+    "imod",
+    "lxml",
+    "requests",
+    "Shapely",
+    "nbconvert",
+    "ipykernel",
+    "hdf5",
+    "netCDF4==1.5.7",
+]
+linting = ["flake8", "ruff"]
+formatting = ["black[jupyter]", "isort"]
+pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+coveraging = ["coverage"]
+dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
+
+[tool.setuptools.dynamic]
+version = { attr = "hydropandas.version.__version__" }
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    requires = tox>=4
+    env_list = format, lint, notebooks, py{37, 38, 39, 310, 311}
+
+    [testenv]
+    description = run unit tests
+    extras = pytesting
+    commands =
+            pytest tests --ignore=tests/test_000_run_notebooks.py
+
+    [testenv:notebooks]
+    description = run all tests with notebooks and coverage
+    extras = pytesting,coveraging,
+    commands =
+            coverage run -m pytest tests
+            coverage xml
+
+    [testenv:format]
+    description = run formatters
+    basepython = python3.9
+    extras = formatting
+    commands =
+            black .
+            isort .
+
+    [testenv:lint]
+    description = run linters
+    basepython = python3.9
+    extras = linting
+    commands =
+            flake8 . --max-line-length=88 --ignore=E741,W503
+            ruff check .
+"""
