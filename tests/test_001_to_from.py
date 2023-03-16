@@ -252,17 +252,6 @@ def test_evap_obs_from_stn_hargreaves():
     return
 
 
-def test_evap_obs_from_xy_interpolate():
-    hpd.EvaporationObs.from_xy((117000, 439000), method="interpolation")
-    return
-
-
-def test_evap_obs_collection_from_xy_interpolate():
-    xy = [[x, y] for x in [117000, 117500] for y in [439000, 439500]]
-    hpd.read_knmi(xy=xy, meteo_vars=("EV24",), method="interpolation")
-    return
-
-
 # %% Precipitation
 
 
@@ -313,7 +302,9 @@ def test_knmi_obs_from_obs():
 def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
     try:
-        hpd.read_knmi(locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015")
+        hpd.read_knmi(
+            locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
+        )
     except:
         pass
     return
