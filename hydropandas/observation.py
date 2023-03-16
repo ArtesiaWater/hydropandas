@@ -248,12 +248,14 @@ class Obs(pd.DataFrame):
                         )
                     elif overlap == "use_left":
                         logger.info(
-                            f"existing observation {key} differs from new observation, use existing"
+                            f"existing observation {key} differs from new"
+                            "observation, use existing"
                         )
                         new_metadata[key] = v1
                     elif overlap == "use_right":
                         logger.info(
-                            f"existing observation {key} differs from new observation, use new"
+                            f"existing observation {key} differs from new"
+                            "observation, use new"
                         )
                         new_metadata[key] = v2
                 else:
@@ -266,12 +268,14 @@ class Obs(pd.DataFrame):
                     )
                 elif overlap == "use_left":
                     logger.info(
-                        f"existing observation {key} differs from new observation, use existing"
+                        f"existing observation {key} differs from new"
+                        "observation, use existing"
                     )
                     new_metadata[key] = v1
                 elif overlap == "use_right":
                     logger.info(
-                        f"existing observation {key} differs from new observation, use new"
+                        f"existing observation {key} differs from new"
+                        "observation, use new"
                     )
                     new_metadata[key] = v2
         if same_metadata:
@@ -326,7 +330,8 @@ class Obs(pd.DataFrame):
                 dup_ind_o[overlap_cols]
             ):
                 logger.warning(
-                    f"timeseries of observation {right.name} overlap with different values"
+                    f"timeseries of observation {right.name} overlap with"
+                    "different values"
                 )
                 if overlap == "error":
                     raise ValueError(
@@ -349,7 +354,8 @@ class Obs(pd.DataFrame):
             ~right.index.isin(self.index)
         ]  # get unique observations right
 
-        # merge unique observations from overlapping columns with duplicate observations from overlapping columns
+        # merge unique observations from overlapping columns with duplicate observations
+        # from overlapping columns
         dfcol = pd.concat(
             [dup_o, unique_o_left[overlap_cols], unique_o_right[overlap_cols]]
         )
@@ -407,13 +413,15 @@ class Obs(pd.DataFrame):
 
         if overlap not in ["error", "use_left", "use_right"]:
             raise ValueError(
-                "invalid value for overlap, choose between error, use_left and use_right"
+                "invalid value for overlap, choose between error, use_left and"
+                "use_right"
             )
 
         # check observation type
         if not isinstance(right, type(self)):
             raise TypeError(
-                f"existing observation has a different type {type(self)} than new observation {type(right)}"
+                f"existing observation has a different type {type(self)} than"
+                f"new observation {type(right)}"
             )
 
         # merge timeseries
@@ -800,8 +808,9 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -982,8 +991,9 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1062,8 +1072,9 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1296,8 +1307,9 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
 
 
         Returns
@@ -1371,8 +1383,9 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1450,8 +1463,9 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1586,8 +1600,9 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
+                if False a text file is downloaded into a temporary folder and
+                the data is read from there. Default is True since the api is
+                back online (July 2021).
             raise_exceptions : bool, optional
                 if True you get errors when no data is returned. The default is False.
 
@@ -1634,8 +1649,9 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
+                if False a text file is downloaded into a temporary folder and
+                the data is read from there. Default is True since the api is
+                back online (July 2021).
             raise_exceptions : bool, optional
                 if True you get errors when no data is returned. The default is False.
 
@@ -1683,8 +1699,9 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
+                if False a text file is downloaded into a temporary folder and
+                the data is read from there. Default is True since the api is
+                back online (July 2021).
             raise_exceptions : bool, optional
                 if True you get errors when no data is returned. The default is False.
 
