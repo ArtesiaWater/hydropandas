@@ -41,6 +41,7 @@ classifiers = [
 [project.urls]
 homepage = "https://www.artesia-water.nl"
 repository = "https://github.com/artesiawater/hydropandas"
+documentation = "https://hydropandas.readthedocs.io/en/stable/"
 
 [project.optional-dependencies]
 full = [
