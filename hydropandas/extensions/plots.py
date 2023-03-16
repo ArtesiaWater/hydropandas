@@ -578,7 +578,7 @@ class CollectionPlots:
             try:
                 ax_section.set_ylabel(ylabel[0])
                 ax_obs.set_ylabel(ylabel[1])
-            except:
+            except ValueError:
                 logger.error(f"Invalid value for ylabel {ylabel}. Plot has no ylabels.")
 
         # add layout to both plots
@@ -599,7 +599,7 @@ class CollectionPlots:
                     fn_save,
                     dpi=250,
                 )
-            except:
+            except ValueError:
                 logger.error(f"Save of figure {name} failed ({fn_save}).")
 
         return fig, axes
