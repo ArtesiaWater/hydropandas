@@ -48,7 +48,6 @@ def test_get_knmi_precip_neerslagstation():
 
 
 def test_read_knmi_meteostation_file():
-
     fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
     knmi.read_knmi_daily_meteo_file(fname, "EV24")
 
@@ -56,7 +55,6 @@ def test_read_knmi_meteostation_file():
 
 
 def test_get_knmi_precip_meteostation_fill_missing():
-
     # De Bilt meteostation
     knmi.get_knmi_timeseries_stn(
         260, "RH", start="2010-1-1", end="2010-1-10", settings=None
@@ -65,7 +63,6 @@ def test_get_knmi_precip_meteostation_fill_missing():
 
 
 def test_get_knmi_precip_meteostation_hourly():
-
     # De Bilt meteostation uurlijks
     knmi.get_knmi_timeseries_stn(
         260,
@@ -78,7 +75,6 @@ def test_get_knmi_precip_meteostation_hourly():
 
 
 def test_get_pressure_hourly():
-
     # De Bilt meteostation uurlijks
     knmi.get_knmi_timeseries_stn(
         310,
