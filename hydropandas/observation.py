@@ -314,7 +314,8 @@ class Obs(pd.DataFrame):
 
         # check if time series are the same
         if self.equals(right):
-            logger.info("new and existing observation have the same time series")
+            logger.info(
+                "new and existing observation have the same time series")
             return self
 
         logger.info("new observation has a different time series")
@@ -559,9 +560,6 @@ class GroundwaterObs(Obs):
     def from_dino(
         cls,
         fname=None,
-        tmin="1900-01-01",
-        tmax="2040-01-01",
-        split_cluster=True,
         **kwargs,
     ):
         """download dino data from the server.
@@ -570,18 +568,6 @@ class GroundwaterObs(Obs):
         ----------
         fname : str, optional
             dino csv filename
-        location : str, optional
-            location of the peilbuis, i.e. B57F0077
-        tube_nr : float, optional
-            filter_nr of the peilbuis, i.e. 1.
-        tmin : str
-            start date in format YYYY-MM-DD
-        tmax : str
-            end date in format YYYY-MM-DD
-        split_cluster : bool
-            if False and the piezometer belongs to a cluster, the combined
-            time series of the cluster is used. if True the indvidual time
-            series of each piezometer is used. Default is True
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
             if fname is not None and otherwise to hydropandas.io.dino.findMeetreeks
@@ -679,7 +665,8 @@ class GroundwaterQualityObs(Obs):
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(
+            fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -1772,7 +1759,8 @@ class PrecipitationObs(MeteoObs):
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
+            fname, "RD", startdate, enddate)
 
         return cls(
             knmi_df,
