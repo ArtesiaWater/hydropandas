@@ -1,6 +1,7 @@
+import logging
+
 import hydropandas as hpd
 from hydropandas.io import bro
-import logging
 
 logging.basicConfig(level=logging.DEBUG)
 

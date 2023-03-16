@@ -3,9 +3,9 @@
 
 @author: oebbe
 """
-from hydropandas.io import dino
-
 import logging
+
+from hydropandas.io import dino
 
 logging.basicConfig(level=logging.DEBUG)
 

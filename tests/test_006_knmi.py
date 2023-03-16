@@ -1,8 +1,9 @@
+import logging
+
 import pandas as pd
+
 import hydropandas as hpd
 from hydropandas.io import knmi
-
-import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
