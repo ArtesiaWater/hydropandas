@@ -84,7 +84,8 @@ def test_groundwater_quality_obs():
 def test_obscollection_from_list():
     o_list = []
     for i in range(10):
-        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
+        o_list.append(test_groundwater_obs(
+            name=f"groundwaterobs_00{i}", tube_nr=i))
 
     oc = hpd.ObsCollection.from_list(o_list)
 
@@ -124,9 +125,10 @@ def test_convert_waterlvl_groundwater_obs():
     )
 
     # This is what I want to do, but now I will lose all metadata
-    o_gw = hpd.GroundwaterObs(o_wl)
+    o_gw = hpd.GroundwaterObs(o_wl, ground_level=200)
 
     assert o_wl.monitoring_well == o_gw.monitoring_well, "conversion failed"
+    assert o_gw.ground_level == 200, "conversion failed"
 
 
 def test_merge_observations_same_timeseries():
