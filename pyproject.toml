@@ -63,7 +63,6 @@ rtd = [
     "Shapely",
     "nbconvert",
     "ipykernel",
-    "hdf5",
     "netCDF4==1.5.7",
 ]
 linting = ["flake8", "ruff"]
@@ -103,7 +102,7 @@ legacy_tox_ini = """
 
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
-    extras = pytesting,coveraging,
+    extras = pytesting,coveraging
     commands =
             coverage run -m pytest tests
             coverage xml
