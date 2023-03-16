@@ -107,6 +107,29 @@ def test_copy_obs():
     assert "answer" in o3.meta.keys(), "copy method failed"
 
 
+def test_convert_waterlvl_groundwater_obs():
+    # create WaterlvlObs
+    df = pd.DataFrame(
+        {"measurements": np.random.randint(0, 10, 5)},
+        index=pd.date_range("2020-1-1", "2020-1-5"),
+    )
+    o_wl = hpd.WaterlvlObs(
+        df,
+        name="obs",
+        x=54.37326,
+        y=-5.57900,
+        source="my fantasy",
+        monitoring_well="Weirwood tree",
+        meta={"place": "Winterfell"},
+    )
+
+    # This is what I want to do, but now I will lose all metadata
+    o_gw = hpd.GroundwaterObs(o_wl, ground_level=200)
+
+    assert o_wl.monitoring_well == o_gw.monitoring_well, "conversion failed"
+    assert o_gw.ground_level == 200, "conversion failed"
+
+
 def test_merge_observations_same_timeseries():
     # base
     o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
