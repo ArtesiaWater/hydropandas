@@ -64,6 +64,11 @@ rtd = [
     "nbconvert",
     "ipykernel",
     "netCDF4>=1.5.7",
+    "docutils<0.18",
+    "sphinx_rtd_theme",
+    "Ipython",
+    "nbsphinx",
+    "nbsphinx_link",
 ]
 linting = ["flake8", "ruff"]
 formatting = ["black[jupyter]", "isort"]
