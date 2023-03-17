@@ -53,7 +53,7 @@ def test_waterlvl_obs():
     )
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    hpd.WaterlvlObs(
+    o = hpd.WaterlvlObs(
         df,
         name="waterlvl_obs1",
         monitoring_well="obs1",
@@ -62,7 +62,7 @@ def test_waterlvl_obs():
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
-    return
+    return o
 
 
 def test_groundwater_quality_obs():
@@ -205,3 +205,10 @@ def test_add_observation_to_oc():
     o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     oc.add_observation(o)
+
+
+def test_interpolate_obscollection():
+    oc = test_obscollection_from_list()
+
+    xy = [[500, 11000], [9000, 18000]]
+    oc.interpolate(xy)

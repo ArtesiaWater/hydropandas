@@ -9,6 +9,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 
 import logging
 import numbers
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -84,9 +85,6 @@ def read_bro(
 
 def read_dino(
     dirname=None,
-    extent=None,
-    bbox=None,
-    locations=None,
     ObsClass=obs.GroundwaterObs,
     subdir="Grondwaterstanden_Put",
     suffix="1.csv",
@@ -105,14 +103,6 @@ def read_dino(
     dirname : str, optional
         directory name, can be a .zip file or the parent directory
         of subdir
-    extent : list, tuple or numpy-array (user must specify extent or bbox)
-        get dinodata online within this extent [xmin, xmax, ymin, ymax]
-    bbox : list, tuple or numpy-array (user must specify extent or bbox)
-        The bounding box, in RD-coordinates, for which you want to
-        retrieve locations [xmin, ymin, xmax, ymax]
-    locations : list of str, optional
-        list of names with location and filter number, separated by
-        'filtersep'
     ObsClass : type
         class of the observations, so far only GroundwaterObs is supported
     subdir : str
@@ -293,7 +283,6 @@ def read_knmi(
     starts=None,
     ends=None,
     ObsClasses=None,
-    method="nearest",
     **kwargs,
 ):
     """Get knmi observations from a list of locations or a list of
@@ -333,10 +322,6 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
-    method : str, optional
-        specify whether EvaporationObs should be collected from the nearest
-        meteo station (fast) or interpolated using thin plate spline (slow).
-        Choiche betweeen 'nearest' or 'interpolation'
     **kwargs :
         kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
@@ -454,7 +439,6 @@ def read_knmi(
         starts=starts,
         ends=ends,
         ObsClasses=ObsClasses,
-        method=method,
         **kwargs,
     )
 
@@ -742,7 +726,8 @@ class ObsCollection(pd.DataFrame):
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(
+                f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """check if an observation collection is consistent. An observation
@@ -769,12 +754,14 @@ class ObsCollection(pd.DataFrame):
         """
         # check unique index
         if not self.index.is_unique:
-            logger.warning(f"index of observation collection -> {self.name} not unique")
+            logger.warning(
+                f"index of observation collection -> {self.name} not unique")
             return False
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(f"missing observation object in collection -> {self.name} ")
+            logger.warning(
+                f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
@@ -796,18 +783,23 @@ class ObsCollection(pd.DataFrame):
 
                                 # otherwise return Nan
                                 logger.warning(
-                                    f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                    f"observation collection -> {self.name} not"
+                                    f"consistent with observation -> {o.name}"
+                                    f"{att} value"
                                 )
                                 return False
                         except TypeError:
                             logger.warning(
-                                f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                f"observation collection -> {self.name} not"
+                                f"consistent with observation -> {o.name} {att}"
+                                "value"
                             )
                             return False
                     elif att == "name":
                         if o.name not in self.index:
                             logger.warning(
-                                f"observation collection -> {self.name} not consistent with observation -> {o.name} name"
+                                f"observation collection -> {self.name} not"
+                                f"consistent with observation -> {o.name} name"
                             )
                             return False
 
@@ -858,7 +850,8 @@ class ObsCollection(pd.DataFrame):
                 raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError("Observation should be of type hydropandas.observation.Obs")
+            raise TypeError(
+                "Observation should be of type hydropandas.observation.Obs")
 
         # add new observation to collection
         if o.name not in self.index:
@@ -1047,7 +1040,8 @@ class ObsCollection(pd.DataFrame):
                 obs_list = [ObsClass() for i in range(len(df))]
             df["obs"] = obs_list
         else:
-            raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
+            raise TypeError(
+                f"df should be type pandas.DataFrame not {type(df)}")
 
         return cls(df, meta=meta)
 
@@ -1323,7 +1317,8 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError("either specify variables file_or_dir or xmlstring")
+            raise ValueError(
+                "either specify variables file_or_dir or xmlstring")
 
     @classmethod
     def from_imod(
@@ -1384,7 +1379,6 @@ class ObsCollection(pd.DataFrame):
         starts=None,
         ends=None,
         ObsClasses=None,
-        method="nearest",
         **kwargs,
     ):
         """Get knmi observations from a list of locations or a list of
@@ -1424,10 +1418,6 @@ class ObsCollection(pd.DataFrame):
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
-        method : str, optional
-            specify whether EvaporationObs should be collected from the nearest
-            meteo station (fast) or interpolated using thin plate spline (slow).
-            Choiche betweeen 'nearest' or 'interpolation'
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
 
@@ -1543,7 +1533,8 @@ class ObsCollection(pd.DataFrame):
 
         elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs,
+                             obs.EvaporationObs, obs.MeteoObs)
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
@@ -1574,7 +1565,6 @@ class ObsCollection(pd.DataFrame):
             ObsClasses=ObsClasses,
             starts=starts,
             ends=ends,
-            method=method,
             **kwargs,
         )
 
@@ -1952,3 +1942,75 @@ class ObsCollection(pd.DataFrame):
             return o.loc[tmin:tmax, col]
 
         return self.obs.apply(lambda o: o.loc[tmin:tmax, col])
+
+    def interpolate(
+        self,
+        xy: List[List[float]],
+        kernel: str = "thin_plate_spline",
+        kernel2: str = "linear",
+        epsilon: Optional[int] = None,
+        col: Optional[str] = None,
+    ):
+        """Interpolation method for ObsCollections using the Scipy radial basis
+        function (RBF)
+
+        Parameters
+        ----------
+        xy : List[List[float]]
+            xy coordinates of locations of interest e.g. [[10,25], [5,25]]
+        kernel : str, optional
+            Type of radial basis funtion, by default thin_plate_spline.
+            Other options are linear, gaussian, inverse_quadratic,
+            multiquadric, inverse_multiquadric, cubic or quintic.
+        kernel2 : str, optional
+            Kernel in case there are not enough observations (3 or 6) for
+            time step, by default linear. Other options are gaussian,
+            inverse_quadratic, multiquadric, or inverse_multiquadric.
+        epsilon : float, optional
+            Shape parameter that scales the input to the RBF. If kernel is
+            linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
+            Otherwise this must be specified.
+        col : str, optional
+            Name of the column in the Obs dataframe to be used. If None the
+            first numeric column in the Obs Dataframe is used.
+
+        Returns
+        -------
+        ObsCollection
+        """
+
+        otype = self._infer_otype()
+        if isinstance(otype, (list, np.ndarray)):
+            raise TypeError(
+                "Please make sure that all Obs are of the same type. Currently"
+                f" found {', '.join([x.__name__ for x in otype])}."
+            )
+
+        xy_oc = self.loc[:, ["x", "y"]]
+        obsdf = util.oc_to_df(self, col=col)
+
+        fill_df = util.interpolate(
+            xy, obsdf, xy_oc, kernel=kernel, kernel2=kernel2, epsilon=epsilon
+        )
+
+        # add all metadata that is equal for all observations
+        kwargs = {}
+        for att in set(otype._metadata) - set(["x", "y", "name", "source", "meta"]):
+            if (self.loc[:, att] == self.iloc[0].loc[att]).all():
+                kwargs[att] = self.iloc[0].loc[att]
+
+        obs_list = []
+        for i, col in enumerate(fill_df.columns):
+            o = otype(
+                fill_df.loc[:, [col]].copy(),
+                x=xy[i][0],
+                y=xy[i][1],
+                name=col,
+                source=f"interpolation {self.name}",
+                meta={"interpolation_kernel": kernel,
+                      "interpolation_epsilon": epsilon},
+                **kwargs,
+            )
+            obs_list.append(o)
+
+        return self.from_list(obs_list)

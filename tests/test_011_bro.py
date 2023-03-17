@@ -42,7 +42,7 @@ def test_gld_no_monitoringnet():
 
 def test_groundwater_observations2():
     bro_id = "GLD000000008061"
-    measurements, meta = bro.get_bro_groundwater(
+    measurements, _ = bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
 
@@ -64,10 +64,11 @@ def test_get_gld_id_from_gmw():
 
 
 def test_get_gld_id_from_gmw_quality_regime():
-    bro_id = "GMW000000063853"  # bro id with two gld's with a different quality regime, both gld's have no measurements 13-3-2023
-    gld1 = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO/A")
+    # bro id with two gld's with a different quality regime, both gld's have no measurements 13-3-2023
+    bro_id = "GMW000000063853"
+    gld1 = bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO/A")
 
-    gld2 = io_bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO")
+    gld2 = bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO")
     assert (
         gld1 != gld2
     ), "different quality regimes should return different gld id's for this gmw id"
@@ -79,7 +80,8 @@ def test_obs_list_from_extent():
     extent = (102395, 103121, 434331, 434750)
     extent = [116500, 120000, 439000, 442000]
     bro.get_obs_list_from_extent(
-        extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992
+        extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992,
+        only_metadata=True
     )
 
     return
