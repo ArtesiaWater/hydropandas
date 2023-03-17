@@ -69,10 +69,11 @@ class Obs(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in Obs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in Obs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
@@ -476,10 +477,11 @@ class GroundwaterObs(Obs):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
@@ -640,12 +642,13 @@ class GroundwaterQualityObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in GroundwaterQualityObs._metadata) and (
-                    key not in kwargs.keys()
-                ):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in GroundwaterQualityObs._metadata) and (
+                        key not in kwargs.keys()
+                    ):
+                        kwargs[key] = getattr(args[0], key)
 
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
@@ -686,10 +689,11 @@ class WaterlvlObs(Obs):
     _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in WaterlvlObs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in WaterlvlObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
@@ -753,10 +757,11 @@ class ModelObs(Obs):
     _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in ModelObs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in ModelObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
 
@@ -776,10 +781,11 @@ class MeteoObs(Obs):
     _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in MeteoObs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in MeteoObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
@@ -1279,10 +1285,11 @@ class EvaporationObs(MeteoObs):
     """
 
     def __init__(self, *args, **kwargs):
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         super(EvaporationObs, self).__init__(*args, **kwargs)
 
@@ -1573,10 +1580,13 @@ class PrecipitationObs(MeteoObs):
     """
 
     def __init__(self, *args, **kwargs):
-        if isinstance(args[0], Obs):
-            for key in args[0]._metadata:
-                if (key in PrecipitationObs._metadata) and (key not in kwargs.keys()):
-                    kwargs[key] = getattr(args[0], key)
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in PrecipitationObs._metadata) and (
+                        key not in kwargs.keys()
+                    ):
+                        kwargs[key] = getattr(args[0], key)
 
         super(PrecipitationObs, self).__init__(*args, **kwargs)
 
