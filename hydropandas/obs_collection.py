@@ -1034,7 +1034,7 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             ObsCollection DataFrame with the 'obs' column
         """
-        meta = {"type": obs.GroundwaterObs}
+
         if isinstance(df, pd.DataFrame):
             if obs_list is None:
                 obs_list = [ObsClass() for i in range(len(df))]
@@ -1043,7 +1043,7 @@ class ObsCollection(pd.DataFrame):
             raise TypeError(
                 f"df should be type pandas.DataFrame not {type(df)}")
 
-        return cls(df, meta=meta)
+        return cls(df)
 
     @classmethod
     def from_dino(
