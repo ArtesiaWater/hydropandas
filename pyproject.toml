@@ -71,8 +71,14 @@ pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
 coveraging = ["coverage"]
 dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.dynamic]
 version = { attr = "hydropandas.version.__version__" }
+
+[tool.setuptools.package-data]
+"hydropandas.data" = ["*.json"]
 
 [tool.black]
 line-length = 88
