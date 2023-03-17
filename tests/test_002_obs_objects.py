@@ -54,7 +54,7 @@ def test_waterlvl_obs():
     )
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    hpd.WaterlvlObs(
+    o = hpd.WaterlvlObs(
         df,
         name="waterlvl_obs1",
         monitoring_well="obs1",
@@ -63,7 +63,7 @@ def test_waterlvl_obs():
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
-    return
+    return o
 
 
 def test_groundwater_quality_obs():
@@ -85,7 +85,8 @@ def test_groundwater_quality_obs():
 def test_obscollection_from_list():
     o_list = []
     for i in range(10):
-        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
+        o_list.append(test_groundwater_obs(
+            name=f"groundwaterobs_00{i}", tube_nr=i))
 
     oc = hpd.ObsCollection.from_list(o_list)
 
@@ -106,6 +107,29 @@ def test_copy_obs():
     # check shallow copy attributes
     o.meta["answer"] = 42
     assert "answer" in o3.meta.keys(), "copy method failed"
+
+
+def test_convert_waterlvl_groundwater_obs():
+    # create WaterlvlObs
+    df = pd.DataFrame(
+        {"measurements": np.random.randint(0, 10, 5)},
+        index=pd.date_range("2020-1-1", "2020-1-5"),
+    )
+    o_wl = hpd.WaterlvlObs(
+        df,
+        name="obs",
+        x=54.37326,
+        y=-5.57900,
+        source="my fantasy",
+        monitoring_well="Weirwood tree",
+        meta={"place": "Winterfell"},
+    )
+
+    # This is what I want to do, but now I will lose all metadata
+    o_gw = hpd.GroundwaterObs(o_wl, ground_level=200)
+
+    assert o_wl.monitoring_well == o_gw.monitoring_well, "conversion failed"
+    assert o_gw.ground_level == 200, "conversion failed"
 
 
 def test_merge_observations_same_timeseries():

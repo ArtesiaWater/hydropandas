@@ -69,6 +69,11 @@ class Obs(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in Obs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
         self.name = kwargs.pop("name", "")
@@ -313,7 +318,8 @@ class Obs(pd.DataFrame):
 
         # check if time series are the same
         if self.equals(right):
-            logger.info("new and existing observation have the same time series")
+            logger.info(
+                "new and existing observation have the same time series")
             return self
 
         logger.info("new observation has a different time series")
@@ -471,6 +477,11 @@ class GroundwaterObs(Obs):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in GroundwaterObs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
@@ -557,9 +568,6 @@ class GroundwaterObs(Obs):
     def from_dino(
         cls,
         fname=None,
-        tmin="1900-01-01",
-        tmax="2040-01-01",
-        split_cluster=True,
         **kwargs,
     ):
         """download dino data from the server.
@@ -568,18 +576,6 @@ class GroundwaterObs(Obs):
         ----------
         fname : str, optional
             dino csv filename
-        location : str, optional
-            location of the peilbuis, i.e. B57F0077
-        tube_nr : float, optional
-            filter_nr of the peilbuis, i.e. 1.
-        tmin : str
-            start date in format YYYY-MM-DD
-        tmax : str
-            end date in format YYYY-MM-DD
-        split_cluster : bool
-            if False and the piezometer belongs to a cluster, the combined
-            time series of the cluster is used. if True the indvidual time
-            series of each piezometer is used. Default is True
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
             if fname is not None and otherwise to hydropandas.io.dino.findMeetreeks
@@ -645,6 +641,13 @@ class GroundwaterQualityObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in GroundwaterQualityObs._metadata) and not (
+                    key in kwargs.keys()
+                ):
+                    kwargs[key] = getattr(args[0], key)
+
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
@@ -670,7 +673,8 @@ class GroundwaterQualityObs(Obs):
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(
+            fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -684,6 +688,11 @@ class WaterlvlObs(Obs):
     _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in WaterlvlObs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
@@ -746,6 +755,11 @@ class ModelObs(Obs):
     _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in ModelObs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
         self.model = kwargs.pop("model", "")
 
         super(ModelObs, self).__init__(*args, **kwargs)
@@ -764,6 +778,11 @@ class MeteoObs(Obs):
     _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in MeteoObs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
 
@@ -1261,6 +1280,14 @@ class EvaporationObs(MeteoObs):
     Subclass of the MeteoObs class
     """
 
+    def __init__(self, *args, **kwargs):
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in EvaporationObs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
+        super(EvaporationObs, self).__init__(*args, **kwargs)
+
     @property
     def _constructor(self):
         return EvaporationObs
@@ -1547,6 +1574,14 @@ class PrecipitationObs(MeteoObs):
     Subclass of the MeteoObs class
     """
 
+    def __init__(self, *args, **kwargs):
+        if isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in PrecipitationObs._metadata) and not (key in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
+
+        super(PrecipitationObs, self).__init__(*args, **kwargs)
+
     @property
     def _constructor(self):
         return PrecipitationObs
@@ -1741,7 +1776,8 @@ class PrecipitationObs(MeteoObs):
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
+            fname, "RD", startdate, enddate)
 
         return cls(
             knmi_df,
