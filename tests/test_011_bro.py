@@ -43,7 +43,7 @@ def test_gld_no_monitoringnet():
 
 def test_groundwater_observations2():
     bro_id = "GLD000000008061"
-    measurements, meta = bro.get_bro_groundwater(
+    measurements, _ = bro.get_bro_groundwater(
         bro_id, tube_nr=None, only_metadata=False
     )
 

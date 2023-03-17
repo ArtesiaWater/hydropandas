@@ -1,4 +1,4 @@
-# import os
+#%% import os
 import pandas as pd
 import pytest
 from requests.exceptions import ConnectionError
