@@ -31,10 +31,10 @@ classifiers = [
     "Intended Audience :: Other Audience",
     "License :: OSI Approved :: MIT License",
     'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
     "Operating System :: OS Independent",
 ]
 
@@ -92,7 +92,7 @@ markers = ["slow: mark test as slow."]
 legacy_tox_ini = """
     [tox]
     requires = tox>=4
-    env_list = format, lint, notebooks, py{37, 38, 39, 310, 311}
+    env_list = format, lint, notebooks, py{37, 38, 39, 310}
 
     [testenv]
     description = run unit tests
