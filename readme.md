@@ -1,17 +1,24 @@
 <img src="/docs/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
+[![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
+[![PyPi Supported Python Versions](https://img.shields.io/pypi/pyversions/hydropandas)](https://pypi.org/project/spei/)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
+
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions?query=workflow%3Ahydropandas)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://www.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=github.com&utm_medium=referral&utm_content=ArtesiaWater/hydropandas&utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://www.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=github.com&utm_medium=referral&utm_content=ArtesiaWater/hydropandas&utm_campaign=Badge_Coverage)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
-[![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
+
+[![Format: isort](https://img.shields.io/badge/imports-isort-ef8336)](https://pycqa.github.io/isort/index.html)
+[![Format: Black](https://img.shields.io/badge/code_style-black-black)](https://github.com/psf/black)
+[![Linter: flake8](https://img.shields.io/badge/linter-flake8-yellowgreen)](https://flake8.pycqa.org/)
+[![Linter: ruff](https://img.shields.io/badge/linter-ruff-red)](https://github.com/charliermarsh/ruff)
 
 # hydropandas
 
-The Hydropandas package allows users to store observation data at multiple locations in a single object (ObsCollection). 
+The HydroPandas package allows users to store observation data at multiple locations in a single object (ObsCollection).
 An ObsCollection is a pandas DataFrame extended with custom methods and attributes related to hydrological timeseries.
-The hydropandas package also provides convenient read functions for Dutch hydrological data from:
+The HydroPandas package also provides convenient read functions for Dutch hydrological data from:
 -   [BRO](https://www.broloket.nl)
 -   [DINO](https://www.dinoloket.nl)
 -   FEWS PI-XML
@@ -43,7 +50,7 @@ For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
 For installing all the optional packages use `pip install -e .[full]`
 
-If you have trouble installing hydropandas, refer to the
+If you have trouble installing HydroPandas, refer to the
 [Dependencies section](#dependencies) below.
 
 ## Example usage

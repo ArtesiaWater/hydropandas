@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Created on Sat Dec 21 09:24:29 2019
+import logging
 
-@author: oebbe
-"""
-
-import numpy as np
 import pandas as pd
-import pytest
+
 import hydropandas as hpd
 from hydropandas.io import knmi
-
-import logging
 
 logging.basicConfig(level=logging.DEBUG)
 

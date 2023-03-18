@@ -558,8 +558,10 @@ def get_knmi_daily_rainfall_url(
         additional information about the variables
     """
     stn = f"{int(stn):03}"
-    url = f"https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
-
+    url = (
+        "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
+        f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
+    )
     # get file name
     basedir = os.path.join(tempfile.gettempdir(), "knmi")
     if not os.path.isdir(basedir):
@@ -912,7 +914,10 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     stations : pandas DataFrame
         additional data about the measurement station
     """
-    url = f"https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/daggegevens/etmgeg_{stn}.zip"
+    url = (
+        "https://cdn.knmi.nl/knmi/map/page/klimatologie"
+        f"/gegevens/daggegevens/etmgeg_{stn}.zip"
+    )
 
     # get file name
     basedir = os.path.join(tempfile.gettempdir(), "knmi")

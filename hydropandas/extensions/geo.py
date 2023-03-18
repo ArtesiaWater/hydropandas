@@ -232,7 +232,8 @@ class GeoAccessor:
                     )
                 else:
                     raise ValueError(
-                        f"invalid value for multiple_geometries -> {multiple_geometries}"
+                        "invalid value for multiple_geometries ->"
+                        f"{multiple_geometries}"
                     )
             else:
                 gdf_obs.loc[i, f"nearest {geometry_type}"] = gdf.iloc[

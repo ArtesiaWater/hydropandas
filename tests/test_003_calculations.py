@@ -101,7 +101,7 @@ def test_get_nearest_polygon():
 
 def test_get_ground_level_oc():
     try:
-        from art_tools import hpd_extension
+        from art_tools import hpd_extension  # noqa: F401
 
         gw = ttf.test_obscollection_fews_lowmemory()
         gw.art.geo_get_ground_level()
@@ -113,7 +113,7 @@ def test_get_ground_level_oc():
 
 def test_get_ground_level_gwobs():
     try:
-        from art_tools import hpd_extension
+        from art_tools import hpd_extension  # noqa: F401
 
         gw = ttf.test_observation_gw()
         gw.art.geo_get_ground_level()

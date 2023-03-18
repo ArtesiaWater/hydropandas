@@ -3,9 +3,9 @@
 
 @author: oebbe
 """
-from hydropandas.io import dino
-
 import logging
+
+from hydropandas.io import dino
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -30,6 +30,6 @@ def test_dino_csv_duplicate_index():
     )
 
     # check if measurements contains no duplicate indices
-    assert measurements.index.duplicated().any() == False
+    assert ~measurements.index.duplicated().any()
 
     return

@@ -480,9 +480,10 @@ def read_artdino_dir(
 ):
     """Read Dino directory with point observations.
 
-    to do:
-    - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een observatie
-    wordt ingelezen. Nu wordt eerst alles ingelezen in een lijst en daar een dataframe van gemaakt.
+    TODO:
+    - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een
+    observatie wordt ingelezen. Nu wordt eerst alles ingelezen in een lijst en
+    daar een dataframe van gemaakt.
     - aparte unzip functie maken en toch de juiste tijdelijke directory krijgen.
 
     Parameters
@@ -683,9 +684,10 @@ def read_dino_dir(
 ):
     """Read Dino directory with point observations.
 
-    to do:
-    - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een observatie
-    wordt ingelezen. Nu wordt eerst alles ingelezen in een lijst en daar een dataframe van gemaakt.
+    TODO:
+    - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een
+    observatie wordt ingelezen. Nu wordt eerst alles ingelezen in een lijst en
+    daar een dataframe van gemaakt.
     - aparte unzip functie maken en toch de juiste tijdelijke directory krijgen.
 
     Parameters

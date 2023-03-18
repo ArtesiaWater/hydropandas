@@ -348,7 +348,8 @@ class CollectionPlots:
                 the columns of the observation to plot. The first numeric column
                 is used if cols is None, by default None.
         section_colname_x : str, optional
-            column used for x position on section plot, when None order collection is used
+            column used for x position on section plot, when None order
+            collection is used
         section_label_x : str, optional
             label applied to x-axis in section plot
         section_well_layout_color : str, optional
@@ -363,7 +364,8 @@ class CollectionPlots:
         check_obs_close_to_screen_bottom : bool, optional
             plots a horizontal line when minimum observation is close to screen_bottom
         plot_well_layout_markers : bool, optional
-            plots ground level, top tube, screen levels and sandtrap via makers. Default is True
+            plots ground level, top tube, screen levels and sandtrap via
+            makers. Default is True
 
         TODO:
             - speficy colors via extra column in ObsCollection
@@ -455,7 +457,8 @@ class CollectionPlots:
                     p = ax_obs.plot(plot_df[col], label=f"{name}, {col}")
 
             if check_obs_close_to_screen_bottom:
-                # add horizonal line to plot when minimum observation in first plot column is close to bottom of screen
+                # add horizonal line to plot when minimum observation in first plot
+                # column is close to bottom of screen
                 offset = 0.1
                 if self._obj.loc[name, "screen_bottom"] > (
                     plot_df[cols[0]].dropna().min() - offset
@@ -465,7 +468,10 @@ class CollectionPlots:
                         ls="--",
                         lw=4,
                         alpha=0.5,
-                        label=f"screen bottom of {name}\nis close to minimum observation",
+                        label=(
+                            f"screen bottom of {name}\n"
+                            "is close to minimum observation"
+                        ),
                         color=p[0].get_color(),
                     )
 
@@ -572,7 +578,7 @@ class CollectionPlots:
             try:
                 ax_section.set_ylabel(ylabel[0])
                 ax_obs.set_ylabel(ylabel[1])
-            except:
+            except ValueError:
                 logger.error(f"Invalid value for ylabel {ylabel}. Plot has no ylabels.")
 
         # add layout to both plots
@@ -593,7 +599,7 @@ class CollectionPlots:
                     fn_save,
                     dpi=250,
                 )
-            except:
+            except ValueError:
                 logger.error(f"Save of figure {name} failed ({fn_save}).")
 
         return fig, axes

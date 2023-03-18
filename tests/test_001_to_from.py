@@ -1,6 +1,7 @@
-#%% import os
 import pandas as pd
 import pytest
+from requests.exceptions import ConnectionError
+
 import hydropandas as hpd
 
 # %% BRO
@@ -301,10 +302,12 @@ def test_knmi_obs_from_obs():
 # )
 def test_knmi_collection_from_locations():
     obsc = test_obscollection_dinozip_gw()
-    hpd.read_knmi(
-        locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
-    )
-
+    try:
+        hpd.read_knmi(
+            locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
+        )
+    except ConnectionError:
+        pass
     return
 
 

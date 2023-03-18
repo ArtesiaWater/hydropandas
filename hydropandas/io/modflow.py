@@ -217,7 +217,8 @@ def interp_weights(xy, uv, d=2):
 
     References
     ----------
-    .. [1] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
+    .. [1] https://stackoverflow.com/questions/20915502/
+    speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
 
     tri = Delaunay(xy)
@@ -253,7 +254,8 @@ def interpolate(values, vtx, wts, fill_value=np.nan):
 
     References
     ----------
-    .. [2] https://stackoverflow.com/questions/20915502/speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
+    .. [2] https://stackoverflow.com/questions/20915502/
+    speedup-scipy-griddata-for-multiple-interpolations-between-two-irregular-grids
     """
     ret = np.einsum("nj,nj->n", np.take(values, vtx), wts)
     ret[np.any(wts < 0, axis=1)] = fill_value

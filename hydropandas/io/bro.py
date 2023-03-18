@@ -197,12 +197,14 @@ def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
                 return tube["gldReferences"][0]["broId"]
             elif len(tube["gldReferences"]) == 0:
                 logger.info(
-                    f"no groundwater level dossier for {bro_id} and tube number {tube_nr}"
+                    f"no groundwater level dossier for {bro_id} and tube number"
+                    f"{tube_nr}"
                 )
                 return None
             elif len(tube["gldReferences"]) == 2:
                 logger.info(
-                    f"two gld references found for GMW {bro_id} and tube nr {tube_nr}, using {quality_regime} quality regime"
+                    f"two gld references found for GMW {bro_id} and tube nr"
+                    f"{tube_nr}, using {quality_regime} quality regime"
                 )
                 for gldref in tube["gldReferences"]:
                     url2 = gldref["url"]
@@ -615,7 +617,8 @@ def get_obs_list_from_extent(
 
     if len(gmws_ids) > 1000:
         ans = input(
-            f"You requested to download {len(gmws_ids)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
+            f"You requested to download {len(gmws_ids)} observations, this can"
+            "take a while. Are you sure you want to continue [Y/n]? "
         )
         if ans not in ["Y", "y", "yes", "Yes", "YES"]:
             return []
@@ -639,7 +642,8 @@ def get_obs_list_from_extent(
             )
             if o.empty:
                 logger.warning(
-                    f"no measurements found for gmw_id {gmw_id} and tube number {tube_nr}"
+                    f"no measurements found for gmw_id {gmw_id} and tube number"
+                    f"{tube_nr}"
                 )
                 if keep_all_obs:
                     obs_list.append(o)
