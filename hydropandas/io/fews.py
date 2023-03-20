@@ -8,7 +8,13 @@ import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
-from ..observation import GroundwaterObs, WaterlvlObs
+from ..observation import (
+    EvaporationObs,
+    GroundwaterObs,
+    MeteoObs,
+    PrecipitationObs,
+    WaterlvlObs,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -444,26 +450,45 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
     else:
         y = np.nan
 
+    if "units" in header.keys():
+        unit = str(header["units"])
+    else:
+        unit = np.nan
+
     if np.isnan(x) or np.isnan(y):
         metadata_available = False
     else:
         metadata_available = True
 
-    if ObsClass in [GroundwaterObs, WaterlvlObs]:
+    if "parameterId" in header:
+        pid = header["parameterId"]
+        name = header["monitoring_well"] + "_" + pid
+
+    if ObsClass in (GroundwaterObs, WaterlvlObs):
         o = ObsClass(
             ts,
             x=x,
             y=y,
+            unit=unit,
             meta=header,
             name=header["monitoring_well"],
             monitoring_well=header["monitoring_well"],
             metadata_available=metadata_available,
             source="FEWS",
         )
-    else:
+    elif ObsClass in (MeteoObs, PrecipitationObs, EvaporationObs):
         o = ObsClass(
-            ts, x=x, y=y, meta=header, name=header["monitoring_well"], source="FEWS"
+            ts,
+            x=x,
+            y=y,
+            unit=unit,
+            meta=header,
+            name=name,
+            meteo_var=pid,
+            source="FEWS",
         )
+    else:
+        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header, name=name, source="FEWS")
 
     return o, header
 
