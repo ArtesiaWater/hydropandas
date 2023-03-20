@@ -37,7 +37,7 @@ def test_obscollection_dino_to_imap():
 
 def test_obscollection_dino_to_mapgraph():
     try:
-        from art_tools import hpd_extension
+        from art_tools import hpd_extension  # noqa: F401
 
         gw = ttf.test_obscollection_dinozip_gw()
         gw.art.plot_mapgraphs(plot_ylim="min_dy")
@@ -47,13 +47,19 @@ def test_obscollection_dino_to_mapgraph():
         return
 
 
+def test_obscollection_dino_to_section_plot():
+    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw.plots.section_plot()
+    return
+
+
 def test_obscollection_to_map():
     try:
-        from art_tools import hpd_extension
+        from art_tools import hpd_extension  # noqa: F401
 
         fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
-        ax = fews_gw_prod.art.plot_mapfig()
-        return ax
+        fews_gw_prod.art.plot_mapfig()
+        return
     except ModuleNotFoundError as e:
         print(e)
         return
@@ -73,7 +79,7 @@ def test_obscollection_to_imap():
         "monitoring_well", if_exists="replace"
     )
 
-    m = fews_gw_prod.plots.interactive_map(
+    fews_gw_prod.plots.interactive_map(
         plot_dir,
         plot_columns=("value",),
         fname=fname,
@@ -82,4 +88,4 @@ def test_obscollection_to_imap():
         map_label="locationId",
         map_label_size=10,
     )
-    return m
+    return

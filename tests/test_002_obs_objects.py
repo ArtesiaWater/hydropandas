@@ -6,6 +6,7 @@
 
 import numpy as np
 import pandas as pd
+
 import hydropandas as hpd
 
 # import sys
@@ -26,7 +27,7 @@ def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
     ground_level = np.random.random()
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    gwo = hpd.GroundwaterObs(
+    o = hpd.GroundwaterObs(
         df,
         name=name,
         monitoring_well=name.split("_")[0],
@@ -43,7 +44,7 @@ def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
-    return gwo
+    return o
 
 
 def test_waterlvl_obs():
@@ -53,7 +54,7 @@ def test_waterlvl_obs():
     )
     x = np.random.randint(0, 10000)
     y = np.random.randint(10000, 20000)
-    wlvl = hpd.WaterlvlObs(
+    o = hpd.WaterlvlObs(
         df,
         name="waterlvl_obs1",
         monitoring_well="obs1",
@@ -62,14 +63,14 @@ def test_waterlvl_obs():
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
-    return wlvl
+    return o
 
 
 def test_groundwater_quality_obs():
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"), data={"pH": np.random.rand(10)}
     )
-    gwq = hpd.WaterlvlObs(
+    hpd.WaterlvlObs(
         df,
         name="waterquality_obs1",
         monitoring_well="waterquality",
@@ -78,7 +79,7 @@ def test_groundwater_quality_obs():
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
-    return gwq
+    return
 
 
 def test_obscollection_from_list():
@@ -86,13 +87,12 @@ def test_obscollection_from_list():
     for i in range(10):
         o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
 
-    obs_col = hpd.ObsCollection.from_list(o_list)
+    oc = hpd.ObsCollection.from_list(o_list)
 
-    return obs_col
+    return oc
 
 
 def test_copy_obs():
-
     o = test_groundwater_obs(name="groundwaterobs_001", tube_nr=2)
     o2 = o.copy()
 
@@ -106,6 +106,29 @@ def test_copy_obs():
     # check shallow copy attributes
     o.meta["answer"] = 42
     assert "answer" in o3.meta.keys(), "copy method failed"
+
+
+def test_convert_waterlvl_groundwater_obs():
+    # create WaterlvlObs
+    df = pd.DataFrame(
+        {"measurements": np.random.randint(0, 10, 5)},
+        index=pd.date_range("2020-1-1", "2020-1-5"),
+    )
+    o_wl = hpd.WaterlvlObs(
+        df,
+        name="obs",
+        x=54.37326,
+        y=-5.57900,
+        source="my fantasy",
+        monitoring_well="Weirwood tree",
+        meta={"place": "Winterfell"},
+    )
+
+    # This is what I want to do, but now I will lose all metadata
+    o_gw = hpd.GroundwaterObs(o_wl, ground_level=200)
+
+    assert o_wl.monitoring_well == o_gw.monitoring_well, "conversion failed"
+    assert o_gw.ground_level == 200, "conversion failed"
 
 
 def test_merge_observations_same_timeseries():
@@ -137,7 +160,7 @@ def test_merge_observations_different_timeseries():
         1,
     ), "merged observation should have one column with 20 values"
 
-    return omerged
+    return
 
 
 def test_merge_overlapping():
@@ -158,7 +181,7 @@ def test_merge_overlapping():
         3,
     ), "merged observation should have one column with 20 values"
 
-    return omerged
+    return
 
 
 def test_merge_errors():
@@ -171,7 +194,7 @@ def test_merge_errors():
     try:
         o.merge_observation(o2)
     except TypeError:
-        return 0
+        return
 
     raise RuntimeError("function should raise an error")
 
@@ -182,3 +205,10 @@ def test_add_observation_to_oc():
     o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     oc.add_observation(o)
+
+
+def test_interpolate_obscollection():
+    oc = test_obscollection_from_list()
+
+    xy = [[500, 11000], [9000, 18000]]
+    oc.interpolate(xy)

@@ -101,6 +101,7 @@ ENV/
 
 # VS Code files
 .vscode/
+*.code-workspace
 .pytest_cache/
 
 *.html

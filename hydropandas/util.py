@@ -4,19 +4,18 @@
 @author: Artesia
 """
 
+import logging
 import os
 import sys
 import tempfile
 import time
 import zipfile
-import logging
+from typing import Dict, List, Optional
 
-import numpy as np
-import pandas as pd
-
-from typing import Dict, Optional
 from colorama import Back, Fore, Style
-from pandas import Timedelta, Timestamp
+from numpy import unique
+from pandas import DataFrame, DatetimeIndex, Timedelta, Timestamp
+from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ def _obslist_to_frame(obs_list):
         DataFrame containing all data
     """
     if len(obs_list) > 0:
-        obs_df = pd.DataFrame(
+        obs_df = DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
@@ -43,7 +42,7 @@ def _obslist_to_frame(obs_list):
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
-        obs_df = pd.DataFrame()
+        obs_df = DataFrame()
 
     return obs_df
 
@@ -70,7 +69,8 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     if os.path.exists(dst):
         if not force:
             print(
-                "File not unzipped. Destination already exists. Use 'force=True' to unzip."
+                "File not unzipped. Destination already exists. Use"
+                "'force=True' to unzip."
             )
             return
     if preserve_datetime:
@@ -213,11 +213,12 @@ def df2gdf(df, xcol="x", ycol="y"):
 
 def show_versions():
     """Method to print the version of dependencies."""
-    from pandas import __version__ as pd_version
-    from numpy import __version__ as np_version
-    from scipy import __version__ as sc_version
-    from matplotlib import __version__ as mpl_version
     from sys import version as os_version
+
+    from matplotlib import __version__ as mpl_version
+    from numpy import __version__ as np_version
+    from pandas import __version__ as pd_version
+    from scipy import __version__ as sc_version
 
     msg = (
         f"Python version    : {os_version}\n"
@@ -279,3 +280,96 @@ def get_color_logger(level="INFO"):
 
     logging.captureWarnings(True)
     return logger
+
+
+def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
+    obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
+    df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
+    for obs in oc.obs:
+        if not obs.empty:
+            if col is None:
+                vals = obs.loc[:, obs._get_first_numeric_col_name()]
+            else:
+                vals = obs.loc[:, col]
+            df.loc[obs.index, obs.name] = vals.values
+
+    return df
+
+
+def interpolate(
+    xy: List[List[float]],
+    obsdf: DataFrame,
+    obsloc: DataFrame,
+    kernel: str = "thin_plate_spline",
+    kernel2: str = "linear",
+    epsilon: Optional[int] = None,
+) -> DataFrame:
+    """Interpolation method using the Scipy radial basis function (RBF)
+
+
+    Parameters
+    ----------
+    xy : List[List[float]]
+        xy coordinates of locations of interest e.g. [[10,25], [5,25]]
+    obsdf : DataFrame
+        Dataframe containing the observation locations as columns and
+        the observations at a measurement time in each row.
+    obsloc : DataFrame
+        Dataframe containing the observation locations coordinates
+        with observation locations as index and columns ["x", "y"]
+    kernel : str, optional
+        Type of radial basis funtion, by default thin_plate_spline.
+        Other options are linear, gaussian, inverse_quadratic,
+        multiquadric, inverse_multiquadric, cubic or quintic.
+    kernel2 : str, optional
+        Kernel in case there are not enough observations (3 or 6) for
+        time step, by default linear. Other options are gaussian,
+        inverse_quadratic, multiquadric, or inverse_multiquadric.
+    epsilon : Optional[int], optional
+        Shape parameter that scales the input to the RBF. If kernel is
+        linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
+        Otherwise this must be specified.
+
+    Returns
+    -------
+    DataFrame
+        DataFrame with locations of interest as columns and interpolated values
+        at a measurement time in each row.
+    """
+
+    if (kernel == "thin_plate_spline") or (kernel == "cubic"):
+        min_val = 3
+    elif kernel == "quintic":
+        min_val = 6
+    else:
+        min_val = len(obsdf.index)
+
+    fill_df = (
+        DataFrame(
+            index=obsdf.index,
+            columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
+        )
+        .sort_index()
+        .astype(float)
+    )
+
+    for idx in obsdf.index:
+        # get all stations with values for this date
+        val = obsdf.loc[idx].dropna()
+        # get stations for this date
+        coor = obsloc.loc[val.index]
+
+        if len(val) >= min_val:
+            kernel = kernel
+        else:
+            kernel = kernel2
+
+        # create an scipy interpolator
+        rbf = RBFInterpolator(
+            coor.to_numpy(), val.to_numpy(), epsilon=epsilon, kernel=kernel
+        )
+
+        val_rbf = rbf(xy)
+        fill_df.loc[idx] = val_rbf
+
+    return fill_df

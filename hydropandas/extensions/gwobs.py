@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 import pandas as pd
 
@@ -64,7 +65,6 @@ def get_model_layer_z(z, zvec, left=-999, right=999):
 
 
 def check_if_var_is_invalid(var):
-
     if var is None:
         return True
     elif np.isnan(var):
@@ -222,7 +222,7 @@ def get_zvec(x, y, gwf=None, ds=None):
     Parameters
     ----------
     x : int or float
-        x coördinate.
+        x coordinate.
     y : int or float
         y coordinate.
     gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
@@ -241,8 +241,8 @@ def get_zvec(x, y, gwf=None, ds=None):
     zvec : list
         list of vertical layer boundaries. length is nlay + 1.
     """
-    from shapely.geometry import Point
     import flopy
+    from shapely.geometry import Point
 
     if gwf and not ds:
         ix = flopy.utils.GridIntersect(gwf.modelgrid)
@@ -329,7 +329,8 @@ class GwObsAccessor:
         Parameters
         ----------
         radius : int, optional
-            max distance between two observations to be seen as one location, by default 1
+            max distance between two observations to be seen as one location,
+            by default 1
         xcol : str, optional
             column name with x coordinates, by default 'x'
         ycol : str, optional
@@ -359,7 +360,8 @@ class GwObsAccessor:
             # check if name should be replaced
             if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'tube_nr' already exist, set if_exists='replace' to replace the current values"
+                    "the column 'tube_nr' already exist, set"
+                    "if_exists='replace' to replace the current values"
                 )
             elif if_exists == "replace":
                 self._obj["tube_nr"] = np.nan
@@ -422,7 +424,8 @@ class GwObsAccessor:
         loc_col : str
             the column name with the names to use for the monitoring_well
         radius : int, optional
-            max distance between two observations to be seen as one location, by default 1
+            max distance between two observations to be seen as one location,
+            by default 1
         xcol : str, optional
             column name with x coordinates, by default 'x'
         ycol : str, optional
@@ -445,7 +448,8 @@ class GwObsAccessor:
         if "tube_nr" in self._obj.columns or "monitoring_well" in self._obj.columns:
             if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'tube_nr or monitoring_well' already exist, set if_exists='replace' to replace the current values"
+                    "the column 'tube_nr or monitoring_well' already exist, set"
+                    "if_exists='replace' to replace the current values"
                 )
             elif if_exists == "replace":
                 self._obj["tube_nr"] = np.nan
