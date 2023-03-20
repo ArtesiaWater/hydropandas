@@ -467,11 +467,28 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
     else:
         name = header["monitoring_well"]
 
-    if ObsClass in (GroundwaterObs, WaterlvlObs):
+    if ObsClass in (WaterlvlObs,):
         o = ObsClass(
             ts,
             x=x,
             y=y,
+            unit=unit,
+            meta=header,
+            name=name,
+            monitoring_well=header["monitoring_well"],
+            metadata_available=metadata_available,
+            source="FEWS",
+        )
+    elif ObsClass in (GroundwaterObs,):
+        if "z" in header.keys():
+            z = float(header["z"])
+        else:
+            z = np.nan
+        o = ObsClass(
+            ts,
+            x=x,
+            y=y,
+            ground_level=z,
             unit=unit,
             meta=header,
             name=name,
