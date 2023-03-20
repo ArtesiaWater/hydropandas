@@ -184,7 +184,8 @@ def iterparse_pi_xml(
                     loc = h_attr.text
                     if loc not in locationIds:
                         element.clear()
-                        logger.info(f" ... skipping '{loc}', not in locationIds")
+                        logger.info(
+                            f" ... skipping '{loc}', not in locationIds")
                         continue
 
                 if filterdict is not None:
@@ -463,6 +464,8 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
     if "parameterId" in header:
         pid = header["parameterId"]
         name = header["monitoring_well"] + "_" + pid
+    else:
+        name = header["monitoring_well"]
 
     if ObsClass in (GroundwaterObs, WaterlvlObs):
         o = ObsClass(
@@ -471,7 +474,7 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             y=y,
             unit=unit,
             meta=header,
-            name=header["monitoring_well"],
+            name=name,
             monitoring_well=header["monitoring_well"],
             metadata_available=metadata_available,
             source="FEWS",
@@ -488,7 +491,8 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             source="FEWS",
         )
     else:
-        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header, name=name, source="FEWS")
+        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header,
+                     name=name, source="FEWS")
 
     return o, header
 
@@ -560,7 +564,8 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
                         tag=htag, date=hdate, time=htime
                     )
                 elif htag.endswith("timeStep"):
-                    hline = '<{tag} unit="{unit}"/>\n'.format(tag=htag, unit=hval)
+                    hline = '<{tag} unit="{unit}"/>\n'.format(
+                        tag=htag, unit=hval)
                 else:
                     hline = paramline.format(tag=htag, param=hval)
                 hlines.append(3 * "\t" + hline)
