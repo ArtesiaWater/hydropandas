@@ -1378,7 +1378,7 @@ class EvaporationObs(MeteoObs):
         )
 
     @classmethod
-    def from_xy(
+    def from_nearest_xy(
         cls,
         xy,
         et_type="EV24",
