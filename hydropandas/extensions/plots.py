@@ -24,7 +24,12 @@ class CollectionPlots:
         self._obj = oc_obj
 
     def interactive_plots(
-        self, savedir, tmin=None, tmax=None, per_monitoring_well=True, **kwargs
+        self,
+        savedir="figures",
+        tmin=None,
+        tmax=None,
+        per_monitoring_well=True,
+        **kwargs,
     ):
         """Create interactive plots of the observations using bokeh.
 
@@ -43,7 +48,7 @@ class CollectionPlots:
             will be passed to the Obs.to_interactive_plot method, options
             include:
 
-            - plot_columns : list of str
+            - cols : list of str or None
             - hoover_names : list of str
             - plot_freq : list of str
             - plot_legend_names : list of str
@@ -107,14 +112,14 @@ class CollectionPlots:
                         return_filename=False,
                         **kwargs,
                     )
-                    logger.info(f"created iplot -> {o.name}")
+                    logger.debug(f"created iplot -> {o.name}")
                 except ValueError:
                     logger.error(f"{o.name} has no data between {tmin} and {tmax}")
                     o.iplot_fname = None
 
     def interactive_map(
         self,
-        plot_dir,
+        plot_dir="figures",
         m=None,
         tiles="OpenStreetMap",
         fname=None,
@@ -180,7 +185,7 @@ class CollectionPlots:
         **kwargs :
             will be passed to the to_interactive_plots method options are:
 
-            - plot_columns : list of str
+            - cols : list of str or None
             - hoover_names : list of str
             - plot_legend_names : list of str
             - plot_freq : list of str

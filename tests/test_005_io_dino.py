@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 def test_dino_csv():
     fname = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/" "B33F0080001_1.csv"
-    measurements, meta = io_dino.read_dino_groundwater_csv(fname)
+    io_dino.read_dino_groundwater_csv(fname)
 
-    return measurements, meta
+    return
 
 
 def test_dino_csv_duplicate_index():
@@ -32,15 +32,15 @@ def test_dino_csv_duplicate_index():
     # check if measurements contains no duplicate indices
     assert measurements.index.duplicated().any() == False
 
-    return measurements, meta
+    return
 
 
 def test_dino_metadata():
     # download metadata
     dinorest = io_dino.DinoREST()
-    meta = dinorest.get_gwo_metadata(location="B52C0057", tube_nr="001")
+    dinorest.get_gwo_metadata(location="B52C0057", tube_nr="001")
 
-    return meta
+    return
 
 
 def test_dino_metadata2():
@@ -48,7 +48,7 @@ def test_dino_metadata2():
     dinorest = io_dino.DinoREST()
     meta = dinorest.get_gwo_metadata(location="B57B0069", tube_nr="002")
     assert meta["metadata_available"]
-    return meta
+    return
 
 
 def test_dino_metadata3():
@@ -58,4 +58,4 @@ def test_dino_metadata3():
 
     assert not meta["metadata_available"]
 
-    return meta
+    return

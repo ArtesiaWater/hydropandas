@@ -164,32 +164,32 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
 
     # Piezometer in layer in which majority of screen is located
     if lay_fbot == lay_ftop:
-        logger.info(f"- selected layer {lay_fbot}")
+        logger.debug(f"- selected layer {lay_fbot}")
         return lay_fbot
 
     else:
         if lay_fbot == left and lay_ftop == right:
-            logger.info("- tube screen spans all layers. " "return nan")
+            logger.debug("- tube screen spans all layers. " "return nan")
             return np.nan
         elif lay_ftop == right:
-            logger.info(
+            logger.debug(
                 "- tube screen top higher than top layer. " f"selected layer {lay_fbot}"
             )
             return lay_fbot
 
         elif lay_fbot == left:
-            logger.info(
+            logger.debug(
                 "- tube screen bot lower than bottom layer. "
                 f"selected layer {lay_ftop}"
             )
             return lay_ftop
 
-        logger.info(
+        logger.debug(
             "- tube screen crosses layer boundary:\n"
             f"  - layers: {lay_ftop}, {lay_fbot}"
         )
 
-        logger.info(
+        logger.debug(
             f"- tube screen spans {lay_fbot - lay_ftop +1} layers."
             " checking length per layer\n"
             "  - length per layer:"
@@ -205,12 +205,12 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
             else:
                 length_layers[i] = zvec[lay_ftop + i] - zvec[lay_ftop + 1 + i]
 
-            logger.info(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
+            logger.debug(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
 
         # choose layer with biggest length
         rel_layer = np.argmax(length_layers)
         lay_out = lay_ftop + rel_layer
-        logger.info(f"  - selected layer: {lay_out}")
+        logger.debug(f"  - selected layer: {lay_out}")
         return lay_out
 
     return np.nan
@@ -228,8 +228,8 @@ def get_zvec(x, y, gwf=None, ds=None):
     gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
         modflow model with top and bottoms
     ds : xarray.Dataset
-        xarray Dataset with with top and bottoms, must have
-        dimensions 'x' and 'y' and variables 'top' and 'bot'
+        xarray Dataset typically create in nlmod. Must have
+        dimensions 'x' and 'y' and variables 'top' and 'botm'.
 
     Raises
     ------
@@ -277,10 +277,20 @@ def get_zvec(x, y, gwf=None, ds=None):
         xmin, xmax, ymin, ymax = ds.attrs["extent"]
         if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
             zvec = np.nan
+        elif ds.gridtype == "vertex":
+            import nlmod
+
+            cid = nlmod.dims.xy_to_icell2d((x, y), ds)
+            sel = ds.sel(icell2d=cid)
+            zvec = np.concatenate(([sel["top"].data], sel["botm"].data))
+            mask = np.isnan(zvec)
+            idx = np.where(~mask, np.arange(mask.size), 0)
+            np.maximum.accumulate(idx, axis=0, out=idx)
+            zvec[mask] = zvec[idx[mask]]
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
             first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
-            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["bot"].data])
+            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["botm"].data])
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)
@@ -497,7 +507,7 @@ class GwObsAccessor:
         """
         modellayers = []
         for o in self._obj.obs.values:
-            logger.info("-" * 10 + f"\n {o.name}:")
+            logger.debug("-" * 10 + f"\n {o.name}:")
 
             modellayers.append(o.gwobs.get_modellayer_modflow(gwf=gwf, ds=ds))
 
@@ -595,7 +605,11 @@ class GeoAccessorObs:
 
         # get index of regis model layer
         layer_i = get_modellayer_from_screen_depth(
-            self._obj.screen_top, self._obj.screen_bottom, zvec, left=-999, right=999,
+            self._obj.screen_top,
+            self._obj.screen_bottom,
+            zvec,
+            left=-999,
+            right=999,
         )
 
         if layer_i == 999:
