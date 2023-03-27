@@ -770,7 +770,8 @@ class ObsCollection(pd.DataFrame):
         """
         # check unique index
         if not self.index.is_unique:
-            logger.warning(f"index of observation collection -> {self.name} not unique. non unique indices are:")
+            logger.warning(f""""index of observation collection -> {self.name}
+                           not unique. non unique indices are:""")
             logger.warning(" ".join(self.index[self.index.duplicated()]))
             return False
 
