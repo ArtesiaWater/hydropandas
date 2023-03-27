@@ -424,13 +424,13 @@ class CollectionPlots:
             for i, col in enumerate(cols):
                 if col is None:
                     cols[i] = self._obj.loc[name, "obs"]._get_first_numeric_col_name()
-            
+
             # create plot dataframe
             plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
             if plot_df.empty or plot_df[cols].isna().all().all():
                 logger.warning(f"{name} has no data between {tmin} and {tmax}")
                 continue
-            
+
             # PART 1: plot timeseries of observations
             # one or multiple columns to plot?
             if len(cols) == 1:
@@ -518,7 +518,7 @@ class CollectionPlots:
                                   )
         else:
             ax_section.set_xlabel(section_label_x)
-            
+  
         ax_obs.set_xlim(left=tmin)
 
         # rotate labels on observation axis
@@ -543,8 +543,8 @@ class CollectionPlots:
                 ax_obs.set_ylabel(ylabel[1])
             except:
                 logger.error(f"Invalid value for ylabel {ylabel}. Plot has no ylabels.")
-            
-            
+ 
+    
         # add layout to both plots
         for ax in axes:
             ax.grid()
