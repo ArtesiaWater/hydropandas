@@ -556,7 +556,7 @@ class CollectionPlots:
         else:
             ax_section.set_xlabel(section_label_x)
 
-        ax_obs.set_xlim(left=tmin)
+        ax_obs.set_xlim(left=tmin, right=tmax)
 
         # rotate labels on observation axis
         ax_obs.set_xticks(
