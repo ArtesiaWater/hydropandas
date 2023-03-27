@@ -378,6 +378,7 @@ class CollectionPlots:
             - limit y-axis of section plot to observations only
             - remove the checking (if obs are near bottom) from this function
             - moving the legend outside the plot
+            - set xlim of observation plot more tight when tmin is not specified
         """
 
         # prepare column for x location in section plot
@@ -554,6 +555,8 @@ class CollectionPlots:
             )
         else:
             ax_section.set_xlabel(section_label_x)
+
+        ax_obs.set_xlim(left=tmin)
 
         # rotate labels on observation axis
         ax_obs.set_xticks(
