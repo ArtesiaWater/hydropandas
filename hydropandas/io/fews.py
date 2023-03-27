@@ -8,7 +8,13 @@ import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
-from ..observation import GroundwaterObs, WaterlvlObs
+from ..observation import (
+    EvaporationObs,
+    GroundwaterObs,
+    MeteoObs,
+    PrecipitationObs,
+    WaterlvlObs,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +184,8 @@ def iterparse_pi_xml(
                     loc = h_attr.text
                     if loc not in locationIds:
                         element.clear()
-                        logger.info(f" ... skipping '{loc}', not in locationIds")
+                        logger.info(
+                            f" ... skipping '{loc}', not in locationIds")
                         continue
 
                 if filterdict is not None:
@@ -444,26 +451,65 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
     else:
         y = np.nan
 
+    if "units" in header.keys():
+        unit = str(header["units"])
+    else:
+        unit = np.nan
+
     if np.isnan(x) or np.isnan(y):
         metadata_available = False
     else:
         metadata_available = True
 
-    if ObsClass in [GroundwaterObs, WaterlvlObs]:
+    if "parameterId" in header:
+        pid = header["parameterId"]
+        name = header["monitoring_well"] + "_" + pid
+    else:
+        name = header["monitoring_well"]
+
+    if ObsClass in (WaterlvlObs,):
         o = ObsClass(
             ts,
             x=x,
             y=y,
+            unit=unit,
             meta=header,
-            name=header["monitoring_well"],
+            name=name,
             monitoring_well=header["monitoring_well"],
             metadata_available=metadata_available,
             source="FEWS",
         )
-    else:
+    elif ObsClass in (GroundwaterObs,):
+        if "z" in header.keys():
+            z = float(header["z"])
+        else:
+            z = np.nan
         o = ObsClass(
-            ts, x=x, y=y, meta=header, name=header["monitoring_well"], source="FEWS"
+            ts,
+            x=x,
+            y=y,
+            ground_level=z,
+            unit=unit,
+            meta=header,
+            name=name,
+            monitoring_well=header["monitoring_well"],
+            metadata_available=metadata_available,
+            source="FEWS",
         )
+    elif ObsClass in (MeteoObs, PrecipitationObs, EvaporationObs):
+        o = ObsClass(
+            ts,
+            x=x,
+            y=y,
+            unit=unit,
+            meta=header,
+            name=name,
+            meteo_var=pid,
+            source="FEWS",
+        )
+    else:
+        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header,
+                     name=name, source="FEWS")
 
     return o, header
 
@@ -535,7 +581,8 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
                         tag=htag, date=hdate, time=htime
                     )
                 elif htag.endswith("timeStep"):
-                    hline = '<{tag} unit="{unit}"/>\n'.format(tag=htag, unit=hval)
+                    hline = '<{tag} unit="{unit}"/>\n'.format(
+                        tag=htag, unit=hval)
                 else:
                     hline = paramline.format(tag=htag, param=hval)
                 hlines.append(3 * "\t" + hline)
@@ -616,7 +663,6 @@ def read_xml_filelist(
     obs_list = []
     nfiles = len(fnames)
     for j, ixml in enumerate(fnames):
-
         # print message
         logger.info(f"{j+1}/{nfiles} read {ixml}")
 

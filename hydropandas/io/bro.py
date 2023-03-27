@@ -2,15 +2,15 @@
 https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleveranciers/url-s-publieke-rest-services
 """
 
-import requests
-import pandas as pd
-import numpy as np
-import xml.etree.ElementTree
-import logging
 import json
-from tqdm import tqdm
+import logging
+import xml.etree.ElementTree
 
+import numpy as np
+import pandas as pd
+import requests
 from pyproj import Transformer
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
         return measurements_from_gld(gld_id, **kwargs)
 
 
-def get_gld_id_from_gmw(bro_id, tube_nr):
+def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
     """get bro_id of a grondwterstandendossier (gld) from a bro_id of a
     grondwatermonitoringsput (gmw).
 
@@ -158,6 +158,8 @@ def get_gld_id_from_gmw(bro_id, tube_nr):
         starts with 'GLD' or 'GMW' e.g. 'GMW000000036287'.
     tube_nr : int
         tube number.
+    quality_regime : str
+        either choose 'IMBRO/A' or 'IMBRO'.
 
     Raises
     ------
@@ -195,7 +197,29 @@ def get_gld_id_from_gmw(bro_id, tube_nr):
                 return tube["gldReferences"][0]["broId"]
             elif len(tube["gldReferences"]) == 0:
                 logger.info(
-                    f"no groundwater level dossier for {bro_id} and tube number {tube_nr}"
+                    f"no groundwater level dossier for {bro_id} and tube number"
+                    f"{tube_nr}"
+                )
+                return None
+            elif len(tube["gldReferences"]) == 2:
+                logger.info(
+                    f"two gld references found for GMW {bro_id} and tube nr"
+                    f"{tube_nr}, using {quality_regime} quality regime"
+                )
+                for gldref in tube["gldReferences"]:
+                    url2 = gldref["url"]
+                    req2 = requests.get(url2)
+                    ns = {
+                        "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
+                        "brocom": "http://www.broservices.nl/xsd/brocommon/3.0",
+                    }
+                    tree = xml.etree.ElementTree.fromstring(req2.text)
+                    gld = tree.findall(".//ns11:GLD_O", ns)[0]
+                    qualityRegime = gld.find("brocom:qualityRegime", ns).text
+                    if qualityRegime == quality_regime:
+                        return gldref["broId"]
+                logger.info(
+                    f"no gld reference with quality regime {quality_regime} was found"
                 )
                 return None
             else:
@@ -593,7 +617,8 @@ def get_obs_list_from_extent(
 
     if len(gmws_ids) > 1000:
         ans = input(
-            f"You requested to download {len(gmws_ids)} observations, this can take a while. Are you sure you want to continue [Y/n]? "
+            f"You requested to download {len(gmws_ids)} observations, this can"
+            "take a while. Are you sure you want to continue [Y/n]? "
         )
         if ans not in ["Y", "y", "yes", "Yes", "YES"]:
             return []
@@ -617,7 +642,8 @@ def get_obs_list_from_extent(
             )
             if o.empty:
                 logger.warning(
-                    f"no measurements found for gmw_id {gmw_id} and tube number {tube_nr}"
+                    f"no measurements found for gmw_id {gmw_id} and tube number"
+                    f"{tube_nr}"
                 )
                 if keep_all_obs:
                     obs_list.append(o)

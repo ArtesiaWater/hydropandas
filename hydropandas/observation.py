@@ -14,16 +14,14 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
-import warnings
+import logging
+
 import numpy as np
 import pandas as pd
-
 from _io import StringIO
 from pandas._config import get_option
-from pandas.io.formats import console
 from pandas.api.types import is_numeric_dtype
-
-import logging
+from pandas.io.formats import console
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +69,12 @@ class Obs(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in Obs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
+
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
         self.name = kwargs.pop("name", "")
@@ -250,12 +254,14 @@ class Obs(pd.DataFrame):
                         )
                     elif overlap == "use_left":
                         logger.info(
-                            f"existing observation {key} differs from new observation, use existing"
+                            f"existing observation {key} differs from new"
+                            "observation, use existing"
                         )
                         new_metadata[key] = v1
                     elif overlap == "use_right":
                         logger.info(
-                            f"existing observation {key} differs from new observation, use new"
+                            f"existing observation {key} differs from new"
+                            "observation, use new"
                         )
                         new_metadata[key] = v2
                 else:
@@ -268,12 +274,14 @@ class Obs(pd.DataFrame):
                     )
                 elif overlap == "use_left":
                     logger.info(
-                        f"existing observation {key} differs from new observation, use existing"
+                        f"existing observation {key} differs from new"
+                        "observation, use existing"
                     )
                     new_metadata[key] = v1
                 elif overlap == "use_right":
                     logger.info(
-                        f"existing observation {key} differs from new observation, use new"
+                        f"existing observation {key} differs from new"
+                        "observation, use new"
                     )
                     new_metadata[key] = v2
         if same_metadata:
@@ -328,7 +336,8 @@ class Obs(pd.DataFrame):
                 dup_ind_o[overlap_cols]
             ):
                 logger.warning(
-                    f"timeseries of observation {right.name} overlap with different values"
+                    f"timeseries of observation {right.name} overlap with"
+                    "different values"
                 )
                 if overlap == "error":
                     raise ValueError(
@@ -351,7 +360,8 @@ class Obs(pd.DataFrame):
             ~right.index.isin(self.index)
         ]  # get unique observations right
 
-        # merge unique observations from overlapping columns with duplicate observations from overlapping columns
+        # merge unique observations from overlapping columns with duplicate observations
+        # from overlapping columns
         dfcol = pd.concat(
             [dup_o, unique_o_left[overlap_cols], unique_o_right[overlap_cols]]
         )
@@ -409,13 +419,15 @@ class Obs(pd.DataFrame):
 
         if overlap not in ["error", "use_left", "use_right"]:
             raise ValueError(
-                "invalid value for overlap, choose between error, use_left and use_right"
+                "invalid value for overlap, choose between error, use_left and"
+                "use_right"
             )
 
         # check observation type
         if not isinstance(right, type(self)):
             raise TypeError(
-                f"existing observation has a different type {type(self)} than new observation {type(right)}"
+                f"existing observation has a different type {type(self)} than"
+                f"new observation {type(right)}"
             )
 
         # merge timeseries
@@ -465,6 +477,12 @@ class GroundwaterObs(Obs):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
+
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
@@ -518,9 +536,9 @@ class GroundwaterObs(Obs):
 
         """
 
-        from .io import io_bro
+        from .io import bro
 
-        measurements, meta = io_bro.get_bro_groundwater(
+        measurements, meta = bro.get_bro_groundwater(
             bro_id,
             tube_nr,
             tmin=tmin,
@@ -551,9 +569,6 @@ class GroundwaterObs(Obs):
     def from_dino(
         cls,
         fname=None,
-        tmin="1900-01-01",
-        tmax="2040-01-01",
-        split_cluster=True,
         **kwargs,
     ):
         """download dino data from the server.
@@ -562,26 +577,14 @@ class GroundwaterObs(Obs):
         ----------
         fname : str, optional
             dino csv filename
-        location : str, optional
-            location of the peilbuis, i.e. B57F0077
-        tube_nr : float, optional
-            filter_nr of the peilbuis, i.e. 1.
-        tmin : str
-            start date in format YYYY-MM-DD
-        tmax : str
-            end date in format YYYY-MM-DD
-        split_cluster : bool
-            if False and the piezometer belongs to a cluster, the combined
-            time series of the cluster is used. if True the indvidual time
-            series of each piezometer is used. Default is True
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_csv if
-            fname is not None and otherwise to io_dino.findMeetreeks
+            these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
+            if fname is not None and otherwise to hydropandas.io.dino.findMeetreeks
         """
-        from .io import io_dino
+        from .io import dino
 
         # read dino csv file
-        measurements, meta = io_dino.read_dino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -594,12 +597,12 @@ class GroundwaterObs(Obs):
         fname : str, optional
             dino csv filename
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_csv
+            these arguments are passed to hydropandas.io._dino.read_dino_groundwater_csv
         """
-        from .io import io_dino
+        from .io import dino
 
         # read artdino csv file
-        measurements, meta = io_dino.read_artdino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_artdino_groundwater_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -617,9 +620,9 @@ class GroundwaterObs(Obs):
         [type]
             [description]
         """
-        from .io import io_wiski
+        from .io import wiski
 
-        data, metadata = io_wiski.read_wiski_file(fname, **kwargs)
+        data, metadata = wiski.read_wiski_file(fname, **kwargs)
 
         return cls(data, meta=metadata, **metadata)
 
@@ -639,6 +642,13 @@ class GroundwaterQualityObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in GroundwaterQualityObs._metadata) and (
+                        key not in kwargs.keys()
+                    ):
+                        kwargs[key] = getattr(args[0], key)
 
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
@@ -660,11 +670,12 @@ class GroundwaterQualityObs(Obs):
         fname : str
             dino txt filename
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_groundwater_quality_txt
+            these arguments are passed to
+            hydropandas.io.dino.read_dino_groundwater_quality_txt
         """
-        from .io import io_dino
+        from .io import dino
 
-        measurements, meta = io_dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -678,6 +689,11 @@ class WaterlvlObs(Obs):
     _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
 
     def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in WaterlvlObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
@@ -697,11 +713,11 @@ class WaterlvlObs(Obs):
         fname : str
             dino csv filename
         kwargs : key-word arguments
-            these arguments are passed to io_dino.read_dino_waterlvl_csv
+            these arguments are passed to hydropandas.io.dino.read_dino_waterlvl_csv
         """
-        from .io import io_dino
+        from .io import dino
 
-        measurements, meta = io_dino.read_dino_waterlvl_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_waterlvl_csv(fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -724,9 +740,9 @@ class WaterlvlObs(Obs):
         ValueError
             if file contains data for more than one location
         """
-        from .io import io_waterinfo
+        from .io import waterinfo
 
-        df, metadata = io_waterinfo.read_waterinfo_file(
+        df, metadata = waterinfo.read_waterinfo_file(
             fname, return_metadata=True, **kwargs
         )
         return cls(df, meta=metadata, **metadata)
@@ -741,6 +757,11 @@ class ModelObs(Obs):
     _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in ModelObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
 
@@ -760,6 +781,11 @@ class MeteoObs(Obs):
     _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in MeteoObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
@@ -805,8 +831,9 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -912,11 +939,14 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
+
+        if fill_missing_obs and interval == "hourly":
+            fill_missing_obs = False
 
         if interval == "hourly" and meteo_var == "RD":
             raise NotImplementedError(
-                "hourly values not (yet) available for precipitation stations"
+                "hourly values are not available for precipitation stations"
             )
 
         settings = {
@@ -927,7 +957,7 @@ class MeteoObs(Obs):
             "raise_exceptions": raise_exceptions,
         }
 
-        ts, meta = io_knmi.get_knmi_timeseries_stn(
+        ts, meta = knmi.get_knmi_timeseries_stn(
             stn, meteo_var, startdate, enddate, settings=settings
         )
 
@@ -958,12 +988,12 @@ class MeteoObs(Obs):
         raise_exceptions=False,
     ):
         """Get a MeteoObs object from the KNMI station closest to the given
-        (x,y) coördinates.
+        (x,y) coordinates.
 
         Parameters
         ----------
         xy : list. tuple or numpy array of int or floats
-            xy coördinates. e.g. [10.1,25.05]
+            xy coordinates. e.g. [10.1,25.05]
         meteo_var : str,
             meteo variable e.g. "RH" or "EV24". See list with al options below.
         startdate : str, datetime or None, optional
@@ -984,8 +1014,9 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -993,7 +1024,7 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1004,7 +1035,7 @@ class MeteoObs(Obs):
             "use_precipitation_stn": use_precipitation_stn,
         }
 
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
+        ts, meta = knmi.get_knmi_timeseries_xy(
             xy, meteo_var, startdate, enddate, settings=settings
         )
 
@@ -1035,7 +1066,7 @@ class MeteoObs(Obs):
         raise_exceptions=False,
     ):
         """Get a MeteoObs object with measurements from the KNMI station
-        closest to the given observation. Uses the x and y coördinates of the
+        closest to the given observation. Uses the x and y coordinates of the
         observation to obtain the nearest KNMI station. Uses the start- and
         enddate of the observation as start- and enddate of the meteo time
         series (unless startdate and enddatet are specified explicitly).
@@ -1064,8 +1095,9 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1171,7 +1203,7 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1189,7 +1221,7 @@ class MeteoObs(Obs):
         if enddate is None:
             enddate = obs.index[-1]
 
-        ts, meta = io_knmi.get_knmi_timeseries_xy(
+        ts, meta = knmi.get_knmi_timeseries_xy(
             xy, meteo_var, startdate, enddate, settings=settings
         )
 
@@ -1224,12 +1256,12 @@ class MeteoObs(Obs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = io_knmi.read_knmi_timeseries_file(
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
             fname, meteo_var, startdate, enddate
         )
 
@@ -1251,6 +1283,15 @@ class EvaporationObs(MeteoObs):
 
     Subclass of the MeteoObs class
     """
+
+    def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
+
+        super(EvaporationObs, self).__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -1298,15 +1339,19 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
 
 
         Returns
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
+        from .io import knmi
+
+        if interval == "hourly":
+            fill_missing_obs = False
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1316,7 +1361,7 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        ts, meta = io_knmi.get_evaporation(
+        ts, meta = knmi.get_evaporation(
             stn, et_type, start=startdate, end=enddate, settings=settings
         )
 
@@ -1333,11 +1378,10 @@ class EvaporationObs(MeteoObs):
         )
 
     @classmethod
-    def from_xy(
+    def from_nearest_xy(
         cls,
         xy,
         et_type="EV24",
-        method="nearest",
         startdate=None,
         enddate=None,
         fill_missing_obs=True,
@@ -1347,20 +1391,16 @@ class EvaporationObs(MeteoObs):
         raise_exceptions=False,
     ):
         """Get an EvaporationObs object with evaporation measurements from the
-        KNMI station closest to the given (x,y) coördinates.
+        KNMI station closest to the given (x,y) coordinates.
 
         Parameters
         ----------
         xy : list. tuple or numpy array of int or floats
-            xy coördinates. e.g. (10.1,25.05)
+            xy coordinates. e.g. (10.1,25.05)
         et_type: str
             type of evapotranspiration to get from KNMI. Choice between
             'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
             'EV24' which collects the KNMI Makkink EV24 evaporation.
-        method: str
-            specify whether evaporation should be collected from the nearest
-            meteo station (fast) or interpolated using thin plate spline (slow).
-            Choiche betweeen 'nearest' or 'interpolation'
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
         enddate : str, datetime or None, optional
@@ -1375,8 +1415,9 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1385,7 +1426,7 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1395,40 +1436,22 @@ class EvaporationObs(MeteoObs):
             "raise_exceptions": raise_exceptions,
         }
 
-        if method == "nearest":
-            stn = io_knmi.get_nearest_stations_xy(xy, "EV24")[0]
-            ts, meta = io_knmi.get_evaporation(
-                stn, et_type, start=startdate, end=enddate, settings=settings
-            )
+        stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
+        ts, meta = knmi.get_evaporation(
+            stn, et_type, start=startdate, end=enddate, settings=settings
+        )
 
-            return cls(
-                ts,
-                meta=meta,
-                station=meta["station"],
-                x=meta["x"],
-                y=meta["y"],
-                name=meta["name"],
-                source=meta["source"],
-                unit=meta["unit"],
-                meteo_var=et_type,
-            )
-
-        elif method == "interpolation":
-            obs_list = io_knmi.get_knmi_obslist(
-                xy=[xy],
-                meteo_vars=(et_type,),
-                starts=startdate,
-                ends=enddate,
-                ObsClasses=(cls,),
-                settings=settings,
-                method=method,
-            )
-
-            return obs_list[0]
-        else:
-            raise ValueError(
-                "Please provide either 'nearest' or 'interpolation' as method"
-            )
+        return cls(
+            ts,
+            meta=meta,
+            station=meta["station"],
+            x=meta["x"],
+            y=meta["y"],
+            name=meta["name"],
+            source=meta["source"],
+            unit=meta["unit"],
+            meteo_var=et_type,
+        )
 
     @classmethod
     def from_obs(
@@ -1445,7 +1468,7 @@ class EvaporationObs(MeteoObs):
     ):
         """Get an EvaporationObs object with evaporation measurements from the
         KNMI station closest to the given observation. Uses the x and y
-        coördinates of the observation to obtain the nearest KNMI evaporation
+        coordinates of the observation to obtain the nearest KNMI evaporation
         time series. Uses the start- and enddate of the observation as start-
         and enddate of the evaporation time series (unless startdate and
         enddatet are specified explicitly).
@@ -1472,8 +1495,9 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the data is read from there.
-            Default is True since the api is back online (July 2021).
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
 
@@ -1481,7 +1505,7 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import io_knmi
+        from .io import knmi
 
         settings = {
             "fill_missing_obs": fill_missing_obs,
@@ -1493,8 +1517,8 @@ class EvaporationObs(MeteoObs):
 
         xy = (obs.x, obs.y)
 
-        stn = io_knmi.get_nearest_stations_xy(xy, "EV24")[0]
-        ts, meta = io_knmi.get_evaporation(
+        stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
+        ts, meta = knmi.get_evaporation(
             stn, et_type, start=startdate, end=enddate, settings=settings
         )
 
@@ -1527,12 +1551,12 @@ class EvaporationObs(MeteoObs):
         -------
         MeteoObs object with meteorological observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = io_knmi.read_knmi_timeseries_file(
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
             fname, "EV24", startdate, enddate
         )
 
@@ -1554,6 +1578,17 @@ class PrecipitationObs(MeteoObs):
 
     Subclass of the MeteoObs class
     """
+
+    def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in PrecipitationObs._metadata) and (
+                        key not in kwargs.keys()
+                    ):
+                        kwargs[key] = getattr(args[0], key)
+
+        super(PrecipitationObs, self).__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -1608,8 +1643,9 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
+                if False a text file is downloaded into a temporary folder and
+                the data is read from there. Default is True since the api is
+                back online (July 2021).
             raise_exceptions : bool, optional
                 if True you get errors when no data is returned. The default is False.
 
@@ -1632,12 +1668,12 @@ class PrecipitationObs(MeteoObs):
     def from_nearest_xy(cls, xy, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y)
-        coördinates.
+        coordinates.
 
         Parameters
         ----------
         xy : list. tuple or numpy array of ints or floats
-            xy coördinates. e.g. [10.1,25.05]
+            xy coordinates. e.g. [10.1,25.05]
         stn_type : str, optional
             type of measurements station. Can be 'meteo' or 'precipitation'.
             Default is 'meteo'.
@@ -1656,8 +1692,9 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
+                if False a text file is downloaded into a temporary folder and
+                the data is read from there. Default is True since the api is
+                back online (July 2021).
             raise_exceptions : bool, optional
                 if True you get errors when no data is returned. The default is False.
 
@@ -1678,7 +1715,7 @@ class PrecipitationObs(MeteoObs):
     def from_obs(cls, obs, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from the
         the meteo or precipitation station closest to the given observation.
-        Uses the x and y coördinates of the observation to obtain the nearest
+        Uses the x and y coordinates of the observation to obtain the nearest
         KNMI precipitation time series. Uses the start- and enddate of the
         observation as start- and enddate of the time series (unless startdate
         and enddate are specified explicitly).
@@ -1705,8 +1742,9 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and the data is read from there.
-                Default is True since the api is back online (July 2021).
+                if False a text file is downloaded into a temporary folder and
+                the data is read from there. Default is True since the api is
+                back online (July 2021).
             raise_exceptions : bool, optional
                 if True you get errors when no data is returned. The default is False.
 
@@ -1741,14 +1779,12 @@ class PrecipitationObs(MeteoObs):
         -------
         PrecipitationObs object with precipitation observations
         """
-        from .io import io_knmi
+        from .io import knmi
 
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = io_knmi.read_knmi_timeseries_file(
-            fname, "RD", startdate, enddate
-        )
+        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
 
         return cls(
             knmi_df,

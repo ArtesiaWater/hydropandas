@@ -7,15 +7,15 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
-import warnings
+import logging
 import numbers
+from typing import List, Optional
+
 import numpy as np
 import pandas as pd
 
 from . import observation as obs
 from . import util
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +85,6 @@ def read_bro(
 
 def read_dino(
     dirname=None,
-    extent=None,
-    bbox=None,
-    locations=None,
     ObsClass=obs.GroundwaterObs,
     subdir="Grondwaterstanden_Put",
     suffix="1.csv",
@@ -106,14 +103,6 @@ def read_dino(
     dirname : str, optional
         directory name, can be a .zip file or the parent directory
         of subdir
-    extent : list, tuple or numpy-array (user must specify extent or bbox)
-        get dinodata online within this extent [xmin, xmax, ymin, ymax]
-    bbox : list, tuple or numpy-array (user must specify extent or bbox)
-        The bounding box, in RD-coordinates, for which you want to
-        retrieve locations [xmin, ymin, xmax, ymax]
-    locations : list of str, optional
-        list of names with location and filter number, separated by
-        'filtersep'
     ObsClass : type
         class of the observations, so far only GroundwaterObs is supported
     subdir : str
@@ -132,8 +121,8 @@ def read_dino(
     name : str, optional
         the name of the observation collection
     kwargs:
-        kwargs are passed to the io_dino.download_dino_within_extent() or
-        the io_dino.read_dino_dir() function
+        kwargs are passed to the hydropandas.io.dino.download_dino_within_extent() or
+        the hydropandas.io.dino.read_dino_dir() function
 
     Returns
     -------
@@ -294,7 +283,6 @@ def read_knmi(
     starts=None,
     ends=None,
     ObsClasses=None,
-    method="nearest",
     **kwargs,
 ):
     """Get knmi observations from a list of locations or a list of
@@ -308,7 +296,7 @@ def read_knmi(
     stns : list of str or None
         list of knmi stations. The default is None
     xy : list or numpy array, optional
-        xy coördinates of the locations. e.g. [[10,25], [5,25]]
+        xy coordinates of the locations. e.g. [[10,25], [5,25]]
     meteo_vars : list or tuple of str
         meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
         See list of all possible variables below
@@ -334,12 +322,8 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
-    method : str, optional
-        specify whether EvaporationObs should be collected from the nearest
-        meteo station (fast) or interpolated using thin plate spline (slow).
-        Choiche betweeen 'nearest' or 'interpolation'
     **kwargs :
-        kwargs are passed to the io_knmi.get_knmi_obslist function
+        kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
     List of possible variables:
         neerslagstations:
@@ -455,7 +439,6 @@ def read_knmi(
         starts=starts,
         ends=ends,
         ObsClasses=ObsClasses,
-        method=method,
         **kwargs,
     )
 
@@ -799,18 +782,23 @@ class ObsCollection(pd.DataFrame):
 
                                 # otherwise return Nan
                                 logger.warning(
-                                    f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                    f"observation collection -> {self.name} not"
+                                    f"consistent with observation -> {o.name}"
+                                    f"{att} value"
                                 )
                                 return False
                         except TypeError:
                             logger.warning(
-                                f"observation collection -> {self.name} not consistent with observation -> {o.name} {att} value"
+                                f"observation collection -> {self.name} not"
+                                f"consistent with observation -> {o.name} {att}"
+                                "value"
                             )
                             return False
                     elif att == "name":
                         if o.name not in self.index:
                             logger.warning(
-                                f"observation collection -> {self.name} not consistent with observation -> {o.name} name"
+                                f"observation collection -> {self.name} not"
+                                f"consistent with observation -> {o.name} name"
                             )
                             return False
 
@@ -994,7 +982,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from .io.io_bro import get_obs_list_from_gmn, get_obs_list_from_extent
+        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
 
         if bro_id is None and (extent is not None):
             obs_list = get_obs_list_from_extent(
@@ -1044,7 +1032,7 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             ObsCollection DataFrame with the 'obs' column
         """
-        meta = {"type": obs.GroundwaterObs}
+
         if isinstance(df, pd.DataFrame):
             if obs_list is None:
                 obs_list = [ObsClass() for i in range(len(df))]
@@ -1052,7 +1040,7 @@ class ObsCollection(pd.DataFrame):
         else:
             raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
 
-        return cls(df, meta=meta)
+        return cls(df)
 
     @classmethod
     def from_dino(
@@ -1102,14 +1090,14 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             the name of the observation collection
         kwargs:
-            kwargs are passed to the io_dino.read_dino_dir() function
+            kwargs are passed to the hydropandas.io.dino.read_dino_dir() function
 
         Returns
         -------
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_dino import read_dino_dir
+        from .io.dino import read_dino_dir
 
         # read dino directory
         if name is None:
@@ -1180,7 +1168,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             the name of the observation collection
         kwargs:
-            kwargs are passed to the io_dino.read_dino_dir() function
+            kwargs are passed to the hydropandas.io.dino.read_dino_dir() function
 
         Returns
         -------
@@ -1188,7 +1176,7 @@ class ObsCollection(pd.DataFrame):
             collection of multiple point observations
         """
 
-        from .io.io_dino import read_artdino_dir
+        from .io.dino import read_artdino_dir
 
         if name is None:
             name = subdir
@@ -1278,7 +1266,7 @@ class ObsCollection(pd.DataFrame):
         cls(obs_df) : ObsCollection
             collection of multiple point observations
         """
-        from .io.io_fews import read_xml_filelist, read_xmlstring
+        from .io.fews import read_xml_filelist, read_xmlstring
 
         if translate_dic is None:
             translate_dic = {"locationId": "monitoring_well"}
@@ -1361,7 +1349,7 @@ class ObsCollection(pd.DataFrame):
         exclude_layers : int
             exclude modellayers from being read from imod
         """
-        from .io.io_modflow import read_imod_results
+        from .io.modflow import read_imod_results
 
         mo_list = read_imod_results(
             obs_collection,
@@ -1387,7 +1375,6 @@ class ObsCollection(pd.DataFrame):
         starts=None,
         ends=None,
         ObsClasses=None,
-        method="nearest",
         **kwargs,
     ):
         """Get knmi observations from a list of locations or a list of
@@ -1401,7 +1388,7 @@ class ObsCollection(pd.DataFrame):
         stns : list of str or None
             list of knmi stations. The default is None
         xy : list or numpy array, optional
-            xy coördinates of the locations. e.g. [[10,25], [5,25]]
+            xy coordinates of the locations. e.g. [[10,25], [5,25]]
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
             See list of all possible variables below
@@ -1427,12 +1414,8 @@ class ObsCollection(pd.DataFrame):
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
-        method : str, optional
-            specify whether EvaporationObs should be collected from the nearest
-            meteo station (fast) or interpolated using thin plate spline (slow).
-            Choiche betweeen 'nearest' or 'interpolation'
         **kwargs :
-            kwargs are passed to the io_knmi.get_knmi_obslist function
+            kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
 
         List of possible variables:
             neerslagstations:
@@ -1531,7 +1514,7 @@ class ObsCollection(pd.DataFrame):
             Potential evapotranspiration (Makkink) (in 0.1 mm)
         """
 
-        from .io.io_knmi import get_knmi_obslist
+        from .io.knmi import get_knmi_obslist
 
         # obtain ObsClass
         if ObsClasses is None:
@@ -1551,13 +1534,15 @@ class ObsCollection(pd.DataFrame):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
                 TypeError(
-                    "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
+                    "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
+                    "list or tuple"
                 )
         elif isinstance(ObsClasses, (list, tuple)):
             pass
         else:
             TypeError(
-                "must be None, PrecipitationObs, EvaporationObs, MeteoObs, list or tuple"
+                "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
+                "list or tuple"
             )
 
         meta = {}
@@ -1575,7 +1560,6 @@ class ObsCollection(pd.DataFrame):
             ObsClasses=ObsClasses,
             starts=starts,
             ends=ends,
-            method=method,
             **kwargs,
         )
 
@@ -1601,8 +1585,7 @@ class ObsCollection(pd.DataFrame):
     def from_menyanthes(
         cls, fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
     ):
-
-        from .io.io_menyanthes import read_file
+        from .io.menyanthes import read_file
 
         menyanthes_meta = {"filename": fname, "type": ObsClass}
 
@@ -1647,7 +1630,7 @@ class ObsCollection(pd.DataFrame):
             interpolation method, either 'linear' or 'nearest',
             default is linear
         """
-        from .io.io_modflow import read_modflow_results
+        from .io.modflow import read_modflow_results
 
         mo_list = read_modflow_results(
             obs_collection,
@@ -1685,11 +1668,11 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             ObsCollection containing data
         """
-        from .io import io_waterinfo
+        from .io import waterinfo
 
         meta = {"name": name, "type": ObsClass, "filename": file_or_dir}
 
-        obs_list = io_waterinfo.read_waterinfo_obs(
+        obs_list = waterinfo.read_waterinfo_obs(
             file_or_dir, ObsClass, progressbar=progressbar, **kwargs
         )
         obs_df = util._obslist_to_frame(obs_list)
@@ -1708,8 +1691,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         **kwargs,
     ):
-
-        from .io.io_wiski import read_wiski_dir
+        from .io.wiski import read_wiski_dir
 
         meta = {
             "dirname": dirname,
@@ -1764,6 +1746,9 @@ class ObsCollection(pd.DataFrame):
         if main_sheet_name is None:
             main_sheet_name = self.name
 
+        if main_sheet_name == "":
+            main_sheet_name = "metadata"
+
         if not self._is_consistent():
             raise RuntimeError("inconsistent observation collection")
 
@@ -1781,9 +1766,9 @@ class ObsCollection(pd.DataFrame):
                 o.to_excel(writer, sheetname)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
-        from .io import io_fews
+        from .io import fews
 
-        io_fews.write_pi_xml(self, fname, timezone=timezone, version=version)
+        fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
     def to_gdf(self, xcol="x", ycol="y"):
         """convert ObsCollection to GeoDataFrame.
@@ -1811,7 +1796,6 @@ class ObsCollection(pd.DataFrame):
             "# measurements",
         ),
     ):
-
         if "startdate" in columns:
             self["startdate"] = self.obs.apply(lambda x: x.index[0])
         if "enddate" in columns:
@@ -1857,7 +1841,7 @@ class ObsCollection(pd.DataFrame):
         pstore : pastastore.PastaStore
             the pastastore with the series from the ObsCollection
         """
-        from .io.io_pastas import create_pastastore
+        from .io.pastas import create_pastastore
 
         pstore = create_pastastore(
             self,
@@ -1953,3 +1937,75 @@ class ObsCollection(pd.DataFrame):
             return o.loc[tmin:tmax, col]
 
         return self.obs.apply(lambda o: o.loc[tmin:tmax, col])
+
+    def interpolate(
+        self,
+        xy: List[List[float]],
+        kernel: str = "thin_plate_spline",
+        kernel2: str = "linear",
+        epsilon: Optional[int] = None,
+        col: Optional[str] = None,
+    ):
+        """Interpolation method for ObsCollections using the Scipy radial basis
+        function (RBF)
+
+        Parameters
+        ----------
+        xy : List[List[float]]
+            xy coordinates of locations of interest e.g. [[10,25], [5,25]]
+        kernel : str, optional
+            Type of radial basis funtion, by default thin_plate_spline.
+            Other options are linear, gaussian, inverse_quadratic,
+            multiquadric, inverse_multiquadric, cubic or quintic.
+        kernel2 : str, optional
+            Kernel in case there are not enough observations (3 or 6) for
+            time step, by default linear. Other options are gaussian,
+            inverse_quadratic, multiquadric, or inverse_multiquadric.
+        epsilon : float, optional
+            Shape parameter that scales the input to the RBF. If kernel is
+            linear, thin_plate_spline, cubic, or quintic, this defaults to 1.
+            Otherwise this must be specified.
+        col : str, optional
+            Name of the column in the Obs dataframe to be used. If None the
+            first numeric column in the Obs Dataframe is used.
+
+        Returns
+        -------
+        ObsCollection
+        """
+
+        otype = self._infer_otype()
+        if isinstance(otype, (list, np.ndarray)):
+            raise TypeError(
+                "Please make sure that all Obs are of the same type. Currently"
+                f" found {', '.join([x.__name__ for x in otype])}."
+            )
+
+        xy_oc = self.loc[:, ["x", "y"]]
+        obsdf = util.oc_to_df(self, col=col)
+
+        fill_df = util.interpolate(
+            xy, obsdf, xy_oc, kernel=kernel, kernel2=kernel2, epsilon=epsilon
+        )
+
+        # add all metadata that is equal for all observations
+        kwargs = {}
+        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
+        for att in meta_att:
+            if (self.loc[:, att] == self.iloc[0].loc[att]).all():
+                kwargs[att] = self.iloc[0].loc[att]
+
+        obs_list = []
+        for i, col in enumerate(fill_df.columns):
+            o = otype(
+                fill_df.loc[:, [col]].copy(),
+                x=xy[i][0],
+                y=xy[i][1],
+                name=col,
+                source=f"interpolation {self.name}",
+                meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
+                **kwargs,
+            )
+            obs_list.append(o)
+
+        return self.from_list(obs_list)
