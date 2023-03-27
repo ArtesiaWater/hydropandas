@@ -519,8 +519,7 @@ class CollectionPlots:
         else:
             ax_section.set_xlabel(section_label_x)
             
-        if tmin is not None:
-            ax_obs.set_xlim(left=tmin)
+        ax_obs.set_xlim(left=tmin)
 
         # rotate labels on observation axis
         ax_obs.set_xticks(ax_obs.get_xticks(),
@@ -554,7 +553,7 @@ class CollectionPlots:
             handles, labels = ax.get_legend_handles_labels()
             by_label = dict(zip(labels, handles))
             ax.legend(by_label.values(), by_label.keys())
-           
+
         fig.suptitle(self._obj.name)
 
         if fn_save is not None:
