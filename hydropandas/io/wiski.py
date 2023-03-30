@@ -9,7 +9,8 @@ from ..util import get_files
 logger = logging.getLogger(__name__)
 
 
-def _read_wiski_header(f, header_sep=":", header_identifier="#", end_header_str=None):
+def _read_wiski_header(f, header_sep=":", header_identifier="#",
+                       end_header_str=None):
     line = f.readline()
     header = dict()
     while header_identifier in line:
@@ -51,8 +52,8 @@ def read_wiski_file(
     sep : str, optional (default=";")
         The delimiter used to separate fields in the file.
     header_sep : str, optional (default=None)
-        The delimiter used to separate fields in the header. If None, the function will try to automatically
-        detect the separator.
+        The delimiter used to separate fields in the header. If None, the
+        function will try to automatically detect the separator.
     header_identifier : str, optional (default="#")
         The character used to identify header lines.
     read_series : bool, optional (default=True)
@@ -71,7 +72,8 @@ def read_wiski_file(
     Returns:
     --------
     data : pandas.DataFrame or None
-        A dataframe containing the time series data from the file. Returns None if `read_series` is False.
+        A dataframe containing the time series data from the file. Returns None
+        if `read_series` is False.
     metadata : dict
         A dictionary containing metadata about the data in the file.
     """
@@ -90,7 +92,8 @@ def read_wiski_file(
     with open(fname, "r") as f:
         if header_sep is None:
             line, header = _read_wiski_header(
-                f, end_header_str=end_header_str, header_identifier=header_identifier
+                f, end_header_str=end_header_str,
+                header_identifier=header_identifier
             )
         else:
             line, header = _read_wiski_header(
@@ -168,34 +171,38 @@ def read_wiski_dir(
     **kwargs,
 ):
     """
-    Reads WISKI CSV files from a directory and returns a list of observation objects.
+    Reads WISKI CSV files from a directory and returns a list of observation
+    objects.
 
     Parameters
     ----------
     dirname : str
         The path of the directory containing the WISKI CSV files.
     ObsClass : object, optional
-        The observation class to use for creating observation objects. Default is None.
+        The observation class to use for creating observation objects. Default
+        is None.
     suffix : str, optional
         The file extension of the WISKI CSV files. Default is ".csv".
     unpackdir : str, optional
         The directory to which the files should be unpacked. Default is None.
     force_unpack : bool, optional
-        If True, forces the files to be unpacked even if they are already in the target directory.
-        Default is False.
+        If True, forces the files to be unpacked even if they are already in the
+        target directory. Default is False.
     preserve_datetime : bool, optional
-        If True, preserves the original modification times of the files when unpacking them.
-        Default is False.
+        If True, preserves the original modification times of the files when
+        unpacking them. Default is False.
     keep_all_obs : bool, optional
-        If True, keeps all observation objects even if they have no metadata available.
-        Default is True.
+        If True, keeps all observation objects even if they have no metadata
+        available. Default is True.
     **kwargs
-        Additional keyword arguments to pass to the `from_wiski` method of the `ObsClass` object.
+        Additional keyword arguments to pass to the `from_wiski` method of the
+        `ObsClass` object.
 
     Returns
     -------
     list
-        A list of observation objects created from the WISKI CSV files in the directory.
+        A list of observation objects created from the WISKI CSV files in the
+        directory.
 
     Raises
     ------
@@ -221,7 +228,8 @@ def read_wiski_dir(
     # gather all obs in list
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
-        logger.info("reading {0}/{1} -> {2}".format(i + 1, len(unzip_fnames), csv))
+        logger.info("reading {0}/{1} -> {2}".format(i +
+                    1, len(unzip_fnames), csv))
         obs = ObsClass.from_wiski(os.path.join(dirname, csv), **kwargs)
 
         if obs.metadata_available:

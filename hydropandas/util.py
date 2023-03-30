@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 
 from colorama import Back, Fore, Style
 from numpy import unique
-from pandas import DataFrame, DatetimeIndex, Timedelta, Timestamp
+from pandas import DataFrame, DatetimeIndex
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)

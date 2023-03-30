@@ -2,7 +2,7 @@ import logging
 import os
 
 import numpy as np
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, Timedelta, Timestamp
 from scipy.io import loadmat
 
 from ..observation import GroundwaterObs, WaterlvlObs
@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 def matlab2datetime(tindex):
     """
-    Transform a MATLAB serial date number to a Python datetime object, rounded to seconds.
+    Transform a MATLAB serial date number to a Python datetime object, rounded
+    to seconds.
 
     Parameters
     ----------
@@ -26,9 +27,9 @@ def matlab2datetime(tindex):
 
     Notes
     -----
-    MATLAB serial date numbers represent the number of days elapsed since January 1, 0000 (the
-    proleptic Gregorian calendar), with January 1, 0000 as day 1. Fractions of a day can be
-    represented as a decimal.
+    MATLAB serial date numbers represent the number of days elapsed since
+    January 1, 0000 (the proleptic Gregorian calendar), with January 1, 0000 as
+    day 1. Fractions of a day can be represented as a decimal.
 
     The returned datetime object is rounded to the nearest second.
 
@@ -54,7 +55,8 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
     ObsClass : GroundwaterObs or WaterlvlObs
         Class of observation object to create.
     load_oseries : bool, optional
-        Flag indicating whether to load observation series or not, by default True.
+        Flag indicating whether to load observation series or not, by default
+        True.
     load_stresses : bool, optional
         Flag indicating whether to load stresses or not, by default True.
 
@@ -108,7 +110,8 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
     if not (os.path.isfile(fname)):
         print("Could not find file ", fname)
 
-    mat = loadmat(fname, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
+    mat = loadmat(fname, struct_as_record=False, squeeze_me=True,
+                  chars_as_strings=True)
 
     obs_list = []
     if load_oseries:
@@ -171,18 +174,22 @@ def read_oseries(mat):
     Returns
     -------
     dict
-        A dictionary containing oseries data, with oseries names as keys and their corresponding metadata and values as values.
+        A dictionary containing oseries data, with oseries names as keys and
+        their corresponding metadata and values as values.
 
     Notes
     -----
-    This function reads the oseries data from a Menyanthes file in .mat format and returns it in a dictionary format. The oseries data contains the following metadata:
+    This function reads the oseries data from a Menyanthes file in .mat format
+    and returns it in a dictionary format. The oseries data contains the
+    following metadata:
         - name: The name of the oseries.
         - x: The x-coordinate of the oseries location.
         - y: The y-coordinate of the oseries location.
         - source: The data source.
         - unit: The unit of measurement.
 
-    In addition to the metadata, the oseries data also contains a pandas Series object named 'values', which contains the time series data for the oseries.
+    In addition to the metadata, the oseries data also contains a pandas Series
+    object named 'values', which contains the time series data for the oseries.
 
     Examples
     --------
