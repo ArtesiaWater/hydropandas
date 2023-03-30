@@ -43,7 +43,8 @@ def test_gld_no_monitoringnet():
 
 def test_groundwater_observations2():
     bro_id = "GLD000000008061"
-    measurements, _ = bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False)
+    measurements, _ = bro.get_bro_groundwater(
+        bro_id, tube_nr=None, only_metadata=False)
 
     measurements["values"].plot(color="blue", marker=".")
     measurements.loc[measurements["qualifier"] == "goedgekeurd", "values"].plot(
@@ -53,25 +54,13 @@ def test_groundwater_observations2():
     return
 
 
-def test_get_gld_id_from_gmw():
+def test_get_gld_ids_from_gmw():
     bro_id = "GMW000000036287"
     bro_id = "GMW000000055372"
     bro_id = "GMW000000059186"
-    bro.get_gld_id_from_gmw(bro_id, tube_nr=1)
-
-    return
-
-
-def test_get_gld_id_from_gmw_quality_regime():
-    # bro id with two gld's with a different quality regime
-    # both gld's have no measurements 13-3-2023
-    bro_id = "GMW000000063853"
-    gld1 = bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO/A")
-
-    gld2 = bro.get_gld_id_from_gmw(bro_id, tube_nr=1, quality_regime="IMBRO")
-    assert (
-        gld1 != gld2
-    ), "different quality regimes should return different gld id's for this gmw id"
+    bro_id = "GMW000000063853"  # two gld ids
+    bro_id = "GMW000000030953"  # three gld ids
+    bro.get_gld_ids_from_gmw(bro_id, tube_nr=1)
 
     return
 
