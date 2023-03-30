@@ -110,8 +110,7 @@ def get_files(
     # again.
     if unpackdir is not None:
         if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
-            raise ValueError(
-                "Please specify a different folder to unpack" " files!")
+            raise ValueError("Please specify a different folder to unpack" " files!")
     # identify whether file_or_dir started as zip
     if file_or_dir.endswith(".zip"):
         iszip = True
@@ -158,8 +157,7 @@ def get_files(
         unzip_fnames = [os.path.basename(file_or_dir)]  # get file name
         dirname = os.path.dirname(file_or_dir)  # get directory path
     else:
-        raise NotImplementedError(
-            "Cannot parse 'file_or_dir': " f"{file_or_dir}!")
+        raise NotImplementedError("Cannot parse 'file_or_dir': " f"{file_or_dir}!")
 
     return dirname, unzip_fnames
 
@@ -249,8 +247,7 @@ def get_color_logger(level="INFO"):
 
 def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
     obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
-    df = DataFrame(index=obs_times, columns=oc.index,
-                   dtype="float").sort_index()
+    df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
     for obs in oc.obs:
         if not obs.empty:
             if col is None:

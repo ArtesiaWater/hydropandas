@@ -41,6 +41,40 @@ def read_wiski_file(
     unit="",
     **kwargs,
 ):
+    """
+    Read data from a WISKI file.
+
+    Parameters:
+    -----------
+    fname : str
+        The name of the file to be read.
+    sep : str, optional (default=";")
+        The delimiter used to separate fields in the file.
+    header_sep : str, optional (default=None)
+        The delimiter used to separate fields in the header. If None, the function will try to automatically
+        detect the separator.
+    header_identifier : str, optional (default="#")
+        The character used to identify header lines.
+    read_series : bool, optional (default=True)
+        Whether to read the time series data from the file.
+    infer_datetime_format : bool, optional (default=True)
+        Whether to infer the datetime format of the timestamp column.
+    translate_dic : dict, optional (default=None)
+        A dictionary mapping header field names to the desired output names.
+    tz_localize : bool, optional (default=True)
+        Whether to localize the datetime index to the machine's timezone.
+    unit : str, optional (default="")
+        The unit of measurement of the data.
+    **kwargs : keyword arguments
+        Additional arguments to pass to the pandas `read_csv` function.
+
+    Returns:
+    --------
+    data : pandas.DataFrame or None
+        A dataframe containing the time series data from the file. Returns None if `read_series` is False.
+    metadata : dict
+        A dictionary containing metadata about the data in the file.
+    """
     logger.info("reading -> {}".format(os.path.split(fname)[-1]))
 
     if translate_dic is None:
@@ -133,6 +167,42 @@ def read_wiski_dir(
     keep_all_obs=True,
     **kwargs,
 ):
+    """
+    Reads WISKI CSV files from a directory and returns a list of observation objects.
+
+    Parameters
+    ----------
+    dirname : str
+        The path of the directory containing the WISKI CSV files.
+    ObsClass : object, optional
+        The observation class to use for creating observation objects. Default is None.
+    suffix : str, optional
+        The file extension of the WISKI CSV files. Default is ".csv".
+    unpackdir : str, optional
+        The directory to which the files should be unpacked. Default is None.
+    force_unpack : bool, optional
+        If True, forces the files to be unpacked even if they are already in the target directory.
+        Default is False.
+    preserve_datetime : bool, optional
+        If True, preserves the original modification times of the files when unpacking them.
+        Default is False.
+    keep_all_obs : bool, optional
+        If True, keeps all observation objects even if they have no metadata available.
+        Default is True.
+    **kwargs
+        Additional keyword arguments to pass to the `from_wiski` method of the `ObsClass` object.
+
+    Returns
+    -------
+    list
+        A list of observation objects created from the WISKI CSV files in the directory.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no WISKI CSV files are found in the directory.
+
+    """
     # get files
     dirname, unzip_fnames = get_files(
         dirname,

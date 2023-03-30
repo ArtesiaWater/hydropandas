@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Created on Thu Oct 10 11:01:22 2019.
-
-@author: oebbe
-"""
-
 import logging
 import os
 
@@ -12,13 +6,63 @@ from pandas import DataFrame, Series
 from scipy.io import loadmat
 
 from ..observation import GroundwaterObs, WaterlvlObs
-from ..util import matlab2datetime
 
 logger = logging.getLogger(__name__)
 
 
+def matlab2datetime(tindex):
+    """
+    Transform a MATLAB serial date number to a Python datetime object, rounded to seconds.
+
+    Parameters
+    ----------
+    tindex : float
+        The MATLAB serial date number to convert.
+
+    Returns
+    -------
+    datetime : datetime.datetime
+        The equivalent datetime object in Python.
+
+    Notes
+    -----
+    MATLAB serial date numbers represent the number of days elapsed since January 1, 0000 (the
+    proleptic Gregorian calendar), with January 1, 0000 as day 1. Fractions of a day can be
+    represented as a decimal.
+
+    The returned datetime object is rounded to the nearest second.
+
+    Examples
+    --------
+    >>> matlab2datetime(719529.496527778)
+    datetime.datetime(2019, 1, 1, 11, 55, 2)
+
+    """
+    day = Timestamp.fromordinal(int(tindex))
+    dayfrac = Timedelta(days=float(tindex) % 1) - Timedelta(days=366)
+    return day + dayfrac
+
+
 def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
-    """This method is used to read the file."""
+    """
+    Read data from a Menyanthes file and create observation objects.
+
+    Parameters
+    ----------
+    fname : str
+        Name of the Menyanthes file to read.
+    ObsClass : GroundwaterObs or WaterlvlObs
+        Class of observation object to create.
+    load_oseries : bool, optional
+        Flag indicating whether to load observation series or not, by default True.
+    load_stresses : bool, optional
+        Flag indicating whether to load stresses or not, by default True.
+
+    Returns
+    -------
+    obs_list : list
+        List of observation objects created from the Menyanthes file.
+    """
 
     logger.info(f"reading menyanthes file {fname}")
 
@@ -117,7 +161,34 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
 
 
 def read_oseries(mat):
-    """Read the oseries from a mat file from menyanthes."""
+    """Read the oseries from a mat file from menyanthes.
+
+    Parameters
+    ----------
+    mat : dict
+        A dictionary object containing the Menyanthes file data.
+
+    Returns
+    -------
+    dict
+        A dictionary containing oseries data, with oseries names as keys and their corresponding metadata and values as values.
+
+    Notes
+    -----
+    This function reads the oseries data from a Menyanthes file in .mat format and returns it in a dictionary format. The oseries data contains the following metadata:
+        - name: The name of the oseries.
+        - x: The x-coordinate of the oseries location.
+        - y: The y-coordinate of the oseries location.
+        - source: The data source.
+        - unit: The unit of measurement.
+
+    In addition to the metadata, the oseries data also contains a pandas Series object named 'values', which contains the time series data for the oseries.
+
+    Examples
+    --------
+    >>> mat = loadmat('menyanthes_file.mat')
+    >>> d_h = read_oseries(mat)
+    """
     d_h = {}
 
     # Check if more then one time series model is present
@@ -158,11 +229,19 @@ def read_oseries(mat):
 
 
 def read_stresses(mat):
-    d_in = {}
+    """Reads the stresses from a mat file from menyanthes.
 
-    # Check if more then one time series is present
-    # if not isinstance(mat["IN"], np.ndarray):
-    #     mat["IN"] = [mat["IN"]]
+    Parameters
+    ----------
+    mat : dict
+        A dictionary object containing the mat file.
+
+    Returns
+    -------
+    dict
+        A dictionary object containing the stresses data.
+    """
+    d_in = {}
 
     # Read all the time series
     for i, IN in enumerate(mat["IN"]):

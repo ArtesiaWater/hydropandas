@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
-    """
+    """get a list of observation from a groundwater monitoring network.
 
     Parameters
     ----------
@@ -60,8 +60,7 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     gmn = tree.find(".//xmlns:GMN_PO", ns)
     gmws = gmn.findall("xmlns:measuringPoint", ns)
 
-    logger.info(
-        f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
+    logger.info(f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
 
     obs_list = []
     for gmw in tqdm(gmws):
@@ -131,8 +130,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
 
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
-            raise ValueError(
-                "if bro_id is GMW a filternumber should be specified")
+            raise ValueError("if bro_id is GMW a filternumber should be specified")
 
         meta = get_metadata_from_gmw(bro_id, tube_nr)
         gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
@@ -210,7 +208,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
                 )
                 return None
             else:
-                return [gldref['broId'] for gldref in tube["gldReferences"]]
+                return [gldref["broId"] for gldref in tube["gldReferences"]]
 
 
 def measurements_from_gld(
@@ -283,8 +281,7 @@ def measurements_from_gld(
     gld = glds[0]
 
     meta = {"source": "BRO"}
-    meta["monitoring_well"] = gld.find(
-        "ns11:monitoringPoint//gldcommon:broId", ns).text
+    meta["monitoring_well"] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
     meta["tube_nr"] = int(
         gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
     )
@@ -302,8 +299,7 @@ def measurements_from_gld(
         np.nan if value.text is None else float(value.text)
         for value in gld.findall(f"{msts}//waterml:value", ns)
     ]
-    qualifiers = [q.text for q in gld.findall(
-        f"{msts}//swe:Category//swe:value", ns)]
+    qualifiers = [q.text for q in gld.findall(f"{msts}//swe:Category//swe:value", ns)]
 
     # to dataframe
     df = pd.DataFrame(
@@ -605,7 +601,7 @@ def get_obs_list_from_extent(
         [gmw.text for gmw in tree.findall(".//dsgmw:GMW_C//brocom:broId", ns)]
     )
 
-    if len(gmws_ids) > 1000:
+    if len(gmws_ids) > 1000 and not ignore_max_obs:
         ans = input(
             f"You requested to download {len(gmws_ids)} observations, this can"
             "take a while. Are you sure you want to continue [Y/n]? "

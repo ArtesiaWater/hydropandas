@@ -1,4 +1,4 @@
-"""Module with a number of observation classes.
+"""Module with observation classes.
 
 The Obs class is a subclass of a pandas DataFrame with
 additional attributes and methods. The specific classes (GroundwaterObs,
@@ -32,19 +32,14 @@ class Obs(pd.DataFrame):
     Unless specified explicitly the first numeric column in the observation is
     used for analysis and plotting.
 
-    An Obs object is a subclass of a pandas.DataFrame and allows for additional
-    attributes and methods. More information about subclassing pandas
-    DataFrames pandas can be found here:
-    http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
-
     Parameters
     ----------
+    name : str
+        name
     x : int or float
         x coordinate of observation point
     y : int or float
         y coordinate of observation point
-    name : str
-        name
     meta : dictionary
         metadata
     filename : str
@@ -608,17 +603,32 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_wiski(cls, fname, **kwargs):
-        """read wiski file
+        """
+        Read data from a WISKI file.
 
-        Parameters
-        ----------
-        fname : [type]
-            [description]
-
-        Returns
-        -------
-        [type]
-            [description]
+        Parameters:
+        -----------
+        fname : str
+            The name of the file to be read.
+        sep : str, optional (default=";")
+            The delimiter used to separate fields in the file.
+        header_sep : str, optional (default=None)
+            The delimiter used to separate fields in the header. If None, the function will try to automatically
+            detect the separator.
+        header_identifier : str, optional (default="#")
+            The character used to identify header lines.
+        read_series : bool, optional (default=True)
+            Whether to read the time series data from the file.
+        infer_datetime_format : bool, optional (default=True)
+            Whether to infer the datetime format of the timestamp column.
+        translate_dic : dict, optional (default=None)
+            A dictionary mapping header field names to the desired output names.
+        tz_localize : bool, optional (default=True)
+            Whether to localize the datetime index to the machine's timezone.
+        unit : str, optional (default="")
+            The unit of measurement of the data.
+        **kwargs : keyword arguments
+            Additional arguments to pass to the pandas `read_csv` function.
         """
         from .io import wiski
 
