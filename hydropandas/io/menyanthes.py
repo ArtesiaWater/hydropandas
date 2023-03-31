@@ -110,8 +110,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
     if not (os.path.isfile(fname)):
         print("Could not find file ", fname)
 
-    mat = loadmat(fname, struct_as_record=False, squeeze_me=True,
-                  chars_as_strings=True)
+    mat = loadmat(fname, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
 
     obs_list = []
     if load_oseries:

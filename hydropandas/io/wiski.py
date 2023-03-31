@@ -9,8 +9,7 @@ from ..util import get_files
 logger = logging.getLogger(__name__)
 
 
-def _read_wiski_header(f, header_sep=":", header_identifier="#",
-                       end_header_str=None):
+def _read_wiski_header(f, header_sep=":", header_identifier="#", end_header_str=None):
     line = f.readline()
     header = dict()
     while header_identifier in line:
@@ -92,8 +91,7 @@ def read_wiski_file(
     with open(fname, "r") as f:
         if header_sep is None:
             line, header = _read_wiski_header(
-                f, end_header_str=end_header_str,
-                header_identifier=header_identifier
+                f, end_header_str=end_header_str, header_identifier=header_identifier
             )
         else:
             line, header = _read_wiski_header(
@@ -228,8 +226,7 @@ def read_wiski_dir(
     # gather all obs in list
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
-        logger.info("reading {0}/{1} -> {2}".format(i +
-                    1, len(unzip_fnames), csv))
+        logger.info("reading {0}/{1} -> {2}".format(i + 1, len(unzip_fnames), csv))
         obs = ObsClass.from_wiski(os.path.join(dirname, csv), **kwargs)
 
         if obs.metadata_available:

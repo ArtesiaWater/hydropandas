@@ -560,6 +560,12 @@ def get_obs_list_from_extent(
         DESCRIPTION.
 
     """
+
+    if only_metadata and not keep_all_obs:
+        logger.error(
+            "you will get an empty ObsCollection with only_metadata is True and keep_all_obs is False"
+        )
+
     url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
 
     data = {}
