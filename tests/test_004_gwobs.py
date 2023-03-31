@@ -90,12 +90,7 @@ def test_get_modellayers_mf6_structured():
 
 
 def test_get_regis_layer():
-    # TODO: E   OSError: [Errno -68] NetCDF: I/O failure:
-    # 'http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc'
+    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw.gwobs.get_regis_layers()
 
-    try:
-        dino_gw = ttf.test_obscollection_dinozip_gw()
-        dino_gw.gwobs.get_regis_layers()
-    except OSError:
-        pass
     return
