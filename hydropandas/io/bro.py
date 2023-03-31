@@ -60,7 +60,8 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     gmn = tree.find(".//xmlns:GMN_PO", ns)
     gmws = gmn.findall("xmlns:measuringPoint", ns)
 
-    logger.info(f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
+    logger.info(
+        f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
 
     obs_list = []
     for gmw in tqdm(gmws):
@@ -130,7 +131,8 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
 
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
-            raise ValueError("if bro_id is GMW a filternumber should be specified")
+            raise ValueError(
+                "if bro_id is GMW a filternumber should be specified")
 
         meta = get_metadata_from_gmw(bro_id, tube_nr)
         gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
@@ -281,7 +283,8 @@ def measurements_from_gld(
     gld = glds[0]
 
     meta = {"source": "BRO"}
-    meta["monitoring_well"] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
+    meta["monitoring_well"] = gld.find(
+        "ns11:monitoringPoint//gldcommon:broId", ns).text
     meta["tube_nr"] = int(
         gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
     )
@@ -299,7 +302,8 @@ def measurements_from_gld(
         np.nan if value.text is None else float(value.text)
         for value in gld.findall(f"{msts}//waterml:value", ns)
     ]
-    qualifiers = [q.text for q in gld.findall(f"{msts}//swe:Category//swe:value", ns)]
+    qualifiers = [q.text for q in gld.findall(
+        f"{msts}//swe:Category//swe:value", ns)]
 
     # to dataframe
     df = pd.DataFrame(
@@ -563,7 +567,8 @@ def get_obs_list_from_extent(
 
     if only_metadata and not keep_all_obs:
         logger.error(
-            "you will get an empty ObsCollection with only_metadata is True and keep_all_obs is False"
+            "you will get an empty ObsCollection with only_metadata is True and"
+            "keep_all_obs is False"
         )
 
     url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
