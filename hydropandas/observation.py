@@ -314,7 +314,8 @@ class Obs(pd.DataFrame):
 
         # check if time series are the same
         if self.equals(right):
-            logger.info("new and existing observation have the same time series")
+            logger.info(
+                "new and existing observation have the same time series")
             return self
 
         logger.info("new observation has a different time series")
@@ -613,8 +614,8 @@ class GroundwaterObs(Obs):
         sep : str, optional (default=";")
             The delimiter used to separate fields in the file.
         header_sep : str, optional (default=None)
-            The delimiter used to separate fields in the header. If None, the function will try to automatically
-            detect the separator.
+            The delimiter used to separate fields in the header. If None, the
+            function will try to automatically detect the separator.
         header_identifier : str, optional (default="#")
             The character used to identify header lines.
         read_series : bool, optional (default=True)
@@ -685,7 +686,8 @@ class GroundwaterQualityObs(Obs):
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(
+            fname, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -1794,7 +1796,8 @@ class PrecipitationObs(MeteoObs):
         if not fname.endswith(".txt"):
             fname += ".txt"
 
-        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
+        knmi_df, meta = knmi.read_knmi_timeseries_file(
+            fname, "RD", startdate, enddate)
 
         return cls(
             knmi_df,
