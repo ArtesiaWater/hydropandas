@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
-    """
+    """get a list of observation from a groundwater monitoring network.
 
     Parameters
     ----------
@@ -60,7 +60,8 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     gmn = tree.find(".//xmlns:GMN_PO", ns)
     gmws = gmn.findall("xmlns:measuringPoint", ns)
 
-    logger.info(f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
+    logger.info(
+        f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
 
     obs_list = []
     for gmw in tqdm(gmws):
@@ -130,26 +131,37 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
 
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
-            raise ValueError("if bro_id is GMW a filternumber should be specified")
+            raise ValueError(
+                "if bro_id is GMW a filternumber should be specified")
 
         meta = get_metadata_from_gmw(bro_id, tube_nr)
-        gld_id = get_gld_id_from_gmw(bro_id, tube_nr)
+        gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
 
-        if gld_id is None:
+        if gld_ids is None:
             meta["name"] = f"{bro_id}_{tube_nr}"
             only_metadata = True  # cannot get time series without gld id
         else:
-            meta["name"] = gld_id
+            meta["name"] = f"{bro_id}_{tube_nr}"
+            meta["gld_ids"] = gld_ids
 
         if only_metadata:
             empty_df = pd.DataFrame()
             return empty_df, meta
 
-        return measurements_from_gld(gld_id, **kwargs)
+        for i, gld_id in enumerate(gld_ids):
+            if i == 0:
+                df, meta_new = measurements_from_gld(gld_id, **kwargs)
+                meta.update(meta_new)
+            else:
+                df_new, meta_new = measurements_from_gld(gld_id, **kwargs)
+                df = pd.concat([df, df_new], axis=1)
+                meta.update(meta_new)
+
+        return df, meta
 
 
-def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
-    """get bro_id of a grondwterstandendossier (gld) from a bro_id of a
+def get_gld_ids_from_gmw(bro_id, tube_nr):
+    """get bro_ids of multiple grondwaterstandendossier (gld) from a bro_id of a
     grondwatermonitoringsput (gmw).
 
     Parameters
@@ -158,8 +170,6 @@ def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
         starts with 'GLD' or 'GMW' e.g. 'GMW000000036287'.
     tube_nr : int
         tube number.
-    quality_regime : str
-        either choose 'IMBRO/A' or 'IMBRO'.
 
     Raises
     ------
@@ -170,8 +180,8 @@ def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
 
     Returns
     -------
-    str
-        bro_id of a grondwaterstandonderzoek (gld).
+    list of str or None
+        bro_ids of a grondwaterstandonderzoek (gld).
 
     """
     if not bro_id.startswith("GMW"):
@@ -193,37 +203,14 @@ def get_gld_id_from_gmw(bro_id, tube_nr, quality_regime="IMBRO/A"):
 
     for tube in d["monitoringTubeReferences"]:
         if tube["tubeNumber"] == tube_nr:
-            if len(tube["gldReferences"]) == 1:
-                return tube["gldReferences"][0]["broId"]
-            elif len(tube["gldReferences"]) == 0:
+            if len(tube["gldReferences"]) == 0:
                 logger.info(
                     f"no groundwater level dossier for {bro_id} and tube number"
                     f"{tube_nr}"
                 )
                 return None
-            elif len(tube["gldReferences"]) == 2:
-                logger.info(
-                    f"two gld references found for GMW {bro_id} and tube nr"
-                    f"{tube_nr}, using {quality_regime} quality regime"
-                )
-                for gldref in tube["gldReferences"]:
-                    url2 = gldref["url"]
-                    req2 = requests.get(url2)
-                    ns = {
-                        "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
-                        "brocom": "http://www.broservices.nl/xsd/brocommon/3.0",
-                    }
-                    tree = xml.etree.ElementTree.fromstring(req2.text)
-                    gld = tree.findall(".//ns11:GLD_O", ns)[0]
-                    qualityRegime = gld.find("brocom:qualityRegime", ns).text
-                    if qualityRegime == quality_regime:
-                        return gldref["broId"]
-                logger.info(
-                    f"no gld reference with quality regime {quality_regime} was found"
-                )
-                return None
             else:
-                raise RuntimeError("unexpected number of gld references")
+                return [gldref["broId"] for gldref in tube["gldReferences"]]
 
 
 def measurements_from_gld(
@@ -295,11 +282,13 @@ def measurements_from_gld(
         raise (Exception("Only one gld supported"))
     gld = glds[0]
 
-    meta = {"name": bro_id, "source": "BRO"}
-    meta["monitoring_well"] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
+    meta = {"source": "BRO"}
+    meta["monitoring_well"] = gld.find(
+        "ns11:monitoringPoint//gldcommon:broId", ns).text
     meta["tube_nr"] = int(
         gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
     )
+    meta["name"] = f"{meta['monitoring_well']}_{meta['tube_nr']}"
     gmn = gld.find("ns11:groundwaterMonitoringNet//gldcommon:broId", ns)
     if gmn is None:
         meta["monitoringsnet"] = None
@@ -313,7 +302,8 @@ def measurements_from_gld(
         np.nan if value.text is None else float(value.text)
         for value in gld.findall(f"{msts}//waterml:value", ns)
     ]
-    qualifiers = [q.text for q in gld.findall(f"{msts}//swe:Category//swe:value", ns)]
+    qualifiers = [q.text for q in gld.findall(
+        f"{msts}//swe:Category//swe:value", ns)]
 
     # to dataframe
     df = pd.DataFrame(
@@ -574,6 +564,13 @@ def get_obs_list_from_extent(
         DESCRIPTION.
 
     """
+
+    if only_metadata and not keep_all_obs:
+        logger.error(
+            "you will get an empty ObsCollection with only_metadata is True and"
+            "keep_all_obs is False"
+        )
+
     url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
 
     data = {}
@@ -615,7 +612,7 @@ def get_obs_list_from_extent(
         [gmw.text for gmw in tree.findall(".//dsgmw:GMW_C//brocom:broId", ns)]
     )
 
-    if len(gmws_ids) > 1000:
+    if len(gmws_ids) > 1000 and not ignore_max_obs:
         ans = input(
             f"You requested to download {len(gmws_ids)} observations, this can"
             "take a while. Are you sure you want to continue [Y/n]? "

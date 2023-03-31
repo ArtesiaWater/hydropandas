@@ -184,8 +184,7 @@ def iterparse_pi_xml(
                     loc = h_attr.text
                     if loc not in locationIds:
                         element.clear()
-                        logger.info(
-                            f" ... skipping '{loc}', not in locationIds")
+                        logger.info(f" ... skipping '{loc}', not in locationIds")
                         continue
 
                 if filterdict is not None:
@@ -508,8 +507,7 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             source="FEWS",
         )
     else:
-        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header,
-                     name=name, source="FEWS")
+        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header, name=name, source="FEWS")
 
     return o, header
 
@@ -581,8 +579,7 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
                         tag=htag, date=hdate, time=htime
                     )
                 elif htag.endswith("timeStep"):
-                    hline = '<{tag} unit="{unit}"/>\n'.format(
-                        tag=htag, unit=hval)
+                    hline = '<{tag} unit="{unit}"/>\n'.format(tag=htag, unit=hval)
                 else:
                     hline = paramline.format(tag=htag, param=hval)
                 hlines.append(3 * "\t" + hline)

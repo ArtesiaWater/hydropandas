@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 
 from colorama import Back, Fore, Style
 from numpy import unique
-from pandas import DataFrame, DatetimeIndex, Timedelta, Timestamp
+from pandas import DataFrame, DatetimeIndex
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -85,43 +85,6 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
         zipf.extractall(dst)
         zipf.close()
     return 1
-
-
-def unzip_changed_files(zipname, pathname, check_time=True, check_size=False):
-    # Extract each file in a zip-file only when the properties are different
-    # With the default arguments this method only checks the modification time
-    with zipfile.ZipFile(zipname) as zf:
-        infolist = zf.infolist()
-        for info in infolist:
-            fname = os.path.join(pathname, info.filename)
-            extract = False
-            if os.path.exists(fname):
-                if check_time:
-                    tz = time.mktime(info.date_time + (0, 0, -1))
-                    tf = os.path.getmtime(fname)
-                    if tz != tf:
-                        extract = True
-                if check_size:
-                    sz = info.file_size
-                    sf = os.path.getsize(fname)
-                    if sz != sf:
-                        extract = True
-            else:
-                extract = True
-            if extract:
-                logging.info("extracting {}".format(info.filename))
-                zf.extract(info.filename, pathname)
-                # set the correct modification time
-                # (which is the time of extraction by default)
-                tz = time.mktime(info.date_time + (0, 0, -1))
-                os.utime(os.path.join(pathname, info.filename), (tz, tz))
-
-
-def matlab2datetime(tindex):
-    """Transform a matlab time to a datetime, rounded to seconds."""
-    day = Timestamp.fromordinal(int(tindex))
-    dayfrac = Timedelta(days=float(tindex) % 1) - Timedelta(days=366)
-    return day + dayfrac
 
 
 def get_files(
