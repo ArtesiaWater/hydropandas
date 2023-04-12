@@ -726,8 +726,7 @@ class ObsCollection(pd.DataFrame):
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(
-                f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """check if an observation collection is consistent. An observation
@@ -763,8 +762,7 @@ class ObsCollection(pd.DataFrame):
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(
-                f"missing observation object in collection -> {self.name} ")
+            logger.warning(f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
@@ -853,8 +851,7 @@ class ObsCollection(pd.DataFrame):
                 raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError(
-                "Observation should be of type hydropandas.observation.Obs")
+            raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
         # add new observation to collection
         if o.name not in self.index:
@@ -1043,8 +1040,7 @@ class ObsCollection(pd.DataFrame):
                 obs_list = [ObsClass() for i in range(len(df))]
             df["obs"] = obs_list
         else:
-            raise TypeError(
-                f"df should be type pandas.DataFrame not {type(df)}")
+            raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
 
         return cls(df)
 
@@ -1320,8 +1316,7 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError(
-                "either specify variables file_or_dir or xmlstring")
+            raise ValueError("either specify variables file_or_dir or xmlstring")
 
     @classmethod
     def from_imod(
@@ -1536,8 +1531,7 @@ class ObsCollection(pd.DataFrame):
 
         elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClasses, (obs.PrecipitationObs,
-                             obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
@@ -1998,8 +1992,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otype._metadata) - \
-            set(["x", "y", "name", "source", "meta"])
+        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
@@ -2012,8 +2005,7 @@ class ObsCollection(pd.DataFrame):
                 y=xy[i][1],
                 name=col,
                 source=f"interpolation {self.name}",
-                meta={"interpolation_kernel": kernel,
-                      "interpolation_epsilon": epsilon},
+                meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
                 **kwargs,
             )
             obs_list.append(o)
