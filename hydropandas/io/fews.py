@@ -31,7 +31,6 @@ def read_xml_fname(
     keep_flags: Tuple[int] = (0, 1),
     return_df: bool = False,
     tags: Tuple[str] = ("series", "header", "event"),
-    skip_errors: bool = True,
     remove_nan: bool = False,
 ):
     """Read an xml filename into a list of observations objects.
@@ -89,7 +88,6 @@ def read_xml_fname(
             keep_flags=keep_flags,
             return_df=return_df,
             tags=tags,
-            skip_errors=skip_errors,
         )
     else:
         tree = etree.parse(fname)
