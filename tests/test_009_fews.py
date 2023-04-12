@@ -1,8 +1,8 @@
 import os
+from pathlib import Path
 
 import hydropandas as hpd
 from hydropandas.io import fews
-from pathlib import Path
 
 fews_testdata = Path(__file__).parent / "data/2019-FEWS-test"
 

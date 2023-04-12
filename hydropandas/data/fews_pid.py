@@ -1,13 +1,14 @@
+from typing import Dict
+
 from hydropandas.observation import (
-    Obs,
-    MeteoObs,
-    PrecipitationObs,
     EvaporationObs,
-    WaterlvlObs,
     GroundwaterObs,
     GroundwaterQualityObs,
+    MeteoObs,
+    Obs,
+    PrecipitationObs,
+    WaterlvlObs,
 )
-from typing import Dict
 
 
 def get_fews_pid(name: str) -> Dict[str, Obs]:

@@ -3,16 +3,17 @@ import logging
 import os
 import xml.etree.ElementTree as etree
 from io import StringIO
-from typing import Union, Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
 from ..observation import (
-    Obs,
     EvaporationObs,
     GroundwaterObs,
     MeteoObs,
+    Obs,
     PrecipitationObs,
     WaterlvlObs,
 )
