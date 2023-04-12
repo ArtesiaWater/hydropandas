@@ -731,12 +731,6 @@ def read_dino_dir(
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
-    unpackdir : str
-        destination directory of the unzipped file
-    force_unpack : boolean, optional
-        force unpack if dst already exists
-    preserve_datetime : boolean, optional
-        use date of the zipfile for the destination file
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without data or
         metadata
