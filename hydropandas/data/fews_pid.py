@@ -43,8 +43,8 @@ wsvv_pid = {
     "P.radar.d9": PrecipitationObs,  # Radarneerslag [mm] - dag (9-9 uur)
     "P.radar.h": PrecipitationObs,  # Radarneerslag [mm] - uur
     "Dsnow.f.harmonie": PrecipitationObs,  # Sneeuwhoogte verwachting [m] (harmonie)
-    "Pgrau.f.harmonie": PrecipitationObs,  # Neerslag (hagel) verwachting [mm] (harmonie)
-    "Psnow.f.harmonie": PrecipitationObs,  # Neerslag (sneeuw) verwachting [mm] (harmonie)
+    "Pgrau.f.harmonie": PrecipitationObs,  # Neerslag (hagel) verwachting [mm] harmonie
+    "Psnow.f.harmonie": PrecipitationObs,  # Neerslag (sneeuw) verwachting [mm] harmonie
     "Eact.d": EvaporationObs,  # Actuele Verdamping [mm] - dag
     "Edef.d": EvaporationObs,  # Verdampingstekort [mm] - dag
     "Eref.d": EvaporationObs,  # Referentiegewasverdamping [mm] - dag
@@ -62,9 +62,9 @@ wsvv_pid = {
     "WS.f.control": MeteoObs,  # Windsnelheid verwachting [m/s] (controle)
     "WS.f.determ": MeteoObs,  # Windsnelheid verwachting [m/s] (deterministisch)
     "WS.f.ensem": MeteoObs,  # Windsnelheid verwachting [m/s] (ensemble)
-    "WSU10.f.harmonie": MeteoObs,  # Windsnelheid verwachting u-component [m/s] (harmonie)
+    "WSU10.f.harmonie": MeteoObs,  # Windsnelheid verwachting u-component [m/s] harmonie
     "WSU10.f.hirlam": MeteoObs,  # Windsnelheid verwachting u-component [m/s] (hirlam)
-    "WSV10.f.harmonie": MeteoObs,  # Windsnelheid verwachting v-component [m/s] (harmonie)
+    "WSV10.f.harmonie": MeteoObs,  # Windsnelheid verwachting v-component [m/s] harmonie
     "WSV10.f.hirlam": MeteoObs,  # Windsnelheid verwachting v-component [m/s] (hirlam)
     "H.B": WaterlvlObs,  # Waterhoogte berekend [mNAP]
     "H.B.d": WaterlvlObs,  # Waterhoogte berekend [mNAP] - dag
@@ -119,7 +119,7 @@ wsvv_pid = {
     "Qafval.G.h": WaterlvlObs,  # Debiet afvalwater [m3/h] - uur
     "T.ow.G": GroundwaterQualityObs,  # Temperatuur oppervlaktewater [C]
     "O2.gehalte": GroundwaterQualityObs,  # Zuurstof gehalte [mg/l]
-    "O2.saturatie": GroundwaterQualityObs,  #  Zuurstof saturatie [%]
+    "O2.saturatie": GroundwaterQualityObs,  # Zuurstof saturatie [%]
     "PA.G": MeteoObs,  # Luchtdruk gemeten [hPa]
     "PA.G.bar": MeteoObs,  # Luchtdruk gemeten [bar]
     "PA.f.harmonie": MeteoObs,  # Luchtdruk verwachting [hPa] (harmonie)
@@ -139,7 +139,7 @@ wsvv_pid = {
     "SS.G.d": WaterlvlObs,  # Stroomsnelheid gemeten [m/s] - dag
     "SS.G.h": WaterlvlObs,  # Stroomsnelheid gemeten [m/s] - uur
     "GW.G": GroundwaterObs,  # Grondwaterstand [mNAP]
-    "GW.G.hm": WaterlvlObs,  #  Grondwaterstand - handmeting [mNAP]
+    "GW.G.hm": WaterlvlObs,  # Grondwaterstand - handmeting [mNAP]
     "SH": GroundwaterObs,  # Stijghoogte [mNAP]
     "T.gw.G": GroundwaterQualityObs,  # Temperatuur grondwater [C]
 }
