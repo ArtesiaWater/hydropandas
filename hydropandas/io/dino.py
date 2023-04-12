@@ -493,7 +493,7 @@ def read_artdino_dir(
     dirname,
     ObsClass=None,
     subdir="csv",
-    suffix=".csv",
+    suffix="1.csv",
     unpackdir=None,
     force_unpack=False,
     preserve_datetime=False,
