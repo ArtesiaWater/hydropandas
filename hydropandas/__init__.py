@@ -1,6 +1,7 @@
 # flake8: noqa
 import logging
 
+from .data.fews_pid import get_fews_pid
 from .extensions import geo as _geo
 from .extensions import gwobs as _gwobs
 from .extensions import plots as _plots
