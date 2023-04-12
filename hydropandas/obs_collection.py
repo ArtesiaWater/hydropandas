@@ -87,10 +87,7 @@ def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
     subdir="Grondwaterstanden_Put",
-    suffix="1.csv",
-    unpackdir=None,
-    force_unpack=False,
-    preserve_datetime=False,
+    suffix=".csv",
     keep_all_obs=True,
     name=None,
     **kwargs,
@@ -109,12 +106,6 @@ def read_dino(
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
-    unpackdir : str
-        destination directory of the unzipped file
-    force_unpack : boolean, optional
-        force unpack if dst already exists
-    preserve_datetime : boolean, optional
-        use date of the zipfile for the destination file
     keep_all_obs : boolean, optional
         add all observation points to the collection, even the points
         without measurements or metadata
@@ -135,9 +126,6 @@ def read_dino(
         ObsClass=ObsClass,
         subdir=subdir,
         suffix=suffix,
-        unpackdir=unpackdir,
-        force_unpack=force_unpack,
-        preserve_datetime=preserve_datetime,
         keep_all_obs=keep_all_obs,
         name=name,
         **kwargs,
@@ -1050,10 +1038,7 @@ class ObsCollection(pd.DataFrame):
         dirname=None,
         ObsClass=obs.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
-        suffix="1.csv",
-        unpackdir=None,
-        force_unpack=False,
-        preserve_datetime=False,
+        suffix=".csv",
         keep_all_obs=True,
         name=None,
         **kwargs,
@@ -1080,12 +1065,6 @@ class ObsCollection(pd.DataFrame):
             subdirectory of dirname with data files
         suffix : str
             suffix of files in subdir that will be read
-        unpackdir : str
-            destination directory of the unzipped file
-        force_unpack : boolean, optional
-            force unpack if dst already exists
-        preserve_datetime : boolean, optional
-            use date of the zipfile for the destination file
         keep_all_obs : boolean, optional
             add all observation points to the collection, even the points
             without measurements or metadata
@@ -1109,9 +1088,6 @@ class ObsCollection(pd.DataFrame):
             "dirname": dirname,
             "type": ObsClass,
             "suffix": suffix,
-            "unpackdir": unpackdir,
-            "force_unpack": force_unpack,
-            "preserve_datetime": preserve_datetime,
             "keep_all_obs": keep_all_obs,
         }
 
@@ -1120,9 +1096,6 @@ class ObsCollection(pd.DataFrame):
             ObsClass,
             subdir,
             suffix,
-            unpackdir,
-            force_unpack,
-            preserve_datetime,
             keep_all_obs,
             **kwargs,
         )
