@@ -33,6 +33,7 @@ def read_xml_fname(
     return_df: bool = False,
     tags: Tuple[str] = ("series", "header", "event"),
     remove_nan: bool = False,
+    **kwargs: dict,  # unused
 ):
     """Read an xml filename into a list of observations objects.
 
