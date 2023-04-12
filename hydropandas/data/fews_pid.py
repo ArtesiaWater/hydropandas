@@ -3,7 +3,7 @@ from typing import Dict
 from hydropandas.observation import (
     EvaporationObs,
     GroundwaterObs,
-    GroundwaterQualityObs,
+    WaterQualityObs,
     MeteoObs,
     Obs,
     PrecipitationObs,
@@ -118,9 +118,9 @@ wsvv_pid = {
     # "Qafval.G": WaterlvlObs,  # Debiet afvalwater [m3/h]
     # "Qafval.G.d": WaterlvlObs,  # Debiet afvalwater [m3/h] - dag
     # "Qafval.G.h": WaterlvlObs,  # Debiet afvalwater [m3/h] - uur
-    "T.ow.G": GroundwaterQualityObs,  # Temperatuur oppervlaktewater [C]
-    "O2.gehalte": GroundwaterQualityObs,  # Zuurstof gehalte [mg/l]
-    "O2.saturatie": GroundwaterQualityObs,  # Zuurstof saturatie [%]
+    "T.ow.G": WaterQualityObs,  # Temperatuur oppervlaktewater [C]
+    "O2.gehalte": WaterQualityObs,  # Zuurstof gehalte [mg/l]
+    "O2.saturatie": WaterQualityObs,  # Zuurstof saturatie [%]
     "PA.G": MeteoObs,  # Luchtdruk gemeten [hPa]
     "PA.G.bar": MeteoObs,  # Luchtdruk gemeten [bar]
     "PA.f.harmonie": MeteoObs,  # Luchtdruk verwachting [hPa] (harmonie)
@@ -142,7 +142,7 @@ wsvv_pid = {
     "GW.G": GroundwaterObs,  # Grondwaterstand [mNAP]
     "GW.G.hm": WaterlvlObs,  # Grondwaterstand - handmeting [mNAP]
     "SH": GroundwaterObs,  # Stijghoogte [mNAP]
-    "T.gw.G": GroundwaterQualityObs,  # Temperatuur grondwater [C]
+    "T.gw.G": WaterQualityObs,  # Temperatuur grondwater [C]
 }
 
 

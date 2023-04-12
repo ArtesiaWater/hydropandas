@@ -21,7 +21,7 @@ from .obs_collection import (
 from .observation import (
     EvaporationObs,
     GroundwaterObs,
-    GroundwaterQualityObs,
+    WaterQualityObs,
     MeteoObs,
     ModelObs,
     Obs,

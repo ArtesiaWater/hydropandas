@@ -81,7 +81,7 @@ The Obs class holds the measurements and metadata for one timeseries. There are
 currently 5 specific Obs classes for different types of measurements:
 
 -   GroundwaterObs: for groundwater measurements
--   GroundwaterQualityObs: for groundwater quality measurements
+-   WaterQualityObs: for groundwater quality measurements
 -   WaterlvlObs: for surface water level measurements
 -   ModelObs: for "observations" from a MODFLOW model
 -   MeteoObs: for meteorological observations

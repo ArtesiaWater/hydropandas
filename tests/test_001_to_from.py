@@ -45,7 +45,7 @@ dinozip = "./tests/data/2019-Dino-test/dino.zip"
 def test_observation_gwq():
     # single observation
     fname = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
-    hpd.GroundwaterQualityObs.from_dino(fname)
+    hpd.WaterQualityObs.from_dino(fname)
     return
 
 
@@ -120,7 +120,7 @@ def test_obscollection_dinozip_gwq():
     # groundwater quality
     hpd.read_dino(
         dirname=dinozip,
-        ObsClass=hpd.GroundwaterQualityObs,
+        ObsClass=hpd.WaterQualityObs,
         subdir="Grondwatersamenstellingen_Put",
         suffix=".txt",
     )
