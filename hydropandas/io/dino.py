@@ -754,7 +754,7 @@ def read_dino_dir(
         elif keep_all_obs:
             return obs
         else:
-            logging.info(f"not added to collection -> {file}")
+            logging.info(f"not added to collection -> {f}")
             return None
 
     if path.suffix == ".zip":
