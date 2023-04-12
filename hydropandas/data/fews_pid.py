@@ -96,28 +96,28 @@ wsvv_pid = {
     # "Hpbe.2b": "Peilevaluatie peil tweede bovengrens [mNAP]",
     # "Hpbe.2o": "Peilevaluatie peil tweede ondergrens [mNAP]",
     # "Hu.G": "Uitwateringspeil [mNAP]",
-    "Hwk": WaterlvlObs,
-    "Hwk.H1": WaterlvlObs,
-    "Hwk.H2": WaterlvlObs,
-    "Hwk.PA.G.Barodiver": WaterlvlObs,
-    "Hwk.PW.G": WaterlvlObs,
-    "Hwk.V.PB": WaterlvlObs,
-    "Hwk.V.SP": WaterlvlObs,
-    "Q.B": WaterlvlObs,
-    "Q.B.d": WaterlvlObs,
-    "Q.B.h": WaterlvlObs,
-    "Q.G": WaterlvlObs,
-    "Q.G.d": WaterlvlObs,
-    "Q.G.h": WaterlvlObs,  # Debiet [m3/s] - uur
-    "Q.f": WaterlvlObs,  # Debiet verwachting [m3/s]
-    "Q.f.determ": WaterlvlObs,  # Debiet verwachting [m3/s] (ecmwf-deterministisch)
-    "Q.f.ecmwf": WaterlvlObs,  # Debiet verwachting [m3/s] (ecmwf-ensemble)
-    "Q.f.fr": WaterlvlObs,  # Debiet verwachting [m3/s] (fews rivieren)
-    "Q.f.rws": WaterlvlObs,  # Debiet verwachting [m3/s] (rws)
-    "Q.f.totaal": WaterlvlObs,  # Debiet verwachting [m3/s] (totaal)
-    "Qafval.G": WaterlvlObs,  # Debiet afvalwater [m3/h]
-    "Qafval.G.d": WaterlvlObs,  # Debiet afvalwater [m3/h] - dag
-    "Qafval.G.h": WaterlvlObs,  # Debiet afvalwater [m3/h] - uur
+    "Hwk": WaterlvlObs,  # Hoogte waterkolom [m]
+    "Hwk.H1": WaterlvlObs,  # Overstortende straal H1 [m]
+    "Hwk.H2": WaterlvlObs,  # Hoogteverschil na stuw H2 [m]
+    "Hwk.PA.G.Barodiver": WaterlvlObs,  # Hoogteverschil na stuw H2 [m]
+    "Hwk.PW.G": WaterlvlObs,  # Gemeten waterdruk [m]
+    "Hwk.V.PB": WaterlvlObs,  # Waterstandsafwijking PB [m]
+    "Hwk.V.SP": WaterlvlObs,  # Waterstandsafwijking SP [m]
+    # "Q.B": WaterlvlObs,  # Debiet FEWS [m3/s]
+    # "Q.B.d": WaterlvlObs,  # Debiet FEWS [m3/s] - dag
+    # "Q.B.h": WaterlvlObs,  # Debiet FEWS [m3/s] - uur
+    # "Q.G": WaterlvlObs,  # Debiet [m3/s]
+    # "Q.G.d": WaterlvlObs, # Debiet [m3/s] - dag
+    # "Q.G.h": WaterlvlObs,  # Debiet [m3/s] - uur
+    # "Q.f": WaterlvlObs,  # Debiet verwachting [m3/s]
+    # "Q.f.determ": WaterlvlObs,  # Debiet verwachting [m3/s] (ecmwf-deterministisch)
+    # "Q.f.ecmwf": WaterlvlObs,  # Debiet verwachting [m3/s] (ecmwf-ensemble)
+    # "Q.f.fr": WaterlvlObs,  # Debiet verwachting [m3/s] (fews rivieren)
+    # "Q.f.rws": WaterlvlObs,  # Debiet verwachting [m3/s] (rws)
+    # "Q.f.totaal": WaterlvlObs,  # Debiet verwachting [m3/s] (totaal)
+    # "Qafval.G": WaterlvlObs,  # Debiet afvalwater [m3/h]
+    # "Qafval.G.d": WaterlvlObs,  # Debiet afvalwater [m3/h] - dag
+    # "Qafval.G.h": WaterlvlObs,  # Debiet afvalwater [m3/h] - uur
     "T.ow.G": GroundwaterQualityObs,  # Temperatuur oppervlaktewater [C]
     "O2.gehalte": GroundwaterQualityObs,  # Zuurstof gehalte [mg/l]
     "O2.saturatie": GroundwaterQualityObs,  # Zuurstof saturatie [%]
