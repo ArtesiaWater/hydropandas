@@ -625,7 +625,7 @@ def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0, version: str = "1.
 
 
 def read_xml_filelist(
-    fnames: list[str],
+    fnames: List[str],
     ObsClass: Union[Obs, Dict[str, Obs]],
     directory: Optional[str] = None,
     locations: Optional[List[str]] = None,
