@@ -1,11 +1,11 @@
 # flake8: noqa
 import logging
 
-from .data.fews_pid import get_fews_pid
 from .extensions import geo as _geo
 from .extensions import gwobs as _gwobs
 from .extensions import plots as _plots
 from .extensions import stats as _stats
+from .io.fews import get_fews_pid
 from .obs_collection import (
     ObsCollection,
     read_bro,
@@ -21,12 +21,12 @@ from .obs_collection import (
 from .observation import (
     EvaporationObs,
     GroundwaterObs,
-    WaterQualityObs,
     MeteoObs,
     ModelObs,
     Obs,
     PrecipitationObs,
     WaterlvlObs,
+    WaterQualityObs,
 )
 from .version import __version__
 
