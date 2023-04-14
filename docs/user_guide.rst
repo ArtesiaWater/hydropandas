@@ -15,7 +15,7 @@ are currently 5 specific Obs classes for different types of measurements:
 - WaterQualityObs: for (ground)water quality measurements
 - WaterlvlObs: for surface water level measurements
 - ModelObs: for hydropandas from a MODFLOW model
-- KnmiObs: for (daily) KNMI hydropandas
+- MeteoObs: for hydropandas from KNMI or other meteorological services
 
 Each of these Obs classes is essentially a pandas DataFrame with additional
 methods and attributes related to the type of measurement that it holds. The
