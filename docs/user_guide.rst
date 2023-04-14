@@ -31,7 +31,7 @@ in a different row. Each row contains metadata (e.g. latitude and longitude
 of the observation point) and the Obs object (DataFrame) that holds the
 measurements. It is recommended to let an ObsCollection contain only one Obs
 type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate
-ObsCollection for 5 KnmiObs.
+ObsCollection for 5 WaterlvlObs.
 
 Like the Obs class, the ObsCollection class contains a bunch of methods for
 reading data from different sources.
