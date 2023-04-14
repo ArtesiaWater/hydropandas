@@ -709,7 +709,7 @@ def read_dino_dir(
     path: Union[str, Path],
     ObsClass,
     subdir: str = "Grondwaterstanden_Put",
-    suffix: str = ".csv",
+    suffix: str = "1.csv",
     keep_all_obs: bool = True,
     **kwargs: dict,
 ):
@@ -761,6 +761,8 @@ def read_dino_dir(
         with ZipFile(path) as zfile:
             fnames = [x for x in zfile.namelist() if f"{subdir}/" in x]
             if suffix:
+                if "0" in suffix:
+                    raise Exception(f"Cant read dino files with _{suffix}")
                 fnames = [x for x in fnames if suffix in x]
             if len(fnames) == 0:
                 raise FileNotFoundError(
@@ -774,7 +776,9 @@ def read_dino_dir(
     elif path.is_dir():
         subpath = path / subdir
         if suffix:
-            if "*" not in suffix:
+            if "0" in suffix:
+                raise Exception(f"Cant read dino files with _{suffix}")
+            elif "*" not in suffix:
                 suffix = f"*{suffix}"
             files = list(subpath.glob(suffix))
         else:
