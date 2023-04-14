@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
-from ..data.fews_pid import pid
 from ..observation import (
     EvaporationObs,
     GroundwaterObs,
@@ -517,7 +516,7 @@ def _obs_from_meta(
             unit=unit,
             meta=header,
             name=name,
-            meteo_var=pid,
+            meteo_var=parid,
             source="FEWS",
         )
     else:
@@ -711,7 +710,7 @@ def get_fews_pid(name: str) -> Dict[str, Obs]:
     Dict[str, Obs]
         Dictonary with ParameterId and the resulting Observation Class
     """
-    from ..data.fews_pid import pid
+    from ..data.fews_parameterid import pid
 
     pid_sel = pid[name.lower()]
     module = import_module("hydropandas.observation")
