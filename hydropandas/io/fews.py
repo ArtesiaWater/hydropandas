@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import xml.etree.ElementTree as etree
+from importlib import import_module
 from io import StringIO
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -9,6 +10,7 @@ import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
+from ..data.fews_pid import pid
 from ..observation import (
     EvaporationObs,
     GroundwaterObs,
@@ -465,14 +467,14 @@ def _obs_from_meta(
         metadata_available = True
 
     if "parameterId" in header:
-        pid = header["parameterId"]
-        name = header["monitoring_well"] + "_" + pid
+        parid = header["parameterId"]
+        name = header["monitoring_well"] + "_" + parid
     else:
         name = header["monitoring_well"]
 
     if isinstance(ObsClass, dict):
-        if pid in ObsClass.keys():
-            ObsC = ObsClass[pid]
+        if parid in ObsClass.keys():
+            ObsC = ObsClass[parid]
         else:
             ObsC = Obs
     else:
@@ -694,3 +696,24 @@ def read_xml_filelist(
         )
 
     return obs_list
+
+
+def get_fews_pid(name: str) -> Dict[str, Obs]:
+    """Get matching ParameterId's and HydroPandas Observation Classes
+
+    Parameters
+    ----------
+    name : str
+        Waterboard name
+
+    Returns
+    -------
+    Dict[str, Obs]
+        Dictonary with ParameterId and the resulting Observation Class
+    """
+    from ..data.fews_pid import pid
+
+    pid_sel = pid[name.lower()]
+    module = import_module("hydropandas.observation")
+
+    return {key: getattr(module, value) for (key, value) in pid_sel.items()}
