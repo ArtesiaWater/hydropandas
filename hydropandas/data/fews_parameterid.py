@@ -1,4 +1,4 @@
-#flake8: noqa
+# flake8: noqa
 wsvv_pid = {
     "P.G.d9": "PrecipitationObs",  # Gemeten neerslag [mm] - dag (9-9 uur)
     "P.G.h": "PrecipitationObs",  # Gemeten neerslag [mm] - uur
