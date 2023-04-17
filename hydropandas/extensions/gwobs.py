@@ -58,7 +58,8 @@ def get_model_layer_z(z, zvec, left=-999, right=999):
     if z in zvec:
         z += 1e-10
     lay = int(
-        np.interp(z, zvec[::-1], np.arange(len(zvec))[::-1], left=left, right=right)
+        np.interp(z, zvec[::-1], np.arange(len(zvec))
+                  [::-1], left=left, right=right)
     )
 
     return lay
@@ -139,6 +140,10 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
     nan
 
     """
+    if isinstance(zvec, np.ndarray):
+        if np.isnan(zvec).all():
+            logger.warning("vertical datum invalid returning nan")
+            return np.nan
 
     zvec = np.sort(zvec)[::-1]
     ftop_invalid = check_if_var_is_invalid(ftop)
@@ -156,7 +161,8 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
         return lay_fbot
 
     if ftop < fbot:
-        logger.warning("- tube screen top below tube screen bot, switch top and bot")
+        logger.warning(
+            "- tube screen top below tube screen bot, switch top and bot")
         fbot, ftop = ftop, fbot
 
     lay_ftop = get_model_layer_z(ftop, zvec, left=left, right=right)
@@ -252,7 +258,8 @@ def get_zvec(x, y, gwf=None, ds=None):
                 r, c = res["cellids"][0]
                 zvec = np.array(
                     [gwf.modelgrid.top[r, c]]
-                    + [gwf.modelgrid.botm[i, r, c] for i in range(gwf.modelgrid.nlay)]
+                    + [gwf.modelgrid.botm[i, r, c]
+                        for i in range(gwf.modelgrid.nlay)]
                 )
             else:
                 print("Point is not within model extent! Returning NaN.")
@@ -290,7 +297,8 @@ def get_zvec(x, y, gwf=None, ds=None):
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
             first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
-            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["botm"].data])
+            zvec = np.concatenate(
+                [sel["top"].data[[first_notna]], sel["botm"].data])
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)
@@ -604,7 +612,8 @@ class GeoAccessorObs:
             .sel(x=self._obj.x, y=self._obj.y, method="nearest")
             .dropna(dim="layer")
         )
-        ztop = regis_ds["top"].sel(x=self._obj.x, y=self._obj.y, method="nearest").max()
+        ztop = regis_ds["top"].sel(
+            x=self._obj.x, y=self._obj.y, method="nearest").max()
         zvec = np.concatenate([[ztop.values], z.values])
 
         # get index of regis model layer

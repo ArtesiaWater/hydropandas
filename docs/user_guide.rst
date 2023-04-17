@@ -16,6 +16,8 @@ are currently 5 specific Obs classes for different types of measurements:
 - WaterlvlObs: for surface water level measurements
 - ModelObs: for hydropandas from a MODFLOW model
 - MeteoObs: for hydropandas from KNMI or other meteorological services
+- PrecipitationObs: for precipitation observations, subclass of MeteoObs
+- EvaporationObs: for evaporation observations, subclass of MeteoObs
 
 Each of these Obs classes is essentially a pandas DataFrame with additional
 methods and attributes related to the type of measurement that it holds. The

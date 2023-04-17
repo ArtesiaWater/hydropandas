@@ -12,16 +12,19 @@ Supported data sources
 
 Currently supported datasources that can be read:
 
+- `BRO <https://www.broloket.nl>`_
 - `FEWS PI-XML <https://publicwiki.deltares.nl/display/FEWSDOC/The+Delft-Fews+Published+Interface>`_
 - `DINOLoket CSV <www.dinoloket.nl>`_
-- WISKI CSV
+- WISKI csv files
 - `Pastastore <https://github.com/pastas/pastastore>`_, for managing Pastas timeseries and models
 - `KNMI data <https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script>`_
 - MODFLOW groundwater models
 - IMOD groundwater models
+- `Waterinfo <https://waterinfo.rws.nl>`_
 
 ObsCollection can be exported to:
 
+- Excel (with one tab for each time series and a single tab with all metadata)
 - Shapefile
 - Pastastore
 
@@ -32,9 +35,10 @@ See the table of contents to get started with `hydropandas`.
    :caption: Contents:
 
    Getting started <getting_started>
-   Example usage <examples>
+   Examples <examples>
    User guide <user_guide>
-   hydropandas API-docs <source/modules>
+   Hydropandas API-docs <source/modules>
+   Contribute <contribute>
 
 
 Indices and tables
