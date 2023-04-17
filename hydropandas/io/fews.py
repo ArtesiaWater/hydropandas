@@ -2,7 +2,6 @@ import datetime
 import logging
 import os
 import xml.etree.ElementTree as etree
-from importlib import import_module
 from io import StringIO
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -10,14 +9,9 @@ import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
-from ..observation import (
-    EvaporationObs,
-    GroundwaterObs,
-    MeteoObs,
-    Obs,
-    PrecipitationObs,
-    WaterlvlObs,
-)
+from .. import observation
+from ..observation import Obs
+
 
 logger = logging.getLogger(__name__)
 
@@ -479,7 +473,7 @@ def _obs_from_meta(
     else:
         ObsC = ObsClass
 
-    if ObsC in (WaterlvlObs,):
+    if ObsC in (observation.WaterlvlObs,):
         o = ObsC(
             ts,
             x=x,
@@ -491,7 +485,7 @@ def _obs_from_meta(
             metadata_available=metadata_available,
             source="FEWS",
         )
-    elif ObsC in (GroundwaterObs,):
+    elif ObsC in (observation.GroundwaterObs,):
         if "z" in header.keys():
             z = float(header["z"])
         else:
@@ -508,7 +502,11 @@ def _obs_from_meta(
             metadata_available=metadata_available,
             source="FEWS",
         )
-    elif ObsC in (MeteoObs, PrecipitationObs, EvaporationObs):
+    elif ObsC in (
+        observation.MeteoObs,
+        observation.PrecipitationObs,
+        observation.EvaporationObs,
+    ):
         o = ObsC(
             ts,
             x=x,
@@ -713,6 +711,5 @@ def get_fews_pid(name: str) -> Dict[str, Obs]:
     from ..data.fews_parameterid import pid
 
     pid_sel = pid[name.lower()]
-    module = import_module("hydropandas.observation")
 
-    return {key: getattr(module, value) for (key, value) in pid_sel.items()}
+    return {key: getattr(observation, value) for (key, value) in pid_sel.items()}
