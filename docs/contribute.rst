@@ -30,7 +30,7 @@ Proposals for changes to the Hydropandas code base can be submitted via a pull
 request. You can find a pull request (or PR) tutorial in the 
 `GitHub's Help Docs. <https://help.github.com/articles/using-pull-requests/>`_.
 
-There are roughly steps for contributing to HydroPandas:
+There are roughly 6 steps for contributing to HydroPandas:
 
 1. Fork the HydroPandas git repository
 2. Create a development environment
@@ -41,6 +41,7 @@ There are roughly steps for contributing to HydroPandas:
 
 For pull request we use the following guidelines (similar to the 
 `geopandas guidelines <https://geopandas.org/en/stable/community/contributing.html>`_):
+
 - All existing tests should pass. Please make sure that the test suite passes,
 both locally and on GitHub Actions. Status on Github Actions will be visible on
 a pull request. To trigger a check, make a PR to your own fork.
