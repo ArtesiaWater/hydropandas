@@ -2,11 +2,13 @@ import logging
 import os
 import re
 import tempfile
+from io import FileIO, TextIOWrapper
+from pathlib import Path
+from typing import Union
+from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-
-from ..util import unzip_file
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +171,7 @@ def _read_dino_groundwater_measurements(f, line):
     return line, measurements
 
 
-def read_dino_groundwater_quality_txt(fname):
+def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
     """Read dino groundwater quality (grondwatersamenstelling) from a dinoloket
     txt file.
 
@@ -179,7 +181,7 @@ def read_dino_groundwater_quality_txt(fname):
 
     Parameters
     ----------
-    fname : str
+    filepath_or_buffer : str
         path to txt file
 
     Returns
@@ -188,41 +190,50 @@ def read_dino_groundwater_quality_txt(fname):
     meta : dict
         dictionary with metadata
     """
-    logger.info("reading -> {}".format(os.path.split(fname)[-1]))
-    with open(fname, "r") as f:
-        # LOCATIE gegevens
-        line = f.readline().rstrip("\n")
-        assert line == "LOCATIE gegevens"
 
-        strt_locatie = f.tell()
-        # determine the number of rows
-        nrows = -1  # the header does not count
+    fname = ""
+    if isinstance(f, (str, Path)):
+        if isinstance(f, str):
+            f = Path(f)
+        fname = f.stem
+        f = f.open("r")
+
+    logger.info("reading -> {}".format(fname))
+
+    # LOCATIE gegevens
+    line = f.readline().rstrip("\n")
+    assert line == "LOCATIE gegevens"
+
+    strt_locatie = f.tell()
+    # determine the number of rows
+    nrows = -1  # the header does not count
+    line = f.readline()
+    while line not in ["\n", ""]:
+        nrows += 1
         line = f.readline()
-        while line not in ["\n", ""]:
-            nrows += 1
-            line = f.readline()
-        eind_locatie = f.tell()
-        # go back to where we were before
-        f.seek(strt_locatie)
-        # read the location-information
-        locatie = pd.read_csv(f, sep="\t", nrows=nrows)
-        # there is always only one location (change if this is not the case)
-        assert nrows == 1
+    eind_locatie = f.tell()
+    # go back to where we were before
+    f.seek(strt_locatie)
+    # read the location-information
+    locatie = pd.read_csv(f, sep="\t", nrows=nrows)
+    # there is always only one location (change if this is not the case)
+    assert nrows == 1
 
-        locatie = locatie.squeeze()
+    locatie = locatie.squeeze()
 
-        # KWALITEIT gegevens VLOEIBAAR
-        f.seek(eind_locatie)
-        line = f.readline().rstrip("\n")
-        assert line == "KWALITEIT gegevens VLOEIBAAR"
+    # KWALITEIT gegevens VLOEIBAAR
+    f.seek(eind_locatie)
+    line = f.readline().rstrip("\n")
+    assert line == "KWALITEIT gegevens VLOEIBAAR"
 
-        measurements = pd.read_csv(
-            f,
-            sep="\t",
-            parse_dates=["Monster datum", "Analyse datum"],
-            dayfirst=True,
-            index_col="Monster datum",
-        )
+    measurements = pd.read_csv(
+        f,
+        sep="\t",
+        parse_dates=["Monster datum", "Analyse datum"],
+        dayfirst=True,
+        index_col="Monster datum",
+    )
+    f.close()
 
     meta = {
         "filename": fname,
@@ -241,13 +252,17 @@ def read_dino_groundwater_quality_txt(fname):
 
 
 def read_dino_groundwater_csv(
-    fname, to_mnap=True, read_series=True, remove_duplicates=False, keep_dup="last"
+    f: Union[str, Path, FileIO],
+    to_mnap: bool = True,
+    read_series: bool = True,
+    remove_duplicates: bool = False,
+    keep_dup: str = "last",
 ):
     """Read dino groundwater quantity data from a dinoloket csv file.
 
     Parameters
     ----------
-    fname : str
+    f : Union[str, Path, FileIO]
         path to csv file
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
@@ -265,58 +280,65 @@ def read_dino_groundwater_csv(
     meta : dict
         dictionary with metadata
     """
-    logger.info(f"reading -> {os.path.split(fname)[-1]}")
 
-    with open(fname, "r") as f:
-        # read header
-        line, header = _read_dino_groundwater_header(f)
-        line = _read_empty(f, line)
-        if not header:
-            logger.warning(f"could not read header -> {fname}")
+    fname = ""
+    if isinstance(f, (str, Path)):
+        if isinstance(f, str):
+            f = Path(f)
+        fname = f.stem
+        f = f.open("r")
 
-        # read reference level
-        line, ref = _read_dino_groundwater_referencelvl(f, line)
-        line = _read_empty(f, line)
-        if not ref:
-            logger.warning(f"could not read reference level -> {fname}")
+    logger.info("reading -> {}".format(fname))
 
-        # read metadata
-        line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
-        line = _read_empty(f, line)
-        if not meta["metadata_available"]:
-            logger.warning(f"could not read metadata -> {fname}")
-        meta["filename"] = fname
-        meta["source"] = "dino"
+    # read header
+    line, header = _read_dino_groundwater_header(f)
+    line = _read_empty(f, line)
+    if not header:
+        logger.warning(f"could not read header -> {fname}")
 
-        # read measurements
-        if read_series:
-            line, measurements = _read_dino_groundwater_measurements(f, line)
+    # read reference level
+    line, ref = _read_dino_groundwater_referencelvl(f, line)
+    line = _read_empty(f, line)
+    if not ref:
+        logger.warning(f"could not read reference level -> {fname}")
+
+    # read metadata
+    line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
+    line = _read_empty(f, line)
+    if not meta["metadata_available"]:
+        logger.warning(f"could not read metadata -> {fname}")
+    meta["filename"] = fname
+    meta["source"] = "dino"
+
+    # read measurements
+    if read_series:
+        line, measurements = _read_dino_groundwater_measurements(f, line)
+        if measurements is None:
+            logger.warning(f"could not read measurements -> {fname}")
+        elif measurements[~measurements.stand_cm_tov_nap.isna()].empty:
+            logger.warning(f"no NAP measurements available -> {fname}")
+        if to_mnap and measurements is not None:
+            measurements.insert(
+                0, "stand_m_tov_nap", measurements["stand_cm_tov_nap"] / 100.0
+            )
+            meta["unit"] = "m NAP"
+        elif not to_mnap:
+            meta["unit"] = "cm NAP"
+        if remove_duplicates:
+            measurements = measurements[~measurements.index.duplicated(keep=keep_dup)]
+
+        # add time variant metadata to measurements
+        for s in meta_ts.values():
             if measurements is None:
-                logger.warning(f"could not read measurements -> {fname}")
-            elif measurements[~measurements.stand_cm_tov_nap.isna()].empty:
-                logger.warning(f"no NAP measurements available -> {fname}")
-            if to_mnap and measurements is not None:
-                measurements.insert(
-                    0, "stand_m_tov_nap", measurements["stand_cm_tov_nap"] / 100.0
-                )
-                meta["unit"] = "m NAP"
-            elif not to_mnap:
-                meta["unit"] = "cm NAP"
-            if remove_duplicates:
-                measurements = measurements[
-                    ~measurements.index.duplicated(keep=keep_dup)
-                ]
+                measurements = pd.DataFrame(data=s.copy(), columns=[s.name])
+            else:
+                measurements = measurements.join(s, how="outer")
+            measurements.loc[:, s.name] = measurements.loc[:, s.name].ffill()
 
-            # add time variant metadata to measurements
-            for s in meta_ts.values():
-                if measurements is None:
-                    measurements = pd.DataFrame(data=s.copy(), columns=[s.name])
-                else:
-                    measurements = measurements.join(s, how="outer")
-                measurements.loc[:, s.name] = measurements.loc[:, s.name].ffill()
+    else:
+        measurements = None
 
-        else:
-            measurements = None
+    f.close()
 
     return measurements, meta
 
@@ -471,7 +493,7 @@ def read_artdino_dir(
     dirname,
     ObsClass=None,
     subdir="csv",
-    suffix=".csv",
+    suffix="1.csv",
     unpackdir=None,
     force_unpack=False,
     preserve_datetime=False,
@@ -484,7 +506,6 @@ def read_artdino_dir(
     - Evt. nog verbeteren door meteen Dataframe te vullen op het moment dat een
     observatie wordt ingelezen. Nu wordt eerst alles ingelezen in een lijst en
     daar een dataframe van gemaakt.
-    - aparte unzip functie maken en toch de juiste tijdelijke directory krijgen.
 
     Parameters
     ----------
@@ -506,13 +527,15 @@ def read_artdino_dir(
         add all observation points to the collection, even without data or
         metadata
     **kwargs: dict, optional
-        Extra arguments are passed to ObsClass.from_dino_file()
+        Extra arguments are passed to ObsClass.from_artdino_file()
 
     Returns
     -------
     obs_df : pd.DataFrame
         collection of multiple point observations
     """
+
+    from ..util import unzip_file
 
     # unzip dir
     if dirname.endswith(".zip"):
@@ -625,7 +648,9 @@ def _read_dino_waterlvl_measurements(f, line):
     return measurements
 
 
-def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
+def read_dino_waterlvl_csv(
+    f: Union[str, Path, FileIO], to_mnap: bool = True, read_series: bool = True
+):
     """Read dino waterlevel data from a dinoloket csv file.
 
     Parameters
@@ -636,51 +661,57 @@ def read_dino_waterlvl_csv(fname, to_mnap=True, read_series=True):
     read_series : boolean, optional
         if False only metadata is read, default is True
     """
-    logging.info(f"reading -> {os.path.split(fname)[-1]}")
+
+    fname = ""
+    if isinstance(f, (str, Path)):
+        if isinstance(f, str):
+            f = Path(f)
+        fname = f.stem
+        f = f.open("r")
+
+    logger.info("reading -> {}".format(fname))
 
     p_meta = re.compile(
         "Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum"
     )
     p_data = re.compile(r"Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid")
 
-    with open(fname, "r") as f:
+    line = f.readline()
+    while line != "":
         line = f.readline()
-        while line != "":
-            line = f.readline()
-            if p_meta.match(line):
-                meta = _read_dino_waterlvl_metadata(f, line)
-                if meta:
-                    meta["metadata_available"] = True
-                else:
-                    meta["metadata_available"] = False
-                meta["filename"] = fname
-                meta["source"] = "dino"
-            elif p_data.match(line):
-                if read_series:
-                    measurements = _read_dino_waterlvl_measurements(f, line)
-                    if to_mnap and measurements is not None:
-                        measurements["stand_m_tov_nap"] = (
-                            measurements["stand_cm_tov_nap"] / 100.0
-                        )
-                        meta["unit"] = "m NAP"
-                    elif not to_mnap:
-                        meta["unit"] = "cm NAP"
-                else:
-                    measurements = None
+        if p_meta.match(line):
+            meta = _read_dino_waterlvl_metadata(f, line)
+            if meta:
+                meta["metadata_available"] = True
+            else:
+                meta["metadata_available"] = False
+            meta["filename"] = fname
+            meta["source"] = "dino"
+        elif p_data.match(line):
+            if read_series:
+                measurements = _read_dino_waterlvl_measurements(f, line)
+                if to_mnap and measurements is not None:
+                    measurements["stand_m_tov_nap"] = (
+                        measurements["stand_cm_tov_nap"] / 100.0
+                    )
+                    meta["unit"] = "m NAP"
+                elif not to_mnap:
+                    meta["unit"] = "cm NAP"
+            else:
+                measurements = None
 
-                return measurements, meta
+    f.close()
+
+    return measurements, meta
 
 
 def read_dino_dir(
-    dirname,
-    ObsClass=None,
-    subdir="Boormonsterprofiel_Geologisch booronderzoek",
-    suffix=".txt",
-    unpackdir=None,
-    force_unpack=False,
-    preserve_datetime=False,
-    keep_all_obs=True,
-    **kwargs,
+    path: Union[str, Path],
+    ObsClass,
+    subdir: str = "Grondwaterstanden_Put",
+    suffix: str = "1.csv",
+    keep_all_obs: bool = True,
+    **kwargs: dict,
 ):
     """Read Dino directory with point observations.
 
@@ -692,7 +723,7 @@ def read_dino_dir(
 
     Parameters
     ----------
-    dirname : str
+    path : str | Path
         directory name, can be a .zip file or the parent directory of subdir
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
@@ -700,12 +731,6 @@ def read_dino_dir(
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
-    unpackdir : str
-        destination directory of the unzipped file
-    force_unpack : boolean, optional
-        force unpack if dst already exists
-    preserve_datetime : boolean, optional
-        use date of the zipfile for the destination file
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without data or
         metadata
@@ -718,39 +743,55 @@ def read_dino_dir(
         collection of multiple point observations
     """
 
-    # unzip dir
-    if dirname.endswith(".zip"):
-        zipf = dirname
-        if unpackdir is None:
-            dirname = tempfile.TemporaryDirectory().name
-        else:
-            dirname = unpackdir
-        unzip_file(
-            zipf, dirname, force=force_unpack, preserve_datetime=preserve_datetime
-        )
+    path = Path(path)
 
-    # read filenames
-    files = os.listdir(os.path.join(dirname, subdir))
-    if suffix:
-        files = [file for file in files if file.endswith(suffix)]
-
-    if not files:
-        raise FileNotFoundError(
-            "no files were found in {} that end with {}".format(
-                os.path.join(dirname, subdir), suffix
-            )
-        )
-
-    # read individual files
     obs_list = []
-    for _, file in enumerate(files):
-        fname = os.path.join(dirname, subdir, file)
-        obs = ObsClass.from_dino(fname=fname, **kwargs)
+
+    def get_dino_obs(f: Union[str, FileIO]):
+        obs = ObsClass.from_dino(fname=f, **kwargs)
         if obs.metadata_available and (not obs.empty):
-            obs_list.append(obs)
+            return obs
         elif keep_all_obs:
-            obs_list.append(obs)
+            return obs
         else:
-            logging.info(f"not added to collection -> {fname}")
+            logging.info(f"not added to collection -> {f}")
+            return None
+
+    if path.suffix == ".zip":
+        with ZipFile(path) as zfile:
+            fnames = [x for x in zfile.namelist() if f"{subdir}/" in x]
+            if suffix:
+                if "0" in suffix:
+                    raise Exception(f"Cant read dino files with _{suffix}")
+                fnames = [x for x in fnames if suffix in x]
+            if len(fnames) == 0:
+                raise FileNotFoundError(
+                    f"no files were found in {path}, {subdir=} with {suffix=}"
+                )
+            for fname in fnames:
+                with zfile.open(fname) as fo:
+                    obs = get_dino_obs(TextIOWrapper(fo))
+                    if obs is not None:
+                        obs_list.append(obs)
+    elif path.is_dir():
+        subpath = path / subdir
+        if suffix:
+            if "0" in suffix:
+                raise Exception(f"Cant read dino files with _{suffix}")
+            elif "*" not in suffix:
+                suffix = f"*{suffix}"
+            files = list(subpath.glob(suffix))
+        else:
+            files = list(subpath.iterdir())
+
+        if len(files) == 0:
+            raise FileNotFoundError(f"no files were found in {subpath} with {suffix=}")
+
+        for file in files:
+            obs = get_dino_obs(file)
+            if obs is not None:
+                obs_list.append(obs)
+    elif path.is_file():
+        raise ValueError("Path must either be a .zip or folder")
 
     return obs_list
