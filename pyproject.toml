@@ -16,14 +16,7 @@ maintainers = [
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
 requires-python = ">=3.7"
-dependencies = [
-    "scipy",
-    "pandas",
-    "matplotlib",
-    "tqdm",
-    "requests",
-    "colorama",
-]
+dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -123,8 +116,8 @@ legacy_tox_ini = """
     basepython = python3.9
     extras = formatting
     commands =
-            black .
-            isort .
+            black . --check --diff
+            isort . --check-only --diff
 
     [testenv:lint]
     description = run linters

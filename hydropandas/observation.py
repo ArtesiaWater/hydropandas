@@ -637,8 +637,8 @@ class GroundwaterObs(Obs):
         return cls(data, meta=metadata, **metadata)
 
 
-class GroundwaterQualityObs(Obs):
-    """class for groundwater quality (grondwatersamenstelling) point
+class WaterQualityObs(Obs):
+    """class for water quality ((grond)watersamenstelling) point
     observations.
 
     Subclass of the Obs class
@@ -655,7 +655,7 @@ class GroundwaterQualityObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in GroundwaterQualityObs._metadata) and (
+                    if (key in WaterQualityObs._metadata) and (
                         key not in kwargs.keys()
                     ):
                         kwargs[key] = getattr(args[0], key)
@@ -665,15 +665,15 @@ class GroundwaterQualityObs(Obs):
         self.ground_level = kwargs.pop("ground_level", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
-        super(GroundwaterQualityObs, self).__init__(*args, **kwargs)
+        super(WaterQualityObs, self).__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
-        return GroundwaterQualityObs
+        return WaterQualityObs
 
     @classmethod
     def from_dino(cls, fname, **kwargs):
-        """read ad dino file with groundwater quality data.
+        """read dino file with groundwater quality data.
 
         Parameters
         ----------

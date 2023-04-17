@@ -3,36 +3,31 @@ import logging
 import os
 import xml.etree.ElementTree as etree
 from io import StringIO
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from lxml.etree import iterparse
 
-from ..observation import (
-    EvaporationObs,
-    GroundwaterObs,
-    MeteoObs,
-    PrecipitationObs,
-    WaterlvlObs,
-)
+from .. import observation
+from ..observation import Obs
 
 logger = logging.getLogger(__name__)
 
 
 def read_xml_fname(
-    fname,
-    ObsClass,
-    translate_dic=None,
-    low_memory=True,
-    locationIds=None,
-    filterdict=None,
-    return_events=True,
-    keep_flags=(0, 1),
-    return_df=False,
-    tags=("series", "header", "event"),
-    skip_errors=True,
-    remove_nan=False,
-    **kwargs,
+    fname: str,
+    ObsClass: Union[Obs, Dict[str, Obs]],
+    translate_dic: Optional[Dict[str, str]] = None,
+    low_memory: bool = True,
+    locationIds: Optional[List[str]] = None,
+    filterdict: Optional[Dict[str, List[str]]] = None,
+    return_events: bool = True,
+    keep_flags: Tuple[int] = (0, 1),
+    return_df: bool = False,
+    tags: Tuple[str] = ("series", "header", "event"),
+    remove_nan: bool = False,
+    **kwargs: dict,  # unused
 ):
     """Read an xml filename into a list of observations objects.
 
@@ -40,7 +35,7 @@ def read_xml_fname(
     ----------
     fname : str
         full path to file
-    ObsClass : type
+    ObsClass: Union[Obs, Dict[str, Obs]]
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
@@ -89,7 +84,6 @@ def read_xml_fname(
             keep_flags=keep_flags,
             return_df=return_df,
             tags=tags,
-            skip_errors=skip_errors,
         )
     else:
         tree = etree.parse(fname)
@@ -106,16 +100,15 @@ def read_xml_fname(
 
 
 def iterparse_pi_xml(
-    fname,
-    ObsClass,
-    translate_dic=None,
-    filterdict=None,
-    locationIds=None,
-    return_events=True,
-    keep_flags=(0, 1),
-    return_df=False,
-    tags=("series", "header", "event"),
-    skip_errors=False,
+    fname: str,
+    ObsClass: Union[Obs, Dict[str, Obs]],
+    translate_dic: Optional[Dict[str, str]] = None,
+    filterdict: Optional[Dict[str, List[str]]] = None,
+    locationIds: Optional[List[str]] = None,
+    return_events: bool = True,
+    keep_flags: Tuple[int] = (0, 1),
+    return_df: bool = False,
+    tags: Tuple[str] = ("series", "header", "event"),
 ):
     """Read a FEWS XML-file with measurements, memory efficient.
 
@@ -123,7 +116,7 @@ def iterparse_pi_xml(
     ----------
     fname : str
         full path to file
-    ObsClass : type
+    ObsClass: Union[Obs, Dict[str, Obs]],
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
@@ -282,13 +275,13 @@ def iterparse_pi_xml(
 
 
 def read_xmlstring(
-    xmlstring,
-    ObsClass,
-    translate_dic=None,
-    filterdict=None,
-    locationIds=None,
-    low_memory=True,
-    remove_nan=False,
+    xmlstring: str,
+    ObsClass: Union[Obs, Dict[str, Obs]],
+    translate_dic: Optional[Dict[str, str]] = None,
+    filterdict: Optional[Dict[str, List[str]]] = None,
+    locationIds: Optional[List[str]] = None,
+    low_memory: bool = True,
+    remove_nan: bool = False,
 ):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
     obtained using a fews api.
@@ -297,7 +290,7 @@ def read_xmlstring(
     ----------
     xmlstring : str
         xml string to be parsed. Typically from a fews api.
-    ObsClass : type
+    ObsClass: Union[Obs, Dict[str, Obs]]
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
@@ -342,11 +335,11 @@ def read_xmlstring(
 
 
 def read_xml_root(
-    root,
-    ObsClass,
-    translate_dic=None,
-    locationIds=None,
-    remove_nan=False,
+    root: etree.Element,
+    ObsClass: Union[Obs, Dict[str, Obs]],
+    translate_dic: Dict[str, str] = None,
+    locationIds: List[str] = None,
+    remove_nan: bool = False,
 ):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
@@ -354,7 +347,7 @@ def read_xml_root(
     ----------
     root : xml.etree.ElementTree.Element
         root element of a fews xml
-    ObsClass : type
+    ObsClass: Union[Obs, Dict[str, Obs]],
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     translate_dic : dic or None, optional
         translate names from fews. If None this default dictionary is used:
@@ -417,7 +410,12 @@ def read_xml_root(
     return obs_list
 
 
-def _obs_from_meta(ts, header, translate_dic, ObsClass):
+def _obs_from_meta(
+    ts: pd.DataFrame,
+    header: Dict[str, str],
+    translate_dic: Dict[str, str],
+    ObsClass: Union[Obs, Dict[str, Obs]],
+):
     """Internal function to convert timeseries and header into Obs objects.
 
     Parameters
@@ -428,7 +426,7 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         metadata.
     translate_dic : dictionary
         translate dictionary.
-    ObsClass : type
+    ObsClass: Union[Obs, Dict[str, Obs]],
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
 
     Returns
@@ -461,13 +459,21 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
         metadata_available = True
 
     if "parameterId" in header:
-        pid = header["parameterId"]
-        name = header["monitoring_well"] + "_" + pid
+        parid = header["parameterId"]
+        name = header["monitoring_well"] + "_" + parid
     else:
         name = header["monitoring_well"]
 
-    if ObsClass in (WaterlvlObs,):
-        o = ObsClass(
+    if isinstance(ObsClass, dict):
+        if parid in ObsClass.keys():
+            ObsC = ObsClass[parid]
+        else:
+            ObsC = Obs
+    else:
+        ObsC = ObsClass
+
+    if ObsC in (observation.WaterlvlObs,):
+        o = ObsC(
             ts,
             x=x,
             y=y,
@@ -478,12 +484,12 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             metadata_available=metadata_available,
             source="FEWS",
         )
-    elif ObsClass in (GroundwaterObs,):
+    elif ObsC in (observation.GroundwaterObs,):
         if "z" in header.keys():
             z = float(header["z"])
         else:
             z = np.nan
-        o = ObsClass(
+        o = ObsC(
             ts,
             x=x,
             y=y,
@@ -495,24 +501,28 @@ def _obs_from_meta(ts, header, translate_dic, ObsClass):
             metadata_available=metadata_available,
             source="FEWS",
         )
-    elif ObsClass in (MeteoObs, PrecipitationObs, EvaporationObs):
-        o = ObsClass(
+    elif ObsC in (
+        observation.MeteoObs,
+        observation.PrecipitationObs,
+        observation.EvaporationObs,
+    ):
+        o = ObsC(
             ts,
             x=x,
             y=y,
             unit=unit,
             meta=header,
             name=name,
-            meteo_var=pid,
+            meteo_var=parid,
             source="FEWS",
         )
     else:
-        o = ObsClass(ts, x=x, y=y, unit=unit, meta=header, name=name, source="FEWS")
+        o = ObsC(ts, x=x, y=y, unit=unit, meta=header, name=name, source="FEWS")
 
     return o, header
 
 
-def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
+def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0, version: str = "1.24"):
     """Write TimeSeries object to PI-XML file.
 
     Parameters
@@ -612,15 +622,15 @@ def write_pi_xml(obs_coll, fname, timezone=1.0, version="1.24"):
 
 
 def read_xml_filelist(
-    fnames,
-    ObsClass,
-    directory=None,
-    locations=None,
-    translate_dic=None,
-    filterdict=None,
-    remove_nan=False,
-    low_memory=True,
-    **kwargs,
+    fnames: List[str],
+    ObsClass: Union[Obs, Dict[str, Obs]],
+    directory: Optional[str] = None,
+    locations: Optional[List[str]] = None,
+    translate_dic: Optional[Dict[str, str]] = None,
+    filterdict: Optional[Dict[str, List[str]]] = None,
+    remove_nan: bool = False,
+    low_memory: bool = True,
+    **kwargs: dict,
 ):
     """Read a list of xml files into a list of observation objects.
 
@@ -628,7 +638,7 @@ def read_xml_filelist(
     ----------
     fnames : TYPE
         DESCRIPTION.
-    ObsClass : type
+    ObsClass: Union[Obs, Dict[str, Obs]]
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     directory : TYPE, optional
         DESCRIPTION. The default is None.
@@ -677,7 +687,28 @@ def read_xml_filelist(
             filterdict=filterdict,
             low_memory=low_memory,
             locationIds=locations,
+            remove_nan=remove_nan,
             **kwargs,
         )
 
     return obs_list
+
+
+def get_fews_pid(name: str) -> Dict[str, Obs]:
+    """Get matching ParameterId's and HydroPandas Observation Classes
+
+    Parameters
+    ----------
+    name : str
+        Waterboard name
+
+    Returns
+    -------
+    Dict[str, Obs]
+        Dictonary with ParameterId and the resulting Observation Class
+    """
+    from ..data.fews_parameterid import pid
+
+    pid_sel = pid[name.lower()]
+
+    return {key: getattr(observation, value) for (key, value) in pid_sel.items()}
