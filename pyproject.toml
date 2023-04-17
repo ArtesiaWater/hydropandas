@@ -10,7 +10,7 @@ license = { file = "LICENSE" }
 readme = "readme.md"
 authors = [{ name = "Onno Ebbens", email = "o.ebbens@artesia-water.nl" }]
 maintainers = [
-    { name = "O. Ebbens", email = "o.ebbens@artesia-water.nl" },
+    { name = "O.N. Ebbens", email = "o.ebbens@artesia-water.nl" },
     { name = "R. Calje", email = "r.calje@artesia-water.nl" },
     { name = "D.A. Brakenhoff", email = "d.brakenhoff@artesia-water.nl" },
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
@@ -22,7 +22,6 @@ dependencies = [
     "matplotlib",
     "tqdm",
     "requests",
-    "zeep",
     "colorama",
 ]
 classifiers = [
