@@ -12,7 +12,6 @@ from lxml.etree import iterparse
 from .. import observation
 from ..observation import Obs
 
-
 logger = logging.getLogger(__name__)
 
 
