@@ -14,10 +14,16 @@
 [![Linter: flake8](https://img.shields.io/badge/linter-flake8-yellowgreen)](https://flake8.pycqa.org/)
 [![Linter: ruff](https://img.shields.io/badge/linter-ruff-red)](https://github.com/charliermarsh/ruff)
 
-# hydropandas
+# HydroPandas
 
-The HydroPandas package allows users to store observation data at multiple locations in a single object (ObsCollection).
+Python tools for hydrological measurement data.
+
+# Introduction
+
+The HydroPandas package allows users to store observation data at multiple locations in a single object: ObsCollection.
+An ObsCollection makes it easier to analyse, visualise and export the observation data. 
 An ObsCollection is a pandas DataFrame extended with custom methods and attributes related to hydrological timeseries.
+
 The HydroPandas package also provides convenient read functions for Dutch hydrological data from:
 -   [BRO](https://www.broloket.nl)
 -   [DINO](https://www.dinoloket.nl)
@@ -30,13 +36,13 @@ The HydroPandas package also provides convenient read functions for Dutch hydrol
 -   WISKI csv files
 
 
-## Installation
+## Install
 
 Install the module with pip:
 
 `pip install hydropandas`
 
-Hydropandas requires `numpy`, `scipy`, `matplotlib`, `pandas`, `requests` and `zeep`.
+HydroPandas requires `pandas`, `scipy`, `matplotlib`, `tqdm`, `requests` and `colorama`.
 
 For some functionality additional packages are required:
 
@@ -53,26 +59,25 @@ For installing all the optional packages use `pip install -e .[full]`
 If you have trouble installing HydroPandas, refer to the
 [Dependencies section](#dependencies) below.
 
-## Example usage
+## Get in touch
 
-Importing a single DINO csv file:
+- Questions on HydroPandas ("How can I?") can be asked and answered on [Github Discussions](https://github.com/ArtesiaWater/hydropandas/discussions).
+- Bugs, feature requests and other improvements can be posted as [Github Issues](https://github.com/ArtesiaWater/hydropandas/issues).
+- Find out how to contribute to HydroPandas at our [Contribution page](https://hydropandas.readthedocs.io/en/stable/contribute.html).
+
+## Examples
+
+Importing a groundwater time series from the BRO using the BRO-id and the tube number:
 
 ```python
 import hydropandas as hpd
-fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-gw = hpd.GroundwaterObs.from_dino(fname=fname)
+gw_bro = hpd.GroundwaterObs.from_bro("GMW000000041261", 1)
 ```
 
-Or for a zipfile:
+Or import all groundwater time series from the BRO within a certain extent:
 
 ```python
-import hydropandas as hpd
-dinozip = './tests/data/2019-Dino-test/dino.zip'
-dino_gw = hpd.read_dino(dirname=dinozip,
-			subdir='Grondwaterstanden_Put',
-                        suffix='1.csv',
-                        ObsClass=hpd.GroundwaterObs,
-                        keep_all_obs=False)
+oc = hpd.read_bro(extent=(117850, 118180, 439550, 439900))
 ```
 
 ## The Obs class
@@ -81,7 +86,7 @@ The Obs class holds the measurements and metadata for one timeseries. There are
 currently 5 specific Obs classes for different types of measurements:
 
 -   GroundwaterObs: for groundwater measurements
--   GroundwaterQualityObs: for groundwater quality measurements
+-   WaterQualityObs: for groundwater quality measurements
 -   WaterlvlObs: for surface water level measurements
 -   ModelObs: for "observations" from a MODFLOW model
 -   MeteoObs: for meteorological observations
@@ -90,7 +95,7 @@ currently 5 specific Obs classes for different types of measurements:
 
 Each of these Obs classes is essentially a pandas DataFrame with additional
 methods and attributes related to the type of measurement that it holds.
-The classes also contain specific methods to read data from specific sources.
+Each Obs object also contain specific methods to read data from specific sources.
 
 ## The ObsCollection class
 
@@ -106,41 +111,6 @@ ObsCollection for 5 PrecipitationObs.
 Like the Obs class, the ObsCollection class contains a bunch of methods for
 reading data from different sources. See the next section for supported data
 sources.
-
-## Dependencies
-
-Hydropandas (indirectly) uses some packages that cannot be installed
-automatically with `pip` on Windows. These packages are:
-
--   GDAL
--   Fiona
--   Shapely
-
-If you do not have these packages already it is recommended to first try
-installing them with `conda install <pkg>`. Otherwise, read the instructions
-below how to install them manually.
-
-Download the packages from [Christoph Gohlke's website](https://www.lfd.uci.edu/~gohlke/pythonlibs).
-Use CTRL+F to find the download link on the page. Be sure to download the
-correct version of the package. The Python version should match your Python
-version. Also the architecture should match (i.e. 64bits vs 32bits).
-For example:
-
--   GDAL-3.1.4-cp38-cp38-win_amd64.whl
-
-This is the GDAL version for Python 3.8 (as can be seen from the cp38 in the
-name), for 64-bits Python (as derived from the amd64 in the name).
-
-Once you have downloaded the correct files, navigate to the directory in which
-you saved your downloads. Now type the following commands (the order is
-important):
-
-1.  `pip install GDAL-3.1.4-cp38-cp38-win_amd64.whl`
-2.  `pip install Fiona-1.8.17-cp38-cp38-win_amd64.whl`
-3.  `pip install Shapely-1.7.1-cp38-cp38-win_amd64.whl`
-
-After you've done this you can install hydropandas using
-`pip install hydropandas`.
 
 ## Authors
 
