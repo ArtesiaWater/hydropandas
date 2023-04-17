@@ -35,7 +35,6 @@ def read_wiski_file(
     header_sep=None,
     header_identifier="#",
     read_series=True,
-    infer_datetime_format=True,
     translate_dic=None,
     tz_localize=True,
     unit="",
@@ -57,8 +56,6 @@ def read_wiski_file(
         The character used to identify header lines.
     read_series : bool, optional (default=True)
         Whether to read the time series data from the file.
-    infer_datetime_format : bool, optional (default=True)
-        Whether to infer the datetime format of the timestamp column.
     translate_dic : dict, optional (default=None)
         A dictionary mapping header field names to the desired output names.
     tz_localize : bool, optional (default=True)
@@ -124,7 +121,6 @@ def read_wiski_file(
                 sep=sep,
                 header=None,
                 names=columns,
-                infer_datetime_format=infer_datetime_format,
                 **kwargs,
             )
 
