@@ -54,10 +54,7 @@ For some functionality additional packages are required:
 
 For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
-For installing all the optional packages use `pip install -e .[full]`
-
-If you have trouble installing HydroPandas, refer to the
-[Dependencies section](#dependencies) below.
+For installing all the optional packages use `pip install -e .[full]`.
 
 ## Get in touch
 
