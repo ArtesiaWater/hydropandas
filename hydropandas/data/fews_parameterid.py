@@ -242,4 +242,44 @@ hhnk_pid = {
     # "AfwijkingRVW_dag_droog": "Percentage RVW >50% over 24 uur droog [%]",
 }
 
-pid = {"wsvv": wsvv_pid, "hhnk": hhnk_pid}
+wli_pid = {
+    "WATDTE": "GroundwaterObs",  # Waterdiepte [m]
+    "DRUK": "GroundwaterObs",  # Drukhoogte [m]
+    "STIJGHTE": "GroundwaterObs",  # Stijghoogte [m]
+    "STIJGHTE_sim": "GroundwaterObs",  # Stijghoogte gesimuleerd [m]
+    "STIJGHTE_res": "GroundwaterObs",  # Resultaat toetsing PASTAS
+    "WATHTE": "WaterlvlObs",  # Waterhoogte [m]
+    # "HEFHTE": "Hefhoogte [m]",
+    # "KRUINHTE": "Kruinhoogte [m]",
+    # "STREEFHTE": "Streefhoogte [m]",
+    # "MAAIVELDHTE": "Maaiveldhoogte [m]",
+    # "KRUINREL": "Kruinoogte [%]"
+    # "STROOMSHD": "Stroomsnelheid [m/s]",
+    # "Q": "Afvoer [m3/s]",
+    # "Q_res" : "Resultaat toetsing PASTAS Afvoer res"
+    # "STREEFQ": "Afvoer streefwaarde [m3/s]",
+    # "Q_sim": "Afvoer gesimuleerd [m3/s]",
+    # "Q_sim.fc": "Afvoer voorspeld is gemiddelde van voorspellingen (sim.fc) [m3/s]",
+    # "Q_sim_q05.fc": "Afvoer gesimuleerd 5%-waarde of ondergrens 90% betrouwbaarheidsinterval [m3/s]",
+    # "Q_sim_q25.fc": "Afvoer gesimuleerd 25%-waarde of ondergrens 50% betrouwbaarheidsinterval [m3/s]",
+    # "Q_sim_q75.fc": "Afvoer gesimuleerd 75%-waarde of bovengrens 50% betrouwbaarheidsinterval [m3/s]",
+    # "Q_sim_q95.fc": "Afvoer gesimuleerd 95%-waarde of bovengrens 90% betrouwbaarheidsinterval [m3/s]",
+    "GELDHD": "WaterQualityObs",  # Geleidbaarheid (MON) [uS/cm]
+    "O2SAT": "WaterQualityObs",  #  Zuurstof saturatie [%]
+    "O2": "WaterQualityObs",  # Zuurstofgehalte [mg/l]
+    "NEERSG": "PrecipitationObs",  # Neerslag [mm]
+    "NEERSG.tekort": "MeteoObs",  # Neerslagtekort [mm]
+    "NEERSG.voorsp.det": "PrecipitationObs",  # Neerslag voorspeld deterministisch [mm]
+    "NEERSG.voorsp.ens": "PrecipitationObs",  # Neerslag voorspeld ensemble [mm]
+    "VERDPG": "EvaporationObs",  # Verdamping [mm]
+    "LUCHTDK": "MeteoObs",  # Luchtdruk [m]
+    "WINDRTG": "MeteoObs",  # Wind richting [degrees]
+    "WINDSHD": "MeteoObs",  # Windhsnelheid [m/s]
+    "GLOBSLG": "MeteoObs",  # Globale straling [Joules/cm2]
+    "T": "MeteoObs",  # Temperatuur [C]
+    "T.voorsp.det": "MeteoObs",  # Temperatuur voorspeld deterministisch [C]
+    "T.voorsp.ens": "MeteoObs",  # Temperatuur voorspeld ensemble [C]
+    "RELTVLVTHD": "MeteoObs",  # Relatieve luchtvochtigheid [%]
+}
+
+pid = {"wsvv": wsvv_pid, "hhnk": hhnk_pid, "wli": wli_pid}
