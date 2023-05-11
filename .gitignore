@@ -110,3 +110,4 @@ ENV/
 
 .ignore*
 .examples/figure*
+.tests/data/excel*
