@@ -88,6 +88,9 @@ def read_dino(
     ObsClass=obs.GroundwaterObs,
     subdir="Grondwaterstanden_Put",
     suffix="1.csv",
+    unpackdir=None,
+    force_unpack=False,
+    preserve_datetime=False,
     keep_all_obs=True,
     name=None,
     **kwargs,
@@ -106,6 +109,12 @@ def read_dino(
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
+    unpackdir : str
+        destination directory of the unzipped file
+    force_unpack : boolean, optional
+        force unpack if dst already exists
+    preserve_datetime : boolean, optional
+        use date of the zipfile for the destination file
     keep_all_obs : boolean, optional
         add all observation points to the collection, even the points
         without measurements or metadata
@@ -126,6 +135,9 @@ def read_dino(
         ObsClass=ObsClass,
         subdir=subdir,
         suffix=suffix,
+        unpackdir=unpackdir,
+        force_unpack=force_unpack,
+        preserve_datetime=preserve_datetime,
         keep_all_obs=keep_all_obs,
         name=name,
         **kwargs,
@@ -614,10 +626,13 @@ class ObsCollection(pd.DataFrame):
 
     Parameters
     ----------
-    name : str
-        name of the observation collection
-    meta : dic
-        metadata of the observation collection
+    *args observations, list of observations or a pandas DataFrame,
+    **kwargs can be one of these:
+        name : str
+            name of the observation collection
+        meta : dic
+            metadata of the observation collection
+
     """
 
     # temporary properties
@@ -631,16 +646,22 @@ class ObsCollection(pd.DataFrame):
     ]
 
     def __init__(self, *args, **kwargs):
-        """constructor of the ObsCollection.
-
-        *args must be input for the pandas.DataFrame constructor,
-        **kwargs can be one of the attributes listed in _metadata or
-        keyword arguments for the constructor of a pandas.DataFrame.
-        """
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
 
-        super(ObsCollection, self).__init__(*args, **kwargs)
+        if isinstance(args[0], (list, tuple)):
+            logger.debug('Convert list of observations to ObsCollection')
+            obs_df = util._obslist_to_frame(args[0])
+            super(ObsCollection, self).__init__(obs_df, *args[1:], **kwargs)
+        elif isinstance(args[0], obs.Obs):
+            logger.debug('Convert observation(s) to ObsCollection')
+            obs_list = [o for o in args if isinstance(o, obs.Obs)]
+            remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
+            obs_df = util._obslist_to_frame(obs_list)
+            super(ObsCollection, self).__init__(obs_df, *remaining_args,
+                                                **kwargs)
+        else:
+            super(ObsCollection, self).__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -714,7 +735,8 @@ class ObsCollection(pd.DataFrame):
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(
+                f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """check if an observation collection is consistent. An observation
@@ -750,7 +772,8 @@ class ObsCollection(pd.DataFrame):
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(f"missing observation object in collection -> {self.name} ")
+            logger.warning(
+                f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
@@ -839,7 +862,8 @@ class ObsCollection(pd.DataFrame):
                 raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError("Observation should be of type hydropandas.observation.Obs")
+            raise TypeError(
+                "Observation should be of type hydropandas.observation.Obs")
 
         # add new observation to collection
         if o.name not in self.index:
@@ -1028,7 +1052,8 @@ class ObsCollection(pd.DataFrame):
                 obs_list = [ObsClass() for i in range(len(df))]
             df["obs"] = obs_list
         else:
-            raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
+            raise TypeError(
+                f"df should be type pandas.DataFrame not {type(df)}")
 
         return cls(df)
 
@@ -1039,6 +1064,9 @@ class ObsCollection(pd.DataFrame):
         ObsClass=obs.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
+        unpackdir=None,
+        force_unpack=False,
+        preserve_datetime=False,
         keep_all_obs=True,
         name=None,
         **kwargs,
@@ -1065,6 +1093,12 @@ class ObsCollection(pd.DataFrame):
             subdirectory of dirname with data files
         suffix : str
             suffix of files in subdir that will be read
+        unpackdir : str
+            destination directory of the unzipped file
+        force_unpack : boolean, optional
+            force unpack if dst already exists
+        preserve_datetime : boolean, optional
+            use date of the zipfile for the destination file
         keep_all_obs : boolean, optional
             add all observation points to the collection, even the points
             without measurements or metadata
@@ -1088,6 +1122,9 @@ class ObsCollection(pd.DataFrame):
             "dirname": dirname,
             "type": ObsClass,
             "suffix": suffix,
+            "unpackdir": unpackdir,
+            "force_unpack": force_unpack,
+            "preserve_datetime": preserve_datetime,
             "keep_all_obs": keep_all_obs,
         }
 
@@ -1096,6 +1133,9 @@ class ObsCollection(pd.DataFrame):
             ObsClass,
             subdir,
             suffix,
+            unpackdir,
+            force_unpack,
+            preserve_datetime,
             keep_all_obs,
             **kwargs,
         )
@@ -1289,7 +1329,8 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError("either specify variables file_or_dir or xmlstring")
+            raise ValueError(
+                "either specify variables file_or_dir or xmlstring")
 
     @classmethod
     def from_imod(
@@ -1504,7 +1545,8 @@ class ObsCollection(pd.DataFrame):
 
         elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs,
+                             obs.EvaporationObs, obs.MeteoObs)
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
@@ -1965,7 +2007,8 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
+        meta_att = set(otype._metadata) - \
+            set(["x", "y", "name", "source", "meta"])
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
@@ -1978,7 +2021,8 @@ class ObsCollection(pd.DataFrame):
                 y=xy[i][1],
                 name=col,
                 source=f"interpolation {self.name}",
-                meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
+                meta={"interpolation_kernel": kernel,
+                      "interpolation_epsilon": epsilon},
                 **kwargs,
             )
             obs_list.append(o)
