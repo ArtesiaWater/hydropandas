@@ -1,7 +1,7 @@
 <img src="/docs/_static/Artesia_logo.jpg" alt="Artesia" width="200" align="right">
 
 [![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
-[![PyPi Supported Python Versions](https://img.shields.io/pypi/pyversions/hydropandas)](https://pypi.org/project/spei/)
+[![PyPi Supported Python Versions](https://img.shields.io/pypi/pyversions/hydropandas)](https://pypi.python.org/pypi/hydropandas)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
 
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions?query=workflow%3Ahydropandas)
@@ -54,10 +54,7 @@ For some functionality additional packages are required:
 
 For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
-For installing all the optional packages use `pip install -e .[full]`
-
-If you have trouble installing HydroPandas, refer to the
-[Dependencies section](#dependencies) below.
+For installing all the optional packages use `pip install -e .[full]`.
 
 ## Get in touch
 

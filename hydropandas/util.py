@@ -110,7 +110,7 @@ def get_files(
     # again.
     if unpackdir is not None:
         if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
-            raise ValueError("Please specify a different folder to unpack" " files!")
+            raise ValueError("Please specify a different folder to unpack files!")
     # identify whether file_or_dir started as zip
     if file_or_dir.endswith(".zip"):
         iszip = True
