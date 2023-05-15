@@ -133,7 +133,7 @@ def read_dino(
     return oc
 
 
-def read_excel(path, meta_sheet_name='metadata'):
+def read_excel(path, meta_sheet_name="metadata"):
     """Create an observation collection from an excel file. The excel file
     should have the same format as excel files created with the `to_excel`
     method of an ObsCollection.
@@ -160,8 +160,7 @@ def read_excel(path, meta_sheet_name='metadata'):
     `read_pickle` function.
     """
 
-    oc = ObsCollection.from_excel(path,
-                                  meta_sheet_name=meta_sheet_name)
+    oc = ObsCollection.from_excel(path, meta_sheet_name=meta_sheet_name)
 
     return oc
 
@@ -553,9 +552,11 @@ def read_modflow(
     return oc
 
 
-def read_pickle(filepath_or_buffer: 'FilePath | ReadPickleBuffer',
-                compression: 'CompressionOptions' = 'infer',
-                storage_options: 'StorageOptions' = None):
+def read_pickle(
+    filepath_or_buffer: "FilePath | ReadPickleBuffer",
+    compression: "CompressionOptions" = "infer",
+    storage_options: "StorageOptions" = None,
+):
     """wrapper around pd.read_pickle
 
     Parameters
@@ -596,9 +597,7 @@ def read_pickle(filepath_or_buffer: 'FilePath | ReadPickleBuffer',
     ObsCollection : same type as object stored in file
     """
 
-    return pd.read_pickle(filepath_or_buffer,
-                          compression,
-                          storage_options)
+    return pd.read_pickle(filepath_or_buffer, compression, storage_options)
 
 
 def read_waterinfo(
@@ -718,18 +717,17 @@ class ObsCollection(pd.DataFrame):
         self.meta = kwargs.pop("meta", {})
 
         if isinstance(args[0], (list, tuple)):
-            logger.debug('Convert list of observations to ObsCollection')
+            logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
             super(ObsCollection, self).__init__(obs_df, *args[1:], **kwargs)
         elif isinstance(args[0], obs.Obs):
-            logger.debug('Convert observation(s) to ObsCollection')
+            logger.debug("Convert observation(s) to ObsCollection")
             obs_list = [o for o in args if isinstance(o, obs.Obs)]
             remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
             obs_df = util._obslist_to_frame(obs_list)
-            super(ObsCollection, self).__init__(obs_df, *remaining_args,
-                                                **kwargs)
+            super(ObsCollection, self).__init__(obs_df, *remaining_args, **kwargs)
         elif isinstance(args[0], pd.DataFrame):
-            if not 'obs' in args[0].columns:
+            if not "obs" in args[0].columns:
                 df = self.from_dataframe(*args)
                 super(ObsCollection, self).__init__(df, **kwargs)
             else:
@@ -809,8 +807,7 @@ class ObsCollection(pd.DataFrame):
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(
-                f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """check if an observation collection is consistent. An observation
@@ -846,8 +843,7 @@ class ObsCollection(pd.DataFrame):
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(
-                f"missing observation object in collection -> {self.name} ")
+            logger.warning(f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
@@ -936,8 +932,7 @@ class ObsCollection(pd.DataFrame):
                 raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError(
-                "Observation should be of type hydropandas.observation.Obs")
+            raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
         # add new observation to collection
         if o.name not in self.index:
@@ -1126,13 +1121,12 @@ class ObsCollection(pd.DataFrame):
                 obs_list = [ObsClass() for i in range(len(df))]
             df["obs"] = obs_list
         else:
-            raise TypeError(
-                f"df should be type pandas.DataFrame not {type(df)}")
+            raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
 
         return cls(df)
 
     @classmethod
-    def from_excel(cls, path, meta_sheet_name='metadata'):
+    def from_excel(cls, path, meta_sheet_name="metadata"):
         """Create an observation collection from an excel file. The excel file
         should have the same format as excel files created with the `to_excel`
         method of an ObsCollection.
@@ -1164,14 +1158,15 @@ class ObsCollection(pd.DataFrame):
         for oname, row in df.iterrows():
             measurements = pd.read_excel(path, oname, index_col=0)
             all_metadata = row.to_dict()
-            obsclass = getattr(obs, row['obs'])
+            obsclass = getattr(obs, row["obs"])
             # get observation specific metadata
-            metadata = {k: v for (k, v) in all_metadata.items()
-                        if k in obsclass._metadata}
-            metadata['name'] = oname
+            metadata = {
+                k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
+            }
+            metadata["name"] = oname
 
             o = obsclass(measurements, **metadata)
-            df.at[oname, 'obs'] = o
+            df.at[oname, "obs"] = o
 
         return cls(df)
 
@@ -1424,8 +1419,7 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError(
-                "either specify variables file_or_dir or xmlstring")
+            raise ValueError("either specify variables file_or_dir or xmlstring")
 
     @classmethod
     def from_imod(
@@ -1640,8 +1634,7 @@ class ObsCollection(pd.DataFrame):
 
         elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClasses, (obs.PrecipitationObs,
-                             obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
@@ -1869,13 +1862,11 @@ class ObsCollection(pd.DataFrame):
 
         with pd.ExcelWriter(path) as writer:
             # replace obs column by observation type
-            obseries = oc.pop('obs')
-            oc['obs'] = [type(o).__name__ for o in obseries]
+            obseries = oc.pop("obs")
+            oc["obs"] = [type(o).__name__ for o in obseries]
 
             # write ObsCollection dataframe to first sheet
-            super(ObsCollection, oc).to_excel(
-                writer, meta_sheet_name
-            )
+            super(ObsCollection, oc).to_excel(writer, meta_sheet_name)
 
             # write each observation time series to next sheets
             for o in obseries:
@@ -2109,8 +2100,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otype._metadata) - \
-            set(["x", "y", "name", "source", "meta"])
+        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
@@ -2123,8 +2113,7 @@ class ObsCollection(pd.DataFrame):
                 y=xy[i][1],
                 name=col,
                 source=f"interpolation {self.name}",
-                meta={"interpolation_kernel": kernel,
-                      "interpolation_epsilon": epsilon},
+                meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
                 **kwargs,
             )
             obs_list.append(o)

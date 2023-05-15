@@ -82,6 +82,7 @@ def test_obscollection_from_df():
 
     return
 
+
 # read dino directories
 
 
@@ -167,8 +168,7 @@ def test_observation_wiskicsv_gw():
         header_identifier=":",
         parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
-        translate_dic={"name": "Station Number",
-                       "x": "GlobalX", "y": "GlobalY"},
+        translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
     return
@@ -178,8 +178,7 @@ def test_observation_wiskicsv_gw():
 def test_obscollection_wiskizip_gw():
     hpd.read_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.zip",
-        translate_dic={"name": "Station Number",
-                       "x": "GlobalX", "y": "GlobalY"},
+        translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
         sep=r"\s+",
         header_sep=":",
         dayfirst=True,
@@ -203,6 +202,7 @@ def test_to_pastastore():
 
 # %% excel
 
+
 def test_to_excel():
     oc = hpd.read_fews(
         "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
@@ -210,13 +210,13 @@ def test_to_excel():
         low_memory=True,
     )
 
-    oc.to_excel('tests/data/excel/test.xlsx')
+    oc.to_excel("tests/data/excel/test.xlsx")
 
     return None
 
 
 def test_from_excel():
-    hpd.read_excel('tests/data/excel/test.xlsx')
+    hpd.read_excel("tests/data/excel/test.xlsx")
 
     return None
 
