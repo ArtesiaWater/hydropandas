@@ -21,19 +21,20 @@ Python tools for hydrological measurement data.
 ## Introduction
 
 The HydroPandas package allows users to store observation data at multiple locations in a single object: ObsCollection.
-An ObsCollection makes it easier to analyse, visualise and export the observation data. 
+An ObsCollection makes it easier to analyse, visualise and export the observation data.
 An ObsCollection is a pandas DataFrame extended with custom methods and attributes related to hydrological timeseries.
 
 The HydroPandas package also provides convenient read functions for Dutch hydrological data from:
--   [BRO](https://www.broloket.nl)
--   [DINO](https://www.dinoloket.nl)
--   FEWS PI-XML
--   [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script)
--   MODFLOW groundwater models
--   IMOD groundwater models
--   [Pastastore](https://github.com/pastas/pastastore)
--   [waterinfo](https://waterinfo.rws.nl/)
--   WISKI csv files
+
+- [BRO](https://www.broloket.nl)
+- [DINO](https://www.dinoloket.nl)
+- FEWS PI-XML
+- [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script)
+- MODFLOW groundwater models
+- IMOD groundwater models
+- [Pastastore](https://github.com/pastas/pastastore)
+- [waterinfo](https://waterinfo.rws.nl/)
+- WISKI csv files
 
 ## Install
 
@@ -45,11 +46,11 @@ HydroPandas requires `pandas`, `scipy`, `matplotlib`, `tqdm`, `requests` and `co
 
 For some functionality additional packages are required:
 
--   `geopandas`: for dealing with shapefiles
--   `pastastore`: for reading or storing data from PastaStore
--   `bokeh`, `branca`, `folium`: for interactive maps
--   `flopy`: for reading data from MODFLOW models
--   `xarray`: for loading data from REGIS
+- `geopandas`: for dealing with shapefiles
+- `pastastore`: for reading or storing data from PastaStore
+- `bokeh`, `branca`, `folium`: for interactive maps
+- `flopy`: for reading data from MODFLOW models
+- `xarray`: for loading data from REGIS
 
 For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
@@ -57,9 +58,9 @@ For installing all the optional packages use `pip install -e .[full]`.
 
 ## Get in touch
 
--   Questions on HydroPandas ("How can I?") can be asked and answered on [Github Discussions](https://github.com/ArtesiaWater/hydropandas/discussions).
--   Bugs, feature requests and other improvements can be posted as [Github Issues](https://github.com/ArtesiaWater/hydropandas/issues).
--   Find out how to contribute to HydroPandas at our [Contribution page](https://hydropandas.readthedocs.io/en/stable/contribute.html).
+- Questions on HydroPandas ("How can I?") can be asked and answered on [Github Discussions](https://github.com/ArtesiaWater/hydropandas/discussions).
+- Bugs, feature requests and other improvements can be posted as [Github Issues](https://github.com/ArtesiaWater/hydropandas/issues).
+- Find out how to contribute to HydroPandas at our [Contribution page](https://hydropandas.readthedocs.io/en/stable/contribute.html).
 
 ## Examples
 
@@ -81,13 +82,13 @@ oc = hpd.read_bro(extent=(117850, 118180, 439550, 439900))
 The Obs class holds the measurements and metadata for one timeseries. There are
 currently 5 specific Obs classes for different types of measurements:
 
--   GroundwaterObs: for groundwater measurements
--   WaterQualityObs: for groundwater quality measurements
--   WaterlvlObs: for surface water level measurements
--   ModelObs: for "observations" from a MODFLOW model
--   MeteoObs: for meteorological observations
--   PrecipitationObs: for precipitation observations, subclass of MeteoObs
--   EvaporationObs: for evaporation observations, subclass of MeteoObs
+- GroundwaterObs: for groundwater measurements
+- WaterQualityObs: for groundwater quality measurements
+- WaterlvlObs: for surface water level measurements
+- ModelObs: for "observations" from a MODFLOW model
+- MeteoObs: for meteorological observations
+- PrecipitationObs: for precipitation observations, subclass of MeteoObs
+- EvaporationObs: for evaporation observations, subclass of MeteoObs
 
 Each of these Obs classes is essentially a pandas DataFrame with additional
 methods and attributes related to the type of measurement that it holds.
@@ -110,7 +111,7 @@ sources.
 
 ## Authors
 
--   Onno Ebbens, Artesia
--   Ruben Caljé, Artesia
--   Davíd Brakenhoff, Artesia
--   Martin Vonk, Artesia
+- Onno Ebbens, Artesia
+- Ruben Caljé, Artesia
+- Davíd Brakenhoff, Artesia
+- Martin Vonk, Artesia
