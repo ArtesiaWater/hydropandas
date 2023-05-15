@@ -54,6 +54,6 @@ For pull request we use the following guidelines (similar to the
   `Black <https://black.readthedocs.io/en/stable/>`_ and 
   `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to ensure a consistent code
   format throughout the project.
-- We use `isort <https://pycqa.github.io/isort/>` to automatically sort imports.
+- We use `isort <https://pycqa.github.io/isort/>`_ to automatically sort imports.
 - We encourage backward compatability between HydroPandas versions but do not
   ensure it (yet) because of the rapid changes to the code base.
