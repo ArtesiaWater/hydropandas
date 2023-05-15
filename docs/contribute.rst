@@ -43,17 +43,17 @@ For pull request we use the following guidelines (similar to the
 `geopandas guidelines <https://geopandas.org/en/stable/community/contributing.html>`_):
 
 - All existing tests should pass. Please make sure that the test suite passes,
-both locally and on GitHub Actions. Status on Github Actions will be visible on
-a pull request. To trigger a check, make a PR to your own fork.
+  both locally and on GitHub Actions. Status on Github Actions will be visible
+  on a pull request. To trigger a check, make a PR to your own fork.
 - New functionality should include tests. Please write reasonable tests for your
-code and make sure that they pass on your pull request.
+  code and make sure that they pass on your pull request.
 - Classes, methods, functions, etc. should have docstrings. The first line of a
-docstring should be a standalone summary. Parameters and return values should be
-documented explicitly.
+  docstring should be a standalone summary. Parameters and return values should
+  be documented explicitly.
 - Follow PEP 8 when possible. We use 
-`Black <https://black.readthedocs.io/en/stable/>`_ and 
-`Flake8 <http://flake8.pycqa.org/en/latest/>`_ to ensure a consistent code
-format throughout the project.
+  `Black <https://black.readthedocs.io/en/stable/>`_ and 
+  `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to ensure a consistent code
+  format throughout the project.
 - We use `isort <https://pycqa.github.io/isort/>` to automatically sort imports.
 - We encourage backward compatability between HydroPandas versions but do not
-ensure it (yet) because of the rapid changes to the code base.
+  ensure it (yet) because of the rapid changes to the code base.
