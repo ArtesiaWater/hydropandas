@@ -288,7 +288,7 @@ def test_knmi_obs_from_xy():
 
 def test_knmi_obs_from_obs():
     pb = test_observation_gw()
-    o = hpd.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
+    hpd.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
 
 
 # @pytest.xfail(
