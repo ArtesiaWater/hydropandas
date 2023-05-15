@@ -721,21 +721,21 @@ class ObsCollection(pd.DataFrame):
         if isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
-            super(ObsCollection, self).__init__(obs_df, *args[1:], **kwargs)
+            super().__init__(obs_df, *args[1:], **kwargs)
         elif isinstance(args[0], obs.Obs):
             logger.debug("Convert observation(s) to ObsCollection")
             obs_list = [o for o in args if isinstance(o, obs.Obs)]
             remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
             obs_df = util._obslist_to_frame(obs_list)
-            super(ObsCollection, self).__init__(obs_df, *remaining_args, **kwargs)
+            super().__init__(obs_df, *remaining_args, **kwargs)
         elif isinstance(args[0], pd.DataFrame):
             if "obs" not in args[0].columns:
                 df = self.from_dataframe(*args)
-                super(ObsCollection, self).__init__(df, **kwargs)
+                super().__init__(df, **kwargs)
             else:
-                super(ObsCollection, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
         else:
-            super(ObsCollection, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
