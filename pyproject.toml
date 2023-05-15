@@ -48,6 +48,7 @@ full = [
     "xarray",
     "shapely",
     "pyproj",
+    "contextily"
 ]
 rtd = [
     "hydropandas[full]",
