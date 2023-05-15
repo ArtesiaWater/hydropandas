@@ -71,7 +71,7 @@ def test_obscollection_from_list():
         keep_all_obs=True,
     )
     obs_list = [o for o in dino_gw.obs.values]
-    hpd.ObsCollectio(obs_list)
+    hpd.ObsCollection(obs_list)
     return
 
 
