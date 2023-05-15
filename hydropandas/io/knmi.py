@@ -298,8 +298,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                     550, "DE-BILT", "RD", start, end
                 )
         else:
-            knmi_df, _ = get_knmi_daily_rainfall_url(
-                550, "DE-BILT", "RD", start, end)
+            knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT", "RD", start, end)
     else:
         if use_api:
             try:
@@ -313,8 +312,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
                 )
             except (RuntimeError, requests.ConnectionError):
                 logger.warning("KNMI API failed, switching to non-API method")
-                knmi_df, _, _ = get_knmi_daily_meteo_url(
-                    260, meteo_var, start, end)
+                knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
         else:
             knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
 
@@ -568,10 +566,8 @@ def get_knmi_daily_rainfall_url(
     basedir = os.path.join(tempfile.gettempdir(), "knmi")
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(),
-                             "knmi", f"neerslaggeg_{stn}.zip")
-    fname_dir = os.path.join(tempfile.gettempdir(),
-                             "knmi", f"neerslaggeg_{stn}")
+    fname_zip = os.path.join(tempfile.gettempdir(), "knmi", f"neerslaggeg_{stn}.zip")
+    fname_dir = os.path.join(tempfile.gettempdir(), "knmi", f"neerslaggeg_{stn}")
     fname_txt = os.path.join(fname_dir, f"neerslaggeg_{stn_name}_{stn}.txt")
 
     # check if file should be downloaded and unzipped
@@ -585,15 +581,13 @@ def get_knmi_daily_rainfall_url(
         # download zip file
         r = requests.get(url, stream=True)
         if r.status_code != 200:
-            raise ValueError(
-                f"invalid url {url} please check station name {stn_name}")
+            raise ValueError(f"invalid url {url} please check station name {stn_name}")
         with open(fname_zip, "wb") as fd:
             for chunk in r.iter_content(chunk_size=128):
                 fd.write(chunk)
 
         # unzip file
-        util.unzip_file(fname_zip, fname_dir, force=True,
-                        preserve_datetime=True)
+        util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
 
     return read_knmi_daily_rainfall_file(fname_txt, meteo_var, start=start, end=end)
 
@@ -948,8 +942,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
                 fd.write(chunk)
 
         # unzip file
-        util.unzip_file(fname_zip, fname_dir, force=True,
-                        preserve_datetime=True)
+        util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
 
     return read_knmi_daily_meteo_file(fname_txt, meteo_var, start=start, end=end)
 
@@ -1004,10 +997,8 @@ def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
                 values = f.readline()
                 if values == "\n":
                     values = f.readline()
-                df = pd.read_csv(f, header=None, names=columns,
-                                 na_values="     ")
-                df.set_index(pd.to_datetime(
-                    df.YYYYMMDD, format="%Y%m%d"), inplace=True)
+                df = pd.read_csv(f, header=None, names=columns, na_values="     ")
+                df.set_index(pd.to_datetime(df.YYYYMMDD, format="%Y%m%d"), inplace=True)
                 df = df.drop("YYYYMMDD", axis=1)
 
                 df = df.loc[df.index.notnull(), :]
@@ -1398,8 +1389,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 
     # download data
     if settings["fill_missing_obs"] and (settings["interval"] == "hourly"):
-        raise NotImplementedError(
-            "cannot yet fill missing values in hourly data")
+        raise NotImplementedError("cannot yet fill missing values in hourly data")
 
     elif settings["fill_missing_obs"]:
         knmi_df, variables, station_meta = fill_missing_measurements(
@@ -1614,8 +1604,7 @@ def add_missing_indices(knmi_df, stn, start, end):
             minute=knmi_df.index[0].minute,
             second=knmi_df.index[0].second,
         )
-        logger.info(
-            f"station {stn} has no measurements before {knmi_df.index[0]}")
+        logger.info(f"station {stn} has no measurements before {knmi_df.index[0]}")
 
     if (end - knmi_df.index[-1]).days < 2:
         new_end = knmi_df.index[-1]
@@ -1628,8 +1617,7 @@ def add_missing_indices(knmi_df, stn, start, end):
             minute=knmi_df.index[-1].minute,
             second=knmi_df.index[-1].second,
         )
-        logger.info(
-            f"station {stn} has no measurements after {knmi_df.index[-1]}")
+        logger.info(f"station {stn} has no measurements after {knmi_df.index[-1]}")
 
     # add missing indices
     new_index = pd.date_range(new_start, new_end, freq="D")
@@ -1699,8 +1687,7 @@ def fill_missing_measurements(
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
-        logger.info(
-            f"station {stn} has no measurements between {start} and {end}")
+        logger.info(f"station {stn} has no measurements between {start} and {end}")
         logger.info("trying to get measurements from nearest station")
         stn = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
@@ -1756,8 +1743,7 @@ def fill_missing_measurements(
                 # index for missing but in newly downloaded data
                 ix_idx = missing_idx.intersection(knmi_df_comp.index)
                 # update missing data
-                knmi_df.loc[ix_idx,
-                            meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
+                knmi_df.loc[ix_idx, meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
                 # add source station number
                 knmi_df.loc[ix_idx, "station_opvulwaarde"] = str(stn_comp)
 
@@ -1787,8 +1773,7 @@ def makkink(tmean, K):
     a = 0.646 + 0.0006 * tmean
     b = 1 + tmean / 237.3
     c = 7.5 * np.log(10) * 6.107 * 10 ** (7.5 * (1 - 1 / b))
-    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / \
-        (2501 - 2.38 * tmean) * K
+    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / (2501 - 2.38 * tmean) * K
     return et
 
 
@@ -1834,8 +1819,7 @@ def penman(
     P = 101.3 * ((293 - 0.0065 * z) / 293) ** 5.26  # kPa
     gamma = 0.665e-3 * P  # kPa/C
     tg = (tmax - tmin) / 2  # C
-    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) /
-                (tg + 237.3) ** 2)  # kPa/C
+    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) / (tg + 237.3) ** 2)  # kPa/C
     es0 = 0.6108 * np.exp(17.27 * tmean / (tmean + 237.3))  # kPa
     esmax = 0.6108 * np.exp(17.27 * tmax / (tmax + 237.3))  # kPa
     esmin = 0.6108 * np.exp(17.27 * tmin / (tmin + 237.3))  # kPa
