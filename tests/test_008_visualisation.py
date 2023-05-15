@@ -17,7 +17,6 @@ def test_interactive_plot():
         hoover_date_format="{%F}",
         add_screen_to_legend=True,
     )
-    return
 
 
 def test_obscollection_dino_to_imap():
@@ -32,7 +31,6 @@ def test_obscollection_dino_to_imap():
         hoover_names=("gws",),
         zoom_start=9,
     )
-    return
 
 
 def test_obscollection_dino_to_mapgraph():
@@ -44,13 +42,11 @@ def test_obscollection_dino_to_mapgraph():
         return
     except ModuleNotFoundError as e:
         print(e)
-        return
 
 
 def test_obscollection_dino_to_section_plot():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.plots.section_plot()
-    return
 
 
 def test_obscollection_to_map():
@@ -62,7 +58,6 @@ def test_obscollection_to_map():
         return
     except ModuleNotFoundError as e:
         print(e)
-        return
 
 
 def test_obscollection_to_imap():
@@ -88,4 +83,3 @@ def test_obscollection_to_imap():
         map_label="locationId",
         map_label_size=10,
     )
-    return

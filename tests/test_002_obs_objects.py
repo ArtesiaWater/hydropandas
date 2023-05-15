@@ -79,7 +79,6 @@ def test_groundwater_quality_obs():
         filename="",
         meta={"info": "you can store additional information in this dictionary"},
     )
-    return
 
 
 def test_obscollection_from_list():
@@ -160,8 +159,6 @@ def test_merge_observations_different_timeseries():
         1,
     ), "merged observation should have one column with 20 values"
 
-    return
-
 
 def test_merge_overlapping():
     # base
@@ -180,8 +177,6 @@ def test_merge_overlapping():
         15,
         3,
     ), "merged observation should have one column with 20 values"
-
-    return
 
 
 def test_merge_errors():

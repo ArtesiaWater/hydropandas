@@ -6,7 +6,6 @@ def test_within_extent():
     extent = [210350, 213300, 473300, 474000]
     dino_gw.geo.within_extent(extent, inplace=True)
     assert dino_gw.shape[0] == 4
-    return
 
 
 # %% stats
@@ -15,37 +14,31 @@ def test_within_extent():
 def test_obscollection_consecutive_obs_years():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.consecutive_obs_years()
-    return
 
 
 def test_obscollection_get_number_of_obs():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.get_no_of_observations()
-    return
 
 
 def test_obscollection_get_first_last_obs_date():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.get_first_last_obs_date()
-    return
 
 
 def test_obscollection_get_seasonal_stats():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.get_seasonal_stat(stat="mean")
-    return
 
 
 def test_obscollection_get_min():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.get_min()
-    return
 
 
 def test_obscollection_get_max():
     gw = ttf.test_obscollection_dinozip_gw_keep_all_obs()
     gw.stats.get_max()
-    return
 
 
 # %% geo
@@ -59,7 +52,6 @@ def test_get_nearest_point():
     dino_gw[
         ["nearest point", "distance nearest point"]
     ] = dino_gw.geo.get_nearest_point(fl)
-    return
 
 
 def test_get_nearest_polygon():
@@ -96,8 +88,6 @@ def test_get_nearest_polygon():
     assert (dino_gw["nearest polygon"] == 0.0).all()
     assert (dino_gw["distance nearest polygon"] == 0.0).all()
 
-    return
-
 
 def test_get_ground_level_oc():
     try:
@@ -108,7 +98,6 @@ def test_get_ground_level_oc():
         return
     except ModuleNotFoundError as e:
         print(e)
-    return
 
 
 def test_get_ground_level_gwobs():
@@ -120,4 +109,3 @@ def test_get_ground_level_gwobs():
         return
     except ModuleNotFoundError as e:
         print(e)
-        return

@@ -14,8 +14,6 @@ def test_dino_csv():
     fname = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/" "B33F0080001_1.csv"
     dino.read_dino_groundwater_csv(fname)
 
-    return
-
 
 def test_dino_csv_duplicate_index():
     # contains 1 duplicate index 2019-11-19
@@ -31,5 +29,3 @@ def test_dino_csv_duplicate_index():
 
     # check if measurements contains no duplicate indices
     assert ~measurements.index.duplicated().any()
-
-    return
