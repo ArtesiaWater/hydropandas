@@ -218,7 +218,6 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
         return lay_out
 
 
-
 def get_zvec(x, y, gwf=None, ds=None):
     """get a list with the vertical layer boundaries at a point in the model.
 
