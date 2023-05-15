@@ -22,7 +22,8 @@ def test_bro_gmn():
 
 
 def test_bro_extent():
-    extent = (210260, 213550, 459890, 473920)  # extent more than 1000 observations
+    # extent more than 1000 observations
+    extent = (210260, 213550, 459890, 473920)
     extent = (213260, 213550, 473890, 473920)  # extent skip duplicates
     extent = (102395, 103121, 434331, 434750)  # 4 observations within extent
 
@@ -70,19 +71,20 @@ def test_obscollection_from_list():
         keep_all_obs=True,
     )
     obs_list = [o for o in dino_gw.obs.values]
-    hpd.ObsCollection.from_list(obs_list)
+    hpd.ObsCollectio(obs_list)
     return
 
 
 def test_obscollection_from_df():
     df = pd.DataFrame(index=["pb1", "pb2"], data={"tube_nr": [1, 1]})
 
-    hpd.ObsCollection.from_dataframe(df)
+    hpd.ObsCollection(df)
 
     return
 
-
 # read dino directories
+
+
 def test_obscollection_dinozip_gw():
     # groundwater quantity
     oc = hpd.read_dino(
@@ -165,7 +167,8 @@ def test_observation_wiskicsv_gw():
         header_identifier=":",
         parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
-        translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
+        translate_dic={"name": "Station Number",
+                       "x": "GlobalX", "y": "GlobalY"},
     )
 
     return
@@ -175,7 +178,8 @@ def test_observation_wiskicsv_gw():
 def test_obscollection_wiskizip_gw():
     hpd.read_wiski(
         r"./tests/data/2019-WISKI-test/1016_PBF.zip",
-        translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
+        translate_dic={"name": "Station Number",
+                       "x": "GlobalX", "y": "GlobalY"},
         sep=r"\s+",
         header_sep=":",
         dayfirst=True,
@@ -195,6 +199,26 @@ def test_to_pastastore():
     dino_gw.to_pastastore()
 
     return
+
+
+# %% excel
+
+def test_to_excel():
+    oc = hpd.read_fews(
+        "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
+        locations=None,
+        low_memory=True,
+    )
+
+    oc.to_excel('tests/data/excel/test.xlsx')
+
+    return None
+
+
+def test_from_excel():
+    hpd.read_excel('tests/data/excel/test.xlsx')
+
+    return None
 
 
 # %% Meteo
