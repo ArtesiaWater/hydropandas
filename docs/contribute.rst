@@ -3,9 +3,9 @@ Contribute
 ==========
 
 HydroPandas is an open source software project that depends on contributions
-from the community. Everyone is welcome, each small contribution, no matter if
-it is a fix of a typo in the documentation, bug report, an idea, or a question,
-is valuable.
+from the community. Everyone is welcome, each small contribution is valuable, 
+no matter if it is a fix of a typo in the documentation, bug report, an idea, 
+or a question.
 
 Questions, bug reports and feature requests
 -------------------------------------------
