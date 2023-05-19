@@ -1,11 +1,10 @@
 Welcome to hydropandas's documentation!
 =======================================
-The hydropandas module is a Python package for reading timeseries data into 
-DataFrames. The basic idea behind the package is to allow users to manipulate 
-data using all of the wonderful features included in pandas, but to also allow 
-the addition of custom methods and attributes related to the timeseries. The 
-hydropandas module extends pandas.DataFrame with extra functionality and 
-stores metadata related to the type of measurements.
+Hydropandas is a Python package for reading, analyzing and writing
+(hydrological) timeseries data. Users can store a timeseries and metadata in a
+single object. This object inherits from a pandas DataFrame, with all its
+wonderful features, and is extended with custom methods and attributes related
+to hydrological timeseries.
 
 Supported data sources
 ----------------------
