@@ -13,15 +13,11 @@ def test_read_knmi_file1():
     fname = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
     knmi.read_knmi_daily_rainfall_file(fname)
 
-    return
-
 
 def test_read_knmi_file2():
     # De Bilt neerslagstation
     fname = "./tests/data/2023-KNMI-test/neerslaggeg_VILSTEREN_342.txt"
     knmi.read_knmi_daily_rainfall_file(fname)
-
-    return
 
 
 def test_read_knmi_file3():
@@ -29,22 +25,17 @@ def test_read_knmi_file3():
     fname = "./tests/data/2023-KNMI-test/precipitation_st_anthonis.txt"
     knmi.read_knmi_daily_rainfall_file(fname)
 
-    return
-
 
 def test_get_knmi_precip_neerslagstation():
     # De Bilt neerslagstation
     knmi.get_knmi_timeseries_stn(
         "550", "RD", start="2010-1-1", end="2010-1-10", settings=None
     )
-    return
 
 
 def test_read_knmi_meteostation_file():
     fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
     knmi.read_knmi_daily_meteo_file(fname, "EV24")
-
-    return
 
 
 def test_get_knmi_precip_meteostation_fill_missing():
@@ -52,7 +43,6 @@ def test_get_knmi_precip_meteostation_fill_missing():
     knmi.get_knmi_timeseries_stn(
         260, "RH", start="2010-1-1", end="2010-1-10", settings=None
     )
-    return
 
 
 def test_get_knmi_precip_meteostation_hourly():
@@ -64,7 +54,6 @@ def test_get_knmi_precip_meteostation_hourly():
         end="2010-1-10",
         settings={"interval": "hourly", "fill_missing_obs": False},
     )
-    return
 
 
 def test_get_pressure_hourly():
@@ -76,7 +65,6 @@ def test_get_pressure_hourly():
         end="2010-1-10",
         settings={"interval": "hourly", "fill_missing_obs": False},
     )
-    return
 
 
 def test_get_knmi_precip_neerslagstation_no_api():
@@ -84,7 +72,6 @@ def test_get_knmi_precip_neerslagstation_no_api():
     knmi.get_knmi_timeseries_stn(
         "550", "RD", start="2010-1-1", end="2010-1-10", settings={"use_api": False}
     )
-    return
 
 
 def test_get_knmi_precip_meteostation_no_api():
@@ -92,7 +79,6 @@ def test_get_knmi_precip_meteostation_no_api():
     knmi.get_knmi_timeseries_stn(
         260, "RH", start="2010-1-1", end="2010-1-10", settings={"use_api": False}
     )
-    return
 
 
 def test_get_knmi_precip_neerslagstation_fill_missing():
@@ -100,7 +86,6 @@ def test_get_knmi_precip_neerslagstation_fill_missing():
     knmi.download_knmi_data(
         "550", meteo_var="RD", start="1952", end=None, settings=settings
     )
-    return
 
 
 def test_download_rd_550_no_api():
@@ -114,7 +99,6 @@ def test_download_rd_550_no_api():
         end=None,
         settings=settings,
     )
-    return
 
 
 def test_download_rd_12():
@@ -122,7 +106,6 @@ def test_download_rd_12():
     knmi.download_knmi_data(
         "12", meteo_var="RD", start="2010", end=None, settings=settings
     )
-    return
 
 
 def test_download_without_data():
@@ -134,8 +117,6 @@ def test_download_without_data():
     except ValueError:
         pass
 
-    return
-
 
 def test_download_without_data_no_error():
     settings = knmi._get_default_settings(settings={"raise_exceptions": False})
@@ -146,8 +127,6 @@ def test_download_without_data_no_error():
 
     assert (knmi_df.empty, variables == {}, stations.empty) == (True, True, True)
 
-    return
-
 
 def test_download_ev24_210():
     settings = knmi._get_default_settings(None)
@@ -155,7 +134,6 @@ def test_download_ev24_210():
     knmi.download_knmi_data(
         210, meteo_var="EV24", start="1952", end=None, settings=settings
     )
-    return
 
 
 def test_download_ev24_210_no_api():
@@ -163,24 +141,19 @@ def test_download_ev24_210_no_api():
     knmi.download_knmi_data(
         210, meteo_var="EV24", start="1952", end=None, settings=settings
     )
-    return
 
 
 def test_get_knmi_daily_meteo_ev24_empty():
     start, end = knmi._start_end_to_datetime("1959", "1963")
     knmi.get_knmi_daily_meteo_api(knmi.URL_DAILY_METEO, 265, "EV24", start, end, False)
 
-    return
-
 
 def test_fill_missing_measurements_ev24_278():
     knmi.fill_missing_measurements(278, meteo_var="EV24", start="1959", end="1963")
-    return
 
 
 def test_fill_missing_measurements_rh_273():
     knmi.fill_missing_measurements(273, meteo_var="RH", start="1995", end="2000")
-    return
 
 
 def test_fill_missing_measurements_rh_278():
@@ -188,7 +161,6 @@ def test_fill_missing_measurements_rh_278():
     knmi.fill_missing_measurements(
         278, meteo_var="RH", start="1990", end=None, settings=settings
     )
-    return
 
 
 def test_obslist_from_grid():
@@ -201,16 +173,12 @@ def test_obslist_from_grid():
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
 
-    return
-
 
 def test_obslist_from_locations():
     locations = pd.DataFrame(data={"x": [100000], "y": [350000]})
     knmi.get_knmi_obslist(
         locations, meteo_vars=["EV24"], ObsClasses=[hpd.EvaporationObs]
     )
-
-    return
 
 
 def test_obslist_from_stns():
@@ -223,8 +191,6 @@ def test_obslist_from_stns():
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
 
-    return
-
 
 def test_obslist_from_stns_single_startdate():
     stns = [344, 260]  # Rotterdam en de Bilt
@@ -235,5 +201,3 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
-
-    return

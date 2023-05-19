@@ -10,21 +10,13 @@ license = { file = "LICENSE" }
 readme = "readme.md"
 authors = [{ name = "Onno Ebbens", email = "o.ebbens@artesia-water.nl" }]
 maintainers = [
-    { name = "O. Ebbens", email = "o.ebbens@artesia-water.nl" },
+    { name = "O.N. Ebbens", email = "o.ebbens@artesia-water.nl" },
     { name = "R. Calje", email = "r.calje@artesia-water.nl" },
     { name = "D.A. Brakenhoff", email = "d.brakenhoff@artesia-water.nl" },
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
 requires-python = ">=3.7"
-dependencies = [
-    "scipy",
-    "pandas",
-    "matplotlib",
-    "tqdm",
-    "requests",
-    "zeep",
-    "colorama",
-]
+dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -36,6 +28,7 @@ classifiers = [
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     "Operating System :: OS Independent",
+    'Topic :: Scientific/Engineering :: Hydrology',
 ]
 
 [project.urls]
@@ -46,6 +39,7 @@ documentation = "https://hydropandas.readthedocs.io/en/stable/"
 [project.optional-dependencies]
 full = [
     "geopandas",
+    "openpyxl",
     "pastastore",
     "bokeh",
     "branca",
@@ -54,6 +48,7 @@ full = [
     "xarray",
     "shapely",
     "pyproj",
+    "contextily"
 ]
 rtd = [
     "hydropandas[full]",
@@ -63,7 +58,7 @@ rtd = [
     "Shapely",
     "nbconvert",
     "ipykernel",
-    "netCDF4>=1.5.7",
+    "netCDF4==1.5.8",
     "docutils<0.18",
     "sphinx_rtd_theme",
     "Ipython",
@@ -123,8 +118,8 @@ legacy_tox_ini = """
     basepython = python3.9
     extras = formatting
     commands =
-            black .
-            isort .
+            black . --check --diff
+            isort . --check-only --diff
 
     [testenv:lint]
     description = run linters

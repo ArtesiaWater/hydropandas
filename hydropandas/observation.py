@@ -249,13 +249,13 @@ class Obs(pd.DataFrame):
                         )
                     elif overlap == "use_left":
                         logger.info(
-                            f"existing observation {key} differs from new"
+                            f"existing observation {key} differs from new "
                             "observation, use existing"
                         )
                         new_metadata[key] = v1
                     elif overlap == "use_right":
                         logger.info(
-                            f"existing observation {key} differs from new"
+                            f"existing observation {key} differs from new "
                             "observation, use new"
                         )
                         new_metadata[key] = v2
@@ -269,13 +269,13 @@ class Obs(pd.DataFrame):
                     )
                 elif overlap == "use_left":
                     logger.info(
-                        f"existing observation {key} differs from new"
+                        f"existing observation {key} differs from new "
                         "observation, use existing"
                     )
                     new_metadata[key] = v1
                 elif overlap == "use_right":
                     logger.info(
-                        f"existing observation {key} differs from new"
+                        f"existing observation {key} differs from new "
                         "observation, use new"
                     )
                     new_metadata[key] = v2
@@ -331,7 +331,7 @@ class Obs(pd.DataFrame):
                 dup_ind_o[overlap_cols]
             ):
                 logger.warning(
-                    f"timeseries of observation {right.name} overlap with"
+                    f"timeseries of observation {right.name} overlap with "
                     "different values"
                 )
                 if overlap == "error":
@@ -408,9 +408,6 @@ class Obs(pd.DataFrame):
         -------
         Observation object.
         """
-        logger.warning(
-            "function 'merge_observation' not thoroughly tested, please be carefull!"
-        )
 
         if overlap not in ["error", "use_left", "use_right"]:
             raise ValueError(
@@ -486,7 +483,7 @@ class GroundwaterObs(Obs):
         self.screen_bottom = kwargs.pop("screen_bottom", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
-        super(GroundwaterObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -637,8 +634,8 @@ class GroundwaterObs(Obs):
         return cls(data, meta=metadata, **metadata)
 
 
-class GroundwaterQualityObs(Obs):
-    """class for groundwater quality (grondwatersamenstelling) point
+class WaterQualityObs(Obs):
+    """class for water quality ((grond)watersamenstelling) point
     observations.
 
     Subclass of the Obs class
@@ -655,7 +652,7 @@ class GroundwaterQualityObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in GroundwaterQualityObs._metadata) and (
+                    if (key in WaterQualityObs._metadata) and (
                         key not in kwargs.keys()
                     ):
                         kwargs[key] = getattr(args[0], key)
@@ -665,15 +662,15 @@ class GroundwaterQualityObs(Obs):
         self.ground_level = kwargs.pop("ground_level", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
-        super(GroundwaterQualityObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
-        return GroundwaterQualityObs
+        return WaterQualityObs
 
     @classmethod
     def from_dino(cls, fname, **kwargs):
-        """read ad dino file with groundwater quality data.
+        """read dino file with groundwater quality data.
 
         Parameters
         ----------
@@ -708,7 +705,7 @@ class WaterlvlObs(Obs):
         self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
-        super(WaterlvlObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -775,7 +772,7 @@ class ModelObs(Obs):
 
         self.model = kwargs.pop("model", "")
 
-        super(ModelObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -800,7 +797,7 @@ class MeteoObs(Obs):
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
 
-        super(MeteoObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -1301,7 +1298,7 @@ class EvaporationObs(MeteoObs):
                     if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
-        super(EvaporationObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -1598,7 +1595,7 @@ class PrecipitationObs(MeteoObs):
                     ):
                         kwargs[key] = getattr(args[0], key)
 
-        super(PrecipitationObs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):

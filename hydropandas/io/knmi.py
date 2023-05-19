@@ -589,7 +589,7 @@ def get_knmi_daily_rainfall_url(
         # unzip file
         util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
 
-    return read_knmi_daily_rainfall_file(fname_txt, meteo_var, start=None, end=None)
+    return read_knmi_daily_rainfall_file(fname_txt, meteo_var, start=start, end=end)
 
 
 def read_knmi_daily_rainfall_file(fname_txt, meteo_var="RD", start=None, end=None):
@@ -944,7 +944,7 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
         # unzip file
         util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
 
-    return read_knmi_daily_meteo_file(fname_txt, meteo_var, start=None, end=None)
+    return read_knmi_daily_meteo_file(fname_txt, meteo_var, start=start, end=end)
 
 
 def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):

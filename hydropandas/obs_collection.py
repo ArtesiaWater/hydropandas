@@ -88,9 +88,6 @@ def read_dino(
     ObsClass=obs.GroundwaterObs,
     subdir="Grondwaterstanden_Put",
     suffix="1.csv",
-    unpackdir=None,
-    force_unpack=False,
-    preserve_datetime=False,
     keep_all_obs=True,
     name=None,
     **kwargs,
@@ -109,20 +106,13 @@ def read_dino(
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
-    unpackdir : str
-        destination directory of the unzipped file
-    force_unpack : boolean, optional
-        force unpack if dst already exists
-    preserve_datetime : boolean, optional
-        use date of the zipfile for the destination file
     keep_all_obs : boolean, optional
         add all observation points to the collection, even the points
         without measurements or metadata
     name : str, optional
         the name of the observation collection
     kwargs:
-        kwargs are passed to the hydropandas.io.dino.download_dino_within_extent() or
-        the hydropandas.io.dino.read_dino_dir() function
+        kwargs are passed to the hydropandas.io.dino.read_dino_dir() function
 
     Returns
     -------
@@ -135,13 +125,42 @@ def read_dino(
         ObsClass=ObsClass,
         subdir=subdir,
         suffix=suffix,
-        unpackdir=unpackdir,
-        force_unpack=force_unpack,
-        preserve_datetime=preserve_datetime,
         keep_all_obs=keep_all_obs,
         name=name,
         **kwargs,
     )
+
+    return oc
+
+
+def read_excel(path, meta_sheet_name="metadata"):
+    """Create an observation collection from an excel file. The excel file
+    should have the same format as excel files created with the `to_excel`
+    method of an ObsCollection.
+
+    Parameters
+    ----------
+    path : str
+        full file path (including extension) of the excel file.
+    meta_sheet_name : str, optional
+        sheetname with metadata. The default is "metadata".
+
+    Returns
+    -------
+    ObsCollection
+
+    Notes
+    -----
+    if you write an excel file using the 'to_excel' method and read an excel
+    with the 'read_excel' method you lose this information:
+    - The 'name' and 'meta' attributes of the ObsCollection
+    - metadata of each Observation stored in the 'meta' attribute
+
+    If you don't want to lose this data consider using the `to_pickle` and
+    `read_pickle` function.
+    """
+
+    oc = ObsCollection.from_excel(path, meta_sheet_name=meta_sheet_name)
 
     return oc
 
@@ -533,6 +552,56 @@ def read_modflow(
     return oc
 
 
+def read_pickle(
+    filepath_or_buffer,
+    compression="infer",
+    storage_options=None,
+):
+    """wrapper around pd.read_pickle
+
+    Parameters
+    ----------
+    filepath_or_buffer : str, path object, or file-like object
+        String, path object (implementing ``os.PathLike[str]``), or file-like
+        object implementing a binary ``readlines()`` function.
+
+        .. versionchanged:: 1.0.0
+        Accept URL. URL is not limited to S3 and GCS.
+
+    compression : str or dict, default 'infer'
+        For on-the-fly decompression of on-disk data. If 'infer' and
+        'filepath_or_buffer' is path-like, then detect compression from the
+        following extensions: '.gz','.bz2', '.zip', '.xz', or '.zst' (otherwise
+        no compression). If using 'zip', the ZIP file must contain only one data
+        file to be read in. Set to ``None`` for no decompression. Can also be a
+        dict with key ``'method'`` set to one of {``'zip'``, ``'gzip'``,
+        ``'bz2'``, ``'zstd'``} and other key-value pairs are forwarded to
+        ``zipfile.ZipFile``, ``gzip.GzipFile``, ``bz2.BZ2File``, or
+        ``zstandard.ZstdDecompressor``, respectively. As an example, the
+        following could be passed for Zstandard decompression using a custom
+        compression dictionary: ``compression={'method': 'zstd', 'dict_data':
+        my_compression_dict}``.
+
+        .. versionchanged:: 1.4.0 Zstandard support.
+
+    storage_options : dict, optional
+        Extra options that make sense for a particular storage connection, e.g.
+        host, port, username, password, etc. For HTTP(S) URLs the key-value
+        pairs are forwarded to ``urllib`` as header options. For other URLs
+        (e.g. starting with "s3://", and "gcs://") the key-value pairs are
+        forwarded to ``fsspec``. Please see ``fsspec`` and ``urllib`` for more
+        details.
+
+        .. versionadded:: 1.2.0
+
+    Returns
+    -------
+    ObsCollection : same type as object stored in file
+    """
+
+    return pd.read_pickle(filepath_or_buffer, compression, storage_options)
+
+
 def read_waterinfo(
     file_or_dir, name="", ObsClass=obs.WaterlvlObs, progressbar=True, **kwargs
 ):
@@ -626,10 +695,13 @@ class ObsCollection(pd.DataFrame):
 
     Parameters
     ----------
-    name : str
-        name of the observation collection
-    meta : dic
-        metadata of the observation collection
+    *args observations, list of observations or a pandas DataFrame,
+    **kwargs can be one of these:
+        name : str
+            name of the observation collection
+        meta : dic
+            metadata of the observation collection
+
     """
 
     # temporary properties
@@ -643,16 +715,27 @@ class ObsCollection(pd.DataFrame):
     ]
 
     def __init__(self, *args, **kwargs):
-        """constructor of the ObsCollection.
-
-        *args must be input for the pandas.DataFrame constructor,
-        **kwargs can be one of the attributes listed in _metadata or
-        keyword arguments for the constructor of a pandas.DataFrame.
-        """
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
 
-        super(ObsCollection, self).__init__(*args, **kwargs)
+        if isinstance(args[0], (list, tuple)):
+            logger.debug("Convert list of observations to ObsCollection")
+            obs_df = util._obslist_to_frame(args[0])
+            super().__init__(obs_df, *args[1:], **kwargs)
+        elif isinstance(args[0], obs.Obs):
+            logger.debug("Convert observation(s) to ObsCollection")
+            obs_list = [o for o in args if isinstance(o, obs.Obs)]
+            remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
+            obs_df = util._obslist_to_frame(obs_list)
+            super().__init__(obs_df, *remaining_args, **kwargs)
+        elif isinstance(args[0], pd.DataFrame):
+            if "obs" not in args[0].columns:
+                df = self.from_dataframe(*args)
+                super().__init__(df, **kwargs)
+            else:
+                super().__init__(*args, **kwargs)
+        else:
+            super().__init__(*args, **kwargs)
 
     @property
     def _constructor(self):
@@ -726,8 +809,7 @@ class ObsCollection(pd.DataFrame):
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(
-                f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """check if an observation collection is consistent. An observation
@@ -763,8 +845,7 @@ class ObsCollection(pd.DataFrame):
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(
-                f"missing observation object in collection -> {self.name} ")
+            logger.warning(f"missing observation object in collection -> {self.name} ")
             return False
 
         # check oc data with individual object attributes
@@ -853,8 +934,7 @@ class ObsCollection(pd.DataFrame):
                 raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
-            raise TypeError(
-                "Observation should be of type hydropandas.observation.Obs")
+            raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
         # add new observation to collection
         if o.name not in self.index:
@@ -1043,8 +1123,52 @@ class ObsCollection(pd.DataFrame):
                 obs_list = [ObsClass() for i in range(len(df))]
             df["obs"] = obs_list
         else:
-            raise TypeError(
-                f"df should be type pandas.DataFrame not {type(df)}")
+            raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
+
+        return cls(df)
+
+    @classmethod
+    def from_excel(cls, path, meta_sheet_name="metadata"):
+        """Create an observation collection from an excel file. The excel file
+        should have the same format as excel files created with the `to_excel`
+        method of an ObsCollection.
+
+        Parameters
+        ----------
+        path : str
+            full file path (including extension) of the excel file.
+        meta_sheet_name : str, optional
+            sheetname with metadata. The default is "metadata".
+
+        Returns
+        -------
+        ObsCollection
+
+        Notes
+        -----
+        if you write an excel file using the 'to_excel' method and read an excel
+        with the 'read_excel' method you lose this information:
+        - The 'name' and 'meta' attributes of the ObsCollection
+        - metadata of each Observation stored in the 'meta' attribute
+
+        If you don't want to lose this data consider using the `to_pickle` and
+        `read_pickle` function.
+        """
+
+        df = pd.read_excel(path, meta_sheet_name, index_col=0)
+
+        for oname, row in df.iterrows():
+            measurements = pd.read_excel(path, oname, index_col=0)
+            all_metadata = row.to_dict()
+            obsclass = getattr(obs, row["obs"])
+            # get observation specific metadata
+            metadata = {
+                k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
+            }
+            metadata["name"] = oname
+
+            o = obsclass(measurements, **metadata)
+            df.at[oname, "obs"] = o
 
         return cls(df)
 
@@ -1055,9 +1179,6 @@ class ObsCollection(pd.DataFrame):
         ObsClass=obs.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
-        unpackdir=None,
-        force_unpack=False,
-        preserve_datetime=False,
         keep_all_obs=True,
         name=None,
         **kwargs,
@@ -1070,26 +1191,12 @@ class ObsCollection(pd.DataFrame):
         dirname : str, optional
             directory name, can be a .zip file or the parent directory
             of subdir
-        extent : list, tuple or numpy-array (user must specify extent or bbox)
-            get dinodata online within this extent [xmin, xmax, ymin, ymax]
-        bbox : list, tuple or numpy-array (user must specify extent or bbox)
-            The bounding box, in RD-coordinates, for which you want to
-            retrieve locations [xmin, ymin, xmax, ymax]
-        locations : list of str, optional
-            list of names with location and filter number, separated by
-            'filtersep'
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
         subdir : str
             subdirectory of dirname with data files
         suffix : str
             suffix of files in subdir that will be read
-        unpackdir : str
-            destination directory of the unzipped file
-        force_unpack : boolean, optional
-            force unpack if dst already exists
-        preserve_datetime : boolean, optional
-            use date of the zipfile for the destination file
         keep_all_obs : boolean, optional
             add all observation points to the collection, even the points
             without measurements or metadata
@@ -1113,9 +1220,6 @@ class ObsCollection(pd.DataFrame):
             "dirname": dirname,
             "type": ObsClass,
             "suffix": suffix,
-            "unpackdir": unpackdir,
-            "force_unpack": force_unpack,
-            "preserve_datetime": preserve_datetime,
             "keep_all_obs": keep_all_obs,
         }
 
@@ -1124,9 +1228,6 @@ class ObsCollection(pd.DataFrame):
             ObsClass,
             subdir,
             suffix,
-            unpackdir,
-            force_unpack,
-            preserve_datetime,
             keep_all_obs,
             **kwargs,
         )
@@ -1320,8 +1421,7 @@ class ObsCollection(pd.DataFrame):
             return cls(obs_df, name=name, meta=meta)
 
         else:
-            raise ValueError(
-                "either specify variables file_or_dir or xmlstring")
+            raise ValueError("either specify variables file_or_dir or xmlstring")
 
     @classmethod
     def from_imod(
@@ -1536,8 +1636,7 @@ class ObsCollection(pd.DataFrame):
 
         elif isinstance(ObsClasses, type):
             if issubclass(
-                ObsClasses, (obs.PrecipitationObs,
-                             obs.EvaporationObs, obs.MeteoObs)
+                ObsClasses, (obs.PrecipitationObs, obs.EvaporationObs, obs.MeteoObs)
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
@@ -1726,19 +1825,19 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=name, meta=meta)
 
-    def to_excel(self, path, main_sheet_name=None):
-        """write an ObsCollection to an excel, the first sheet in the
+    def to_excel(self, path, meta_sheet_name="metadata"):
+        """Write an ObsCollection to an excel, the first sheet in the
         excel contains the metadata, the other tabs are the timeseries of each
         observation.
 
+        The excel can be read using the read_excel function of hydropandas.
 
         Parameters
         ----------
         path : str
             full path of xlsx file.
-        main_sheet_name : str or None, optional
-            sheetname with metadata, if None the name of the ObsCollection is
-            used. The default is None.
+        meta_sheet_name : str, optional
+            sheetname with metadata. The default is "metadata".
 
         Raises
         ------
@@ -1749,25 +1848,30 @@ class ObsCollection(pd.DataFrame):
         -------
         None.
 
+        Notes
+        -----
+        The following data is NOT written to the excel file:
+        - The 'name' and 'meta' attributes of the ObsCollection
+        - metadata of each Observation stored in the 'meta' dictionary
+
+        If you don't want this consider using the `to_pickle` method.
         """
-
-        if main_sheet_name is None:
-            main_sheet_name = self.name
-
-        if main_sheet_name == "":
-            main_sheet_name = "metadata"
 
         if not self._is_consistent():
             raise RuntimeError("inconsistent observation collection")
 
+        oc = self.copy(deep=True)
+
         with pd.ExcelWriter(path) as writer:
-            # write ObsCollection dataframe without observations to first sheet
-            super(ObsCollection, self.drop(columns="obs")).to_excel(
-                writer, main_sheet_name
-            )
+            # replace obs column by observation type
+            obseries = oc.pop("obs")
+            oc["obs"] = [type(o).__name__ for o in obseries]
+
+            # write ObsCollection dataframe to first sheet
+            super(ObsCollection, oc).to_excel(writer, meta_sheet_name)
 
             # write each observation time series to next sheets
-            for o in self.obs.values:
+            for o in obseries:
                 sheetname = o.name
                 for ch in ["[", "]", ":", "*", "?", "/", "\\"]:
                     sheetname = sheetname.replace(ch, "_")
@@ -1998,8 +2102,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otype._metadata) - \
-            set(["x", "y", "name", "source", "meta"])
+        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
@@ -2012,8 +2115,7 @@ class ObsCollection(pd.DataFrame):
                 y=xy[i][1],
                 name=col,
                 source=f"interpolation {self.name}",
-                meta={"interpolation_kernel": kernel,
-                      "interpolation_epsilon": epsilon},
+                meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
                 **kwargs,
             )
             obs_list.append(o)

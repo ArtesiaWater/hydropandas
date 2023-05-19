@@ -139,6 +139,10 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
     nan
 
     """
+    if isinstance(zvec, np.ndarray):
+        if np.isnan(zvec).all():
+            logger.warning("vertical datum invalid returning nan")
+            return np.nan
 
     zvec = np.sort(zvec)[::-1]
     ftop_invalid = check_if_var_is_invalid(ftop)
@@ -156,7 +160,7 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
         return lay_fbot
 
     if ftop < fbot:
-        logger.warning("- tube screen top below tube screen bot, switch top and bot")
+        logger.warning("- tube screen top below tube screen bot, switching top and bot")
         fbot, ftop = ftop, fbot
 
     lay_ftop = get_model_layer_z(ftop, zvec, left=left, right=right)
@@ -212,8 +216,6 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
         lay_out = lay_ftop + rel_layer
         logger.debug(f"  - selected layer: {lay_out}")
         return lay_out
-
-    return np.nan
 
 
 def get_zvec(x, y, gwf=None, ds=None):

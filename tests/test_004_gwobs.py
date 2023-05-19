@@ -5,7 +5,6 @@ import test_001_to_from as ttf
 def test_set_tube_nr():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.gwobs.set_tube_nr(if_exists="replace")
-    return
 
 
 def test_set_tube_nr_monitoring_well():
@@ -13,7 +12,6 @@ def test_set_tube_nr_monitoring_well():
     fews_gw_prod.gwobs.set_tube_nr_monitoring_well(
         "monitoring_well", if_exists="replace"
     )
-    return
 
 
 def test_get_modellayers_mf2005():
@@ -49,21 +47,17 @@ def test_get_modellayers_mf2005():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.gwobs.get_modellayers(ml)
 
-    return
-
 
 def test_get_modellayers_mf6_structured():
     import flopy
 
     # Create the Flopy simulation object
     model_name = "test_mf6_structured"
-    sim = flopy.mf6.MFSimulation(
-        sim_name=model_name, exe_name="mf6", version="mf6")
+    sim = flopy.mf6.MFSimulation(sim_name=model_name, exe_name="mf6", version="mf6")
 
     # Create the Flopy groundwater flow (gwf) model object
     model_nam_file = "{}.nam".format(model_name)
-    gwf = flopy.mf6.ModflowGwf(
-        sim, modelname=model_name, model_nam_file=model_nam_file)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=model_name, model_nam_file=model_nam_file)
     Lx = 300000.0
     Ly = 400000.0
     ztop = 50.0
@@ -88,16 +82,7 @@ def test_get_modellayers_mf6_structured():
     dino_gw = ttf.test_obscollection_dinozip_gw()
     dino_gw.gwobs.get_modellayers(gwf)
 
-    return
-
 
 def test_get_regis_layer():
-    # TODO: E   OSError: [Errno -68] NetCDF: I/O failure:
-    # 'http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc'
-
-    try:
-        dino_gw = ttf.test_obscollection_dinozip_gw()
-        dino_gw.gwobs.get_regis_layers()
-    except OSError:
-        pass
-    return
+    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw.gwobs.get_regis_layers()
