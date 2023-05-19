@@ -100,12 +100,10 @@ def _read_dino_groundwater_metadata(f, line):
                 if meta[key] == "":
                     meta_tsi[_translate_dic_div_100[key]] = np.nan
                 else:
-                    meta_tsi[_translate_dic_div_100[key]
-                             ] = float(meta[key]) / 100.0
+                    meta_tsi[_translate_dic_div_100[key]] = float(meta[key]) / 100.0
             if i == 0:
                 for key in meta_tsi.keys():
-                    meta_ts[key] = pd.Series(
-                        name=key, dtype=type(meta_tsi[key]))
+                    meta_ts[key] = pd.Series(name=key, dtype=type(meta_tsi[key]))
 
             for key in meta_tsi.keys():
                 meta_ts[key].loc[start_date] = meta_tsi[key]
@@ -291,8 +289,7 @@ def read_dino_groundwater_csv(
     elif isinstance(f, TextIOWrapper):
         fname = f.name
     else:
-        raise TypeError(
-            "f should be of type str, Path or TextIOWrapper")
+        raise TypeError("f should be of type str, Path or TextIOWrapper")
 
     logger.info("reading -> {}".format(fname))
 
@@ -331,8 +328,7 @@ def read_dino_groundwater_csv(
         elif not to_mnap:
             meta["unit"] = "cm NAP"
         if remove_duplicates:
-            measurements = measurements[~measurements.index.duplicated(
-                keep=keep_dup)]
+            measurements = measurements[~measurements.index.duplicated(keep=keep_dup)]
 
         # add time variant metadata to measurements
         for s in meta_ts.values():
@@ -368,8 +364,7 @@ def _read_artdino_groundwater_metadata(f, line):
     if metalist:
         meta["monitoring_well"] = metalist[-1]["locatie"]
         meta["tube_nr"] = int(float(metalist[-1]["filternummer"]))
-        meta["name"] = "-".join([meta["monitoring_well"],
-                                metalist[-1]["filternummer"]])
+        meta["name"] = "-".join([meta["monitoring_well"], metalist[-1]["filternummer"]])
         meta["x"] = float(metalist[-1]["x-coordinaat"])
         meta["y"] = float(metalist[-1]["y-coordinaat"])
         meetpunt = metalist[-1]["meetpunt nap"]
@@ -682,8 +677,7 @@ def read_dino_waterlvl_csv(
     p_meta = re.compile(
         "Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum"
     )
-    p_data = re.compile(
-        r"Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid")
+    p_data = re.compile(r"Locatie,Peildatum,Stand \(cm t.o.v. NAP\),Bijzonderheid")
 
     line = f.readline()
     while line != "":
@@ -794,8 +788,7 @@ def read_dino_dir(
             files = list(subpath.iterdir())
 
         if len(files) == 0:
-            raise FileNotFoundError(
-                f"no files were found in {subpath} with {suffix=}")
+            raise FileNotFoundError(f"no files were found in {subpath} with {suffix=}")
 
         for file in files:
             obs = get_dino_obs(file)
