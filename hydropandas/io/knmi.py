@@ -188,7 +188,7 @@ def get_stations(meteo_var="RH"):
     return stations
 
 
-def get_station_name(stn, stations=None):
+def _get_station_name(stn: int, stations: Optional[pd.DataFrame] = None) -> str:
     """Returns the station name from a KNMI station.
 
     Modifies the station name in such a way that a valid url can be obtained.
@@ -1350,7 +1350,7 @@ def read_knmi_timeseries_file(fname, meteo_var, start, end, interval="daily"):
 
     # get stations
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(meta["station"], stations)
+    stn_name = _get_station_name(meta["station"], stations)
 
     # set metadata
     x = stations.loc[meta["station"], "x"]
@@ -1508,7 +1508,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 
     # get station
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(stn, stations)
+    stn_name = _get_station_name(stn, stations)
 
     # download data
     if settings["fill_missing_obs"] and (settings["interval"] == "hourly"):
@@ -1785,7 +1785,7 @@ def fill_missing_measurements(
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var)
     if stn_name is None:
-        stn_name = get_station_name(stn, stations)
+        stn_name = _get_station_name(stn, stations)
 
     # get start and end date
     start, end = _start_end_to_datetime(start, end)
@@ -1815,7 +1815,7 @@ def fill_missing_measurements(
         stn = get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
         )[0]
-        stn_name = get_station_name(stn, stations)
+        stn_name = _get_station_name(stn, stations)
         knmi_df, variables, station_meta = download_knmi_data(
             stn, stn_name, meteo_var, start=start, end=end, settings=settings
         )
@@ -1848,7 +1848,7 @@ def fill_missing_measurements(
             break
         else:
             stn_comp = stn_comp[0]
-        stn_name_comp = get_station_name(stn_comp, stations)
+        stn_name_comp = _get_station_name(stn_comp, stations)
         knmi_df_comp, _, __ = download_knmi_data(
             stn_comp, stn_name_comp, meteo_var, start=start, end=end, settings=settings
         )
