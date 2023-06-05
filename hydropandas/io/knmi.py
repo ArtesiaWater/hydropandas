@@ -17,10 +17,12 @@ import re
 import tempfile
 from functools import lru_cache
 from io import StringIO
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 import requests
+from pyproj import Transformer
 
 from .. import util
 
@@ -29,7 +31,54 @@ logger = logging.getLogger(__name__)
 URL_DAILY_NEERSLAG = "https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen"
 URL_DAILY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
 URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
+URL_WOW_KNMI = "https://wow.knmi.nl/sites"
 LOOK_BACK_DAYS = 365
+
+meteo_vars_wow = (
+    "rain_rate",
+    "temperature",
+    "weather_code",
+    "wind",
+    "humidity",
+    "pressure_msl",
+)
+
+def get_stations_amateur(
+    meteo_var: str = "rain_rate",
+    date: Optional[pd.Timestamp] = None,
+    bbox: Optional[List[float]] = None,
+) -> pd.DataFrame:
+    if meteo_var not in meteo_vars_wow:
+        raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
+
+    if date is None:
+        date = pd.Timestamp.today() - pd.Timedelta(days=0, hours=0, minutes=10)
+    datestr = date.strftime("%Y-%m-%dT%H") + "%3A" + date.strftime("%M")[0] + "0%3A00"
+    if bbox is None:
+        bbox = [2.5, 50.0, 8.0, 54.0]  # Netherlands extent
+    bboxstr = (
+        str(bbox[0]) + "%20" + str(bbox[1]) + "," + str(bbox[2]) + "%20" + str(bbox[3])
+    )  # lat lon,lat lon
+    try:
+        r = requests.get(
+            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}&filter=wow_observations&date={datestr}",
+            timeout=120,
+        )
+        r.raise_for_status()
+        sites = r.json()["sites"]
+        transformer = Transformer.from_crs(4326, 28992)
+        lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
+        xy = pd.DataFrame(
+            np.column_stack(transformer.transform(lat_lon[:, 1], lat_lon[:, 0])),
+            columns=["x", "y"],
+        )
+        stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(
+            "id", drop=False
+        )
+    except requests.HTTPError as ex:
+        raise ex
+
+    return stations
 
 
 def get_stations(meteo_var="RH"):
@@ -123,8 +172,12 @@ def get_nearest_station_df(
     stns : list
         station numbers.
     """
+    stations = None
     if stations is None:
-        stations = get_stations(meteo_var=meteo_var)
+        if meteo_var in meteo_vars_wow:
+            stations = get_stations_amateur(meteo_var=meteo_var)
+        else:
+            stations = get_stations(meteo_var=meteo_var)
     if ignore is not None:
         stations.drop(ignore, inplace=True)
         if stations.empty:
