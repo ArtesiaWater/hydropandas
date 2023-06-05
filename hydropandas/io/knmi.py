@@ -17,7 +17,7 @@ import re
 import tempfile
 from functools import lru_cache
 from io import StringIO
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -37,11 +37,19 @@ LOOK_BACK_DAYS = 365
 meteo_vars_wow = (
     "rain_rate",
     "temperature",
-    "weather_code",
+    # "weather_code",
     "wind",
     "humidity",
     "pressure_msl",
 )
+
+meteo_vars_wow_translate = {
+    "neerslagintensiteit (mm/uur)": "precipitation rate [mm/h]",
+    "temperatuur (C)": "temperature [C]",
+    "windsnelheid (m/s)": "windspeed [m/s]",
+    "relatieve vochtigheid  (%)": "relative humidity [%]",
+    "luchtdruk (hPa)": "air pressure [hPa]",
+}
 
 def get_stations_amateur(
     meteo_var: str = "rain_rate",
@@ -53,7 +61,7 @@ def get_stations_amateur(
 
     if date is None:
         date = pd.Timestamp.today() - pd.Timedelta(days=0, hours=0, minutes=10)
-    datestr = date.strftime("%Y-%m-%dT%H") + "%3A" + date.strftime("%M")[0] + "0%3A00"
+    datestr = _wow_knmi_strftime(date)
     if bbox is None:
         bbox = [2.5, 50.0, 8.0, 54.0]  # Netherlands extent
     bboxstr = (
@@ -79,6 +87,68 @@ def get_stations_amateur(
         raise ex
 
     return stations
+
+
+def _wow_knmi_strftime(timestamp: pd.Timestamp) -> str:
+    return (
+        timestamp.strftime("%Y-%m-%dT%H")
+        + "%3A"
+        + timestamp.strftime("%M")[0]
+        + "0%3A00"
+    )
+
+
+def get_knmi_wow_metadata(stn_id: str, report_id: str) -> dict:
+    try:
+        r = requests.get(f"{URL_WOW_KNMI}/{stn_id}?report_id={report_id}")
+        r.raise_for_status()
+        metadata = r.json()
+    except requests.HTTPError as ex:
+        raise ex
+    return metadata
+
+
+@lru_cache()
+def get_knmi_wow_measurements(
+    stn_id: str,
+    meteo_var: str = "rain_rate",
+    start: pd.Timestamp = None,
+    end: pd.Timestamp = None,
+):
+    start, end = _start_end_to_datetime(start, end)
+    if (end - start) > pd.to_timedelta(365, unit="D"):
+        t = list(pd.date_range(start, end, freq="365D"))
+        if t[-1] != end:
+            t.append(end)
+        dfs = []
+        for i in range(len(t) - 1):
+            dfs.append(
+                get_knmi_wow_measurements(stn_id, meteo_var, start=t[i], end=t[i + 1])
+            )
+        df = pd.concat(dfs)
+        df = df[~df.index.duplicated()]
+        return df
+
+    startstr = _wow_knmi_strftime(start)
+    endstr = _wow_knmi_strftime(end)
+    # get station measurements
+    try:
+        meas = pd.read_csv(
+            f"{URL_WOW_KNMI}/{stn_id}/export?start={startstr}&end={endstr}&layer={meteo_var}",
+            delimiter=";",
+            index_col=["datum"],
+        )
+        meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
+        measurements = meas.rename(
+            columns={
+                x: meteo_vars_wow_translate[x.replace(f" [{stn_id}]", "")]
+                for x in meas.columns
+            }
+        )
+    except requests.HTTPError as ex:
+        raise ex
+
+    return measurements
 
 
 def get_stations(meteo_var="RH"):
@@ -279,7 +349,7 @@ def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
     return stns
 
 
-def _start_end_to_datetime(start, end):
+def _start_end_to_datetime(start, end) -> Tuple[pd.Timestamp]:
     """convert start and endtime to datetime.
 
     Parameters
