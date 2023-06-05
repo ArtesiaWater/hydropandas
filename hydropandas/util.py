@@ -10,11 +10,11 @@ import sys
 import tempfile
 import time
 import zipfile
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from colorama import Back, Fore, Style
 from numpy import unique
-from pandas import DataFrame, DatetimeIndex
+from pandas import DataFrame, DatetimeIndex, Timedelta, Timestamp, to_datetime
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -336,3 +336,34 @@ def interpolate(
         fill_df.loc[idx] = val_rbf
 
     return fill_df
+
+
+def util._start_end_to_datetime(start, end) -> Tuple[Timestamp]:
+    """convert start and endtime to datetime.
+
+    Parameters
+    ----------
+    start : str, datetime, None
+        start time
+    end : str, datetime, None
+        start time
+
+    Returns
+    -------
+    start : pd.TimeStamp
+        start time
+    end : pd.TimeStamp
+        end time
+    """
+
+    if start is None:
+        start = Timestamp(Timestamp.today().year - 1, 1, 1)
+    else:
+        start = to_datetime(start)
+
+    if end is None:
+        end = Timestamp.today() - Timedelta(1, unit="D")
+    else:
+        end = to_datetime(end)
+
+    return start, end

@@ -17,12 +17,11 @@ import re
 import tempfile
 from functools import lru_cache
 from io import StringIO
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 import requests
-from pyproj import Transformer
 
 from .. import util
 
@@ -31,124 +30,9 @@ logger = logging.getLogger(__name__)
 URL_DAILY_NEERSLAG = "https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen"
 URL_DAILY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
 URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
-URL_WOW_KNMI = "https://wow.knmi.nl/sites"
 LOOK_BACK_DAYS = 365
 
-meteo_vars_wow = (
-    "rain_rate",
-    "temperature",
-    # "weather_code",
-    "wind",
-    "humidity",
-    "pressure_msl",
-)
 
-meteo_vars_wow_translate = {
-    "neerslagintensiteit (mm/uur)": "precipitation rate [mm/h]",
-    "temperatuur (C)": "temperature [C]",
-    "windsnelheid (m/s)": "windspeed [m/s]",
-    "relatieve vochtigheid  (%)": "relative humidity [%]",
-    "luchtdruk (hPa)": "air pressure [hPa]",
-}
-
-def get_stations_amateur(
-    meteo_var: str = "rain_rate",
-    date: Optional[pd.Timestamp] = None,
-    bbox: Optional[List[float]] = None,
-) -> pd.DataFrame:
-    if meteo_var not in meteo_vars_wow:
-        raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
-
-    if date is None:
-        date = pd.Timestamp.today() - pd.Timedelta(days=0, hours=0, minutes=10)
-    datestr = _wow_knmi_strftime(date)
-    if bbox is None:
-        bbox = [2.5, 50.0, 8.0, 54.0]  # Netherlands extent
-    bboxstr = (
-        str(bbox[0]) + "%20" + str(bbox[1]) + "," + str(bbox[2]) + "%20" + str(bbox[3])
-    )  # lat lon,lat lon
-    try:
-        r = requests.get(
-            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}&filter=wow_observations&date={datestr}",
-            timeout=120,
-        )
-        r.raise_for_status()
-        sites = r.json()["sites"]
-        transformer = Transformer.from_crs(4326, 28992)
-        lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
-        xy = pd.DataFrame(
-            np.column_stack(transformer.transform(lat_lon[:, 1], lat_lon[:, 0])),
-            columns=["x", "y"],
-        )
-        stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(
-            "id", drop=False
-        )
-    except requests.HTTPError as ex:
-        raise ex
-
-    return stations
-
-
-def _wow_knmi_strftime(timestamp: pd.Timestamp) -> str:
-    return (
-        timestamp.strftime("%Y-%m-%dT%H")
-        + "%3A"
-        + timestamp.strftime("%M")[0]
-        + "0%3A00"
-    )
-
-
-def get_knmi_wow_metadata(stn_id: str, report_id: str) -> dict:
-    try:
-        r = requests.get(f"{URL_WOW_KNMI}/{stn_id}?report_id={report_id}")
-        r.raise_for_status()
-        metadata = r.json()
-    except requests.HTTPError as ex:
-        raise ex
-    return metadata
-
-
-@lru_cache()
-def get_knmi_wow_measurements(
-    stn_id: str,
-    meteo_var: str = "rain_rate",
-    start: pd.Timestamp = None,
-    end: pd.Timestamp = None,
-):
-    start, end = _start_end_to_datetime(start, end)
-    if (end - start) > pd.to_timedelta(365, unit="D"):
-        t = list(pd.date_range(start, end, freq="365D"))
-        if t[-1] != end:
-            t.append(end)
-        dfs = []
-        for i in range(len(t) - 1):
-            dfs.append(
-                get_knmi_wow_measurements(stn_id, meteo_var, start=t[i], end=t[i + 1])
-            )
-        df = pd.concat(dfs)
-        df = df[~df.index.duplicated()]
-        return df
-
-    startstr = _wow_knmi_strftime(start)
-    endstr = _wow_knmi_strftime(end)
-    # get station measurements
-    try:
-        meas = pd.read_csv(
-            f"{URL_WOW_KNMI}/{stn_id}/export?start={startstr}&end={endstr}&layer={meteo_var}",
-            delimiter=";",
-            index_col=["datum"],
-        )
-        meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
-        measurements = meas.rename(
-            columns={
-                x: meteo_vars_wow_translate[x.replace(f" [{stn_id}]", "")]
-                for x in meas.columns
-            }
-        )
-    except requests.HTTPError as ex:
-        raise ex
-
-    return measurements
 
 
 def get_stations(meteo_var="RH"):
@@ -348,38 +232,6 @@ def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
 
     return stns
 
-
-def _start_end_to_datetime(start, end) -> Tuple[pd.Timestamp]:
-    """convert start and endtime to datetime.
-
-    Parameters
-    ----------
-    start : str, datetime, None
-        start time
-    end : str, datetime, None
-        start time
-
-    Returns
-    -------
-    start : pd.TimeStamp
-        start time
-    end : pd.TimeStamp
-        end time
-    """
-
-    if start is None:
-        start = pd.Timestamp(pd.Timestamp.today().year - 1, 1, 1)
-    else:
-        start = pd.to_datetime(start)
-
-    if end is None:
-        end = pd.Timestamp.today() - pd.Timedelta(1, unit="D")
-    else:
-        end = pd.to_datetime(end)
-
-    return start, end
-
-
 def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
     """According to the website of the knmi it can take up to 3 weeks before
     precipitation data is updated. If you use the fill_missing_measurements
@@ -502,7 +354,7 @@ def download_knmi_data(
     if settings["inseason"]:
         raise NotImplementedError("inseason stuff not implemented")
 
-    start, end = _start_end_to_datetime(start, end)
+    start, end = util._start_end_to_datetime(start, end)
 
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
@@ -1647,7 +1499,7 @@ def get_knmi_obslist(
             elif meteo_var == "EV24":
                 obs_kwargs["et_type"] = "EV24"
 
-        start, end = _start_end_to_datetime(start, end)
+        start, end = util._start_end_to_datetime(start, end)
 
         # get stations
         if stns is None:
@@ -1788,7 +1640,7 @@ def fill_missing_measurements(
         stn_name = _get_station_name(stn, stations)
 
     # get start and end date
-    start, end = _start_end_to_datetime(start, end)
+    start, end = util._start_end_to_datetime(start, end)
 
     # check latest date at which measurements are available at De Bilt
     if (meteo_var in ["RD", "RH"]) and (

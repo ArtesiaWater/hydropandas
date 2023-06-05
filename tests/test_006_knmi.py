@@ -144,7 +144,7 @@ def test_download_ev24_210_no_api():
 
 
 def test_get_knmi_daily_meteo_ev24_empty():
-    start, end = knmi._start_end_to_datetime("1959", "1963")
+    start, end = hpd.util._start_end_to_datetime("1959", "1963")
     knmi.get_knmi_daily_meteo_api(knmi.URL_DAILY_METEO, 265, "EV24", start, end, False)
 
 
