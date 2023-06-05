@@ -33,8 +33,6 @@ URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
 LOOK_BACK_DAYS = 365
 
 
-
-
 def get_stations(meteo_var="RH"):
     """get knmi stations from json files according to variable.
 
@@ -99,63 +97,6 @@ def _get_station_name(stn: int, stations: Optional[pd.DataFrame] = None) -> str:
     return stn_name
 
 
-def get_nearest_station_df(
-    locations, xcol="x", ycol="y", stations=None, meteo_var="RH", ignore=None
-):
-    """Find the KNMI stations that measure 'meteo_var' closest to the
-    coordinates in 'locations'.
-
-    Parameters
-    ----------
-    locations : pandas.DataFrame
-        DataFrame containing x and y coordinates
-    xcol : str
-        name of the column in the locations dataframe with the x values
-    ycol : str
-        name of the column in the locations dataframe with the y values
-    stations : pandas DataFrame, optional
-        if None stations will be obtained using the get_stations function.
-        The default is None.
-    meteo_var : str
-        measurement variable e.g. 'RH' or 'EV24'
-    ignore : list, optional
-        list of stations to ignore. The default is None.
-
-    Returns
-    -------
-    stns : list
-        station numbers.
-    """
-    stations = None
-    if stations is None:
-        if meteo_var in meteo_vars_wow:
-            stations = get_stations_amateur(meteo_var=meteo_var)
-        else:
-            stations = get_stations(meteo_var=meteo_var)
-    if ignore is not None:
-        stations.drop(ignore, inplace=True)
-        if stations.empty:
-            return None
-
-    xo = pd.to_numeric(locations[xcol])
-    xt = pd.to_numeric(stations.x)
-    yo = pd.to_numeric(locations[ycol])
-    yt = pd.to_numeric(stations.y)
-
-    xh, xi = np.meshgrid(xt, xo)
-    yh, yi = np.meshgrid(yt, yo)
-
-    distances = pd.DataFrame(
-        np.sqrt((xh - xi) ** 2 + (yh - yi) ** 2),
-        index=locations.index,
-        columns=stations.index,
-    )
-
-    stns = distances.idxmin(axis=1).to_list()
-
-    return stns
-
-
 def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
     """find the KNMI stations that measure 'meteo_var' closest to the given
     x and y coordinates.
@@ -184,7 +125,10 @@ def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
 
     locations = pd.DataFrame(data=xy, columns=["x", "y"])
 
-    stns = get_nearest_station_df(
+    if stations is None:
+        stations = get_stations(meteo_var=meteo_var)
+
+    stns = util.get_nearest_station_df(
         locations,
         xcol="x",
         ycol="y",
@@ -231,6 +175,7 @@ def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
     stns = distance.nsmallest(n).index.to_list()
 
     return stns
+
 
 def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
     """According to the website of the knmi it can take up to 3 weeks before
@@ -1509,7 +1454,7 @@ def get_knmi_obslist(
                     xy, stations=stations, meteo_var=meteo_var
                 )
             elif locations is not None:
-                _stns = get_nearest_station_df(
+                _stns = util.get_nearest_station_df(
                     locations, stations=stations, meteo_var=meteo_var
                 )
             else:
@@ -1664,7 +1609,7 @@ def fill_missing_measurements(
     while knmi_df.empty:
         logger.info(f"station {stn} has no measurements between {start} and {end}")
         logger.info("trying to get measurements from nearest station")
-        stn = get_nearest_station_df(
+        stn = util.get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
         )[0]
         stn_name = _get_station_name(stn, stations)
@@ -1682,7 +1627,7 @@ def fill_missing_measurements(
     # fill missing values
     settings["raise_exceptions"] = False
     while np.any(missing) and not np.all(missing):
-        stn_comp = get_nearest_station_df(
+        stn_comp = util.get_nearest_station_df(
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
         )
 

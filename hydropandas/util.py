@@ -12,9 +12,16 @@ import time
 import zipfile
 from typing import Dict, List, Optional, Tuple
 
+import numpy as np
 from colorama import Back, Fore, Style
-from numpy import unique
-from pandas import DataFrame, DatetimeIndex, Timedelta, Timestamp, to_datetime
+from pandas import (
+    DataFrame,
+    DatetimeIndex,
+    Timedelta,
+    Timestamp,
+    to_datetime,
+    to_numeric,
+)
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -246,7 +253,7 @@ def get_color_logger(level="INFO"):
 
 
 def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
-    obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
+    obs_times = DatetimeIndex(np.unique([obs.index for obs in oc.obs]))
     df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
     for obs in oc.obs:
         if not obs.empty:
@@ -338,7 +345,7 @@ def interpolate(
     return fill_df
 
 
-def util._start_end_to_datetime(start, end) -> Tuple[Timestamp]:
+def _start_end_to_datetime(start, end) -> Tuple[Timestamp]:
     """convert start and endtime to datetime.
 
     Parameters
@@ -367,3 +374,71 @@ def util._start_end_to_datetime(start, end) -> Tuple[Timestamp]:
         end = to_datetime(end)
 
     return start, end
+
+
+def get_nearest_station_df(locations, stations, xcol="x", ycol="y", ignore=None):
+    """Find the nearest stations that measure 'meteo_var' closest to the
+    coordinates in 'locations'.
+
+    Parameters
+    ----------
+    locations : pandas.DataFrame
+        DataFrame containing x and y coordinates
+    xcol : str
+        name of the column in the locations dataframe with the x values
+    ycol : str
+        name of the column in the locations dataframe with the y values
+    stations : pandas DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
+    meteo_var : str
+        measurement variable e.g. 'RH' or 'EV24'
+    ignore : list, optional
+        list of stations to ignore. The default is None.
+
+    Returns
+    -------
+    stns : list
+        station numbers.
+    """
+
+    if ignore is not None:
+        stations.drop(ignore, inplace=True)
+        if stations.empty:
+            return None
+
+    xo = to_numeric(locations[xcol])
+    xt = to_numeric(stations.x)
+    yo = to_numeric(locations[ycol])
+    yt = to_numeric(stations.y)
+
+    xh, xi = np.meshgrid(xt, xo)
+    yh, yi = np.meshgrid(yt, yo)
+
+    if "lon" in xcol.lower() or "lat" in ycol.lower():
+        distances = DataFrame(
+            _latlon_distance(xo, yo, xt, yt),
+            index=locations.index,
+            columns=stations.index,
+        )
+    else:
+        distances = DataFrame(
+            np.sqrt((xh - xi) ** 2 + (yh - yi) ** 2),
+            index=locations.index,
+            columns=stations.index,
+        )
+
+    stns = distances.idxmin(axis=1).to_list()
+
+    return stns
+
+
+def _latlon_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Haversine formula"""
+    p = 0.017453292519943295
+    hav = (
+        0.5
+        - np.cos((lat2 - lat1) * p) / 2
+        + np.cos(lat1 * p) * np.cos(lat2 * p) * (1 - np.cos((lon2 - lon1) * p)) / 2
+    )
+    return 12742 * np.asin(np.sqrt(hav))

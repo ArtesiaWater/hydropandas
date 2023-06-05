@@ -4,7 +4,6 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 import requests
-from pyproj import Transformer
 
 from .. import util
 
@@ -21,7 +20,7 @@ meteo_vars_wow = (
 )
 
 meteo_vars_wow_translate = {
-    "neerslagintensiteit (mm/uur)": "precipitation rate [mm/h]",
+    "neerslagintensiteit (mm/uur)": "precipitation [mm]",
     "temperatuur (C)": "temperature [C]",
     "windsnelheid (m/s)": "windspeed [m/s]",
     "relatieve vochtigheid  (%)": "relative humidity [%]",
@@ -29,7 +28,7 @@ meteo_vars_wow_translate = {
 }
 
 
-def get_stations_amateur(
+def get_wow_stations(
     meteo_var: str = "rain_rate",
     date: Optional[pd.Timestamp] = None,
     bbox: Optional[List[float]] = None,
@@ -39,7 +38,7 @@ def get_stations_amateur(
 
     if date is None:
         date = pd.Timestamp.today() - pd.Timedelta(days=0, hours=0, minutes=10)
-    datestr = _wow_knmi_strftime(date)
+    datestr = _wow_strftime(date)
 
     if bbox is None:
         bbox = [2.5, 50.0, 8.0, 54.0]  # Netherlands extent
@@ -56,10 +55,9 @@ def get_stations_amateur(
         )
         r.raise_for_status()
         sites = r.json()["sites"]
-        transformer = Transformer.from_crs(4326, 28992)
         lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
         xy = pd.DataFrame(
-            np.column_stack(transformer.transform(lat_lon[:, 1], lat_lon[:, 0])),
+            np.column_stack(lat_lon[:, 1], lat_lon[:, 0]),
             columns=["x", "y"],
         )
         stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(
@@ -71,7 +69,7 @@ def get_stations_amateur(
     return stations
 
 
-def _wow_knmi_strftime(timestamp: pd.Timestamp) -> str:
+def _wow_strftime(timestamp: pd.Timestamp) -> str:
     return (
         timestamp.strftime("%Y-%m-%dT%H")
         + "%3A"
@@ -80,7 +78,7 @@ def _wow_knmi_strftime(timestamp: pd.Timestamp) -> str:
     )
 
 
-def get_knmi_wow_metadata(stn_id: str, report_id: str) -> dict:
+def get_wow_metadata(stn_id: str, report_id: str) -> dict:
     try:
         r = requests.get(f"{URL_WOW_KNMI}/{stn_id}?report_id={report_id}")
         r.raise_for_status()
@@ -91,7 +89,7 @@ def get_knmi_wow_metadata(stn_id: str, report_id: str) -> dict:
 
 
 @lru_cache()
-def get_knmi_wow_measurements(
+def get_wow_measurements(
     stn_id: str,
     meteo_var: str = "rain_rate",
     start: pd.Timestamp = None,
@@ -105,14 +103,14 @@ def get_knmi_wow_measurements(
         dfs = []
         for i in range(len(t) - 1):
             dfs.append(
-                get_knmi_wow_measurements(stn_id, meteo_var, start=t[i], end=t[i + 1])
+                get_wow_measurements(stn_id, meteo_var, start=t[i], end=t[i + 1])
             )
         df = pd.concat(dfs)
         df = df[~df.index.duplicated()]
         return df
 
-    startstr = _wow_knmi_strftime(start)
-    endstr = _wow_knmi_strftime(end)
+    startstr = _wow_strftime(start)
+    endstr = _wow_strftime(end)
     # get station measurements
     try:
         meas = pd.read_csv(
@@ -135,10 +133,6 @@ def get_knmi_wow_measurements(
             (measurements.index[1:] - measurements.index[:-1])
             / pd.Timedelta(1, unit="H")
         ).values
-        measurements = (
-            measurements.iloc[0:-1]
-            .multiply(weights, axis=0)
-            .rename(columns={"precipitation rate [mm/h]": "precipitation [mm]"})
-        )
+        measurements = measurements.iloc[0:-1].multiply(weights, axis=0)
 
     return measurements
