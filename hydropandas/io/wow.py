@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -78,9 +78,19 @@ def _wow_strftime(timestamp: pd.Timestamp) -> str:
     )
 
 
-def get_wow_metadata(stn_id: str, report_id: str) -> dict:
+def get_wow(
+    stn: str, meteo_var: str, start: pd.Timestamp = None, end: pd.Timestamp = None
+) -> Tuple[pd.DataFrame, dict]:
+    metadata = get_wow_metadata(stn=stn)
+    measurements = get_wow_measurements(
+        stn=stn, meteo_var=meteo_var, start=start, end=end
+    )
+    return measurements, metadata
+
+
+def get_wow_metadata(stn: str) -> dict:
     try:
-        r = requests.get(f"{URL_WOW_KNMI}/{stn_id}?report_id={report_id}")
+        r = requests.get(f"{URL_WOW_KNMI}/{stn}")
         r.raise_for_status()
         metadata = r.json()
     except requests.HTTPError as ex:
@@ -90,11 +100,14 @@ def get_wow_metadata(stn_id: str, report_id: str) -> dict:
 
 @lru_cache()
 def get_wow_measurements(
-    stn_id: str,
-    meteo_var: str = "rain_rate",
+    stn: str,
+    meteo_var: str,
     start: pd.Timestamp = None,
     end: pd.Timestamp = None,
 ):
+    if meteo_var not in meteo_vars_wow:
+        raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
+
     start, end = util._start_end_to_datetime(start, end)
     if (end - start) > pd.to_timedelta(365, unit="D"):
         t = list(pd.date_range(start, end, freq="365D"))
@@ -102,9 +115,7 @@ def get_wow_measurements(
             t.append(end)
         dfs = []
         for i in range(len(t) - 1):
-            dfs.append(
-                get_wow_measurements(stn_id, meteo_var, start=t[i], end=t[i + 1])
-            )
+            dfs.append(get_wow_measurements(stn, meteo_var, start=t[i], end=t[i + 1]))
         df = pd.concat(dfs)
         df = df[~df.index.duplicated()]
         return df
@@ -114,14 +125,14 @@ def get_wow_measurements(
     # get station measurements
     try:
         meas = pd.read_csv(
-            f"{URL_WOW_KNMI}/{stn_id}/export?start={startstr}&end={endstr}&layer={meteo_var}",
+            f"{URL_WOW_KNMI}/{stn}/export?start={startstr}&end={endstr}&layer={meteo_var}",
             delimiter=";",
             index_col=["datum"],
         )
         meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
         measurements = meas.rename(
             columns={
-                x: meteo_vars_wow_translate[x.replace(f" [{stn_id}]", "")]
+                x: meteo_vars_wow_translate[x.replace(f" [{stn}]", "")]
                 for x in meas.columns
             }
         )

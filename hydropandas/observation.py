@@ -15,6 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import logging
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -1284,6 +1285,32 @@ class MeteoObs(Obs):
             meteo_var=meteo_var,
         )
 
+    @classmethod
+    def from_wow(
+        cls,
+        stn: str,
+        meteo_var: str,
+        startdate: Optional[pd.Timestamp] = None,
+        enddate: Optional[pd.Timestamp] = None,
+    ):
+        from .io import wow
+
+        wow_df, meta = wow.get_wow(
+            stn=stn, meteo_var=meteo_var, start=startdate, end=enddate
+        )
+
+        return cls(
+            wow_df,
+            meta=meta,
+            station=meta["site"]["id"],
+            x=meta["site"]["geo"]["coordinates"][1],
+            y=meta["site"]["geo"]["coordinates"][0],
+            name=meta["site"]["name"],
+            source="wow.knmi.nl",
+            unit=wow_df.columns[0].split(" ")[-1],
+            meteo_var=meteo_var,
+        )
+
 
 class EvaporationObs(MeteoObs):
     """class for evaporation timeseries.
@@ -1803,4 +1830,15 @@ class PrecipitationObs(MeteoObs):
             source=meta["source"],
             unit=meta["unit"],
             meteo_var="RD",
+        )
+
+    @classmethod
+    def from_wow(
+        cls,
+        stn: str,
+        startdate: Optional[pd.Timestamp] = None,
+        enddate: Optional[pd.Timestamp] = None,
+    ):
+        return super().from_wow(
+            stn, meteo_var="rain_rate", stardate=startdate, enddate=enddate
         )
