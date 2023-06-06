@@ -64,7 +64,7 @@ def get_wow_stations(
         sites = r.json()["sites"]
         lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
         xy = pd.DataFrame(
-            np.column_stack(lat_lon[:, 1], lat_lon[:, 0]),
+            np.column_stack([lat_lon[:, 1], lat_lon[:, 0]]),
             columns=["x", "y"],
         )
         stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(

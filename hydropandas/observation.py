@@ -1324,10 +1324,10 @@ class MeteoObs(Obs):
 
         bbox = [xy[0] - 1, xy[1] - 1, xy[0] + 1, xy[1] + 1]  # lat lon,lat lon
         stations = wow.get_wow_stations(
-            meteo_var=meteo_var, date=startdate, bbox=bbox, obs_filter=obs_filter
+            meteo_var=meteo_var, date=startdate, bbox=bbox, obs_filter=None
         )
         nearest_stations = wow.get_nearest_station_xy(
-            xy, stations=stations, ignore=None
+            [xy], stations=stations, ignore=None
         )
         stn = nearest_stations[0]
         wow_df, meta = wow.get_wow(
@@ -1875,7 +1875,7 @@ class PrecipitationObs(MeteoObs):
         enddate: Optional[pd.Timestamp] = None,
     ):
         return super().from_wow(
-            stn, meteo_var="rain_rate", stardate=startdate, enddate=enddate
+            stn, meteo_var="rain_rate", startdate=startdate, enddate=enddate
         )
 
     @classmethod
@@ -1886,5 +1886,5 @@ class PrecipitationObs(MeteoObs):
         enddate: Optional[pd.Timestamp] = None,
     ):
         return super().from_wow_nearest_xy(
-            xy, meteo_var="rain_rate", stardate=startdate, enddate=enddate
+            xy, meteo_var="rain_rate", startdate=startdate, enddate=enddate
         )
