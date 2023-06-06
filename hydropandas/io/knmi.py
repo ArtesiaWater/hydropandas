@@ -1453,9 +1453,7 @@ def get_knmi_obslist(
                     xy, stations=stations, meteo_var=meteo_var
                 )
             elif locations is not None:
-                _stns = util.get_nearest_station_df(
-                    locations, stations=stations, meteo_var=meteo_var
-                )
+                _stns = util.get_nearest_station_df(locations, stations=stations)
             else:
                 raise ValueError(
                     "stns, location and x are both None" "please specify one of these"
@@ -1602,14 +1600,14 @@ def fill_missing_measurements(
     knmi_df, variables, station_meta = download_knmi_data(
         stn, stn_name, meteo_var, start=start, end=end, settings=settings
     )
-
+    stns = get_stations(meteo_var=meteo_var)
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
         logger.info(f"station {stn} has no measurements between {start} and {end}")
         logger.info("trying to get measurements from nearest station")
         stn = util.get_nearest_station_df(
-            stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
+            locations=stations.loc[[stn]], stations=stns, ignore=ignore
         )[0]
         stn_name = _get_station_name(stn, stations)
         knmi_df, variables, station_meta = download_knmi_data(
@@ -1627,7 +1625,7 @@ def fill_missing_measurements(
     settings["raise_exceptions"] = False
     while np.any(missing) and not np.all(missing):
         stn_comp = util.get_nearest_station_df(
-            stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
+            locations=stations.loc[[stn]], stations=stns, ignore=ignore
         )
 
         logger.info(
