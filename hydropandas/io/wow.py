@@ -55,10 +55,11 @@ def get_wow_stations(
             raise ValueError(f"{obs_filter} must be one of {wow_filters}")
 
     try:
-        r = requests.get(
-            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}&filter={obs_filter}&date={datestr}",
-            timeout=120,
+        url = (
+            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}"
+            f"&filter={obs_filter}&date={datestr}"
         )
+        r = requests.get(url, timeout=120)
         r.raise_for_status()
         sites = r.json()["sites"]
         lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
@@ -131,11 +132,11 @@ def get_wow_measurements(
     endstr = _wow_strftime(end)
     # get station measurements
     try:
-        meas = pd.read_csv(
-            f"{URL_WOW_KNMI}/{stn}/export?start={startstr}&end={endstr}&layer={meteo_var}",
-            delimiter=";",
-            index_col=["datum"],
+        url = (
+            f"{URL_WOW_KNMI}/{stn}/export?start={startstr}"
+            f"&end={endstr}&layer={meteo_var}"
         )
+        meas = pd.read_csv(url, delimiter=";", index_col=["datum"])
         meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
         measurements = meas.rename(
             columns={

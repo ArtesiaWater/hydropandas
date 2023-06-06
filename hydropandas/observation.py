@@ -25,7 +25,6 @@ from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
 
 logger = logging.getLogger(__name__)
-from . import util
 
 
 class Obs(pd.DataFrame):
