@@ -283,7 +283,7 @@ def test_knmi_obs_from_stn_with_missing_data_in_time_period():
 
 
 def test_knmi_obs_from_xy():
-    hpd.PrecipitationObs.from_nearest_xy((100000, 350000))
+    hpd.PrecipitationObs.from_knmi_nearest_xy((100000, 350000))
 
 
 def test_knmi_obs_from_obs():

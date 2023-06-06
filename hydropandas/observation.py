@@ -982,7 +982,7 @@ class MeteoObs(Obs):
         )
 
     @classmethod
-    def from_nearest_xy(
+    def from_knmi_nearest_xy(
         cls,
         xy,
         meteo_var,
@@ -1412,7 +1412,7 @@ class EvaporationObs(MeteoObs):
         )
 
     @classmethod
-    def from_nearest_xy(
+    def from_knmi_nearest_xy(
         cls,
         xy,
         et_type="EV24",
@@ -1699,7 +1699,7 @@ class PrecipitationObs(MeteoObs):
         return super().from_knmi(stn, meteo_var=meteo_var, **kwargs)
 
     @classmethod
-    def from_nearest_xy(cls, xy, stn_type="meteo", **kwargs):
+    def from_knmi_nearest_xy(cls, xy, stn_type="meteo", **kwargs):
         """Get a PrecipitationObs object with precipitation measurements from
         the meteo or precipitation station closest to the given (x,y)
         coordinates.
@@ -1743,7 +1743,7 @@ class PrecipitationObs(MeteoObs):
         else:
             raise ValueError(f"invalid measurement station type -> {stn_type}")
 
-        return super().from_nearest_xy(xy, meteo_var=meteo_var, **kwargs)
+        return super().from_knmi_nearest_xy(xy, meteo_var=meteo_var, **kwargs)
 
     @classmethod
     def from_obs(cls, obs, stn_type="meteo", **kwargs):
