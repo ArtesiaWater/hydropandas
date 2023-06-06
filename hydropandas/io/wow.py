@@ -9,7 +9,6 @@ from .. import util
 
 URL_WOW_KNMI = "https://wow.knmi.nl/sites"
 
-
 meteo_vars_wow = (
     "rain_rate",
     "temperature",
@@ -77,6 +76,7 @@ def get_wow_stations(
 
 
 def _wow_strftime(timestamp: pd.Timestamp) -> str:
+    """Convert pandast Timestamp to wow string time"""
     return (
         timestamp.strftime("%Y-%m-%dT%H")
         + "%3A"

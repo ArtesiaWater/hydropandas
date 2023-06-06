@@ -15,7 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -1294,6 +1294,23 @@ class MeteoObs(Obs):
         startdate: Optional[pd.Timestamp] = None,
         enddate: Optional[pd.Timestamp] = None,
     ):
+        """Get a MeteoObs timeseries from a wow.knmi.nl station
+
+        Parameters
+        ----------
+        stn : str
+            station name
+        meteo_var : str
+            wow meteo variable
+        startdate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+        enddate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+
+        Returns
+        -------
+        MeteoObs
+        """
         from .io import wow
 
         wow_df, meta = wow.get_wow(
@@ -1320,6 +1337,23 @@ class MeteoObs(Obs):
         startdate: Optional[pd.Timestamp] = None,
         enddate: Optional[pd.Timestamp] = None,
     ):
+        """Get a MeteoObs timeseries from the nearest wow.knmi.nl station
+
+        Parameters
+        ----------
+        xy : List[float]
+            longitude latitude of location [lon, lat] eg: [4.85, 51.95]
+        meteo_var : str
+            wow meteo variable
+        startdate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+        enddate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+
+        Returns
+        -------
+        MeteoObs
+        """
         from .io import wow
 
         bbox = [xy[0] - 1, xy[1] - 1, xy[0] + 1, xy[1] + 1]  # lat lon,lat lon
@@ -1874,6 +1908,23 @@ class PrecipitationObs(MeteoObs):
         startdate: Optional[pd.Timestamp] = None,
         enddate: Optional[pd.Timestamp] = None,
     ):
+        """Get a PrecipitationObs timeseries from a wow.knmi.nl station
+
+        Parameters
+        ----------
+        stn : str
+            station name
+        meteo_var : str
+            wow meteo variable
+        startdate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+        enddate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+
+        Returns
+        -------
+        PrecipitationObs
+        """
         return super().from_wow(
             stn, meteo_var="rain_rate", startdate=startdate, enddate=enddate
         )
@@ -1885,6 +1936,21 @@ class PrecipitationObs(MeteoObs):
         startdate: Optional[pd.Timestamp] = None,
         enddate: Optional[pd.Timestamp] = None,
     ):
+        """Get a PrecipitationObs timeseries from the nearest wow.knmi.nl station
+
+        Parameters
+        ----------
+        xy : List[float]
+            longitude latitude of location [lon, lat] eg: [4.85, 51.95]
+        startdate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+        enddate : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+
+        Returns
+        -------
+        PrecipitationObs
+        """
         return super().from_wow_nearest_xy(
             xy, meteo_var="rain_rate", startdate=startdate, enddate=enddate
         )
