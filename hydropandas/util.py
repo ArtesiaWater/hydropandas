@@ -423,7 +423,7 @@ def get_nearest_station_df(
 
     if "lon" in xcol.lower() or "lat" in ycol.lower():
         distances = DataFrame(
-            _latlon_distance(xo, yo, xt, yt),
+            _latlon_distance(yh, xh, yi, xi),
             index=locations.index,
             columns=stations.index,
         )
@@ -447,4 +447,4 @@ def _latlon_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> floa
         - np.cos((lat2 - lat1) * p) / 2
         + np.cos(lat1 * p) * np.cos(lat2 * p) * (1 - np.cos((lon2 - lon1) * p)) / 2
     )
-    return 12742 * np.asin(np.sqrt(hav))
+    return 12742 * np.arcsin(np.sqrt(hav))
