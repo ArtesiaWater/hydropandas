@@ -27,11 +27,14 @@ meteo_vars_wow_translate = {
     "luchtdruk (hPa)": "air pressure [hPa]",
 }
 
+wow_filters = ("wow_observations", "official_observations")
+
 
 def get_wow_stations(
     meteo_var: str = "rain_rate",
     date: Optional[pd.Timestamp] = None,
     bbox: Optional[List[float]] = None,
+    obs_filter: Optional[str] = None,
 ) -> pd.DataFrame:
     if meteo_var not in meteo_vars_wow:
         raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
@@ -46,11 +49,15 @@ def get_wow_stations(
         str(bbox[0]) + "%20" + str(bbox[1]) + "," + str(bbox[2]) + "%20" + str(bbox[3])
     )  # lat lon,lat lon
 
-    # filter=wow_observations
-    # filter=official_observations
+    if obs_filter is None:
+        obs_filter = ""
+    else:
+        if obs_filter not in wow_filters:
+            raise ValueError(f"{obs_filter} must be one of {wow_filters}")
+
     try:
         r = requests.get(
-            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}&filter=&date={datestr}",
+            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}&filter={obs_filter}&date={datestr}",
             timeout=120,
         )
         r.raise_for_status()
@@ -104,7 +111,7 @@ def get_wow_measurements(
     meteo_var: str,
     start: pd.Timestamp = None,
     end: pd.Timestamp = None,
-):
+) -> pd.DataFrame:
     if meteo_var not in meteo_vars_wow:
         raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
 
@@ -147,3 +154,42 @@ def get_wow_measurements(
         measurements = measurements.iloc[0:-1].multiply(weights, axis=0)
 
     return measurements
+
+
+def get_nearest_station_xy(
+    xy: List[List[float]], stations: pd.DataFrame, ignore: List[str] = None
+) -> List[str]:
+    """find the stations that measure closest to the given
+    longitude and latitude coordinates.
+
+    Parameters
+    ----------
+    xy : list or numpy array, optional
+        longitude, latitude coordinates of the locations. e.g. [[10,25], [5,25]]
+    stations : pandas DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
+    ignore : list, optional
+        list of stations to ignore. The default is None.
+
+    Returns
+    -------
+    stns : list
+        station numbers.
+
+    Notes
+    -----
+    assumes you have a structured rectangular grid.
+    """
+
+    locations = pd.DataFrame(data=xy, columns=["lon", "lat"])
+
+    stns = util.get_nearest_station_df(
+        locations=locations,
+        stations=stations,
+        xcol="lon",
+        ycol="lat",
+        ignore=ignore,
+    )
+
+    return stns

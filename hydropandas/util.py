@@ -376,7 +376,13 @@ def _start_end_to_datetime(start, end) -> Tuple[Timestamp]:
     return start, end
 
 
-def get_nearest_station_df(locations, stations, xcol="x", ycol="y", ignore=None):
+def get_nearest_station_df(
+    locations: DataFrame,
+    stations: DataFrame,
+    xcol: str = "x",
+    ycol: str = "y",
+    ignore: List[str] = None,
+) -> List[str]:
     """Find the nearest stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
 
@@ -384,13 +390,13 @@ def get_nearest_station_df(locations, stations, xcol="x", ycol="y", ignore=None)
     ----------
     locations : pandas.DataFrame
         DataFrame containing x and y coordinates
+    stations : pandas DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
     xcol : str
         name of the column in the locations dataframe with the x values
     ycol : str
         name of the column in the locations dataframe with the y values
-    stations : pandas DataFrame, optional
-        if None stations will be obtained using the get_stations function.
-        The default is None.
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
     ignore : list, optional

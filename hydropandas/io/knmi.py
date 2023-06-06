@@ -133,7 +133,6 @@ def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
         xcol="x",
         ycol="y",
         stations=stations,
-        meteo_var=meteo_var,
         ignore=ignore,
     )
 
