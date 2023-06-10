@@ -1974,10 +1974,8 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         fname : str
-            filename of shapefile, ends with .shp
-            
-            In order to export to Geopackage, use .gpkg as extension.
-            This has the advantage that column names will not be truncated.
+            filename of shapefile (.shp) or geopackage (.gpkg). A Geopackage
+            has the advantage that column names will not be truncated.
         xcol : str
             column name with x values
         ycol : str
