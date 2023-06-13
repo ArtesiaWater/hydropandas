@@ -558,6 +558,66 @@ class GroundwaterObs(Obs):
         )
 
     @classmethod
+    def from_bronhouderportaal_bro(
+        cls,
+        fn_xml,
+        tube_nr,
+        full_meta=False,
+    ):
+        """load BRO groundwater metadata from XML file. Mind that
+        bro_id is applicable, because file is not yet imported in BRO
+
+
+        Parameters
+        ----------
+        fn_xml : str
+            filename of XML file.
+        tube_nr : int
+            tube number.
+        full_meta : bool
+            process not only the standard metadata to ObsCollection.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+
+        from .io import bronhouderportaal_bro
+
+        meta = bronhouderportaal_bro.get_metadata_from_gmw(
+            fn_xml,
+            tube_nr,
+            full_meta=full_meta
+        )
+
+        # ONNO, hier een print statement om te laten zien wat er gebeurd met de verwerking
+        # van de meta data.
+        print('obs.py', meta)
+
+        empty_df = pd.DataFrame()
+
+        return cls(
+            empty_df,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            filename=meta.pop("filename"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+            meta=meta
+        )
+
+
+    @classmethod
     def from_dino(
         cls,
         fname=None,

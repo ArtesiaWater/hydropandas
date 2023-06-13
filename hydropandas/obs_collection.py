@@ -83,6 +83,36 @@ def read_bro(
     return oc
 
 
+def read_bronhouderportaal_bro(
+    folder,
+    full_meta=False,
+):
+    """get all the metadata from files in folder. Files are GMW files of well
+    construction, and are subbmitted to https://www.bronhouderportaal-bro.nl .
+
+
+    Parameters
+    ----------
+    folder : str
+        name of folder that holds XML files
+    full_meta : bool, optional
+        process not only the standard metadata to ObsCollection
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection DataFrame without the 'obs' column
+
+    """
+
+    oc = ObsCollection.from_bronhouderportaal_bro(
+        folder=folder,
+        full_meta=full_meta,
+    )
+
+    return oc
+
+
 def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
@@ -1095,6 +1125,44 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
+
+
+    @classmethod
+    def from_bronhouderportaal_bro(
+        cls,
+        folder,
+        full_meta=False,
+    ):
+        """get all the metadata from folder.
+
+
+        Parameters
+        ----------
+        folder : str
+            name of folder that holds XML files
+        full_meta : bool , optional
+            process all metadata. The default is False.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame without the 'obs' column
+
+        """
+
+        from .io.bronhouderportaal_bro import get_obs_list_from_folder
+
+        obs_list = get_obs_list_from_folder(
+            folder,
+            obs.GroundwaterObs,
+            full_meta=full_meta,
+            )
+
+        print('\n\nobs_coll.py LIST ', obs_list[0])
+        obs_df = util._obslist_to_frame(obs_list)
+
+        print('\n\nobs_coll.py DF ',obs_df.iloc[0])
+        return cls(obs_df)
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
