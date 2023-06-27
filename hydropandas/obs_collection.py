@@ -1137,7 +1137,6 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=name, meta=meta)
 
-
     @classmethod
     def from_bronhouderportaal_bro(
         cls,
