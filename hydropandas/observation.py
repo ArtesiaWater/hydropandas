@@ -612,7 +612,6 @@ class GroundwaterObs(Obs):
             meta=meta
         )
 
-
     @classmethod
     def from_dino(
         cls,
