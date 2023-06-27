@@ -592,10 +592,6 @@ class GroundwaterObs(Obs):
             full_meta=full_meta
         )
 
-        # ONNO, hier een print statement om te laten zien wat er gebeurd met de verwerking
-        # van de meta data.
-        print('obs.py', meta)
-
         empty_df = pd.DataFrame()
 
         return cls(

@@ -335,6 +335,7 @@ class CollectionPlots:
         fn_save=None,
         check_obs_close_to_screen_bottom=True,
         plot_well_layout_markers=True,
+        plot_obs=True,
     ):
         """Create plot with well layout (left) en observations (right).
 
@@ -366,6 +367,8 @@ class CollectionPlots:
         plot_well_layout_markers : bool, optional
             plots ground level, top tube, screen levels and sandtrap via
             makers. Default is True
+        plot_obs : bool, optional
+            Plots observation. Default is True
 
         TODO:
             - speficy colors via extra column in ObsCollection
@@ -390,11 +393,18 @@ class CollectionPlots:
 
         # create figure
         fig = plt.figure(figsize=(15, 5))
-        gs = GridSpec(
-            1,
-            2,
-            width_ratios=[1, 3],
-        )
+        if plot_obs:
+            gs = GridSpec(
+                1,
+                2,
+                width_ratios=[1, 3],
+            )
+        else:
+            gs = GridSpec(
+                1,
+                2,
+                width_ratios=[9, 1],
+            )
         ax_section = fig.add_subplot(gs[0])
         ax_obs = fig.add_subplot(gs[1])
         axes = [ax_section, ax_obs]
@@ -437,44 +447,49 @@ class CollectionPlots:
 
         # loop over all wells, plot observations and details in section plot
         for counter, name in enumerate(self._obj.index):
-            # which column to plot?
-            cols = list(cols)
-            for i, col in enumerate(cols):
-                if col is None:
-                    cols[i] = self._obj.loc[name, "obs"]._get_first_numeric_col_name()
+            if plot_obs:
+                # which column to plot?
+                cols = list(cols)
+                for i, col in enumerate(cols):
+                    if col is None:
+                        cols[i] = self._obj.loc[name, "obs"]._get_first_numeric_col_name()
 
-            # create plot dataframe
-            plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
-            if plot_df.empty or plot_df[cols].isna().all().all():
-                logger.warning(f"{name} has no data between {tmin} and {tmax}")
-                continue
+                # create plot dataframe
+                plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
+                if plot_df.empty or plot_df[cols].isna().all().all():
+                    logger.warning(f"{name} has no data between {tmin} and {tmax}")
+                    continue
 
-            # PART 1: plot timeseries of observations
-            # one or multiple columns to plot?
-            if len(cols) == 1:
-                p = ax_obs.plot(plot_df, label=name)
+                # PART 1: plot timeseries of observations
+                # one or multiple columns to plot?
+                if len(cols) == 1:
+                    p = ax_obs.plot(plot_df, label=name)
+                else:
+                    for col in cols:
+                        p = ax_obs.plot(plot_df[col], label=f"{name}, {col}")
+                plot_color = p[0].get_color()
+
+                if check_obs_close_to_screen_bottom:
+                    # add horizonal line to plot when minimum observation in first plot
+                    # column is close to bottom of screen
+                    offset = 0.1
+                    if self._obj.loc[name, "screen_bottom"] > (
+                        plot_df[cols[0]].dropna().min() - offset
+                    ):
+                        ax_obs.axhline(
+                            y=self._obj.loc[name, "screen_bottom"],
+                            ls="--",
+                            lw=4,
+                            alpha=0.5,
+                            label=(
+                                f"screen bottom of {name}\n"
+                                "is close to minimum observation"
+                            ),
+                            color=plot_color,
+                        )
             else:
-                for col in cols:
-                    p = ax_obs.plot(plot_df[col], label=f"{name}, {col}")
+                plot_color = 'hotpink'
 
-            if check_obs_close_to_screen_bottom:
-                # add horizonal line to plot when minimum observation in first plot
-                # column is close to bottom of screen
-                offset = 0.1
-                if self._obj.loc[name, "screen_bottom"] > (
-                    plot_df[cols[0]].dropna().min() - offset
-                ):
-                    ax_obs.axhline(
-                        y=self._obj.loc[name, "screen_bottom"],
-                        ls="--",
-                        lw=4,
-                        alpha=0.5,
-                        label=(
-                            f"screen bottom of {name}\n"
-                            "is close to minimum observation"
-                        ),
-                        color=p[0].get_color(),
-                    )
 
             # PART 2: fancy section plot with lines along tube
 
@@ -494,7 +509,7 @@ class CollectionPlots:
             ax_section.plot(
                 [plot_x[counter]] * 2,
                 [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
-                color=p[0].get_color(),
+                color=plot_color,
                 lw=3,
             )
 
@@ -506,41 +521,42 @@ class CollectionPlots:
                         self._obj.loc[name, "screen_bottom"],
                         self._obj.loc[name, "tube_bottom"],
                     ],
-                    color=p[0].get_color(),
+                    color=plot_color,
                     lw=3,
                 )
 
-            # PART 3: fancy section plot with bandwith of observations
-            ax_section.scatter(
-                plot_x[counter],
-                plot_df.quantile(q=0.95),
-                section_markersize,
-                marker=(3, 0, 0),
-                color="blue",
-                alpha=0.5,
-                label="95% observation",
-                zorder=100,
-            )
-            ax_section.scatter(
-                plot_x[counter],
-                plot_df.median(),
-                section_markersize,
-                marker=(4, 0, 90),
-                color="green",
-                alpha=0.5,
-                label="median",
-                zorder=100,
-            )
-            ax_section.scatter(
-                plot_x[counter],
-                plot_df.quantile(q=0.05),
-                section_markersize,
-                marker=(3, 0, 180),
-                color="red",
-                alpha=0.5,
-                label="5% observation",
-                zorder=100,
-            )
+            if plot_obs:
+                # PART 3: fancy section plot with bandwith of observations
+                ax_section.scatter(
+                    plot_x[counter],
+                    plot_df.quantile(q=0.95),
+                    section_markersize,
+                    marker=(3, 0, 0),
+                    color="blue",
+                    alpha=0.5,
+                    label="95% observation",
+                    zorder=100,
+                )
+                ax_section.scatter(
+                    plot_x[counter],
+                    plot_df.median(),
+                    section_markersize,
+                    marker=(4, 0, 90),
+                    color="green",
+                    alpha=0.5,
+                    label="median",
+                    zorder=100,
+                )
+                ax_section.scatter(
+                    plot_x[counter],
+                    plot_df.quantile(q=0.05),
+                    section_markersize,
+                    marker=(3, 0, 180),
+                    color="red",
+                    alpha=0.5,
+                    label="5% observation",
+                    zorder=100,
+                )
 
         logger.info(f"created sectionplot -> {name}")
 

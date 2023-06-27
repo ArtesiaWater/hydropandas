@@ -12,6 +12,34 @@ import pathlib
 logger = logging.getLogger(__name__)
 
 
+def get_tube_nrs_from_xml(tree, ns):
+    """
+    Get tube numbers from xml data
+
+    Parameters
+    ----------
+    tree : xml.etree.ElementTree.ElementTree
+        The XML input.
+    ns : dictonary
+        Namespaces in XML input
+
+    Returns
+    -------
+    all_tube_nrs : list
+        The numbers of all filters in the xml data.
+
+    """
+    # get numbers of individual filters from XML file
+    all_tube_nrs = []
+    tubes = tree.findall('isgmw:sourceDocument//'
+                         'isgmw:GMW_Construction//'
+                         'isgmw:monitoringTube', ns)
+    for tube in tubes:
+        all_tube_nrs.append(int(tube.find("isgmw:tubeNumber", ns).text))
+
+    return all_tube_nrs
+
+
 def get_obs_list_from_folder(
     folder,
     ObsClass,
@@ -47,11 +75,19 @@ def get_obs_list_from_folder(
     for path_xml in pathlib.Path(folder).glob('*.xml'):
         # open xml and get number of monitoring tubes
         tree = xml.etree.ElementTree.parse(path_xml)
-        ntubes = int(tree.find('isgmw:sourceDocument//'
-                               'isgmw:GMW_Construction//'
-                               'isgmw:numberOfMonitoringTubes', ns).text)
-        # loop over monitoring tubes
-        for tube_nr in range(1, ntubes + 1):
+        # get number of tubes from XML file
+        ntubes_from_tree = int(tree.find('isgmw:sourceDocument//'
+                                         'isgmw:GMW_Construction//'
+                                         'isgmw:numberOfMonitoringTubes', ns).text)
+        all_tube_nrs = get_tube_nrs_from_xml(tree, ns)
+        if len(all_tube_nrs) != ntubes_from_tree:
+            logger.warning(f'{path_xml} numberOfMonitoringTubes suggests that '
+                           f'{ntubes_from_tree} filters are present, '
+                           f'however meta data for {len(all_tube_nrs)} filters is '
+                           f'in the xml. Meta data for {len(all_tube_nrs)} filters '
+                           'is processed.')
+
+        for tube_nr in all_tube_nrs:
             # append each tube to the obs_list
             o = ObsClass.from_bronhouderportaal_bro(
                 path_xml,
@@ -59,10 +95,6 @@ def get_obs_list_from_folder(
                 full_meta=full_meta,
             )
             obs_list.append(o)
-
-    # ONNO, hier een print statement om te laten zien wat er gebeurd met de verwerking
-    # van de meta data.
-    print('bron_bro.py:', obs_list[-1])
 
     return obs_list
 
@@ -96,11 +128,17 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
         dictionary with metadata.
 
     """
+    if not isinstance(path_xml, pathlib.WindowsPath):
+        try:
+            path_xml = pathlib.Path(path_xml)
+        except ValueError:
+            print(f'invalid path_xml {path_xml}')
+
 
     # open meta dictonary
     meta = {"filename": path_xml.name,
             "tube_nr": tube_nr,
-            "source": str(path_xml)[:-len(path_xml.name)]}  # directory name
+            "source": "bronhouderportaal-bro"}
 
     # open xml file
     tree = xml.etree.ElementTree.parse(path_xml)
@@ -110,9 +148,14 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
           "d5p1": "http://www.opengis.net/gml/3.2",
           }
 
+    # is tube_nr valid
+    all_tube_nrs = get_tube_nrs_from_xml(tree, ns)
+    if tube_nr not in all_tube_nrs:
+        raise ValueError(f'Request is to process tube_nr {tube_nr}, that number is not '
+                         f'in the XML data. Valid tube_nrs are {all_tube_nrs} ')
+
     # name of well via requestReference
     # bro_id is not used, because well is not yet imported in Broloket
-    # ONNO: een if statement met tree.find leek me handige optie. Wat jij?
     if tree.find('brocommon:requestReference', ns) is not None:
         name = tree.find('brocommon:requestReference', ns).text
     else:
@@ -281,7 +324,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
     if ('screen_top' in meta) and ('screenLength' in locals()) and \
             (plainTubePartLength_unit == screenLength_unit):
         meta["screen_bottom"] = round(meta["screen_top"] - screenLength, 2)
-    if ('screen_bottom' in meta) and ('sediment_sump_length' in locals()) and \
+    if ('screen_bottom' in meta) and ('sedimentSumpLength' in locals()) and \
             (screenLength_unit == sedimentSumpLength_unit):
         meta["tube_bottom"] = round(meta["screen_bottom"] - sedimentSumpLength, 2)
 

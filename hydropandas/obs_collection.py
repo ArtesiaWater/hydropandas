@@ -110,6 +110,17 @@ def read_bronhouderportaal_bro(
         full_meta=full_meta,
     )
 
+    if full_meta:
+        # get all keys from Obs
+        all_keys = []
+        for ind in oc.index:
+            all_keys.append(list(oc.obs[ind].meta.keys()))
+        # create unique keys
+        unique_keys = [list(x) for x in set(tuple(x) for x in all_keys)][0]
+        # update ObsCollection
+        for new_col in unique_keys:
+            oc.add_meta_to_df(new_col)
+
     return oc
 
 
@@ -1158,10 +1169,8 @@ class ObsCollection(pd.DataFrame):
             full_meta=full_meta,
             )
 
-        print('\n\nobs_coll.py LIST ', obs_list[0])
         obs_df = util._obslist_to_frame(obs_list)
 
-        print('\n\nobs_coll.py DF ',obs_df.iloc[0])
         return cls(obs_df)
 
     @classmethod
