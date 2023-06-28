@@ -200,10 +200,6 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
 
     logger.info("reading -> {}".format(fname))
 
-    f.seek(0, 2)  # jump to the end
-    endfile = f.tell()  # the end location (characters from start)
-    f.seek(0)  # jump to the beginning of the file again
-
     # LOCATIE gegevens
     line = f.readline().rstrip("\n")
     assert line == "LOCATIE gegevens"
