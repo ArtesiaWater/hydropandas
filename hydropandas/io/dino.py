@@ -191,14 +191,18 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
         dictionary with metadata
     """
 
-    fname = ""
+    fname = f.name.split(os.sep)[-1]
     if isinstance(f, (str, Path)):
         if isinstance(f, str):
             f = Path(f)
-        fname = f.stem
+        fname = str(f.stem)
         f = f.open("r")
 
     logger.info("reading -> {}".format(fname))
+
+    f.seek(0, 2)  # jump to the end
+    endfile = f.tell()  # the end location (characters from start)
+    f.seek(0)  # jump to the beginning of the file again
 
     # LOCATIE gegevens
     line = f.readline().rstrip("\n")
@@ -218,21 +222,40 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
     locatie = pd.read_csv(f, sep="\t", nrows=nrows)
     # there is always only one location (change if this is not the case)
     assert nrows == 1
-
     locatie = locatie.squeeze()
 
-    # KWALITEIT gegevens VLOEIBAAR
+    # KWALITEIT gegevens
     f.seek(eind_locatie)
-    line = f.readline().rstrip("\n")
-    assert line == "KWALITEIT gegevens VLOEIBAAR"
+    read_quality = False
+    while line:
+        if line.startswith("KWALITEIT gegevens VAST\n"):
+            logger.warning("ignoring 'KWALITEIT gegevens VAST'! ")
 
-    measurements = pd.read_csv(
-        f,
-        sep="\t",
-        parse_dates=["Monster datum", "Analyse datum"],
-        dayfirst=True,
-        index_col="Monster datum",
-    )
+        if line.startswith("KWALITEIT gegevens VLOEIBAAR"):
+            read_quality = True
+            break
+        line = f.readline()
+
+    if read_quality:
+        strt_locatie = f.tell()
+        nrows = -1
+        while line not in ["\n", ""]:
+            nrows += 1
+            line = f.readline()
+        eind_locatie = f.tell()
+        f.seek(strt_locatie)
+
+        measurements = pd.read_csv(
+            f,
+            sep="\t",
+            parse_dates=["Monster datum", "Analyse datum"],
+            dayfirst=True,
+            index_col="Monster datum",
+            nrows=nrows,
+        )
+    else:
+        measurements = pd.Series()
+
     f.close()
 
     meta = {
