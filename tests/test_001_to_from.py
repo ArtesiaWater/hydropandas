@@ -1,4 +1,3 @@
-# %%import pandas as pd
 import pandas as pd
 import pytest
 from requests.exceptions import ConnectionError
