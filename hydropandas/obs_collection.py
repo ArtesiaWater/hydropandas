@@ -86,6 +86,7 @@ def read_bro(
 def read_bronhouderportaal_bro(
     dirname,
     full_meta=False,
+    add_to_df=False
 ):
     """get all the metadata from files in a directory. Files are GMW files of
     well construction, and are subbmitted to
@@ -98,6 +99,8 @@ def read_bronhouderportaal_bro(
         name of directory that holds XML files
     full_meta : bool, optional
         process not only the standard metadata to ObsCollection
+    add_to_df : bool, optional
+        add all the metadata to the ObsCollection DataFrame
 
     Returns
     -------
@@ -111,16 +114,8 @@ def read_bronhouderportaal_bro(
         full_meta=full_meta,
     )
 
-    if full_meta:
-        # get all keys from Obs
-        all_keys = []
-        for ind in oc.index:
-            all_keys.append(list(oc.obs[ind].meta.keys()))
-        # create unique keys
-        unique_keys = [list(x) for x in set(tuple(x) for x in all_keys)][0]
-        # update ObsCollection
-        for new_col in unique_keys:
-            oc.add_meta_to_df(new_col)
+    if add_to_df:
+        oc.add_meta_to_df(all=True)
 
     return oc
 
@@ -2079,7 +2074,7 @@ class ObsCollection(pd.DataFrame):
 
         gdf.to_file(path)
 
-    def add_meta_to_df(self, key):
+    def add_meta_to_df(self, key=None, all=False):
         """Get the values from the meta dictionary of each observation object
         and add these to the ObsCollection as a column.
 
@@ -2087,13 +2082,25 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        key : str
-            key in meta dictionary of observation object
+        key : str, int, tuple, list, set or None, optional
+            key in meta dictionary of observation object. If all=True all keys
+            are added so key can be None. The default is None
+        all : bool, optional
+            if True all the keys from all the observations are added to the
+            dataframe. The default is False.
         """
 
-        self[key] = [
-            o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
-        ]
+        if all:
+            keys = set().union(*[o.meta for o in self.obs.values])
+            for key in keys:
+                self[key] = [
+                    o.meta[key] if key in o.meta.keys() else None
+                    for o in self.obs.values
+                ]
+        else:
+            self[key] = [
+                o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+            ]
 
     def get_series(self, tmin=None, tmax=None, col=None):
         """

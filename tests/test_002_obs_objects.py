@@ -91,6 +91,13 @@ def test_obscollection_from_list():
     return oc
 
 
+def test_add_meta_to_df():
+    oc = test_obscollection_from_list()
+    oc.add_meta_to_df(all=True)
+
+    assert "info" in oc.columns, "unexpected result for add_meta_to_df"
+
+
 def test_copy_obs():
     o = test_groundwater_obs(name="groundwaterobs_001", tube_nr=2)
     o2 = o.copy()
