@@ -83,11 +83,7 @@ def read_bro(
     return oc
 
 
-def read_bronhouderportaal_bro(
-    dirname,
-    full_meta=False,
-    add_to_df=False
-):
+def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
     """get all the metadata from files in a directory. Files are GMW files of
     well construction, and are subbmitted to
     https://www.bronhouderportaal-bro.nl .
