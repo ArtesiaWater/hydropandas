@@ -191,7 +191,10 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
         dictionary with metadata
     """
 
-    fname = f.name.split(os.sep)[-1]
+    if isinstance(f, str):
+        fname = f
+    else:
+        fname = f.name.split(os.sep)[-1]
     if isinstance(f, (str, Path)):
         if isinstance(f, str):
             f = Path(f)
