@@ -412,20 +412,19 @@ class CollectionPlots:
         # create figure
         fig = plt.figure(figsize=(15, 5))
         if plot_obs:
+            # make figure with section plot on left, and righthand plot for obs
             gs = GridSpec(
                 1,
                 2,
                 width_ratios=[1, 3],
             )
+            ax_section = fig.add_subplot(gs[0])
+            ax_obs = fig.add_subplot(gs[1])
+            axes = [ax_section, ax_obs]
         else:
-            gs = GridSpec(
-                1,
-                2,
-                width_ratios=[9, 1],
-            )
-        ax_section = fig.add_subplot(gs[0])
-        ax_obs = fig.add_subplot(gs[1])
-        axes = [ax_section, ax_obs]
+            # make figure with only one plot on left, observations are not plotted
+            ax_section = fig.add_subplot(111)
+            axes = [ax_section]
 
         if plot_well_layout_markers:
             # plot well layout via markers
@@ -591,15 +590,16 @@ class CollectionPlots:
         else:
             ax_section.set_xlabel(section_label_x)
 
-        ax_obs.set_xlim(left=tmin, right=tmax)
+        if plot_obs:
+            ax_obs.set_xlim(left=tmin, right=tmax)
 
-        # rotate labels on observation axis
-        ax_obs.set_xticks(
-            ax_obs.get_xticks(),
-            ax_obs.get_xticklabels(),
-            rotation="vertical",
-            fontsize="small",
-        )
+            # rotate labels on observation axis
+            ax_obs.set_xticks(
+                ax_obs.get_xticks(),
+                ax_obs.get_xticklabels(),
+                rotation="vertical",
+                fontsize="small",
+            )
 
         if ylabel == "auto":
             # has collection uniform unit?
