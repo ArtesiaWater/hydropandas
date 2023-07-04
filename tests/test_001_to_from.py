@@ -1,5 +1,6 @@
 # %%import pandas as pd
 import pytest
+import pandas as pd
 from requests.exceptions import ConnectionError
 
 import hydropandas as hpd
