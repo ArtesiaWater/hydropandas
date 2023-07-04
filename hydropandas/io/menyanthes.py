@@ -44,14 +44,14 @@ def matlab2datetime(tindex):
     return day + dayfrac
 
 
-def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
+def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
     """
     Read data from a Menyanthes file and create observation objects.
 
     Parameters
     ----------
-    fname : str
-        Name of the Menyanthes file to read.
+    path : str
+        Full path of the Menyanthes file (.men) to read.
     ObsClass : GroundwaterObs or WaterlvlObs
         Class of observation object to create.
     load_oseries : bool, optional
@@ -66,7 +66,7 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
         List of observation objects created from the Menyanthes file.
     """
 
-    logger.info(f"reading menyanthes file {fname}")
+    logger.info(f"reading menyanthes file {path}")
 
     if ObsClass == GroundwaterObs:
         _rename_dic = {
@@ -107,10 +107,10 @@ def read_file(fname, ObsClass, load_oseries=True, load_stresses=True):
         unit = ""
 
     # Check if file is present
-    if not (os.path.isfile(fname)):
-        print("Could not find file ", fname)
+    if not (os.path.isfile(path)):
+        print("Could not find file ", path)
 
-    mat = loadmat(fname, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
+    mat = loadmat(path, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
 
     obs_list = []
     if load_oseries:

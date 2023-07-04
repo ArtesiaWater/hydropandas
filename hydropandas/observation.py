@@ -587,9 +587,7 @@ class GroundwaterObs(Obs):
         from .io import bronhouderportaal_bro
 
         meta = bronhouderportaal_bro.get_metadata_from_gmw(
-            fn_xml,
-            tube_nr,
-            full_meta=full_meta
+            fn_xml, tube_nr, full_meta=full_meta
         )
 
         empty_df = pd.DataFrame()
@@ -609,7 +607,7 @@ class GroundwaterObs(Obs):
             monitoring_well=meta.pop("monitoring_well"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
-            meta=meta
+            meta=meta,
         )
 
     @classmethod
@@ -893,7 +891,7 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1076,7 +1074,7 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1157,7 +1155,7 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1401,7 +1399,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
 
@@ -1477,7 +1475,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1557,7 +1555,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1705,7 +1703,7 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
+                if False a text file is downloaded into a temporary directory and
                 the data is read from there. Default is True since the api is
                 back online (July 2021).
             raise_exceptions : bool, optional
@@ -1754,7 +1752,7 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
+                if False a text file is downloaded into a temporary directory and
                 the data is read from there. Default is True since the api is
                 back online (July 2021).
             raise_exceptions : bool, optional
@@ -1804,7 +1802,7 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
+                if False a text file is downloaded into a temporary directory and
                 the data is read from there. Default is True since the api is
                 back online (July 2021).
             raise_exceptions : bool, optional
