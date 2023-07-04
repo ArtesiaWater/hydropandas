@@ -1,4 +1,4 @@
-import pandas as pd
+# %%import pandas as pd
 import pytest
 from requests.exceptions import ConnectionError
 
@@ -44,20 +44,20 @@ dinozip = "./tests/data/2019-Dino-test/dino.zip"
 
 def test_observation_gwq():
     # single observation
-    fname = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
-    hpd.WaterQualityObs.from_dino(fname)
+    path = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
+    hpd.WaterQualityObs.from_dino(path)
     return
 
 
 def test_observation_wl():
-    fname = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
-    hpd.WaterlvlObs.from_dino(fname)
+    path = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
+    hpd.WaterlvlObs.from_dino(path)
     return
 
 
 def test_observation_gw():
-    fname = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
-    o = hpd.GroundwaterObs.from_dino(fname=fname)
+    path = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
+    o = hpd.GroundwaterObs.from_dino(path=path)
     return o
 
 
@@ -236,8 +236,8 @@ def test_pressure_read_knmi():
 
 
 def test_evap_obs_from_file():
-    fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
-    hpd.EvaporationObs.from_knmi_file(fname)
+    path = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
+    hpd.EvaporationObs.from_knmi_file(path)
 
 
 def test_evap_obs_from_stn():
@@ -260,8 +260,8 @@ def test_evap_obs_from_stn_hargreaves():
 
 
 def test_precip_obs_from_file():
-    fname = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
-    hpd.PrecipitationObs.from_knmi_file(fname)
+    path = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
+    hpd.PrecipitationObs.from_knmi_file(path)
 
 
 def test_precip_obs_from_stn():
@@ -338,7 +338,7 @@ def test_waterinfo_from_dir():
 
 # def test_obscollection_menyanthes():
 #
-#    fname = r'export_from_ADI.men'
-#    obsc = oc.ObsCollection.from_menyanthes(fname)
+#    path = r'export_from_ADI.men'
+#    obsc = oc.ObsCollection.from_menyanthes(path)
 #
 #    return obsc
