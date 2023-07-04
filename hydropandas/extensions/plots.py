@@ -113,7 +113,7 @@ class CollectionPlots:
                     logger.debug(f"created iplot -> {o.name}")
                 except ValueError:
                     logger.error(f"{o.name} has no data between {tmin} and {tmax}")
-                    o.iplot_fname = None
+                    o.meta["iplot_fname"] = None
 
     def interactive_map(
         self,
@@ -182,7 +182,7 @@ class CollectionPlots:
             start zoom level of the folium ma
         create_interactive_plots : boolean, optional
             if True interactive plots will be created, if False the iplot_fname
-            attribute of the observations is used.
+            in the meta ditctionary of the observations is used.
         **kwargs :
             will be passed to the to_interactive_plots method options are:
 
@@ -208,8 +208,17 @@ class CollectionPlots:
         import folium
         from folium.features import DivIcon
 
+        # check for empty observations
+        if all([o.empty for o in self._obj.obs.values]):
+            logger.warning("all observations in the collection are empty")
+            for oname in self._obj.index:
+                self._obj._set_metadata_value(
+                    oname, "iplot_fname", None, add_to_meta=True
+                )
+            empty_obs = True
+
         # create interactive bokeh plots
-        if create_interactive_plots:
+        if create_interactive_plots and not empty_obs:
             self._obj.plots.interactive_plots(
                 savedir=plot_dir, per_monitoring_well=per_monitoring_well, **kwargs
             )
@@ -265,8 +274,8 @@ class CollectionPlots:
             else:
                 o = self._obj.loc[name, "obs"]
 
-            if o.iplot_fname is not None:
-                with open(o.iplot_fname, "r") as f:
+            if o.meta["iplot_fname"] is not None:
+                with open(o.meta["iplot_fname"], "r") as f:
                     bokeh_html = f.read()
 
                 iframe = branca.element.IFrame(html=bokeh_html, width=620, height=420)
@@ -304,6 +313,15 @@ class CollectionPlots:
                     ).add_to(group)
             else:
                 logger.info(f"no iplot available for {o.name}")
+                folium.CircleMarker(
+                    [
+                        self._obj.loc[o.name, col_name_lat],
+                        self._obj.loc[o.name, col_name_lon],
+                    ],
+                    icon=folium.Icon(icon="signal"),
+                    fill=True,
+                    color=color,
+                ).add_to(group)
 
         group.add_to(m)
 
@@ -452,7 +470,9 @@ class CollectionPlots:
                 cols = list(cols)
                 for i, col in enumerate(cols):
                     if col is None:
-                        cols[i] = self._obj.loc[name, "obs"]._get_first_numeric_col_name()
+                        cols[i] = self._obj.loc[
+                            name, "obs"
+                        ]._get_first_numeric_col_name()
 
                 # create plot dataframe
                 plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
@@ -488,8 +508,7 @@ class CollectionPlots:
                             color=plot_color,
                         )
             else:
-                plot_color = 'hotpink'
-
+                plot_color = "hotpink"
 
             # PART 2: fancy section plot with lines along tube
 
@@ -798,10 +817,12 @@ class ObsPlots:
         if savedir is not None:
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
-            self._obj.iplot_fname = os.path.join(savedir, self._obj.name + ".html")
-            save(p, self._obj.iplot_fname, resources=CDN, title=self._obj.name)
+            self._obj.meta["iplot_fname"] = os.path.join(
+                savedir, self._obj.name + ".html"
+            )
+            save(p, self._obj.meta["iplot_fname"], resources=CDN, title=self._obj.name)
 
         if return_filename:
-            return self._obj.iplot_fname
+            return self._obj.meta["iplot_fname"]
         else:
             return p
