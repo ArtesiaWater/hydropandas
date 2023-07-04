@@ -216,6 +216,8 @@ class CollectionPlots:
                     oname, "iplot_fname", None, add_to_meta=True
                 )
             empty_obs = True
+        else:
+            empty_obs = False
 
         # create interactive bokeh plots
         if create_interactive_plots and not empty_obs:
