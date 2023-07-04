@@ -752,7 +752,7 @@ def read_dino_dir(
     obs_list = []
 
     def get_dino_obs(f: Union[str, FileIO]):
-        obs = ObsClass.from_dino(path=f, **kwargs)
+        obs = ObsClass.from_dino(f, **kwargs)
         if obs.metadata_available and (not obs.empty):
             return obs
         elif keep_all_obs:
