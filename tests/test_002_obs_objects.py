@@ -87,7 +87,7 @@ def test_obscollection_from_list():
 
 def test_add_meta_to_df():
     oc = test_obscollection_from_list()
-    oc.add_meta_to_df(all=True)
+    oc.add_meta_to_df(key="all")
 
     assert "info" in oc.columns, "unexpected result for add_meta_to_df"
 
