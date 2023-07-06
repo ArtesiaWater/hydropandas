@@ -111,7 +111,7 @@ def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
     )
 
     if add_to_df:
-        oc.add_meta_to_df(all=True)
+        oc.add_meta_to_df(key="all")
 
     return oc
 
@@ -2070,7 +2070,7 @@ class ObsCollection(pd.DataFrame):
 
         gdf.to_file(path)
 
-    def add_meta_to_df(self, key=None, all=False):
+    def add_meta_to_df(self, key="all"):
         """Get the values from the meta dictionary of each observation object
         and add these to the ObsCollection as a column.
 
@@ -2079,14 +2079,11 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         key : str, int, tuple, list, set or None, optional
-            key in meta dictionary of observation object. If all=True all keys
-            are added so key can be None. The default is None
-        all : bool, optional
-            if True all the keys from all the observations are added to the
-            dataframe. The default is False.
+            key in meta dictionary of observation object. If key is 'all', all
+            keys are added. The default is 'all'.
         """
 
-        if all:
+        if isinstance(key, str) and key == "all":
             keys = set().union(*[o.meta for o in self.obs.values])
             for key in keys:
                 self[key] = [
