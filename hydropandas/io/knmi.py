@@ -1395,6 +1395,8 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
         knmi_df, variables, station_meta = fill_missing_measurements(
             stn, stn_name, meteo_var, start, end, settings
         )
+        stn = station_meta.index[0]
+        stn_name = get_station_name(stn, stations)
     else:
         knmi_df, variables, station_meta = download_knmi_data(
             stn, stn_name, meteo_var, start, end, settings
