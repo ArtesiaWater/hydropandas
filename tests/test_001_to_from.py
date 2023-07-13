@@ -339,4 +339,4 @@ def test_waterinfo_from_dir():
 
 def test_obscollection_menyanthes():
     fname = "./tests/data/2023-MEN-test/test.men"
-    oc = hpd.read_menyanthes(fname, ObsClass=hpd.GroundwaterObs)
+    hpd.read_menyanthes(fname, ObsClass=hpd.GroundwaterObs)
