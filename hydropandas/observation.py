@@ -211,7 +211,8 @@ class Obs(pd.DataFrame):
         return d
 
     def merge_metadata(self, right, overlap="error"):
-        """Merge the metadata of an Obs object with new metadata.
+        """Merge the metadata of an Obs object with metadata from another Obs
+        object.
 
         Parameters
         ----------
@@ -245,18 +246,18 @@ class Obs(pd.DataFrame):
                     same_metadata = False
                     if overlap == "error":
                         raise ValueError(
-                            f"existing observation {key} differs from new observation"
+                            f"left observation {key} differs from right observation"
                         )
                     elif overlap == "use_left":
                         logger.info(
-                            f"existing observation {key} differs from new "
-                            "observation, use existing"
+                            f"left observation {key} differs from right "
+                            "observation, use left"
                         )
                         new_metadata[key] = v1
                     elif overlap == "use_right":
                         logger.info(
-                            f"existing observation {key} differs from new "
-                            "observation, use new"
+                            f"left observation {key} differs from right "
+                            "observation, use right"
                         )
                         new_metadata[key] = v2
                 else:
@@ -265,22 +266,22 @@ class Obs(pd.DataFrame):
                 same_metadata = False
                 if overlap == "error":
                     raise ValueError(
-                        f"existing observation {key} differs from new observation"
+                        f"left observation {key} differs from right observation"
                     )
                 elif overlap == "use_left":
                     logger.info(
-                        f"existing observation {key} differs from new "
-                        "observation, use existing"
+                        f"left observation {key} differs from right "
+                        "observation, use left"
                     )
                     new_metadata[key] = v1
                 elif overlap == "use_right":
                     logger.info(
-                        f"existing observation {key} differs from new "
-                        "observation, use new"
+                        f"left observation {key} differs from right "
+                        "observation, use right"
                     )
                     new_metadata[key] = v2
         if same_metadata:
-            logger.info("new and existing observation have the same metadata")
+            logger.info("left and right observation have the same metadata")
 
         return new_metadata
 
@@ -295,10 +296,9 @@ class Obs(pd.DataFrame):
             How to deal with overlapping timeseries with different values.
             Options are:
                 error : Raise a ValueError
-                use_left : use the part of the overlapping timeseries from the
-                existing observation
-                use_right : use the part of the overlapping timeseries from the
-                new observation
+                use_left : use the part of the overlapping timeseries from self
+                use_right : use the part of the overlapping timeseries from
+                right
             Default is 'error'.
 
         Raises
@@ -314,10 +314,10 @@ class Obs(pd.DataFrame):
 
         # check if time series are the same
         if self.equals(right):
-            logger.info("new and existing observation have the same time series")
+            logger.info("left and right observation have the same time series")
             return self
 
-        logger.info("new observation has a different time series")
+        logger.info("right observation has a different time series")
         logger.info("merge time series")
 
         # merge overlapping columns
@@ -418,8 +418,8 @@ class Obs(pd.DataFrame):
         # check observation type
         if not isinstance(right, type(self)):
             raise TypeError(
-                f"existing observation has a different type {type(self)} than"
-                f"new observation {type(right)}"
+                f"observation left has a different type {type(self)} than"
+                f"observation right {type(right)}"
             )
 
         # merge timeseries
