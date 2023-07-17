@@ -336,9 +336,7 @@ def test_waterinfo_from_dir():
 
 # %% MENYANTHES (still need a small menyanthes file to do the test)
 
-# def test_obscollection_menyanthes():
-#
-#    fname = r'export_from_ADI.men'
-#    obsc = oc.ObsCollection.from_menyanthes(fname)
-#
-#    return obsc
+
+def test_obscollection_menyanthes():
+    fname = "./tests/data/2023-MEN-test/test.men"
+    hpd.read_menyanthes(fname, ObsClass=hpd.GroundwaterObs)
