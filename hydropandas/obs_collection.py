@@ -30,6 +30,7 @@ def read_bro(
     keep_all_obs=True,
     epsg=28992,
     ignore_max_obs=False,
+    local_path=None,
 ):
     """get all the observations within an extent or within a
     groundwatermonitoring net.
@@ -78,6 +79,7 @@ def read_bro(
         keep_all_obs=keep_all_obs,
         epsg=epsg,
         ignore_max_obs=ignore_max_obs,
+        local_path=local_path,
     )
 
     return oc
@@ -1029,6 +1031,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         epsg=28992,
         ignore_max_obs=False,
+        local_path=None,
     ):
         """get all the observations within an extent or within a
         groundwatermonitoring net.
@@ -1067,7 +1070,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
+        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn, get_obs_list_from_local_path
 
         if bro_id is None and (extent is not None):
             obs_list = get_obs_list_from_extent(
@@ -1089,8 +1092,17 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
             )
             name = meta.pop("name")
+        elif (extent is None) and (bro_id is None) and (local_path is not None):
+            obs_list = get_obs_list_from_local_path(
+                local_path,
+                obs.GroundwaterObs,
+                only_metadata=only_metadata,
+                keep_all_obs=keep_all_obs,
+                ignore_max_obs=ignore_max_obs,
+            )
+            meta = {}
         else:
-            raise ValueError("specify bro_id or extent")
+            raise ValueError("specify local_path, bro_id or extent")
 
         obs_df = util._obslist_to_frame(obs_list)
 

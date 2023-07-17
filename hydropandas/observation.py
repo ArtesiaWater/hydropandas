@@ -499,8 +499,9 @@ class GroundwaterObs(Obs):
         to_wintertime=True,
         drop_duplicate_times=True,
         only_metadata=False,
+        local_path=None,
     ):
-        """download BRO groundwater observations from the server.
+        """download BRO groundwater observations from the server or local_path.
 
 
         Parameters
@@ -520,6 +521,8 @@ class GroundwaterObs(Obs):
         drop_duplicate_times : bool, optional
             if True rows with a duplicate time stamp are removed keeping only the
             first row. The default is True.
+        local_path: str
+            path to folder with XML files
 
         Returns
         -------
@@ -538,6 +541,7 @@ class GroundwaterObs(Obs):
             to_wintertime=to_wintertime,
             drop_duplicate_times=drop_duplicate_times,
             only_metadata=only_metadata,
+            local_path=local_path,
         )
 
         return cls(
