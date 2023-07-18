@@ -36,12 +36,55 @@ def get_knmi_obs(
     stn=None,
     fname=None,
     xy=None,
-    obs=None,
     meteo_var=None,
     start=None,
     end=None,
     **kwargs,
 ):
+    """get knmi observation from stn, fname or nearest xy coordinates.
+
+    Parameters
+    ----------
+    stn : int, str or None, optional
+        measurement station e.g. 829. The default is None.
+    fname : str, path object, file-like object or None, optional
+        filename of a knmi file. The default is None.
+    xy : list, tuple or None, optional
+        RD coördinates of a location in the Netherlands. The station nearest
+        to this location used. The Default is None.
+    meteo_var : str or None, optional
+        meteo variable e.g. "RH" or "EV24". See list with al options in the
+        hydropandas documentation.
+    start : str, datetime or None, optional
+        start date of observations. The default is None.
+    end : str, datetime or None, optional
+        end date of observations. The default is None.
+    **kwargs:
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is False.
+        interval : str, optional
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+
+    Returns
+    -------
+    pd.DataFrame, measurements
+    dict, metadata
+
+    Raises
+    ------
+    ValueError
+        if no meteo_var is given or stn, fname and xy are all None.
+    """
     if meteo_var is None and fname is None:
         raise ValueError("To get knmi data a meteo_var should be specified")
     elif meteo_var is not None:
@@ -1421,6 +1464,46 @@ def get_nearest_station_df(
     return stns
 
 
+def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
+    """find the KNMI stations that measure 'meteo_var' closest to the given
+    x and y coordinates.
+
+    Parameters
+    ----------
+    xy : list or numpy array, optional
+        xy coordinates of the locations. e.g. [[10,25], [5,25]]
+    stations : pandas DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
+    meteo_var : str
+        measurement variable e.g. 'RH' or 'EV24'
+    ignore : list, optional
+        list of stations to ignore. The default is None.
+
+    Returns
+    -------
+    stns : list
+        station numbers.
+
+    Notes
+    -----
+    assumes you have a structured rectangular grid.
+    """
+
+    locations = pd.DataFrame(data=xy, columns=["x", "y"])
+
+    stns = get_nearest_station_df(
+        locations,
+        xcol="x",
+        ycol="y",
+        stations=stations,
+        meteo_var=meteo_var,
+        ignore=ignore,
+    )
+
+    return stns
+
+
 def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
     """Find the N nearest KNMI stations that measure variable 'meteo_var' to
     the x, y coordinates.
@@ -1513,3 +1596,130 @@ def _add_missing_indices(knmi_df, stn, start, end):
     knmi_df = knmi_df.reindex(new_index)
 
     return knmi_df
+
+
+def get_knmi_obslist(
+    locations=None,
+    stns=None,
+    xy=None,
+    meteo_vars=("RH",),
+    starts=None,
+    ends=None,
+    ObsClasses=None,
+    **kwargs,
+):
+    """Get a list of observations of knmi stations. Either specify a list of
+    knmi stations (stns) or a dataframe with x, y coordinates (locations).
+
+    Parameters
+    ----------
+    locations : pandas DataFrame or None
+        dataframe with x and y coordinates. The default is None
+    stns : list of str or None
+        list of knmi stations. The default is None
+    xy : list or numpy array, optional
+        xy coordinates of the locations. e.g. [[10,25], [5,25]]
+    meteo_vars : list or tuple of str
+        meteo variables e.g. ["RH", "EV24"]. The default is ("RH")
+    starts : None, str, datetime or list, optional
+        start date of observations per meteo variable. The start date is
+        included in the time series.
+        If start is None the start date will be January 1st of the
+        previous year.
+        if start is str it will be converted to datetime
+        if start is a list it should be the same length as meteo_vars and
+        the start time for each variable. The default is None
+    ends : list of str, datetime or None
+        end date of observations per meteo variable. The end date is
+        included in the time series.
+        If end is None the start date will be January 1st of the
+        previous year.
+        if end is a str it will be converted to datetime
+        if end is a list it should be the same length as meteo_vars and
+        the end time for each meteo variable. The default is None
+    ObsClasses : list of type or None
+        class of the observations, can be PrecipitationObs or
+        EvaporationObs. The default is None.
+    **kwargs:
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is False.
+        interval : str, optional
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
+
+    Returns
+    -------
+    obs_list : list of obsevation objects
+        collection of multiple point observations
+    """
+
+    settings = _get_default_settings(kwargs)
+
+    if starts is None:
+        starts = [None] * len(meteo_vars)
+    elif isinstance(starts, (str, dt.datetime)):
+        starts = [starts] * len(meteo_vars)
+    elif isinstance(starts, list):
+        pass
+    else:
+        raise TypeError("must be None, str, dt.datetime or list")
+
+    if ends is None:
+        ends = [None] * len(meteo_vars)
+    elif isinstance(ends, (str, dt.datetime)):
+        ends = [ends] * len(meteo_vars)
+    elif isinstance(ends, list):
+        pass
+    else:
+        raise TypeError("must be None, str, dt.datetime or list")
+
+    if not isinstance(xy, (tuple, list, np.ndarray, type(None))):
+        raise TypeError("must be tuple, list or numpy.ndarray")
+
+    obs_list = []
+    for meteo_var, start, end, ObsClass in zip(meteo_vars, starts, ends, ObsClasses):
+        start, end = _start_end_to_datetime(start, end)
+
+        # get stations
+        if stns is None:
+            stations = get_stations(meteo_var=meteo_var)
+            if (locations is None) and (xy is not None):
+                _stns = get_nearest_station_xy(
+                    xy, stations=stations, meteo_var=meteo_var
+                )
+            elif locations is not None:
+                _stns = get_nearest_station_df(
+                    locations, stations=stations, meteo_var=meteo_var
+                )
+            else:
+                raise ValueError(
+                    "stns, location and x are all None" "please specify one of these"
+                )
+            _stns = np.unique(_stns)
+
+            if locations is not None:
+                xy = locations[["x", "y"]].values
+        else:
+            _stns = stns
+
+        for stn in _stns:
+            o = ObsClass.from_knmi(
+                meteo_var=meteo_var,
+                stn=stn,
+                start=start,
+                end=end,
+                **settings,
+            )
+
+            obs_list.append(o)
+
+    return obs_list

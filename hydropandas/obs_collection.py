@@ -302,7 +302,10 @@ def read_knmi(
     starts=None,
     ends=None,
     ObsClasses=None,
-    **kwargs,
+    fill_missing_obs=False,
+    interval="daily",
+    use_api=True,
+    raise_exceptions=True,
 ):
     """Get knmi observations from a list of locations or a list of
     stations.
@@ -458,7 +461,10 @@ def read_knmi(
         starts=starts,
         ends=ends,
         ObsClasses=ObsClasses,
-        **kwargs,
+        fill_missing_obs=fill_missing_obs,
+        interval=interval,
+        use_api=use_api,
+        raise_exceptions=raise_exceptions,
     )
 
     return oc
@@ -1482,7 +1488,10 @@ class ObsCollection(pd.DataFrame):
         starts=None,
         ends=None,
         ObsClasses=None,
-        **kwargs,
+        fill_missing_obs=False,
+        interval="daily",
+        use_api=True,
+        raise_exceptions=True,
     ):
         """Get knmi observations from a list of locations or a list of
         stations.
@@ -1521,6 +1530,20 @@ class ObsCollection(pd.DataFrame):
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is False.
+        interval : str, optional
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
 
@@ -1626,10 +1649,10 @@ class ObsCollection(pd.DataFrame):
         # obtain ObsClass
         if ObsClasses is None:
             ObsClasses = []
-            for meteovar in meteo_vars:
-                if meteovar in ("RH", "RD"):
+            for meteo_var in meteo_vars:
+                if meteo_var in ("RH", "RD"):
                     ObsClasses.append(obs.PrecipitationObs)
-                elif meteovar == "EV24":
+                elif meteo_var == "EV24":
                     ObsClasses.append(obs.EvaporationObs)
                 else:
                     ObsClasses.append(obs.MeteoObs)
@@ -1664,10 +1687,13 @@ class ObsCollection(pd.DataFrame):
             stns,
             xy,
             meteo_vars,
-            ObsClasses=ObsClasses,
             starts=starts,
             ends=ends,
-            **kwargs,
+            ObsClasses=ObsClasses,
+            fill_missing_obs=fill_missing_obs,
+            interval=interval,
+            use_api=use_api,
+            raise_exceptions=raise_exceptions,
         )
 
         obs_df = util._obslist_to_frame(obs_list)
