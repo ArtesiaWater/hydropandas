@@ -30,7 +30,7 @@ def _read_wiski_header(f, header_sep=":", header_identifier="#", end_header_str=
 
 
 def read_wiski_file(
-    fname,
+    path,
     sep=";",
     header_sep=None,
     header_identifier="#",
@@ -45,8 +45,8 @@ def read_wiski_file(
 
     Parameters:
     -----------
-    fname : str
-        The name of the file to be read.
+    path : str
+        The path of the file to be read.
     sep : str, optional (default=";")
         The delimiter used to separate fields in the file.
     header_sep : str, optional (default=None)
@@ -73,7 +73,7 @@ def read_wiski_file(
     metadata : dict
         A dictionary containing metadata about the data in the file.
     """
-    logger.info("reading -> {}".format(os.path.split(fname)[-1]))
+    logger.info("reading -> {}".format(os.path.split(path)[-1]))
 
     if translate_dic is None:
         translate_dic = {}
@@ -85,7 +85,7 @@ def read_wiski_file(
         end_header_str = None
 
     # read header
-    with open(fname, "r") as f:
+    with open(path, "r") as f:
         if header_sep is None:
             line, header = _read_wiski_header(
                 f, end_header_str=end_header_str, header_identifier=header_identifier

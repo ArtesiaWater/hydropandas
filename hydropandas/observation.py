@@ -558,55 +558,108 @@ class GroundwaterObs(Obs):
         )
 
     @classmethod
+    def from_bronhouderportaal_bro(
+        cls,
+        path,
+        tube_nr,
+        full_meta=False,
+    ):
+        """load BRO groundwater metadata from XML file. Mind that
+        bro_id is applicable, because file is not yet imported in BRO
+
+
+        Parameters
+        ----------
+        path : str
+            filepath of XML file.
+        tube_nr : int
+            tube number.
+        full_meta : bool
+            process not only the standard metadata to ObsCollection.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+
+        from .io import bronhouderportaal_bro
+
+        meta = bronhouderportaal_bro.get_metadata_from_gmw(
+            path, tube_nr, full_meta=full_meta
+        )
+
+        empty_df = pd.DataFrame()
+
+        return cls(
+            empty_df,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            filename=meta.pop("filename"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+            meta=meta,
+        )
+
+    @classmethod
     def from_dino(
         cls,
-        fname=None,
+        path=None,
         **kwargs,
     ):
         """download dino data from the server.
 
         Parameters
         ----------
-        fname : str, optional
-            dino csv filename
+        path : str, optional
+            path of dino csv file
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
-            if fname is not None and otherwise to hydropandas.io.dino.findMeetreeks
+            if path is not None and otherwise to hydropandas.io.dino.findMeetreeks
         """
         from .io import dino
 
         # read dino csv file
-        measurements, meta = dino.read_dino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_artdino_file(cls, fname=None, **kwargs):
+    def from_artdino_file(cls, path=None, **kwargs):
         """read a dino csv file (artdiver style).
 
         Parameters
         ----------
-        fname : str, optional
-            dino csv filename
+        path : str, optional
+            path of dino csv filename
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io._dino.read_dino_groundwater_csv
         """
         from .io import dino
 
         # read artdino csv file
-        measurements, meta = dino.read_artdino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_artdino_groundwater_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_wiski(cls, fname, **kwargs):
+    def from_wiski(cls, path, **kwargs):
         """
         Read data from a WISKI file.
 
         Parameters:
         -----------
-        fname : str
-            The name of the file to be read.
+        path : str
+            The path of the file to be read.
         sep : str, optional (default=";")
             The delimiter used to separate fields in the file.
         header_sep : str, optional (default=None)
@@ -629,7 +682,7 @@ class GroundwaterObs(Obs):
         """
         from .io import wiski
 
-        data, metadata = wiski.read_wiski_file(fname, **kwargs)
+        data, metadata = wiski.read_wiski_file(path, **kwargs)
 
         return cls(data, meta=metadata, **metadata)
 
@@ -669,20 +722,20 @@ class WaterQualityObs(Obs):
         return WaterQualityObs
 
     @classmethod
-    def from_dino(cls, fname, **kwargs):
+    def from_dino(cls, path, **kwargs):
         """read dino file with groundwater quality data.
 
         Parameters
         ----------
-        fname : str
-            dino txt filename
+        path : str
+            path of dino txt filename
         kwargs : key-word arguments
             these arguments are passed to
             hydropandas.io.dino.read_dino_groundwater_quality_txt
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -712,29 +765,29 @@ class WaterlvlObs(Obs):
         return WaterlvlObs
 
     @classmethod
-    def from_dino(cls, fname, **kwargs):
+    def from_dino(cls, path, **kwargs):
         """read a dino file with waterlvl data.
 
         Parameters
         ----------
-        fname : str
-            dino csv filename
+        path : str
+            path of dino csv filename
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_waterlvl_csv
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_waterlvl_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_waterlvl_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_waterinfo(cls, fname, **kwargs):
+    def from_waterinfo(cls, path, **kwargs):
         """Read data from waterinfo csv-file or zip.
 
         Parameters
         ----------
-        fname : str
+        path : str
             path to file (file can zip or csv)
 
         Returns
@@ -750,7 +803,7 @@ class WaterlvlObs(Obs):
         from .io import waterinfo
 
         df, metadata = waterinfo.read_waterinfo_file(
-            fname, return_metadata=True, **kwargs
+            path, return_metadata=True, **kwargs
         )
         return cls(df, meta=metadata, **metadata)
 
@@ -838,7 +891,7 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1021,7 +1074,7 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1102,7 +1155,7 @@ class MeteoObs(Obs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1245,12 +1298,12 @@ class MeteoObs(Obs):
         )
 
     @classmethod
-    def from_knmi_file(cls, fname, meteo_var="RH", startdate=None, enddate=None):
+    def from_knmi_file(cls, path, meteo_var="RH", startdate=None, enddate=None):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
         ----------
-        fname : str
+        path : str
             full path of a knmi .txt file
         meteo_var : str,
             meteo variable e.g. "RH" or "EV24".
@@ -1265,11 +1318,11 @@ class MeteoObs(Obs):
         """
         from .io import knmi
 
-        if not fname.endswith(".txt"):
-            fname += ".txt"
+        if not path.endswith(".txt"):
+            path += ".txt"
 
         knmi_df, meta = knmi.read_knmi_timeseries_file(
-            fname, meteo_var, startdate, enddate
+            path, meteo_var, startdate, enddate
         )
 
         return cls(
@@ -1346,7 +1399,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
 
@@ -1422,7 +1475,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1502,7 +1555,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
@@ -1542,12 +1595,12 @@ class EvaporationObs(MeteoObs):
         )
 
     @classmethod
-    def from_knmi_file(cls, fname, startdate=None, enddate=None):
+    def from_knmi_file(cls, path, startdate=None, enddate=None):
         """Get a EvaporationObs timeseries from the KNMI meteo data.
 
         Parameters
         ----------
-        fname : str
+        path : str
             full path of a knmi .txt file
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
@@ -1560,12 +1613,10 @@ class EvaporationObs(MeteoObs):
         """
         from .io import knmi
 
-        if not fname.endswith(".txt"):
-            fname += ".txt"
+        if not path.endswith(".txt"):
+            path += ".txt"
 
-        knmi_df, meta = knmi.read_knmi_timeseries_file(
-            fname, "EV24", startdate, enddate
-        )
+        knmi_df, meta = knmi.read_knmi_timeseries_file(path, "EV24", startdate, enddate)
 
         return cls(
             knmi_df,
@@ -1650,7 +1701,7 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
+                if False a text file is downloaded into a temporary directory and
                 the data is read from there. Default is True since the api is
                 back online (July 2021).
             raise_exceptions : bool, optional
@@ -1699,7 +1750,7 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
+                if False a text file is downloaded into a temporary directory and
                 the data is read from there. Default is True since the api is
                 back online (July 2021).
             raise_exceptions : bool, optional
@@ -1749,7 +1800,7 @@ class PrecipitationObs(MeteoObs):
             use_api : bool, optional
                 if True the api is used to obtain the data, API documentation is here:
                     https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
+                if False a text file is downloaded into a temporary directory and
                 the data is read from there. Default is True since the api is
                 back online (July 2021).
             raise_exceptions : bool, optional
@@ -1770,12 +1821,12 @@ class PrecipitationObs(MeteoObs):
         return super().from_obs(obs, meteo_var=meteo_var, **kwargs)
 
     @classmethod
-    def from_knmi_file(cls, fname, startdate=None, enddate=None):
+    def from_knmi_file(cls, path, startdate=None, enddate=None):
         """Get a PrecipitationObs timeseries from the KNMI meteo data.
 
         Parameters
         ----------
-        fname : str
+        path : str
             full path of a knmi .txt file
         startdate : str, datetime or None, optional
             start date of observations. The default is None.
@@ -1788,10 +1839,10 @@ class PrecipitationObs(MeteoObs):
         """
         from .io import knmi
 
-        if not fname.endswith(".txt"):
-            fname += ".txt"
+        if not path.endswith(".txt"):
+            path += ".txt"
 
-        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
+        knmi_df, meta = knmi.read_knmi_timeseries_file(path, "RD", startdate, enddate)
 
         return cls(
             knmi_df,

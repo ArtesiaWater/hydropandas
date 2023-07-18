@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Created on Fri Jan 31 13:26:04 2020.
-
-@author: oebbe
-"""
-
 import numpy as np
 import pandas as pd
 
@@ -89,6 +83,13 @@ def test_obscollection_from_list():
     oc = hpd.ObsCollection.from_list(o_list)
 
     return oc
+
+
+def test_add_meta_to_df():
+    oc = test_obscollection_from_list()
+    oc.add_meta_to_df(key="all")
+
+    assert "info" in oc.columns, "unexpected result for add_meta_to_df"
 
 
 def test_copy_obs():
