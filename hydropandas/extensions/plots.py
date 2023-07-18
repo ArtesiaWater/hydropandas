@@ -578,7 +578,7 @@ class CollectionPlots:
                     zorder=100,
                 )
 
-        logger.info(f"created sectionplot -> {name}")
+            logger.info(f"created sectionplot -> {name}")
 
         # layout
         if section_label_x is None:

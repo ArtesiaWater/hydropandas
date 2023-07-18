@@ -113,7 +113,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
     mat = loadmat(path, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
 
     obs_list = []
-    if load_oseries:
+    if load_oseries and ("H" in mat.keys()):
         d_h = read_oseries(mat)
 
         locations = d_h.keys()
@@ -131,10 +131,10 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
 
             meta_o = {k: metadata[k] for k in _keys_o if k in metadata}
 
-            o = ObsClass(df, meta=metadata, **meta_o)
+            o = ObsClass(df, meta=metadata, **meta_o, filename=fname)
             obs_list.append(o)
 
-    if load_stresses:
+    if load_stresses and ("IN" in mat.keys()):
         d_in = read_stresses(mat)
         stresses = d_in.keys()
         for stress in stresses:
@@ -156,6 +156,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
                 y=metadata["y"],
                 source=metadata["source"],
                 unit=metadata["unit"],
+                filename=fname,
             )
             obs_list.append(o)
 
@@ -214,8 +215,12 @@ def read_oseries(mat):
         data = {}
 
         for name in H._fieldnames:
+            val = getattr(H, name)
             if name != "values":
-                data[name.lower()] = getattr(H, name)
+                # if value is an empty numpy array set value to nan
+                if isinstance(val, np.ndarray) and val.size == 0:
+                    val = np.nan
+                data[name.lower()] = val
             else:
                 if H.values.size == 0:
                     # when diver-files are used, values will be empty
@@ -262,8 +267,12 @@ def read_stresses(mat):
 
         data = {}
         for name in IN._fieldnames:
+            val = getattr(IN, name)
             if name != "values":
-                data[name.lower()] = getattr(IN, name)
+                # if value is an empty numpy array set value to nan
+                if isinstance(val, np.ndarray) and val.size == 0:
+                    val = np.nan
+                data[name.lower()] = val
             else:
                 if IN.values.size == 0:
                     # when diver-files are used, values will be empty
