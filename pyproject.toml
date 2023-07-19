@@ -68,7 +68,13 @@ rtd = [
 ]
 linting = ["flake8", "ruff"]
 formatting = ["black[jupyter]", "isort"]
-pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+pytesting = [
+    "hydropandas[full,rtd]",
+    "pytest>=7",
+    "pytest-cov",
+    "pytest-sugar"
+    "pkg-config",
+]
 coveraging = ["coverage"]
 dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
 
