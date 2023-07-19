@@ -99,7 +99,8 @@ def get_knmi_obs(
         stn = int(stn)
 
         logger.info(
-            f"get KNMI data from station {stn} and meteo variable {meteo_var} from {start} to {end}"
+            f"get KNMI data from station {stn} and meteo variable {meteo_var}"
+            f"from {start} to {end}"
         )
         ts, meta = get_knmi_timeseries_stn(stn, meteo_var, settings, start, end)
     elif fname is not None:
@@ -107,7 +108,8 @@ def get_knmi_obs(
         ts, meta = get_knmi_timeseries_fname(fname, meteo_var, settings, start, end)
     elif xy is not None:
         logger.info(
-            f"get KNMI data from station nearest to coordinates {xy} and meteo variable {meteo_var}"
+            f"get KNMI data from station nearest to coordinates {xy} and meteo"
+            f"variable {meteo_var}"
         )
         stns = get_n_nearest_stations_xy(xy, meteo_var, n=1)
         ts, meta = get_knmi_timeseries_stn(stns[0], meteo_var, settings, start, end)
@@ -144,7 +146,8 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         ts, meta = read_knmi_hourly(fname, meteo_var, start, end)
     else:
         raise ValueError(
-            "please indicate how to read the file by specifying a meteo_var and an interval"
+            "please indicate how to read the file by specifying a meteo_var and"
+            " an interval"
         )
     stn = meta["station"]
     stations = get_stations(meteo_var=meteo_var)
@@ -459,7 +462,8 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
         )
         if stn_lst is None:
             logger.warning(
-                "there is no station with measurements of {meteo_var} between {start} and {end}"
+                f"there is no station with measurements of {meteo_var} between "
+                f"{start} and {end}"
             )
             return pd.DataFrame(), dict()
 
@@ -953,8 +957,9 @@ def read_knmi_daily_rainfall(f, meteo_var):
 
     Notes
     -----
-    This function assumes that the file object `f` is already open and positioned at the start of the data.
-    The file is expected to have a header with variable names and a corresponding data table.
+    This function assumes that the file object `f` is already open and
+    positioned at the start of the data. The file is expected to have a header
+    with variable names and a corresponding data table.
 
     The DataFrame returned by this function has the following modifications:
     - The index is set to the datetime values derived from the 'YYYYMMDD' column.
@@ -1768,7 +1773,8 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
     if meteo_var == "hargreaves":
         if not settings["use_api"]:
             raise NotImplementedError(
-                "cannot use hargreaves without the api because hargreaves needs the lattitude"
+                "cannot use hargreaves without the api because hargreaves needs "
+                "the lattitude"
             )
         d = {}
         mvs = ["TG", "TN", "TX"]
@@ -1796,7 +1802,8 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
     elif meteo_var == "penman":
         if not settings["use_api"]:
             raise NotImplementedError(
-                "cannot use penman without the api because penman needs the lattitude and height of the meteo station"
+                "cannot use penman without the api because penman needs the "
+                "lattitude and height of the meteo station"
             )
         d = {}
         mvs = ["TG", "TN", "TX", "Q", "FG", "UG"]
@@ -1818,7 +1825,8 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
         ).to_frame(name=meteo_var)
     else:
         raise ValueError(
-            "Provide valid argument for meteo_var -> 'hargreaves', 'makkink' or 'penman'"
+            "Provide valid argument for meteo_var -> 'hargreaves', 'makkink' or "
+            "'penman'"
         )
 
     stn_name = get_station_name(meta["station"])
