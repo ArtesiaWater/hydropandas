@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from lxml.etree import iterparse
 
 from .. import observation
 from ..observation import Obs
@@ -148,6 +147,8 @@ def iterparse_pi_xml(
     obs_list : list of pandas Series
         list of timeseries if 'return_df' is False
     """
+    from lxml.etree import iterparse
+
     if translate_dic is None:
         translate_dic = {"locationId": "monitoring_well"}
 

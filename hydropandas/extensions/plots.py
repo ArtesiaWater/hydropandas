@@ -113,7 +113,7 @@ class CollectionPlots:
                     logger.debug(f"created iplot -> {o.name}")
                 except ValueError:
                     logger.error(f"{o.name} has no data between {tmin} and {tmax}")
-                    o.iplot_fname = None
+                    o.meta["iplot_fname"] = None
 
     def interactive_map(
         self,
@@ -182,7 +182,7 @@ class CollectionPlots:
             start zoom level of the folium ma
         create_interactive_plots : boolean, optional
             if True interactive plots will be created, if False the iplot_fname
-            attribute of the observations is used.
+            in the meta ditctionary of the observations is used.
         **kwargs :
             will be passed to the to_interactive_plots method options are:
 
@@ -208,8 +208,19 @@ class CollectionPlots:
         import folium
         from folium.features import DivIcon
 
+        # check for empty observations
+        if all([o.empty for o in self._obj.obs.values]):
+            logger.warning("all observations in the collection are empty")
+            for oname in self._obj.index:
+                self._obj._set_metadata_value(
+                    oname, "iplot_fname", None, add_to_meta=True
+                )
+            empty_obs = True
+        else:
+            empty_obs = False
+
         # create interactive bokeh plots
-        if create_interactive_plots:
+        if create_interactive_plots and not empty_obs:
             self._obj.plots.interactive_plots(
                 savedir=plot_dir, per_monitoring_well=per_monitoring_well, **kwargs
             )
@@ -265,8 +276,8 @@ class CollectionPlots:
             else:
                 o = self._obj.loc[name, "obs"]
 
-            if o.iplot_fname is not None:
-                with open(o.iplot_fname, "r") as f:
+            if o.meta["iplot_fname"] is not None:
+                with open(o.meta["iplot_fname"], "r") as f:
                     bokeh_html = f.read()
 
                 iframe = branca.element.IFrame(html=bokeh_html, width=620, height=420)
@@ -304,6 +315,15 @@ class CollectionPlots:
                     ).add_to(group)
             else:
                 logger.info(f"no iplot available for {o.name}")
+                folium.CircleMarker(
+                    [
+                        self._obj.loc[o.name, col_name_lat],
+                        self._obj.loc[o.name, col_name_lon],
+                    ],
+                    icon=folium.Icon(icon="signal"),
+                    fill=True,
+                    color=color,
+                ).add_to(group)
 
         group.add_to(m)
 
@@ -335,6 +355,7 @@ class CollectionPlots:
         fn_save=None,
         check_obs_close_to_screen_bottom=True,
         plot_well_layout_markers=True,
+        plot_obs=True,
     ):
         """Create plot with well layout (left) en observations (right).
 
@@ -366,6 +387,8 @@ class CollectionPlots:
         plot_well_layout_markers : bool, optional
             plots ground level, top tube, screen levels and sandtrap via
             makers. Default is True
+        plot_obs : bool, optional
+            Plots observation. Default is True
 
         TODO:
             - speficy colors via extra column in ObsCollection
@@ -390,14 +413,20 @@ class CollectionPlots:
 
         # create figure
         fig = plt.figure(figsize=(15, 5))
-        gs = GridSpec(
-            1,
-            2,
-            width_ratios=[1, 3],
-        )
-        ax_section = fig.add_subplot(gs[0])
-        ax_obs = fig.add_subplot(gs[1])
-        axes = [ax_section, ax_obs]
+        if plot_obs:
+            # make figure with section plot on left, and righthand plot for obs
+            gs = GridSpec(
+                1,
+                2,
+                width_ratios=[1, 3],
+            )
+            ax_section = fig.add_subplot(gs[0])
+            ax_obs = fig.add_subplot(gs[1])
+            axes = [ax_section, ax_obs]
+        else:
+            # make figure with only one plot on left, observations are not plotted
+            ax_section = fig.add_subplot(111)
+            axes = [ax_section]
 
         if plot_well_layout_markers:
             # plot well layout via markers
@@ -437,44 +466,50 @@ class CollectionPlots:
 
         # loop over all wells, plot observations and details in section plot
         for counter, name in enumerate(self._obj.index):
-            # which column to plot?
-            cols = list(cols)
-            for i, col in enumerate(cols):
-                if col is None:
-                    cols[i] = self._obj.loc[name, "obs"]._get_first_numeric_col_name()
+            if plot_obs:
+                # which column to plot?
+                cols = list(cols)
+                for i, col in enumerate(cols):
+                    if col is None:
+                        cols[i] = self._obj.loc[
+                            name, "obs"
+                        ]._get_first_numeric_col_name()
 
-            # create plot dataframe
-            plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
-            if plot_df.empty or plot_df[cols].isna().all().all():
-                logger.warning(f"{name} has no data between {tmin} and {tmax}")
-                continue
+                # create plot dataframe
+                plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
+                if plot_df.empty or plot_df[cols].isna().all().all():
+                    logger.warning(f"{name} has no data between {tmin} and {tmax}")
+                    continue
 
-            # PART 1: plot timeseries of observations
-            # one or multiple columns to plot?
-            if len(cols) == 1:
-                p = ax_obs.plot(plot_df, label=name)
+                # PART 1: plot timeseries of observations
+                # one or multiple columns to plot?
+                if len(cols) == 1:
+                    p = ax_obs.plot(plot_df, label=name)
+                else:
+                    for col in cols:
+                        p = ax_obs.plot(plot_df[col], label=f"{name}, {col}")
+                plot_color = p[0].get_color()
+
+                if check_obs_close_to_screen_bottom:
+                    # add horizonal line to plot when minimum observation in first plot
+                    # column is close to bottom of screen
+                    offset = 0.1
+                    if self._obj.loc[name, "screen_bottom"] > (
+                        plot_df[cols[0]].dropna().min() - offset
+                    ):
+                        ax_obs.axhline(
+                            y=self._obj.loc[name, "screen_bottom"],
+                            ls="--",
+                            lw=4,
+                            alpha=0.5,
+                            label=(
+                                f"screen bottom of {name}\n"
+                                "is close to minimum observation"
+                            ),
+                            color=plot_color,
+                        )
             else:
-                for col in cols:
-                    p = ax_obs.plot(plot_df[col], label=f"{name}, {col}")
-
-            if check_obs_close_to_screen_bottom:
-                # add horizonal line to plot when minimum observation in first plot
-                # column is close to bottom of screen
-                offset = 0.1
-                if self._obj.loc[name, "screen_bottom"] > (
-                    plot_df[cols[0]].dropna().min() - offset
-                ):
-                    ax_obs.axhline(
-                        y=self._obj.loc[name, "screen_bottom"],
-                        ls="--",
-                        lw=4,
-                        alpha=0.5,
-                        label=(
-                            f"screen bottom of {name}\n"
-                            "is close to minimum observation"
-                        ),
-                        color=p[0].get_color(),
-                    )
+                plot_color = "hotpink"
 
             # PART 2: fancy section plot with lines along tube
 
@@ -494,7 +529,7 @@ class CollectionPlots:
             ax_section.plot(
                 [plot_x[counter]] * 2,
                 [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
-                color=p[0].get_color(),
+                color=plot_color,
                 lw=3,
             )
 
@@ -506,43 +541,44 @@ class CollectionPlots:
                         self._obj.loc[name, "screen_bottom"],
                         self._obj.loc[name, "tube_bottom"],
                     ],
-                    color=p[0].get_color(),
+                    color=plot_color,
                     lw=3,
                 )
 
-            # PART 3: fancy section plot with bandwith of observations
-            ax_section.scatter(
-                plot_x[counter],
-                plot_df.quantile(q=0.95),
-                section_markersize,
-                marker=(3, 0, 0),
-                color="blue",
-                alpha=0.5,
-                label="95% observation",
-                zorder=100,
-            )
-            ax_section.scatter(
-                plot_x[counter],
-                plot_df.median(),
-                section_markersize,
-                marker=(4, 0, 90),
-                color="green",
-                alpha=0.5,
-                label="median",
-                zorder=100,
-            )
-            ax_section.scatter(
-                plot_x[counter],
-                plot_df.quantile(q=0.05),
-                section_markersize,
-                marker=(3, 0, 180),
-                color="red",
-                alpha=0.5,
-                label="5% observation",
-                zorder=100,
-            )
+            if plot_obs:
+                # PART 3: fancy section plot with bandwith of observations
+                ax_section.scatter(
+                    plot_x[counter],
+                    plot_df.quantile(q=0.95),
+                    section_markersize,
+                    marker=(3, 0, 0),
+                    color="blue",
+                    alpha=0.5,
+                    label="95% observation",
+                    zorder=100,
+                )
+                ax_section.scatter(
+                    plot_x[counter],
+                    plot_df.median(),
+                    section_markersize,
+                    marker=(4, 0, 90),
+                    color="green",
+                    alpha=0.5,
+                    label="median",
+                    zorder=100,
+                )
+                ax_section.scatter(
+                    plot_x[counter],
+                    plot_df.quantile(q=0.05),
+                    section_markersize,
+                    marker=(3, 0, 180),
+                    color="red",
+                    alpha=0.5,
+                    label="5% observation",
+                    zorder=100,
+                )
 
-        logger.info(f"created sectionplot -> {name}")
+            logger.info(f"created sectionplot -> {name}")
 
         # layout
         if section_label_x is None:
@@ -556,15 +592,16 @@ class CollectionPlots:
         else:
             ax_section.set_xlabel(section_label_x)
 
-        ax_obs.set_xlim(left=tmin, right=tmax)
+        if plot_obs:
+            ax_obs.set_xlim(left=tmin, right=tmax)
 
-        # rotate labels on observation axis
-        ax_obs.set_xticks(
-            ax_obs.get_xticks(),
-            ax_obs.get_xticklabels(),
-            rotation="vertical",
-            fontsize="small",
-        )
+            # rotate labels on observation axis
+            ax_obs.set_xticks(
+                ax_obs.get_xticks(),
+                ax_obs.get_xticklabels(),
+                rotation="vertical",
+                fontsize="small",
+            )
 
         if ylabel == "auto":
             # has collection uniform unit?
@@ -782,10 +819,12 @@ class ObsPlots:
         if savedir is not None:
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
-            self._obj.iplot_fname = os.path.join(savedir, self._obj.name + ".html")
-            save(p, self._obj.iplot_fname, resources=CDN, title=self._obj.name)
+            self._obj.meta["iplot_fname"] = os.path.join(
+                savedir, self._obj.name + ".html"
+            )
+            save(p, self._obj.meta["iplot_fname"], resources=CDN, title=self._obj.name)
 
         if return_filename:
-            return self._obj.iplot_fname
+            return self._obj.meta["iplot_fname"]
         else:
             return p

@@ -45,16 +45,16 @@ def get_stations(meteo_var="RH"):
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dirname = os.path.dirname(os.path.realpath(__file__))
 
-    fname = "../data/knmi_meteostation.json"
+    path = "../data/knmi_meteostation.json"
 
-    stations = pd.read_json(os.path.join(dir_path, fname))
+    stations = pd.read_json(os.path.join(dirname, path))
 
     if meteo_var == "RD":
         # read precipitation station data only
-        fname = "../data/knmi_neerslagstation.json"
-        stations = pd.read_json(os.path.join(dir_path, fname))
+        path = "../data/knmi_neerslagstation.json"
+        stations = pd.read_json(os.path.join(dirname, path))
 
     if meteo_var == "PG":
         # in Ell wordt geen luchtdruk gemeten
@@ -592,12 +592,12 @@ def get_knmi_daily_rainfall_url(
     return read_knmi_daily_rainfall_file(fname_txt, meteo_var, start=start, end=end)
 
 
-def read_knmi_daily_rainfall_file(fname_txt, meteo_var="RD", start=None, end=None):
+def read_knmi_daily_rainfall_file(path, meteo_var="RD", start=None, end=None):
     """read a knmi file with daily rainfall data.
 
     Parameters
     ----------
-    fname_txt : str
+    path : str
         file path of a knmi .txt file.
     meteo_var : str
         must be 'RD'.
@@ -614,7 +614,7 @@ def read_knmi_daily_rainfall_file(fname_txt, meteo_var="RD", start=None, end=Non
         additional information about the variables
 
     """
-    with open(fname_txt, "r") as f:
+    with open(path, "r") as f:
         line = f.readline()
         # get meteo var
         for _ in range(50):
@@ -947,13 +947,13 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start, end, use_cache=True):
     return read_knmi_daily_meteo_file(fname_txt, meteo_var, start=start, end=end)
 
 
-def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
+def read_knmi_daily_meteo_file(path, meteo_var, start=None, end=None):
     """read knmi daily meteo data from a file
 
     Parameters
     ----------
-    fname : str
-        file path.
+    path : str
+        file path of .txt file.
     meteo_var : str
         e.g. 'EV24'.
     start : pd.TimeStamp
@@ -976,7 +976,7 @@ def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
         additional data about the measurement station
     """
     variables = None
-    with open(fname, "r") as f:
+    with open(path, "r") as f:
         line = f.readline()
         # get meteo var
         for _ in range(50):
@@ -987,7 +987,7 @@ def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
             line = f.readline()
 
         if variables is None:
-            raise ValueError(f"could not find {meteo_var} in file {fname}")
+            raise ValueError(f"could not find {meteo_var} in file {path}")
 
         # get dataframe
         for _ in range(50):
@@ -1213,17 +1213,17 @@ def _get_default_settings(settings):
     return settings
 
 
-def read_knmi_timeseries_file(fname, meteo_var, start, end, interval="daily"):
+def read_knmi_timeseries_file(path, meteo_var, start, end, interval="daily"):
     if meteo_var == "RD" and interval == "daily":
         knmi_df, meta = read_knmi_daily_rainfall_file(
-            fname, meteo_var="RD", start=start, end=end
+            path, meteo_var="RD", start=start, end=end
         )
     elif interval == "daily":
         knmi_df, meta, _ = read_knmi_daily_meteo_file(
-            fname, meteo_var, start=start, end=end
+            path, meteo_var, start=start, end=end
         )
     elif interval == "hourly":
-        knmi_df, meta = read_knmi_hourly(fname)
+        knmi_df, meta = read_knmi_hourly(path)
 
     # get stations
     stations = get_stations(meteo_var=meteo_var)

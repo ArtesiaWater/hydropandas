@@ -83,6 +83,39 @@ def read_bro(
     return oc
 
 
+def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
+    """get all the metadata from files in a directory. Files are GMW files of
+    well construction, and are subbmitted to
+    https://www.bronhouderportaal-bro.nl .
+
+
+    Parameters
+    ----------
+    dirname : str
+        name of directory that holds XML files
+    full_meta : bool, optional
+        process not only the standard metadata to ObsCollection
+    add_to_df : bool, optional
+        add all the metadata to the ObsCollection DataFrame
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection DataFrame without the 'obs' column
+
+    """
+
+    oc = ObsCollection.from_bronhouderportaal_bro(
+        dirname=dirname,
+        full_meta=full_meta,
+    )
+
+    if add_to_df:
+        oc.add_meta_to_df(key="all")
+
+    return oc
+
+
 def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
@@ -211,7 +244,7 @@ def read_fews(
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
     unpackdir : str
-        destination directory to unzip file if fname is a .zip
+        destination directory to unzip file if file_or_dir is a .zip
     force_unpack : boolean, optional
         force unpack if dst already exists
     preserve_datetime : boolean, optional
@@ -465,13 +498,13 @@ def read_knmi(
 
 
 def read_menyanthes(
-    fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+    path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
 ):
     """read a Menyanthes file
 
     Parameters
     ----------
-    fname : str
+    path : str
         full path of the .men file.
     name : str, optional
         name of the observation collection. The default is "".
@@ -490,7 +523,7 @@ def read_menyanthes(
     """
 
     oc = ObsCollection.from_menyanthes(
-        fname=fname,
+        path=path,
         name=name,
         ObsClass=ObsClass,
         load_oseries=load_oseries,
@@ -1097,6 +1130,41 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
+    def from_bronhouderportaal_bro(
+        cls,
+        dirname,
+        full_meta=False,
+    ):
+        """get all the metadata from dirname.
+
+
+        Parameters
+        ----------
+        dirname : str
+            name of dirname that holds XML files
+        full_meta : bool , optional
+            process all metadata. The default is False.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame without the 'obs' column
+
+        """
+
+        from .io.bronhouderportaal_bro import get_obs_list_from_dir
+
+        obs_list = get_obs_list_from_dir(
+            dirname,
+            obs.GroundwaterObs,
+            full_meta=full_meta,
+        )
+
+        obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df)
+
+    @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
         """Create an observation collection from a DataFrame by adding a column
         with empty observations.
@@ -1362,7 +1430,7 @@ class ObsCollection(pd.DataFrame):
             remove nan values from measurements, flag information about the
             nan values is also lost, only used if low_memory=False
         unpackdir : str
-            destination directory to unzip file if fname is a .zip
+            destination directory to unzip file if path is a .zip
         force_unpack : boolean, optional
             force unpack if dst already exists
         preserve_datetime : boolean, optional
@@ -1690,14 +1758,14 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_menyanthes(
-        cls, fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+        cls, path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
     ):
         from .io.menyanthes import read_file
 
-        menyanthes_meta = {"filename": fname, "type": ObsClass}
+        menyanthes_meta = {"path": path, "type": ObsClass}
 
         obs_list = read_file(
-            fname, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
+            path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
         )
         obs_df = util._obslist_to_frame(obs_list)
 
@@ -1968,12 +2036,12 @@ class ObsCollection(pd.DataFrame):
 
         return pstore
 
-    def to_shapefile(self, fname, xcol="x", ycol="y"):
+    def to_shapefile(self, path, xcol="x", ycol="y"):
         """save ObsCollection as shapefile.
 
         Parameters
         ----------
-        fname : str
+        path : str
             filename of shapefile, ends with .shp
         xcol : str
             column name with x values
@@ -2000,9 +2068,9 @@ class ObsCollection(pd.DataFrame):
             elif np.issubdtype(coltype, np.datetime64):
                 gdf[colname] = gdf[colname].astype(str)
 
-        gdf.to_file(fname)
+        gdf.to_file(path)
 
-    def add_meta_to_df(self, key):
+    def add_meta_to_df(self, key="all"):
         """Get the values from the meta dictionary of each observation object
         and add these to the ObsCollection as a column.
 
@@ -2010,13 +2078,22 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        key : str
-            key in meta dictionary of observation object
+        key : str, int, tuple, list, set or None, optional
+            key in meta dictionary of observation object. If key is 'all', all
+            keys are added. The default is 'all'.
         """
 
-        self[key] = [
-            o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
-        ]
+        if isinstance(key, str) and key == "all":
+            keys = set().union(*[o.meta for o in self.obs.values])
+            for key in keys:
+                self[key] = [
+                    o.meta[key] if key in o.meta.keys() else None
+                    for o in self.obs.values
+                ]
+        else:
+            self[key] = [
+                o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+            ]
 
     def get_series(self, tmin=None, tmax=None, col=None):
         """

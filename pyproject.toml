@@ -50,11 +50,11 @@ full = [
     "shapely",
     "pyproj",
     "contextily",
+    "lxml",
 ]
 rtd = [
     "hydropandas[full]",
     "imod",
-    "lxml",
     "requests",
     "Shapely",
     "nbconvert",

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Created on Fri Nov  8 11:46:51 2019
-
-@author: oebbe
-"""
-
 import test_001_to_from as ttf
 
 plot_dir = "./tests/data/2019-Dino-test/plots"
