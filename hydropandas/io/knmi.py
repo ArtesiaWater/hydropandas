@@ -90,7 +90,7 @@ def get_knmi_obs(
     elif meteo_var is not None:
         if not isinstance(meteo_var, str):
             raise (TypeError(f"meteo var should be string not {type(meteo_var)}"))
-            
+
     settings = _get_default_settings(kwargs)
 
     start, end = _start_end_to_datetime(start, end)
