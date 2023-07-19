@@ -72,7 +72,7 @@ pytesting = [
     "hydropandas[full,rtd]",
     "pytest>=7",
     "pytest-cov",
-    "pytest-sugar"
+    "pytest-sugar",
     "pkg-config",
 ]
 coveraging = ["coverage"]
