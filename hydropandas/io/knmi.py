@@ -1281,13 +1281,13 @@ def get_knmi_hourly_api(stn, meteo_var, start, end):
 
     # It looks like the API has an option to select the start and end hour that
     # you want but in reality it does not have this option.
-    if start is not None:
+    if start is None:
         raise ValueError("A start date is required when using hourly interval")
-    if end is not None:
+    if end is None:
         raise ValueError("An end date is required when using hourly interval")
 
     if (end - start).days > 4150:
-        raise ValueError("time span for hourly date cannot be greater than 10 years")
+        raise ValueError("time span for hourly data cannot be greater than 10 years")
 
     params["end"] = end.strftime("%Y%m%d") + "24"
 
