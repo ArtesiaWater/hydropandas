@@ -15,6 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import logging
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -967,6 +968,8 @@ class EvaporationObs(MeteoObs):
         interval="daily",
         use_api=True,
         raise_exceptions=True,
+        startdate=None,
+        enddate=None,
     ):
         """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
@@ -1005,6 +1008,14 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
+        if startdate is not None:
+            warnings.warn(
+                "please use 'start' instead of startdate'", DeprecationWarning
+            )
+            start = startdate
+        if enddate is not None:
+            warnings.warn("please use 'end' instead of enddate'", DeprecationWarning)
+            end = enddate
 
         return super().from_knmi(
             meteo_var,
