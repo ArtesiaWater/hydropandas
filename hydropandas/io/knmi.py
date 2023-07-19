@@ -105,7 +105,6 @@ def get_knmi_obs(
     elif fname is not None:
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
         ts, meta = get_knmi_timeseries_fname(fname, meteo_var, settings, start, end)
-
     elif xy is not None:
         logger.info(
             f"get KNMI data from station nearest to coordinates {xy} and meteo variable {meteo_var}"
@@ -297,17 +296,25 @@ def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
             "set use_api=False."
         )
         raise ValueError(message)
-
-    # download data
     elif settings["fill_missing_obs"]:
+        # download data
         knmi_df, meta = fill_missing_measurements(
             stn, meteo_var, start, end, settings, stn_name
         )
+
+        return knmi_df, meta
+    elif meteo_var in ["penman", "makkink", "hargreaves"]:
+        # compute evaporation from data
+        knmi_df, meta = get_evaporation(meteo_var, stn, start, end, settings)
     else:
         knmi_df, variables, station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
-        meta = station_meta.to_dict()
+
+        if str(stn) in station_meta.index:
+            meta = station_meta.loc[f"{stn}"].to_dict()
+        else:
+            meta = {}
 
         # set metadata
         meta.update(
@@ -469,7 +476,7 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     missing = knmi_df[meteo_var].isna()
     logger.info(f"station {stn} has {missing.sum()} missing measurements")
 
-    knmi_df.loc[~missing, "station_opvulwaarde"] = str(stn)
+    knmi_df.loc[~missing, "station"] = str(stn)
 
     # fill missing values
     while np.any(missing) and not np.all(missing):
@@ -511,12 +518,15 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
                 # update missing data
                 knmi_df.loc[ix_idx, meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
                 # add source station number
-                knmi_df.loc[ix_idx, "station_opvulwaarde"] = str(stn_comp)
+                knmi_df.loc[ix_idx, "station"] = str(stn_comp)
 
         missing = knmi_df[meteo_var].isna()
         ignore.append(stn_comp)
 
-    meta = station_meta.to_dict()
+    if str(stn) in station_meta.index:
+        meta = station_meta.loc[f"{stn}"].to_dict()
+    else:
+        meta = {}
 
     # set metadata
     meta.update(
@@ -622,6 +632,12 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
         logger.error(e)
         if settings["raise_exceptions"]:
             raise ValueError(e)
+
+    if knmi_df.empty:
+        logger.info(
+            "no measurements found for station "
+            f"{stn}-{stn_name} between {start} and {end}"
+        )
 
     return knmi_df, variables, stations
 
@@ -1008,7 +1024,7 @@ def _read_station_location(f):
     return f, stations
 
 
-# @lru_cache()
+@lru_cache()
 def get_knmi_daily_meteo_api(stn, meteo_var, start=None, end=None):
     """download and read knmi daily meteo data.
 
@@ -1149,8 +1165,10 @@ def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
         for _ in range(50):
             if meteo_var in line:
                 key, item = line.split("=")
-                variables = {key.strip(): item.strip()}
-                break
+                var_name = key.strip()
+                variables = {var_name: item.strip()}
+                if var_name == meteo_var:
+                    break
             line = f.readline()
 
         if variables is None:
@@ -1220,7 +1238,7 @@ def read_knmi_daily_meteo(f, meteo_var):
     return df, variables, stations
 
 
-# @lru_cache()
+@lru_cache()
 def get_knmi_hourly_api(stn, meteo_var, start=None, end=None):
     """Retrieve hourly meteorological data from the KNMI API.
 
@@ -1723,3 +1741,236 @@ def get_knmi_obslist(
             obs_list.append(o)
 
     return obs_list
+
+
+def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
+    """Collect different types of (reference) evaporation
+    from KNMI weather stations
+
+    Parameters
+    ----------
+    meteo_var : str
+        Choice between 'penman', 'makkink' or 'hargraves'.
+    stn : str
+        station number, defaults to 260 De Bilt
+    start : pd.TimeStamp
+        start time of observations.
+    end : pd.TimeStamp
+        end time of observations.
+    settings : dict or None, optional
+        settings for the time series
+
+    Returns
+    ------
+    pandas.DataFrame
+
+    """
+    if meteo_var == "hargreaves":
+        if not settings["use_api"]:
+            raise NotImplementedError(
+                "cannot use hargreaves without the api because hargreaves needs the lattitude"
+            )
+        d = {}
+        mvs = ["TG", "TN", "TX"]
+        for mv in mvs:
+            ts, meta = get_knmi_timeseries_stn(
+                stn, meteo_var=mv, start=start, end=end, settings=settings
+            )
+            d[mv] = ts.squeeze()
+        et = hargreaves(
+            d["TG"],
+            d["TN"],
+            d["TX"],
+            d["TG"].index,
+            meta["LAT_north"],
+        ).to_frame(name=meteo_var)
+    elif meteo_var == "makkink":
+        d = {}
+        mvs = ["TG", "Q"]
+        for mv in mvs:
+            ts, meta = get_knmi_timeseries_stn(
+                stn, meteo_var=mv, start=start, end=end, settings=settings
+            )
+            d[mv] = ts.squeeze()
+        et = makkink(d["TG"], d["Q"]).to_frame(name=meteo_var)
+    elif meteo_var == "penman":
+        if not settings["use_api"]:
+            raise NotImplementedError(
+                "cannot use penman without the api because penman needs the lattitude and height of the meteo station"
+            )
+        d = {}
+        mvs = ["TG", "TN", "TX", "Q", "FG", "UG"]
+        for mv in mvs:
+            ts, meta = get_knmi_timeseries_stn(
+                stn, meteo_var=mv, start=start, end=end, settings=settings
+            )
+            d[mv] = ts.squeeze()
+        et = penman(
+            d["TG"],
+            d["TN"],
+            d["TX"],
+            d["Q"],
+            d["FG"],
+            d["UG"],
+            d["TG"].index,
+            meta["LAT_north"],
+            meta["ALT_m"],
+        ).to_frame(name=meteo_var)
+    else:
+        raise ValueError(
+            "Provide valid argument for meteo_var -> 'hargreaves', 'makkink' or 'penman'"
+        )
+
+    stn_name = get_station_name(meta["station"])
+    meta["name"] = f"{meteo_var}_{stn_name}"
+    meta["unit"] = "m"
+
+    return et, meta
+
+
+def makkink(tmean, K):
+    """Estimate of Makkink reference evaporation
+    according to KNMI.
+
+    Parameters
+    ----------
+    tmean : tmean : pandas.Series
+        Daily mean temperature in Celsius
+    K : pandas.Series
+        Global radiation estimate in J/cm2
+
+    Returns
+    -------
+    pandas.Series
+
+    """
+
+    a = 0.646 + 0.0006 * tmean
+    b = 1 + tmean / 237.3
+    c = 7.5 * np.log(10) * 6.107 * 10 ** (7.5 * (1 - 1 / b))
+    et = 0.0065 * (1 - a / (c / (237.3 * b * b) + a)) / (2501 - 2.38 * tmean) * K
+    return et
+
+
+def penman(
+    tmean, tmin, tmax, K, wind, rh, dates, z=1.0, lat=52.1, G=0.0, wh=10.0, tdew=None
+):
+    """Estimate of Penman reference evaporation
+    according to Allen et al 1990.
+
+    Parameters
+    ----------
+    tmean : pandas.Series
+        Daily mean temperature in Celsius
+    tmin : pandas.Series
+        Daily minimum temperature in Celsius
+    tmax : pandas.Series
+        Daily maximum temperature in Celsius
+    K : pandas.Series
+        Global radiation estimate in J/cm2
+    wind : pandas.Series
+        Daily mean wind speed in m/s
+    rh : pandas.Series
+        Relative humidity in %
+    dates : pandas.Series
+        Dates
+    z : float, optional
+        Elevation of station in m, by default 1.0
+    lat : float, optional
+        Latitude of station, by default 52.1
+    G : float, optional
+        Ground flux in MJ/m2, by default 0.0
+    wh : float, optional
+        Height of wind measurement in m, by default 10.0
+    tdew : pandas.Series
+        Dew point temperature in C, by default None
+
+    Returns
+    -------
+    pandas.Series
+
+    """
+    K = K * 1e4 * 0.000012  # J/cm2 to W/m2/d
+    P = 101.3 * ((293 - 0.0065 * z) / 293) ** 5.26  # kPa
+    gamma = 0.665e-3 * P  # kPa/C
+    tg = (tmax - tmin) / 2  # C
+    s = 4098 * (0.6108 * np.exp(17.27 * tg / (tg + 237.3)) / (tg + 237.3) ** 2)  # kPa/C
+    es0 = 0.6108 * np.exp(17.27 * tmean / (tmean + 237.3))  # kPa
+    esmax = 0.6108 * np.exp(17.27 * tmax / (tmax + 237.3))  # kPa
+    esmin = 0.6108 * np.exp(17.27 * tmin / (tmin + 237.3))  # kPa
+    es = (esmax + esmin) / 2  # kpa
+    if tdew:
+        ea = 0.6108 * np.exp(17.27 * tdew / (tdew + 237.3))  # kPa
+    else:
+        ea = es0 * rh / 100  # kPa
+    u2 = wind * 4.87 / np.log(67.8 * wh - 5.42)  # m/s
+    J = pd.Series([int(date.strftime("%j")) for date in dates], index=dates)
+    dr = 1 + 0.033 * np.cos(2 * np.pi * J / 365)  # -
+    delt = 0.409 * np.sin(2 * np.pi * J / 365 - 1.39)  # rad
+    phi = lat * np.pi / 180  # rad
+    ws = np.arccos(-np.tan(phi) * np.tan(delt))  # rad
+    Kext = (
+        1366
+        * dr
+        / np.pi
+        * (ws * np.sin(phi) * np.sin(delt) + np.cos(phi) * np.cos(delt) * np.sin(ws))
+    )  # W/m2/d
+    K0 = Kext * (0.75 + 2e-5 * z)  # W/m2/d
+    Lout_in = (
+        5.67e-8
+        * (((tmax + 273) ** 4 + (tmin + 273) ** 4) / 2)
+        * (0.34 - 0.14 * np.sqrt(ea))
+        * (1.35 * K / K0 - 0.35)
+    )  # W/m2/d
+    Q = (1 - 0.23) * K + Lout_in  # W/m2/d
+    Q = Q * 0.0864  # W/m2/d to MJ/m2
+    straling = 0.408 * s * (Q - G)
+    windterm = gamma * 900 / (tmean + 273) * u2 * (es - ea)
+    denom = s + gamma * (1 + 0.34 * u2)
+    et = (straling + windterm) / denom * 1e-3
+    et[et < 0] = 0
+    return et
+
+
+def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
+    """Estimate of Hargraves potential evaporation
+    according to Allen et al. 1990.
+
+    Parameters
+    ----------
+    tmean : pandas.Series
+        Daily mean temperature
+    tmin : pandas.Series
+        Daily minimum temperature
+    tmax : pandas.Series
+        Daily maximum temperature
+    dates : pandas.Series.index
+        Dates
+    lat : float, optional
+        Latitude of station, by default 52.1
+    x : _type_, optional
+        Optional parameter to scale evaporation estimate, by default None
+
+    Returns
+    -------
+    pandas.Series
+
+    """
+    J = pd.Series([int(date.strftime("%j")) for date in dates], index=dates)
+    dr = 1 + 0.033 * np.cos(2 * np.pi * J / 365)
+    delt = 0.409 * np.sin(2 * np.pi * J / 365 - 1.39)
+    phi = lat * np.pi / 180
+    ws = np.arccos(-np.tan(phi) * np.tan(delt))
+    Kext = (
+        12
+        * 60
+        * 0.0820
+        * dr
+        / np.pi
+        * (ws * np.sin(phi) * np.sin(delt) + np.cos(phi) * np.cos(delt) * np.sin(ws))
+    )  # MJ/m2/d
+    Kext = 0.408 * Kext  # MJ/m2/d to mm/d
+    et = 0.0023 * (tmean + 273 + 17.8) / np.sqrt(tmax - tmin) * Kext * 1e-3
+    if x:
+        et = x[0] + x[1] * et
+    return et

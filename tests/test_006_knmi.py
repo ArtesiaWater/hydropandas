@@ -97,6 +97,55 @@ def test_download_knmi_de_bilt():
     )
 
 
+def test_xy():
+    # empty dataframe because nearest station has no data in time frame
+    knmi.get_knmi_obs(
+        xy=(100000, 330000),
+        meteo_var="EV24",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    # fill missing obs does work
+    knmi.get_knmi_obs(
+        xy=(100000, 330000),
+        meteo_var="EV24",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+        fill_missing_obs=True,
+    )
+
+    knmi.get_knmi_obs(
+        xy=(150000, 250000),
+        meteo_var="RD",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+
+def test_calculate_evaporation():
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="makkink",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="penman",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="hargreaves",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+
 def test_download_knmi_xy():
     df1, meta1 = knmi.get_knmi_obs(meteo_var="RH", stn=344)
     df2, meta2 = knmi.get_knmi_obs(meteo_var="RH", xy=(90600, 442800))
