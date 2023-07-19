@@ -870,6 +870,8 @@ class MeteoObs(Obs):
         interval="daily",
         use_api=True,
         raise_exceptions=True,
+        startdate=None,
+        enddate=None,
     ):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
@@ -909,6 +911,15 @@ class MeteoObs(Obs):
         MeteoObs object with meteorological observations
         """
         from .io import knmi
+
+        if startdate is not None:
+            warnings.warn(
+                "please use 'start' instead of startdate'", DeprecationWarning
+            )
+            start = startdate
+        if enddate is not None:
+            warnings.warn("please use 'end' instead of enddate'", DeprecationWarning)
+            end = enddate
 
         ts, meta = knmi.get_knmi_obs(
             stn=stn,
@@ -1008,14 +1019,6 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        if startdate is not None:
-            warnings.warn(
-                "please use 'start' instead of startdate'", DeprecationWarning
-            )
-            start = startdate
-        if enddate is not None:
-            warnings.warn("please use 'end' instead of enddate'", DeprecationWarning)
-            end = enddate
 
         return super().from_knmi(
             meteo_var,
@@ -1028,6 +1031,8 @@ class EvaporationObs(MeteoObs):
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
+            startdate=startdate,
+            enddate=enddate,
         )
 
 
@@ -1065,6 +1070,8 @@ class PrecipitationObs(MeteoObs):
         interval="daily",
         use_api=True,
         raise_exceptions=True,
+        startdate=None,
+        enddate=None,
     ):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for.
@@ -1140,4 +1147,6 @@ class PrecipitationObs(MeteoObs):
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
+            startdate=startdate,
+            enddate=enddate,
         )
