@@ -27,6 +27,7 @@ classifiers = [
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     "Operating System :: OS Independent",
     'Topic :: Scientific/Engineering :: Hydrology',
 ]
@@ -58,7 +59,7 @@ rtd = [
     "Shapely",
     "nbconvert",
     "ipykernel",
-    "netCDF4==1.5.8",
+    "netCDF4",
     "docutils<0.18",
     "sphinx_rtd_theme",
     "Ipython",
@@ -67,7 +68,12 @@ rtd = [
 ]
 linting = ["flake8", "ruff"]
 formatting = ["black[jupyter]", "isort"]
-pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+pytesting = [
+    "hydropandas[full,rtd]",
+    "pytest>=7",
+    "pytest-cov",
+    "pytest-sugar",
+]
 coveraging = ["coverage"]
 dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
 
@@ -98,7 +104,7 @@ markers = ["slow: mark test as slow."]
 legacy_tox_ini = """
     [tox]
     requires = tox>=4
-    env_list = format, lint, notebooks, py{37, 38, 39, 310}
+    env_list = format, lint, notebooks, py{37, 38, 39, 310, 311}
 
     [testenv]
     description = run unit tests

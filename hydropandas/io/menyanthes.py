@@ -131,7 +131,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
 
             meta_o = {k: metadata[k] for k in _keys_o if k in metadata}
 
-            o = ObsClass(df, meta=metadata, **meta_o, filename=fname)
+            o = ObsClass(df, meta=metadata, **meta_o, filename=path)
             obs_list.append(o)
 
     if load_stresses and ("IN" in mat.keys()):
@@ -156,7 +156,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
                 y=metadata["y"],
                 source=metadata["source"],
                 unit=metadata["unit"],
-                filename=fname,
+                filename=path,
             )
             obs_list.append(o)
 
