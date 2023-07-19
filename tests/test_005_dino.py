@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Created on Mon Jun 24 11:43:27 2019.
-
-@author: oebbe
-"""
 import logging
 
 from hydropandas.io import dino

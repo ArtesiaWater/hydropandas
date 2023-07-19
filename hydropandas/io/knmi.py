@@ -90,7 +90,7 @@ def get_knmi_obs(
     elif meteo_var is not None:
         if not isinstance(meteo_var, str):
             raise (TypeError(f"meteo var should be string not {type(meteo_var)}"))
-
+            
     settings = _get_default_settings(kwargs)
 
     start, end = _start_end_to_datetime(start, end)
@@ -757,7 +757,7 @@ def read_knmi_daily_rainfall_file(fname_txt, start=None, end=None):
 
     Parameters
     ----------
-    fname_txt : str
+    path : str
         file path of a knmi .txt file.
     start : pd.TimeStamp or None
         start time of observations.
@@ -1132,13 +1132,13 @@ def get_knmi_daily_meteo_url(stn, meteo_var, start=None, end=None):
     return read_knmi_daily_meteo_file(fname_txt, meteo_var, start, end)
 
 
-def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
+def read_knmi_daily_meteo_file(path, meteo_var, start=None, end=None):
     """read knmi daily meteo data from a file
 
     Parameters
     ----------
-    fname : str
-        file path.
+    path : str
+        file path of .txt file.
     meteo_var : str
         e.g. 'EV24'.
     start : pd.TimeStamp or None
@@ -1159,7 +1159,7 @@ def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
         additional information about the variables
     """
     variables = None
-    with open(fname, "r") as f:
+    with open(path, "r") as f:
         line = f.readline()
         # get meteo var
         for _ in range(50):
@@ -1172,7 +1172,7 @@ def read_knmi_daily_meteo_file(fname, meteo_var, start=None, end=None):
             line = f.readline()
 
         if variables is None:
-            raise ValueError(f"could not find {meteo_var} in file {fname}")
+            raise ValueError(f"could not find {meteo_var} in file {path}")
 
         # get dataframe
         for _ in range(50):
