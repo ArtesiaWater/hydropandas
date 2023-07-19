@@ -59,7 +59,7 @@ rtd = [
     "Shapely",
     "nbconvert",
     "ipykernel",
-    "netCDF4==1.5.8",
+    "netCDF4",
     "docutils<0.18",
     "sphinx_rtd_theme",
     "Ipython",
@@ -73,7 +73,6 @@ pytesting = [
     "pytest>=7",
     "pytest-cov",
     "pytest-sugar",
-    "pkg-config",
 ]
 coveraging = ["coverage"]
 dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
