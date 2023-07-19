@@ -57,7 +57,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install -y libhdf5-dev libnetcdf-dev
           python -m pip install --upgrade pip
           pip install tox
 
