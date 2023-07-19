@@ -10,9 +10,9 @@ import sys
 import tempfile
 import time
 import zipfile
-import pandas as pd
 from typing import Dict, List, Optional
 
+import pandas as pd
 from colorama import Back, Fore, Style
 from scipy.interpolate import RBFInterpolator
 
