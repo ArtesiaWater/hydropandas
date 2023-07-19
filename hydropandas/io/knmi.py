@@ -1244,7 +1244,7 @@ def read_knmi_daily_meteo(f, meteo_var):
 
 
 @lru_cache()
-def get_knmi_hourly_api(stn, meteo_var, start=None, end=None):
+def get_knmi_hourly_api(stn, meteo_var, start, end):
     """Retrieve hourly meteorological data from the KNMI API.
 
     Parameters
@@ -1282,10 +1282,17 @@ def get_knmi_hourly_api(stn, meteo_var, start=None, end=None):
     # It looks like the API has an option to select the start and end hour that
     # you want but in reality it does not have this option.
     if start is not None:
-        s = start - pd.Timedelta(1, unit="H")
-        params["start"] = s.strftime("%Y%m%d") + "01"
+        raise ValueError("A start date is required when using hourly interval")
     if end is not None:
-        params["end"] = end.strftime("%Y%m%d") + "24"
+        raise ValueError("An end date is required when using hourly interval")
+
+    if (end - start).days > 4150:
+        raise ValueError("time span for hourly date cannot be greater than 10 years")
+
+    params["end"] = end.strftime("%Y%m%d") + "24"
+
+    s = start - pd.Timedelta(1, unit="H")
+    params["start"] = s.strftime("%Y%m%d") + "01"
 
     result = requests.get(url, params=params)
 
