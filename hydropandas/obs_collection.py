@@ -1974,7 +1974,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         fname : str
-            filename of shapefile (.shp) or geopackage (.gpkg). A Geopackage
+            filename of shapefile (.shp) or geopackage (.gpkg). A geopackage
             has the advantage that column names will not be truncated.
         xcol : str
             column name with x values
