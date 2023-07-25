@@ -757,7 +757,10 @@ class ObsCollection(pd.DataFrame):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
 
-        if isinstance(args[0], (list, tuple)):
+        if len(args) == 0:
+            logger.debug("Create empty ObsCollection")
+            super().__init__(**kwargs)
+        elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
             super().__init__(obs_df, *args[1:], **kwargs)

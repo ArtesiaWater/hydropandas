@@ -79,7 +79,9 @@ def test_obscollection_from_df():
 
     hpd.ObsCollection(df)
 
-    return
+
+def test_obscollection_empty():
+    hpd.ObsCollection()
 
 
 # read dino directories
