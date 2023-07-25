@@ -17,6 +17,7 @@ import re
 import tempfile
 from functools import lru_cache
 from io import StringIO
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -69,7 +70,7 @@ def get_stations(meteo_var="RH"):
     return stations
 
 
-def get_station_name(stn, stations=None):
+def _get_station_name(stn: int, stations: Optional[pd.DataFrame] = None) -> str:
     """Returns the station name from a KNMI station.
 
     Modifies the station name in such a way that a valid url can be obtained.
@@ -94,59 +95,6 @@ def get_station_name(stn, stations=None):
     stn_name = stn_name.replace("(", "").replace(")", "")
 
     return stn_name
-
-
-def get_nearest_station_df(
-    locations, xcol="x", ycol="y", stations=None, meteo_var="RH", ignore=None
-):
-    """Find the KNMI stations that measure 'meteo_var' closest to the
-    coordinates in 'locations'.
-
-    Parameters
-    ----------
-    locations : pandas.DataFrame
-        DataFrame containing x and y coordinates
-    xcol : str
-        name of the column in the locations dataframe with the x values
-    ycol : str
-        name of the column in the locations dataframe with the y values
-    stations : pandas DataFrame, optional
-        if None stations will be obtained using the get_stations function.
-        The default is None.
-    meteo_var : str
-        measurement variable e.g. 'RH' or 'EV24'
-    ignore : list, optional
-        list of stations to ignore. The default is None.
-
-    Returns
-    -------
-    stns : list
-        station numbers.
-    """
-    if stations is None:
-        stations = get_stations(meteo_var=meteo_var)
-    if ignore is not None:
-        stations.drop(ignore, inplace=True)
-        if stations.empty:
-            return None
-
-    xo = pd.to_numeric(locations[xcol])
-    xt = pd.to_numeric(stations.x)
-    yo = pd.to_numeric(locations[ycol])
-    yt = pd.to_numeric(stations.y)
-
-    xh, xi = np.meshgrid(xt, xo)
-    yh, yi = np.meshgrid(yt, yo)
-
-    distances = pd.DataFrame(
-        np.sqrt((xh - xi) ** 2 + (yh - yi) ** 2),
-        index=locations.index,
-        columns=stations.index,
-    )
-
-    stns = distances.idxmin(axis=1).to_list()
-
-    return stns
 
 
 def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
@@ -177,12 +125,14 @@ def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
 
     locations = pd.DataFrame(data=xy, columns=["x", "y"])
 
-    stns = get_nearest_station_df(
+    if stations is None:
+        stations = get_stations(meteo_var=meteo_var)
+
+    stns = util.get_nearest_station_df(
         locations,
         xcol="x",
         ycol="y",
         stations=stations,
-        meteo_var=meteo_var,
         ignore=ignore,
     )
 
@@ -224,37 +174,6 @@ def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
     stns = distance.nsmallest(n).index.to_list()
 
     return stns
-
-
-def _start_end_to_datetime(start, end):
-    """convert start and endtime to datetime.
-
-    Parameters
-    ----------
-    start : str, datetime, None
-        start time
-    end : str, datetime, None
-        start time
-
-    Returns
-    -------
-    start : pd.TimeStamp
-        start time
-    end : pd.TimeStamp
-        end time
-    """
-
-    if start is None:
-        start = pd.Timestamp(pd.Timestamp.today().year - 1, 1, 1)
-    else:
-        start = pd.to_datetime(start)
-
-    if end is None:
-        end = pd.Timestamp.today() - pd.Timedelta(1, unit="D")
-    else:
-        end = pd.to_datetime(end)
-
-    return start, end
 
 
 def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
@@ -379,7 +298,7 @@ def download_knmi_data(
     if settings["inseason"]:
         raise NotImplementedError("inseason stuff not implemented")
 
-    start, end = _start_end_to_datetime(start, end)
+    start, end = util._start_end_to_datetime(start, end)
 
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
@@ -1227,7 +1146,7 @@ def read_knmi_timeseries_file(path, meteo_var, start, end, interval="daily"):
 
     # get stations
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(meta["station"], stations)
+    stn_name = _get_station_name(meta["station"], stations)
 
     # set metadata
     x = stations.loc[meta["station"], "x"]
@@ -1385,7 +1304,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, start, end, settings=None):
 
     # get station
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(stn, stations)
+    stn_name = _get_station_name(stn, stations)
 
     # download data
     if settings["fill_missing_obs"] and (settings["interval"] == "hourly"):
@@ -1524,7 +1443,7 @@ def get_knmi_obslist(
             elif meteo_var == "EV24":
                 obs_kwargs["et_type"] = "EV24"
 
-        start, end = _start_end_to_datetime(start, end)
+        start, end = util._start_end_to_datetime(start, end)
 
         # get stations
         if stns is None:
@@ -1534,9 +1453,7 @@ def get_knmi_obslist(
                     xy, stations=stations, meteo_var=meteo_var
                 )
             elif locations is not None:
-                _stns = get_nearest_station_df(
-                    locations, stations=stations, meteo_var=meteo_var
-                )
+                _stns = util.get_nearest_station_df(locations, stations=stations)
             else:
                 raise ValueError(
                     "stns, location and x are both None" "please specify one of these"
@@ -1662,10 +1579,10 @@ def fill_missing_measurements(
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var)
     if stn_name is None:
-        stn_name = get_station_name(stn, stations)
+        stn_name = _get_station_name(stn, stations)
 
     # get start and end date
-    start, end = _start_end_to_datetime(start, end)
+    start, end = util._start_end_to_datetime(start, end)
 
     # check latest date at which measurements are available at De Bilt
     if (meteo_var in ["RD", "RH"]) and (
@@ -1683,16 +1600,15 @@ def fill_missing_measurements(
     knmi_df, variables, station_meta = download_knmi_data(
         stn, stn_name, meteo_var, start=start, end=end, settings=settings
     )
-
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
         logger.info(f"station {stn} has no measurements between {start} and {end}")
         logger.info("trying to get measurements from nearest station")
-        stn = get_nearest_station_df(
-            stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
+        stn = util.get_nearest_station_df(
+            locations=stations.loc[[stn]], stations=stations, ignore=ignore
         )[0]
-        stn_name = get_station_name(stn, stations)
+        stn_name = _get_station_name(stn, stations)
         knmi_df, variables, station_meta = download_knmi_data(
             stn, stn_name, meteo_var, start=start, end=end, settings=settings
         )
@@ -1707,8 +1623,8 @@ def fill_missing_measurements(
     # fill missing values
     settings["raise_exceptions"] = False
     while np.any(missing) and not np.all(missing):
-        stn_comp = get_nearest_station_df(
-            stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
+        stn_comp = util.get_nearest_station_df(
+            locations=stations.loc[[stn]], stations=stations, ignore=ignore
         )
 
         logger.info(
@@ -1725,7 +1641,7 @@ def fill_missing_measurements(
             break
         else:
             stn_comp = stn_comp[0]
-        stn_name_comp = get_station_name(stn_comp, stations)
+        stn_name_comp = _get_station_name(stn_comp, stations)
         knmi_df_comp, _, __ = download_knmi_data(
             stn_comp, stn_name_comp, meteo_var, start=start, end=end, settings=settings
         )
