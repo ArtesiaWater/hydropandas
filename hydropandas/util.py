@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 import zipfile
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from colorama import Back, Fore, Style
