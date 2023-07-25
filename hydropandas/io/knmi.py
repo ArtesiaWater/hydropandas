@@ -1288,6 +1288,8 @@ def get_knmi_hourly_api(stn, meteo_var, start, end):
 
     if (end - start).days > 4150:
         raise ValueError("time span for hourly data cannot be greater than 10 years")
+    if (end - start).days < 1:
+        raise ValueError("time span should be more than 1 day")
 
     params["end"] = end.strftime("%Y%m%d") + "24"
 

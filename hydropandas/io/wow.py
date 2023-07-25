@@ -85,12 +85,28 @@ def _wow_strftime(timestamp: pd.Timestamp) -> str:
 
 
 def get_wow(
-    stn: str, meteo_var: str, start: pd.Timestamp = None, end: pd.Timestamp = None
+    meteo_var: str,
+    stn: str,
+    xy: List[float] = None,
+    start: pd.Timestamp = None,
+    end: pd.Timestamp = None,
 ) -> Tuple[pd.DataFrame, dict]:
+    if stn is None and xy is None:
+        raise ValueError("specify KNMI station (stn) or coordinates (xy)")
+
+    if stn is None and xy is not None:
+        bbox = [xy[0] - 1, xy[1] - 1, xy[0] + 1, xy[1] + 1]  # lat lon,lat lon
+        stations = get_wow_stations(
+            meteo_var=meteo_var, date=start, bbox=bbox, obs_filter=None
+        )
+        nearest_stations = get_nearest_station_xy([xy], stations=stations, ignore=None)
+        stn = nearest_stations[0]
+
     metadata = get_wow_metadata(stn=stn)
     measurements = get_wow_measurements(
         stn=stn, meteo_var=meteo_var, start=start, end=end
     )
+
     return measurements, metadata
 
 
