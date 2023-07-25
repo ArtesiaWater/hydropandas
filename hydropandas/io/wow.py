@@ -116,7 +116,7 @@ def get_wow_measurements(
     if meteo_var not in meteo_vars_wow:
         raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
 
-    start, end = util._start_end_to_datetime(start, end)
+    start, end = _start_end_to_datetime(start, end)
     if (end - start) > pd.to_timedelta(365, unit="D"):
         t = list(pd.date_range(start, end, freq="365D"))
         if t[-1] != end:
@@ -185,7 +185,7 @@ def get_nearest_station_xy(
 
     locations = pd.DataFrame(data=xy, columns=["lon", "lat"])
 
-    stns = util.get_nearest_station_df(
+    stns = get_nearest_station_df(
         locations=locations,
         stations=stations,
         xcol="lon",
@@ -194,3 +194,106 @@ def get_nearest_station_xy(
     )
 
     return stns
+
+
+def get_nearest_station_df(
+    locations: pd.DataFrame,
+    stations: pd.DataFrame,
+    xcol: str = "x",
+    ycol: str = "y",
+    ignore: List[str] = None,
+) -> List[str]:
+    """Find the nearest stations that measure 'meteo_var' closest to the
+    coordinates in 'locations'.
+
+    Parameters
+    ----------
+    locations : pandas.DataFrame
+        DataFrame containing x and y coordinates
+    stations : pandas DataFrame, optional
+        if None stations will be obtained using the get_stations function.
+        The default is None.
+    xcol : str
+        name of the column in the locations dataframe with the x values
+    ycol : str
+        name of the column in the locations dataframe with the y values
+    ignore : list, optional
+        list of stations to ignore. The default is None.
+
+    Returns
+    -------
+    stns : list
+        station numbers.
+    """
+
+    if ignore is not None:
+        stations = stations.drop(ignore, inplace=False)
+        if stations.empty:
+            return None
+
+    xo = pd.to_numeric(locations[xcol])
+    xt = pd.to_numeric(stations.x)
+    yo = pd.to_numeric(locations[ycol])
+    yt = pd.to_numeric(stations.y)
+
+    xh, xi = np.meshgrid(xt, xo)
+    yh, yi = np.meshgrid(yt, yo)
+
+    if "lon" in xcol.lower() or "lat" in ycol.lower():
+        distances = pd.DataFrame(
+            _latlon_distance(yh, xh, yi, xi),
+            index=locations.index,
+            columns=stations.index,
+        )
+    else:
+        distances = pd.DataFrame(
+            np.sqrt((xh - xi) ** 2 + (yh - yi) ** 2),
+            index=locations.index,
+            columns=stations.index,
+        )
+
+    stns = distances.idxmin(axis=1).to_list()
+
+    return stns
+
+
+def _latlon_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Haversine formula"""
+    p = 0.017453292519943295
+    hav = (
+        0.5
+        - np.cos((lat2 - lat1) * p) / 2
+        + np.cos(lat1 * p) * np.cos(lat2 * p) * (1 - np.cos((lon2 - lon1) * p)) / 2
+    )
+    return 12742 * np.arcsin(np.sqrt(hav))
+
+
+def _start_end_to_datetime(start, end) -> Tuple[pd.Timestamp]:
+    """convert start and endtime to datetime.
+
+    Parameters
+    ----------
+    start : str, datetime, None
+        start time
+    end : str, datetime, None
+        start time
+
+    Returns
+    -------
+    start : pd.TimeStamp
+        start time
+    end : pd.TimeStamp
+        end time
+    """
+
+    if start is None:
+        start = pd.Timestamp(pd.Timestamp.today().year - 1, 1, 1)
+    else:
+        start = pd.to_datetime(start)
+
+    if end is None:
+        end = pd.Timestamp.today() - pd.Timedelta(1, unit="D")
+    else:
+        end = pd.to_datetime(end)
+
+    return start, end
