@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 import requests
 
-from .. import util
-
 URL_WOW_KNMI = "https://wow.knmi.nl/sites"
 
 meteo_vars_wow = (
