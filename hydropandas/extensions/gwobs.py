@@ -283,6 +283,7 @@ def get_zvec(x, y, gwf=None, ds=None):
         # first check if point is within the extent
         if "angrot" in ds.attrs and ds.attrs["angrot"] != 0.0:
             import nlmod
+
             pol = nlmod.dims.get_extent_polygon(ds)
             if not Point(x, y).within(pol):
                 return np.nan
