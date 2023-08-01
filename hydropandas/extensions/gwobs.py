@@ -290,7 +290,7 @@ def get_zvec(x, y, gwf=None, ds=None):
             xmin, xmax, ymin, ymax = ds.attrs["extent"]
             if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
                 return np.nan
-            
+
         if ds.gridtype == "vertex":
             import nlmod
 
