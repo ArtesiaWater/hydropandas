@@ -1050,6 +1050,30 @@ class ObsCollection(pd.DataFrame):
 
             return oc
 
+
+    def copy(self, deep=False):
+        """Make a copy of this object's indices and data.
+
+        Parameters
+        ----------
+        deep : bool, default True
+            Make a deep copy, including a deep copy of the observation objects.
+            With ``deep=False`` neither the indices nor the data are copied.
+
+        Returns
+        -------
+        ObsCollection
+        """
+        
+        if deep:
+            oc = super().copy(deep=deep)
+            # manually make a deep copy of the observations
+            oc["obs"] = [o.copy(deep=deep) for o in oc.obs.values]
+            return oc
+
+        return super().copy(deep=deep)
+
+
     @classmethod
     def from_bro(
         cls,
