@@ -1050,7 +1050,6 @@ class ObsCollection(pd.DataFrame):
 
             return oc
 
-
     def copy(self, deep=False):
         """Make a copy of this object's indices and data.
 
@@ -1064,7 +1063,7 @@ class ObsCollection(pd.DataFrame):
         -------
         ObsCollection
         """
-        
+
         if deep:
             oc = super().copy(deep=deep)
             # manually make a deep copy of the observations
@@ -1072,7 +1071,6 @@ class ObsCollection(pd.DataFrame):
             return oc
 
         return super().copy(deep=deep)
-
 
     @classmethod
     def from_bro(
