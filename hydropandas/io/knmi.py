@@ -611,7 +611,9 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                     )
 
         except (RuntimeError, requests.ConnectionError) as e:
-            logger.warning("KNMI API failed")
+            logger.warning(
+                "KNMI API failed, try setting the 'use_api' argument to 'False'"
+            )
             if settings["raise_exceptions"]:
                 raise e
             logger.info("Try non api method")
