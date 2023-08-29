@@ -33,6 +33,37 @@ def get_wow_stations(
     bbox: Optional[List[float]] = None,
     obs_filter: Optional[str] = None,
 ) -> pd.DataFrame:
+    """
+    Get a DataFrame with the observation stations from WOW-KNMI.
+
+    Parameters
+    ----------
+    meteo_var : str, optional
+        The meteorological variable to query, one of 'rain_rate',
+        'temperature', 'wind', 'humidity', 'pressure_msl' by default
+        'rain_rate'.
+    date : Optional[pd.Timestamp], optional
+        The date and time of the observations, by default the latest available
+        (10 minutes ago).
+    bbox : Optional[List[float]], optional
+        The bounding box of the spatial query in the format [min_lon, min_lat,
+        max_lon, max_lat], by default the extent of the Netherlands.
+    obs_filter : Optional[str], optional
+        The filter to apply to the observations, one of 'wow_observations',
+        'official_observations', by default None which selects all stations.
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe with the station information and observations.
+
+    Raises
+    ------
+    ValueError
+        If meteo_var or obs_filter are not valid choices.
+    requests.HTTPError
+        If the request to the WOW-KNMI API fails.
+    """
     if meteo_var not in meteo_vars_wow:
         raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
 
@@ -91,11 +122,45 @@ def get_wow(
     start: pd.Timestamp = None,
     end: pd.Timestamp = None,
 ) -> Tuple[pd.DataFrame, dict]:
+    """
+    Get weather observations and metadata from a WOW-KNMI station based on the
+    station name or lat, lon location
+
+    Parameters
+    ----------
+    meteo_var : str
+        The meteorological variable to query, one of 'rain_rate',
+        'temperature', 'wind', 'humidity', 'pressure_msl'.
+    stn : str
+        The station ID of the WOW-KNMI station.
+    xy : List[float], optional
+        The coordinates of the location to query in the format [lon, lat], by
+        default None. If specified, the nearest station within 1 degree will be
+        used.
+    start : pd.Timestamp, optional
+        The start date and time of the observations, by default None. If None,
+        the januari first of the year before will be used.
+    end : pd.Timestamp, optional
+        The end date and time of the observations, by default None. If None,
+        the yesterday will be used.
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, dict]
+        A tuple of a dataframe with the observations and a dictionary with the
+        station metadata.
+
+    Raises
+    ------
+    ValueError
+        If both stn and xy are None or if meteo_var is not valid.
+    """
+
     if stn is None and xy is None:
         raise ValueError("specify KNMI station (stn) or coordinates (xy)")
 
     if stn is None and xy is not None:
-        bbox = [xy[0] - 1, xy[1] - 1, xy[0] + 1, xy[1] + 1]  # lat lon,lat lon
+        bbox = [xy[0] - 1, xy[1] - 1, xy[0] + 1, xy[1] + 1]  # lat lon lat lon
         stations = get_wow_stations(
             meteo_var=meteo_var, date=start, bbox=bbox, obs_filter=None
         )
@@ -111,12 +176,10 @@ def get_wow(
 
 
 def get_wow_metadata(stn: str) -> dict:
-    try:
-        r = requests.get(f"{URL_WOW_KNMI}/{stn}")
-        r.raise_for_status()
-        metadata = r.json()
-    except requests.HTTPError as ex:
-        raise ex
+    """Get metadata from a WOW-KNMI station."""
+    r = requests.get(f"{URL_WOW_KNMI}/{stn}")
+    r.raise_for_status()
+    metadata = r.json()
     return metadata
 
 
@@ -127,6 +190,35 @@ def get_wow_measurements(
     start: pd.Timestamp = None,
     end: pd.Timestamp = None,
 ) -> pd.DataFrame:
+    """
+    Get measurements from a WOW-KNMI station.
+
+    Parameters
+    ----------
+    stn : str
+        The station ID of the WOW-KNMI station.
+    meteo_var : str
+        The meteorological variable to query, one of 'rain_rate',
+        'temperature', 'wind', 'humidity', 'pressure_msl'.
+    start : pd.Timestamp, optional
+        The start date and time of the observations, by default None. If None,
+        the januari first of the year before will be used.
+    end : pd.Timestamp, optional
+        The end date and time of the observations, by default None. If None,
+        the yesterday will be used.
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe with the measurements.
+
+    Raises
+    ------
+    ValueError
+        If meteo_var is not valid.
+    requests.HTTPError
+        If the request to the WOW-KNMI API fails.
+    """
     if meteo_var not in meteo_vars_wow:
         raise ValueError(f"{meteo_var} must be one of {meteo_vars_wow}")
 
@@ -228,16 +320,19 @@ def get_nearest_station_df(
         if None stations will be obtained using the get_stations function.
         The default is None.
     xcol : str
-        name of the column in the locations dataframe with the x values
+        The name of the column in the locations dataframe with the x values, by
+        default 'x'. If lon in xcol, longitude is assumed.
     ycol : str
-        name of the column in the locations dataframe with the y values
+        The name of the column in the locations dataframe with the y values, by
+        default 'y'. If lat in ycol, latitude is assumed.
     ignore : list, optional
-        list of stations to ignore. The default is None.
+        A list of station IDs to ignore, by default None.
 
     Returns
     -------
     stns : list
-        station numbers.
+        A list of station IDs that are closest to each location.
+
     """
 
     if ignore is not None:
@@ -282,14 +377,16 @@ def _latlon_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> floa
     return 12742 * np.arcsin(np.sqrt(hav))
 
 
-def _start_end_to_datetime(start, end) -> Tuple[pd.Timestamp]:
-    """convert start and endtime to datetime.
+def _start_end_to_datetime(
+    start: Optional[str], end: Optional[str]
+) -> Tuple[pd.Timestamp]:
+    """Convert start and endtime to datetime.
 
     Parameters
     ----------
-    start : str, datetime, None
+    start : str, None
         start time
-    end : str, datetime, None
+    end : str, None
         start time
 
     Returns
