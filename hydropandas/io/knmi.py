@@ -279,7 +279,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
 
     # get station
     stations = get_stations(meteo_var=meteo_var)
-    stn_name = get_station_name(stn, stations)
+    stn_name = get_station_name(stn=stn, stations=stations)
 
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
@@ -385,10 +385,8 @@ def get_station_name(stn, stations=None):
         logger.warning("station {stn} not found")
         return None
 
-    stn_name = stations.loc[stn, "naam"]
-    stn_name = stn_name.upper().replace(" ", "-")
-    stn_name = stn_name.replace("(", "").replace(")", "")
-
+    stn_name = stations.at[stn, "naam"]
+    stn_name = stn_name.upper().replace(" ", "-").replace("(", "").replace(")", "")
     return stn_name
 
 
@@ -432,7 +430,7 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var)
     if stn_name is None:
-        stn_name = get_station_name(stn, stations)
+        stn_name = get_station_name(stn=stn, stations=stations)
 
     # check latest date at which measurements are available at De Bilt
     if (meteo_var in ["RD", "RH"]) and (
@@ -468,7 +466,7 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
             return pd.DataFrame(), dict()
 
         stn = stn_lst[0]
-        stn_name = get_station_name(stn, stations)
+        stn_name = get_station_name(stn=stn, stations=stations)
         knmi_df, variables, station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
@@ -1840,7 +1838,7 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
             "'penman'"
         )
 
-    stn_name = get_station_name(meta["station"])
+    stn_name = get_station_name(meta["station"], stations=get_stations(meteo_var))
     meta["name"] = f"{meteo_var}_{stn_name}"
     meta["unit"] = "m"
 
