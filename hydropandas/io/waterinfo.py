@@ -68,7 +68,6 @@ def read_waterinfo_file(
         encoding="ISO-8859-1",
         parse_dates=[index_cols],
         dayfirst=True,
-        infer_datetime_format=True,
         index_col="_".join(index_cols),
     )
 
