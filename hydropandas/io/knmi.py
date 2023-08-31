@@ -320,17 +320,18 @@ def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
             meta = {}
 
         # set metadata
-        if str(stn) in stations.index:
-            meta.update(
-                {
-                    "x": stations.loc[stn, "x"],
-                    "y": stations.loc[stn, "y"],
-                    "station": stn,
-                    "name": f"{meteo_var}_{stn_name}",
-                    "source": "KNMI",
-                }
-            )
-            meta.update(variables)
+        x = stations.at[stn, "x"] if stn in stations.index else np.nan
+        y = stations.at[stn, "y"] if stn in stations.index else np.nan
+        meta.update(
+            {
+                "x": x,
+                "y": y,
+                "station": stn,
+                "name": f"{meteo_var}_{stn_name}",
+                "source": "KNMI",
+            }
+        )
+        meta.update(variables)
 
     return knmi_df, meta
 
