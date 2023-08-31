@@ -10,18 +10,10 @@ import sys
 import tempfile
 import time
 import zipfile
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-import numpy as np
+import pandas as pd
 from colorama import Back, Fore, Style
-from pandas import (
-    DataFrame,
-    DatetimeIndex,
-    Timedelta,
-    Timestamp,
-    to_datetime,
-    to_numeric,
-)
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -41,7 +33,7 @@ def _obslist_to_frame(obs_list):
         DataFrame containing all data
     """
     if len(obs_list) > 0:
-        obs_df = DataFrame(
+        obs_df = pd.DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
@@ -49,7 +41,7 @@ def _obslist_to_frame(obs_list):
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
-        obs_df = DataFrame()
+        obs_df = pd.DataFrame()
 
     return obs_df
 
@@ -252,28 +244,40 @@ def get_color_logger(level="INFO"):
     return logger
 
 
-def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
-    obs_times = DatetimeIndex(np.unique([obs.index for obs in oc.obs]))
-    df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
-    for obs in oc.obs:
+def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
+    """convert an observation collection to
+
+    Parameters
+    ----------
+    oc : hydropandas ObsCollection
+        observation collection
+    col : Optional[str], optional
+        Name of a column in hte observation collection, by default None
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
+    df_list = []
+    for obs in oc.obs.values:
         if not obs.empty:
             if col is None:
                 vals = obs.loc[:, obs._get_first_numeric_col_name()]
             else:
                 vals = obs.loc[:, col]
-            df.loc[obs.index, obs.name] = vals.values
-
-    return df
+            df_list.append(vals)
+    return pd.concat(df_list, axis=1)
 
 
 def interpolate(
     xy: List[List[float]],
-    obsdf: DataFrame,
-    obsloc: DataFrame,
+    obsdf: pd.DataFrame,
+    obsloc: pd.DataFrame,
     kernel: str = "thin_plate_spline",
     kernel2: str = "linear",
     epsilon: Optional[int] = None,
-) -> DataFrame:
+) -> pd.DataFrame:
     """Interpolation method using the Scipy radial basis function (RBF)
 
 
@@ -315,7 +319,7 @@ def interpolate(
         min_val = len(obsdf.index)
 
     fill_df = (
-        DataFrame(
+        pd.DataFrame(
             index=obsdf.index,
             columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
         )
@@ -343,108 +347,3 @@ def interpolate(
         fill_df.loc[idx] = val_rbf
 
     return fill_df
-
-
-def _start_end_to_datetime(start, end) -> Tuple[Timestamp]:
-    """convert start and endtime to datetime.
-
-    Parameters
-    ----------
-    start : str, datetime, None
-        start time
-    end : str, datetime, None
-        start time
-
-    Returns
-    -------
-    start : pd.TimeStamp
-        start time
-    end : pd.TimeStamp
-        end time
-    """
-
-    if start is None:
-        start = Timestamp(Timestamp.today().year - 1, 1, 1)
-    else:
-        start = to_datetime(start)
-
-    if end is None:
-        end = Timestamp.today() - Timedelta(1, unit="D")
-    else:
-        end = to_datetime(end)
-
-    return start, end
-
-
-def get_nearest_station_df(
-    locations: DataFrame,
-    stations: DataFrame,
-    xcol: str = "x",
-    ycol: str = "y",
-    ignore: List[str] = None,
-) -> List[str]:
-    """Find the nearest stations that measure 'meteo_var' closest to the
-    coordinates in 'locations'.
-
-    Parameters
-    ----------
-    locations : pandas.DataFrame
-        DataFrame containing x and y coordinates
-    stations : pandas DataFrame, optional
-        if None stations will be obtained using the get_stations function.
-        The default is None.
-    xcol : str
-        name of the column in the locations dataframe with the x values
-    ycol : str
-        name of the column in the locations dataframe with the y values
-    meteo_var : str
-        measurement variable e.g. 'RH' or 'EV24'
-    ignore : list, optional
-        list of stations to ignore. The default is None.
-
-    Returns
-    -------
-    stns : list
-        station numbers.
-    """
-
-    if ignore is not None:
-        stations = stations.drop(ignore, inplace=False)
-        if stations.empty:
-            return None
-
-    xo = to_numeric(locations[xcol])
-    xt = to_numeric(stations.x)
-    yo = to_numeric(locations[ycol])
-    yt = to_numeric(stations.y)
-
-    xh, xi = np.meshgrid(xt, xo)
-    yh, yi = np.meshgrid(yt, yo)
-
-    if "lon" in xcol.lower() or "lat" in ycol.lower():
-        distances = DataFrame(
-            _latlon_distance(yh, xh, yi, xi),
-            index=locations.index,
-            columns=stations.index,
-        )
-    else:
-        distances = DataFrame(
-            np.sqrt((xh - xi) ** 2 + (yh - yi) ** 2),
-            index=locations.index,
-            columns=stations.index,
-        )
-
-    stns = distances.idxmin(axis=1).to_list()
-
-    return stns
-
-
-def _latlon_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Haversine formula"""
-    p = 0.017453292519943295
-    hav = (
-        0.5
-        - np.cos((lat2 - lat1) * p) / 2
-        + np.cos(lat1 * p) * np.cos(lat2 * p) * (1 - np.cos((lon2 - lon1) * p)) / 2
-    )
-    return 12742 * np.arcsin(np.sqrt(hav))

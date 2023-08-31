@@ -73,7 +73,7 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
             bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata
         )
         if o.empty:
-            logger.warning(
+            logger.debug(
                 f"no measurements found for gmw_id {gmw_id} and tube number {tube_nr}"
             )
             if keep_all_obs:
@@ -121,7 +121,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
         metadata.
 
     """
-    logger.info(f"reading bro_id {bro_id}")
+    logger.debug(f"reading bro_id {bro_id}")
 
     if bro_id.startswith("GLD"):
         if only_metadata:
@@ -194,7 +194,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     d = json.loads(req.text)
 
     if len(d["monitoringTubeReferences"]) == 0:
-        logger.info(
+        logger.debug(
             f"no groundwater level dossier for {bro_id} and tube number {tube_nr}"
         )
         return None
@@ -202,7 +202,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     for tube in d["monitoringTubeReferences"]:
         if tube["tubeNumber"] == tube_nr:
             if len(tube["gldReferences"]) == 0:
-                logger.info(
+                logger.debug(
                     f"no groundwater level dossier for {bro_id} and tube number"
                     f"{tube_nr}"
                 )
@@ -318,7 +318,7 @@ def measurements_from_gld(
     if df.index.has_duplicates and drop_duplicate_times:
         duplicates = df.index.duplicated(keep="first")
         message = "{} contains {} duplicates (of {}). Keeping only first values."
-        logger.info(message.format(bro_id, duplicates.sum(), len(df)))
+        logger.debug(message.format(bro_id, duplicates.sum(), len(df)))
         df = df[~duplicates]
 
     df = df.sort_index()
@@ -634,7 +634,7 @@ def get_obs_list_from_extent(
                 only_metadata=only_metadata,
             )
             if o.empty:
-                logger.warning(
+                logger.debug(
                     f"no measurements found for gmw_id {gmw_id} and tube number"
                     f"{tube_nr}"
                 )
