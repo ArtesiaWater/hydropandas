@@ -158,13 +158,13 @@ def test_schiermonnikoog_precipitation_station():
 
 
 def test_download_without_data():
-    df, meta = knmi.get_knmi_obs(
+    df, _ = knmi.get_knmi_obs(
         324, meteo_var="RD", start=pd.Timestamp("2018"), end=pd.Timestamp("2020")
     )
 
     assert df.empty, "expected empty DataFrame"
 
-    df, meta = knmi.get_knmi_obs(
+    df, _ = knmi.get_knmi_obs(
         265,
         meteo_var="EV24",
         start=pd.Timestamp("1959"),
