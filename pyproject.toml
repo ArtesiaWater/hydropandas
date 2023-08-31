@@ -16,7 +16,14 @@ maintainers = [
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
 requires-python = ">=3.7"
-dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama"]
+dependencies = [
+    "scipy",
+    "pandas<2.1.0",
+    "matplotlib",
+    "tqdm",
+    "requests",
+    "colorama",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -68,12 +75,7 @@ rtd = [
 ]
 linting = ["flake8", "ruff"]
 formatting = ["black[jupyter]", "isort"]
-pytesting = [
-    "hydropandas[full,rtd]",
-    "pytest>=7",
-    "pytest-cov",
-    "pytest-sugar",
-]
+pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
 coveraging = ["coverage"]
 dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
 

@@ -79,7 +79,9 @@ def test_obscollection_from_df():
 
     hpd.ObsCollection(df)
 
-    return
+
+def test_obscollection_empty():
+    hpd.ObsCollection()
 
 
 # read dino directories
@@ -215,7 +217,7 @@ def test_from_excel():
 
 def test_pressure_obs_from_stn():
     hpd.MeteoObs.from_knmi(
-        310, meteo_var="P", interval="hourly", fill_missing_obs=False
+        stn=310, meteo_var="P", interval="hourly", start="2022-1-1", end="2023-1-1"
     )
 
 
@@ -223,12 +225,9 @@ def test_pressure_read_knmi():
     hpd.read_knmi(
         stns=(310,),
         meteo_vars=("P",),
-        settings={
-            "interval": "hourly",
-            "fill_missing_obs": False,
-            "inseason": False,
-            "normalize_index": True,
-        },
+        interval="hourly",
+        starts="2022-1-1",
+        ends="2023-1-1",
     )
 
 
@@ -237,23 +236,23 @@ def test_pressure_read_knmi():
 
 def test_evap_obs_from_file():
     path = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
-    hpd.EvaporationObs.from_knmi_file(path)
+    hpd.EvaporationObs.from_knmi(fname=path)
 
 
 def test_evap_obs_from_stn():
-    hpd.EvaporationObs.from_knmi(260, et_type="EV24")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="EV24")
 
 
 def test_evap_obs_from_stn_makkink():
-    hpd.EvaporationObs.from_knmi(260, et_type="makkink")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="makkink")
 
 
 def test_evap_obs_from_stn_penman():
-    hpd.EvaporationObs.from_knmi(260, et_type="penman")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="penman")
 
 
 def test_evap_obs_from_stn_hargreaves():
-    hpd.EvaporationObs.from_knmi(260, et_type="hargreaves")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="hargreaves")
 
 
 # %% Precipitation
@@ -261,34 +260,29 @@ def test_evap_obs_from_stn_hargreaves():
 
 def test_precip_obs_from_file():
     path = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
-    hpd.PrecipitationObs.from_knmi_file(path)
+    hpd.PrecipitationObs.from_knmi(fname=path)
 
 
 def test_precip_obs_from_stn():
-    hpd.PrecipitationObs.from_knmi(233, "precipitation")
+    hpd.PrecipitationObs.from_knmi(stn=233, meteo_var="RD")
 
 
 def test_knmi_obs_from_stn_no_api():
-    hpd.PrecipitationObs.from_knmi(233, "precipitation", use_api=False)
+    hpd.PrecipitationObs.from_knmi(stn=233, meteo_var="RD", use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
     hpd.EvaporationObs.from_knmi(
-        210, startdate="19500101", enddate="19600101", fill_missing_obs=False
+        stn=210, startdate="19500101", enddate="19600101", fill_missing_obs=False
     )
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    hpd.PrecipitationObs.from_knmi("441", "precipitation", startdate="2010-1-2")
+    hpd.PrecipitationObs.from_knmi(stn=441, meteo_var="RD", start="2010-1-2")
 
 
 def test_knmi_obs_from_xy():
-    hpd.PrecipitationObs.from_knmi_nearest_xy((100000, 350000))
-
-
-def test_knmi_obs_from_obs():
-    pb = test_observation_gw()
-    hpd.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
+    hpd.PrecipitationObs.from_knmi(xy=(100000, 350000))
 
 
 # @pytest.xfail(

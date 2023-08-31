@@ -12,11 +12,9 @@ def test_wow_strftime() -> None:
 
 def test_get_wow_stn() -> None:
     stn = "423216079"  # Macquarie Island
-    startdate = pd.Timestamp(year=2023, month=6, day=4, hour=1, minute=34, second=0)
-    enddate = pd.Timestamp(year=2023, month=6, day=5, hour=23, minute=54, second=0)
-    obs = hpd.MeteoObs.from_wow(
-        stn=stn, meteo_var="temperature", startdate=startdate, enddate=enddate
-    )
+    start = pd.Timestamp(year=2023, month=6, day=4, hour=1, minute=34, second=0)
+    end = pd.Timestamp(year=2023, month=6, day=5, hour=23, minute=54, second=0)
+    obs = hpd.MeteoObs.from_wow(stn=stn, meteo_var="temperature", start=start, end=end)
     assert obs.name == "Macquarie Island"
 
 
@@ -24,9 +22,7 @@ def test_get_wow_nearest() -> None:
     lat = -35.4184
     lon = 149.0937
     xy = [lon, lat]
-    startdate = pd.Timestamp(year=2023, month=6, day=4, hour=1, minute=34, second=0)
-    enddate = pd.Timestamp(year=2023, month=6, day=5, hour=23, minute=54, second=0)
-    obs = hpd.PrecipitationObs.from_wow_nearest_xy(
-        xy=xy, startdate=startdate, enddate=enddate
-    )
+    start = pd.Timestamp(year=2023, month=6, day=4, hour=1, minute=34, second=0)
+    end = pd.Timestamp(year=2023, month=6, day=5, hour=23, minute=54, second=0)
+    obs = hpd.PrecipitationObs.from_wow(xy=xy, start=start, end=end)
     assert obs.name == "Hillanhome"
