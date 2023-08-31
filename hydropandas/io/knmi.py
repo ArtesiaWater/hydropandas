@@ -383,7 +383,7 @@ def get_station_name(stn, stations=None):
         stations = pd.concat([get_stations("RD"), get_stations("EV24")], axis=0)
 
     if stn not in stations.index:
-        logger.warning("station {stn} not found")
+        logger.warning(f"station {stn} not found")
         return None
 
     stn_name = stations.at[stn, "naam"]
