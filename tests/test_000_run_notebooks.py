@@ -37,4 +37,9 @@ def test_run_notebook_03_hydropandas_and_pastas():
 # not tested because notebook has intentional errors
 # @pytest.mark.notebooks
 # def test_run_notebook_04_merging_observations():
-#     _run_notebook(nbdir, "03_pastastore_from_observations.ipynb")
+#     _run_notebook(nbdir, "04_merging_observations.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_05_bronhouderportaal_bro():
+    _run_notebook(nbdir, "05_bronhouderportaal_bro.ipynb")

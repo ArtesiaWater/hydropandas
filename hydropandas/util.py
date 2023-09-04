@@ -12,9 +12,8 @@ import time
 import zipfile
 from typing import Dict, List, Optional
 
+import pandas as pd
 from colorama import Back, Fore, Style
-from numpy import unique
-from pandas import DataFrame, DatetimeIndex
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ def _obslist_to_frame(obs_list):
         DataFrame containing all data
     """
     if len(obs_list) > 0:
-        obs_df = DataFrame(
+        obs_df = pd.DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
@@ -42,7 +41,7 @@ def _obslist_to_frame(obs_list):
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
-        obs_df = DataFrame()
+        obs_df = pd.DataFrame()
 
     return obs_df
 
@@ -245,28 +244,40 @@ def get_color_logger(level="INFO"):
     return logger
 
 
-def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
-    obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
-    df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
-    for obs in oc.obs:
+def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
+    """convert an observation collection to
+
+    Parameters
+    ----------
+    oc : hydropandas ObsCollection
+        observation collection
+    col : Optional[str], optional
+        Name of a column in hte observation collection, by default None
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
+    df_list = []
+    for obs in oc.obs.values:
         if not obs.empty:
             if col is None:
                 vals = obs.loc[:, obs._get_first_numeric_col_name()]
             else:
                 vals = obs.loc[:, col]
-            df.loc[obs.index, obs.name] = vals.values
-
-    return df
+            df_list.append(vals)
+    return pd.concat(df_list, axis=1)
 
 
 def interpolate(
     xy: List[List[float]],
-    obsdf: DataFrame,
-    obsloc: DataFrame,
+    obsdf: pd.DataFrame,
+    obsloc: pd.DataFrame,
     kernel: str = "thin_plate_spline",
     kernel2: str = "linear",
     epsilon: Optional[int] = None,
-) -> DataFrame:
+) -> pd.DataFrame:
     """Interpolation method using the Scipy radial basis function (RBF)
 
 
@@ -308,7 +319,7 @@ def interpolate(
         min_val = len(obsdf.index)
 
     fill_df = (
-        DataFrame(
+        pd.DataFrame(
             index=obsdf.index,
             columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
         )

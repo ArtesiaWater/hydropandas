@@ -16,13 +16,15 @@
 
 # HydroPandas
 
-Python tools for hydrological measurement data.
+Hydropandas is a Python package for reading, analyzing and writing
+(hydrological) timeseries data.
 
 ## Introduction
 
-The HydroPandas package allows users to store observation data at multiple locations in a single object: ObsCollection.
-An ObsCollection makes it easier to analyse, visualise and export the observation data.
-An ObsCollection is a pandas DataFrame extended with custom methods and attributes related to hydrological timeseries.
+The HydroPandas package allows users to store a timeseries and metadata in a
+single object. This object inherits from a pandas DataFrame, with all its
+wonderful features, and is extended with custom methods and attributes related
+to hydrological timeseries.
 
 The HydroPandas package also provides convenient read functions for Dutch hydrological data from:
 

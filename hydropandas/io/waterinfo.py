@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 def read_waterinfo_file(
-    path_to_file,
+    path,
     index_cols=None,
     return_metadata=False,
     value_col=None,
@@ -20,8 +20,8 @@ def read_waterinfo_file(
 
     Parameters
     ----------
-    path_to_file : str
-        path to file
+    path : str
+        path to waterinfo file (.zip or .csv)
 
     Returns
     -------
@@ -33,16 +33,16 @@ def read_waterinfo_file(
     """
     from pyproj import Transformer
 
-    name = os.path.splitext(os.path.basename(path_to_file))[0]
+    name = os.path.splitext(os.path.basename(path))[0]
 
-    if path_to_file.endswith(".csv"):
-        f = path_to_file
-    elif path_to_file.endswith(".zip"):
-        zf = zipfile.ZipFile(path_to_file)
+    if path.endswith(".csv"):
+        f = path
+    elif path.endswith(".zip"):
+        zf = zipfile.ZipFile(path)
         f = zf.open("{}.csv".format(name))
     else:
         raise NotImplementedError(
-            "File type '{}' not supported!".format(os.path.splitext(path_to_file)[-1])
+            "File type '{}' not supported!".format(os.path.splitext(path)[-1])
         )
 
     if index_cols is None:
@@ -68,7 +68,6 @@ def read_waterinfo_file(
         encoding="ISO-8859-1",
         parse_dates=[index_cols],
         dayfirst=True,
-        infer_datetime_format=True,
         index_col="_".join(index_cols),
     )
 

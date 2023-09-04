@@ -1,3 +1,4 @@
+# %%
 import logging
 
 import pandas as pd
@@ -8,159 +9,216 @@ from hydropandas.io import knmi
 logging.basicConfig(level=logging.DEBUG)
 
 
-def test_read_knmi_file1():
-    # De Bilt neerslagstation
-    fname = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
-    knmi.read_knmi_daily_rainfall_file(fname)
+# %% test observations
 
 
-def test_read_knmi_file2():
-    # De Bilt neerslagstation
-    fname = "./tests/data/2023-KNMI-test/neerslaggeg_VILSTEREN_342.txt"
-    knmi.read_knmi_daily_rainfall_file(fname)
-
-
-def test_read_knmi_file3():
-    # De Bilt neerslagstation
-    fname = "./tests/data/2023-KNMI-test/precipitation_st_anthonis.txt"
-    knmi.read_knmi_daily_rainfall_file(fname)
-
-
-def test_get_knmi_precip_neerslagstation():
-    # De Bilt neerslagstation
-    knmi.get_knmi_timeseries_stn(
-        "550", "RD", start="2010-1-1", end="2010-1-10", settings=None
-    )
-
-
-def test_read_knmi_meteostation_file():
-    fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
-    knmi.read_knmi_daily_meteo_file(fname, "EV24")
-
-
-def test_get_knmi_precip_meteostation_fill_missing():
-    # De Bilt meteostation
-    knmi.get_knmi_timeseries_stn(
-        260, "RH", start="2010-1-1", end="2010-1-10", settings=None
-    )
-
-
-def test_get_knmi_precip_meteostation_hourly():
-    # De Bilt meteostation uurlijks
-    knmi.get_knmi_timeseries_stn(
-        260,
-        "RH",
+def test_read_knmi_files():
+    # neerslagstation
+    knmi.get_knmi_obs(
+        fname="./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt",
         start="2010-1-1",
         end="2010-1-10",
-        settings={"interval": "hourly", "fill_missing_obs": False},
+    )
+
+    # neerslagstation
+    knmi.get_knmi_obs(fname="./tests/data/2023-KNMI-test/neerslaggeg_VILSTEREN_342.txt")
+
+    # neerslagstation
+    knmi.get_knmi_obs(fname="./tests/data/2023-KNMI-test/precipitation_st_anthonis.txt")
+
+    # neerslagstation
+    knmi.get_knmi_obs(
+        fname="./tests/data/2023-KNMI-test/etmgeg_260.txt", meteo_var="EV24"
+    )
+
+    # neerslagstation
+    knmi.get_knmi_obs(
+        fname="./tests/data/2023-KNMI-test/uurgeg_260_2001-2010.txt",
+        meteo_var="RH",
+        interval="hourly",
     )
 
 
-def test_get_pressure_hourly():
-    # De Bilt meteostation uurlijks
-    knmi.get_knmi_timeseries_stn(
-        310,
-        "P",
-        start="2010-1-1",
-        end="2010-1-10",
-        settings={"interval": "hourly", "fill_missing_obs": False},
-    )
-
-
-def test_get_knmi_precip_neerslagstation_no_api():
-    # De Bilt neerslagstation
-    knmi.get_knmi_timeseries_stn(
-        "550", "RD", start="2010-1-1", end="2010-1-10", settings={"use_api": False}
-    )
-
-
-def test_get_knmi_precip_meteostation_no_api():
-    # De Bilt neerslagstation
-    knmi.get_knmi_timeseries_stn(
-        260, "RH", start="2010-1-1", end="2010-1-10", settings={"use_api": False}
-    )
-
-
-def test_get_knmi_precip_neerslagstation_fill_missing():
-    settings = knmi._get_default_settings(None)
-    knmi.download_knmi_data(
-        "550", meteo_var="RD", start="1952", end=None, settings=settings
-    )
-
-
-def test_download_rd_550_no_api():
-    settings = knmi._get_default_settings(None)
-    settings["use_api"] = False
-    knmi.download_knmi_data(
-        "550",
-        stn_name="DE-BILT",
+def test_download_knmi_de_bilt():
+    # De Bilt precipitation station daily api
+    knmi.get_knmi_obs(
+        stn=550,
         meteo_var="RD",
-        start="1952",
-        end=None,
-        settings=settings,
+        start="2010-1-1",
+        end="2010-1-10",
+    )
+
+    # De Bilt precipitation from meteo station daily api
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="RH",
+        start="2010-1-1",
+        end="2010-1-10",
+    )
+
+    # De Bilt evaporation from meteo station daily api
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="EV24",
+        start="2010-1-1",
+        end="2010-1-10",
+    )
+
+    # De Bilt precipitation meteostation hourly api
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="RH",
+        interval="hourly",
+        start=pd.Timestamp("2010-1-5 01:00"),
+        end=pd.Timestamp("2010-1-6 23:00"),
+    )
+
+    # De Bilt precipitation station daily no api
+    knmi.get_knmi_obs(
+        stn=550, meteo_var="RD", use_api=False, start="2010-1-1", end="2010-1-10"
+    )
+
+    # De Bilt precipitation meteo station daily no api
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="RH",
+        use_api=False,
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    # De Bilt evaporation station daily no api
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="EV24",
+        use_api=False,
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
     )
 
 
-def test_download_rd_12():
-    settings = knmi._get_default_settings(None)
-    knmi.download_knmi_data(
-        "12", meteo_var="RD", start="2010", end=None, settings=settings
+def test_xy():
+    # empty dataframe because nearest station has no data in time frame
+    knmi.get_knmi_obs(
+        xy=(100000, 330000),
+        meteo_var="EV24",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
     )
+
+    # fill missing obs does work
+    knmi.get_knmi_obs(
+        xy=(100000, 330000),
+        meteo_var="EV24",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+        fill_missing_obs=True,
+    )
+
+    knmi.get_knmi_obs(
+        xy=(150000, 250000),
+        meteo_var="RD",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+
+def test_calculate_evaporation():
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="makkink",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="penman",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    knmi.get_knmi_obs(
+        stn=260,
+        meteo_var="hargreaves",
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+
+def test_download_knmi_xy():
+    df1, meta1 = knmi.get_knmi_obs(meteo_var="RH", stn=344)
+    df2, meta2 = knmi.get_knmi_obs(meteo_var="RH", xy=(90600, 442800))
+
+    assert df1.equals(df2), "Dataframes should be identical"
+
+
+def test_schiermonnikoog_precipitation_station():
+    knmi.get_knmi_obs(12, meteo_var="RD", start=pd.Timestamp("2023-1-1"), end=None)
 
 
 def test_download_without_data():
-    settings = knmi._get_default_settings(None)
-    try:
-        knmi.download_knmi_data(
-            "324", meteo_var="RD", start="2018", end="2020", settings=settings
-        )
-    except ValueError:
-        pass
-
-
-def test_download_without_data_no_error():
-    settings = knmi._get_default_settings(settings={"raise_exceptions": False})
-
-    knmi_df, variables, stations = knmi.download_knmi_data(
-        "324", meteo_var="RD", start="2018", end="2020", settings=settings
+    df, _ = knmi.get_knmi_obs(
+        324, meteo_var="RD", start=pd.Timestamp("2018"), end=pd.Timestamp("2020")
     )
 
-    assert (knmi_df.empty, variables == {}, stations.empty) == (True, True, True)
+    assert df.empty, "expected empty DataFrame"
 
-
-def test_download_ev24_210():
-    settings = knmi._get_default_settings(None)
-
-    knmi.download_knmi_data(
-        210, meteo_var="EV24", start="1952", end=None, settings=settings
+    df, _ = knmi.get_knmi_obs(
+        265,
+        meteo_var="EV24",
+        start=pd.Timestamp("1959"),
+        end=pd.Timestamp("1963"),
     )
 
+    assert df.empty, "expected empty DataFrame"
 
-def test_download_ev24_210_no_api():
-    settings = knmi._get_default_settings({"use_api": False})
-    knmi.download_knmi_data(
-        210, meteo_var="EV24", start="1952", end=None, settings=settings
+
+def test_fill_missing_measurements():
+    settings = knmi._get_default_settings({"fill_missing_obs": True})
+
+    # nothing is missing
+    knmi.get_knmi_timeseries_stn(
+        260,
+        "RH",
+        settings=settings,
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
     )
 
-
-def test_get_knmi_daily_meteo_ev24_empty():
-    start, end = knmi._start_end_to_datetime("1959", "1963")
-    knmi.get_knmi_daily_meteo_api(knmi.URL_DAILY_METEO, 265, "EV24", start, end, False)
-
-
-def test_fill_missing_measurements_ev24_278():
-    knmi.fill_missing_measurements(278, meteo_var="EV24", start="1959", end="1963")
-
-
-def test_fill_missing_measurements_rh_273():
-    knmi.fill_missing_measurements(273, meteo_var="RH", start="1995", end="2000")
-
-
-def test_fill_missing_measurements_rh_278():
-    settings = knmi._get_default_settings({"exclude_neerslag_stn": True})
-    knmi.fill_missing_measurements(
-        278, meteo_var="RH", start="1990", end=None, settings=settings
+    # missing all data
+    df, meta = knmi.get_knmi_timeseries_stn(
+        265,
+        meteo_var="EV24",
+        settings=settings,
+        start=pd.Timestamp("1959-1-1"),
+        end=pd.Timestamp("1959-1-10"),
     )
+
+    assert meta["station"] == 260, "expected metadata from different station"
+
+    # missing some data
+    df, meta = knmi.get_knmi_timeseries_stn(
+        273,
+        meteo_var="RH",
+        settings=settings,
+        start=pd.Timestamp("1998-9-1"),
+        end=pd.Timestamp("1998-9-10"),
+    )
+
+    # no data at all (test is disabled because of too many requests)
+    # df, meta = knmi.get_knmi_timeseries_stn(
+    #     260,
+    #     meteo_var="EV24",
+    #     settings=settings,
+    #     start=pd.Timestamp("1951-1-1"),
+    #     end=pd.Timestamp("1951-1-10"),
+    # )
+
+    # assert df.empty, "expected empty dataframe"
+
+
+# %% obs collections
 
 
 def test_obslist_from_grid():
