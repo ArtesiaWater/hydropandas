@@ -1,7 +1,7 @@
 """
 This module is all about data is to be submitted to
-https://www.bronhouderportaal-bro.nl, i.e. XMLs of GMWs that are newly installed by
-a fieldwork company
+https://www.bronhouderportaal-bro.nl, i.e. XMLs of GMWs that are newly
+installed by a fieldwork company
 """
 
 import logging
