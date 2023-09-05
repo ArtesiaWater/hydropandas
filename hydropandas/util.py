@@ -161,14 +161,32 @@ def get_files(
     return dirname, unzip_fnames
 
 
-def df2gdf(df, xcol="x", ycol="y"):
-    """Make a GeoDataFrame from a DataFrame, assuming the geometry are
-    points."""
+def df2gdf(df, xcol="x", ycol="y", crs=28992):
+    """Create a GeoDataFrame from a DataFrame with xy points.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        input dataframe
+    xcol : str, optional
+        column name with x values. The default is  'x'.
+    ycol : str, optional
+        column name with y values. The default is  'x'.
+    crs : int, optional
+        coordinate reference system, by default 28992 (RD new).
+
+    Returns
+    -------
+    geopandas GeoDataFrame
+        geodataframe
+    """
     from geopandas import GeoDataFrame
     from shapely.geometry import Point
 
     gdf = GeoDataFrame(
-        df.copy(), geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()]
+        df.copy(),
+        geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()],
+        crs=crs,
     )
     return gdf
 
