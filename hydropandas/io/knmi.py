@@ -693,7 +693,7 @@ def get_knmi_daily_rainfall_api(stn, start=None, end=None):
 
     f = StringIO(result_str)
     knmi_df, variables = read_knmi_daily_rainfall(f, meteo_var)
-    if stn not in knmi_df['STN']unique():
+    if stn not in knmi_df["STN"].unique():
         return pd.DataFrame(), variables
 
     return knmi_df[[meteo_var]], variables
