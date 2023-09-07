@@ -9,10 +9,17 @@ import xml.etree.ElementTree
 import numpy as np
 import pandas as pd
 import requests
-from pyproj import Transformer
+from pyproj import Proj, Transformer
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
+EPSG_28992 = (
+    "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 "
+    "+x_0=155000 +y_0=463000 +ellps=bessel "
+    "+towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m "
+    "+no_defs"
+)
 
 
 def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
@@ -481,7 +488,9 @@ def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
         "srsName"
     ]
     epsg_gwm = int(srsname.split(":")[-1])
-    transformer = Transformer.from_crs(epsg_gwm, epsg)
+    proj_from = Proj(f"EPSG:{epsg_gwm}")
+    proj_to = Proj(EPSG_28992)
+    transformer = Transformer.from_proj(proj_from, proj_to)
     xy = transformer.transform(xy[0], xy[1])
 
     meta["x"], meta["y"] = xy
