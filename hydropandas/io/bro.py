@@ -12,14 +12,9 @@ import requests
 from pyproj import Proj, Transformer
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+from ..util import EPSG_28992
 
-EPSG_28992 = (
-    "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 "
-    "+x_0=155000 +y_0=463000 +ellps=bessel "
-    "+towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m "
-    "+no_defs"
-)
+logger = logging.getLogger(__name__)
 
 
 def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
