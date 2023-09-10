@@ -693,7 +693,7 @@ def get_knmi_daily_rainfall_api(stn, start=None, end=None):
 
     f = StringIO(result_str)
     knmi_df, variables = read_knmi_daily_rainfall(f, meteo_var)
-    if stn not in knmi_df.STN.unique():
+    if stn not in knmi_df["STN"].unique():
         return pd.DataFrame(), variables
 
     return knmi_df[[meteo_var]], variables
@@ -819,8 +819,9 @@ def read_knmi_daily_rainfall_file(fname_txt, start=None, end=None):
         variables["unit"] = "m"
 
         # add station to variables
-        if len(df["STN"].unique()) != 1:
-            raise ValueError("multiple stations in single file")
+        unique_stn = df["STN"].unique()
+        if len(unique_stn) > 1:
+            raise ValueError(f"multiple stations in single file {unique_stn}")
         else:
             variables["station"] = df["STN"].iloc[0]
 
@@ -1202,8 +1203,9 @@ def read_knmi_daily_meteo_file(path, meteo_var, start=None, end=None):
                 df.index = df.index + pd.to_timedelta(1, unit="h")
 
                 # add station to variables
-                if len(df["STN"].unique()) != 1:
-                    raise ValueError("multiple stations in single file")
+                unique_stn = df["STN"].unique()
+                if len(unique_stn) > 1:
+                    raise ValueError(f"multiple stations in single file {unique_stn}")
                 else:
                     station = df["STN"].iloc[0]
 
@@ -1355,8 +1357,9 @@ def read_knmi_hourly(f, meteo_var, start=None, end=None):
     datetime.loc[datetime.dt.hour == 0] = datetime + dt.timedelta(days=1)
 
     # add station to variables
-    if len(df["STN"].unique()) != 1:
-        raise ValueError("multiple stations in single file")
+    unique_stn = df["STN"].unique()
+    if len(unique_stn) > 1:
+        raise ValueError(f"multiple stations in single file {unique_stn}")
     else:
         station = df["STN"].iloc[0]
 

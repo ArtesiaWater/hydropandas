@@ -169,6 +169,7 @@ def test_observation_wiskicsv_gw():
         header_identifier=":",
         parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
+        dayfirst=True,
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
@@ -273,7 +274,7 @@ def test_knmi_obs_from_stn_no_api():
 
 def test_knmi_obs_from_stn_without_any_data():
     hpd.EvaporationObs.from_knmi(
-        stn=210, startdate="19500101", enddate="19600101", fill_missing_obs=False
+        stn=210, start="19500101", end="19600101", fill_missing_obs=False
     )
 
 
