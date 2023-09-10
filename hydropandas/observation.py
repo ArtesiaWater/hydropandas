@@ -138,7 +138,7 @@ class Obs(pd.DataFrame):
         metadata = metadata_df._repr_html_()
 
         observations = super()._repr_html_()
-
+        # fmt: off
         if collapse:
             collapse_button_meta = '<button type="button" class="collapsible active" id="meta"><i class="arrow right"></i> Metadata</button>\n'
             collapse_button_obs = '<button type="button" class="collapsible active" id="obs"><i class="arrow right"></i> Observations</button>\n'
@@ -150,6 +150,7 @@ class Obs(pd.DataFrame):
                 "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
             )
             js_collapse_button = '<script>\nvar coll = document.getElementsByClassName("collapsible");\nvar i;\n\nfor (i = 0; i < coll.length; i++) {\n  coll[i].addEventListener("click", function() {\n    this.classList.toggle("active");\n    \n\tvar content = this.nextElementSibling;\n    if (content.style.display === "block") {\n\t\tcontent.style.display = "none";\n\t\tif (this.getAttribute(\'id\') == \'meta\') {\n\t\t\tthis.innerHTML = \'<i class="arrow right"></i> Metadata\';\n\t\t\t}\n\t\telse {\n\t\t\tthis.innerHTML = \'<i class="arrow right"></i> Observations\';\n\t\t\t}\n    } \t\n\telse {\n\t\tcontent.style.display = "block";\n\t\tif (this.getAttribute(\'id\') == \'meta\') {\n\t\t\tthis.innerHTML = \'<i class="arrow down"></i> Metadata\';\n\t\t\t}\n\t\telse {\n\t\t\tthis.innerHTML = \'<i class="arrow down"></i> Observations\';\n\t\t\t}\n    }\n  });\n} \n</script>'
+        # fmt: on
             return (
                 obs_type
                 + css_arrow
@@ -160,8 +161,7 @@ class Obs(pd.DataFrame):
                 + observations
                 + js_collapse_button
             )
-        else:
-            return obs_type + metadata + "<br>\n" + observations
+        return obs_type + metadata + "<br>\n" + observations
 
     @property
     def _constructor(self):
