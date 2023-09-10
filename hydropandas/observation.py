@@ -121,6 +121,39 @@ class Obs(pd.DataFrame):
 
         return buf.getvalue()
 
+    def _repr_html_(self, collapse=False):
+        """
+        Uses the pandas DataFrame html representation with the metadata
+        prepended.
+        """
+        obs_type = f'<p style="color:#808080";>hydropandas.{type(self).__name__}</p>\n'
+
+        metadata_dic = {key: getattr(self, key) for key in self._metadata}
+        metadata_dic.pop("meta")
+        metadata_df = pd.DataFrame(
+            columns=[metadata_dic.pop("name")],
+            index=metadata_dic.keys(),
+            data=metadata_dic.values(),
+        )
+        metadata = metadata_df._repr_html_()
+
+        observations = super()._repr_html_()
+
+        if collapse:
+            collapse_button = '<button type="button" class="collapsible" id="meta">v Metadata</button>'
+            js_collapse_button = '<script>\nvar coll = document.getElementsByClassName("collapsible");\nvar i;\n\nfor (i = 0; i < coll.length; i++) {\n  coll[i].addEventListener("click", function() {\n    this.classList.toggle("active");\n    var content = this.nextElementSibling;\n    if (content.style.display === "block") {\n\t  button = document.getElementById("meta").textContent = "-> Metadata;"\n      content.style.display = "none";\n    } else {\n      content.style.display = "block";\n\t  button = document.getElementById("meta").textContent = "v Metadata"\n    }\n  });\n} \n</script>'
+
+            return (
+                obs_type
+                + collapse_button
+                + metadata
+                + "<br>\n"
+                + observations
+                + js_collapse_button
+            )
+        else:
+            return obs_type + metadata + "<br>\n" + observations
+
     @property
     def _constructor(self):
         return Obs
