@@ -38,11 +38,11 @@ def _get_metadata_from_obs(o):
                 elif isinstance(v, numbers.Number):
                     meta[k] = float(v)
                 else:
-                    logger.info(
+                    logger.debug(
                         f"did not add {k} to metadata because datatype is {type(v)}"
                     )
         else:
-            logger.info(
+            logger.debug(
                 f"did not add {attr_key} to metadata because datatype is {type(val)}"
             )
 
@@ -95,7 +95,7 @@ def create_pastastore(
         pstore = pst.PastaStore(name=pstore_name, connector=conn)
 
     for o in oc.obs.values:
-        logger.info("add to pastastore -> {}".format(o.name))
+        logger.debug("add to pastastore -> {}".format(o.name))
 
         if add_metadata:
             meta = _get_metadata_from_obs(o)

@@ -18,6 +18,13 @@ from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
 
+EPSG_28992 = (
+    "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 "
+    "+x_0=155000 +y_0=463000 +ellps=bessel "
+    "+towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m "
+    "+no_defs"
+)
+
 
 def _obslist_to_frame(obs_list):
     """convert a list of observations to a pandas DataFrame.
@@ -161,14 +168,32 @@ def get_files(
     return dirname, unzip_fnames
 
 
-def df2gdf(df, xcol="x", ycol="y"):
-    """Make a GeoDataFrame from a DataFrame, assuming the geometry are
-    points."""
+def df2gdf(df, xcol="x", ycol="y", crs=28992):
+    """Create a GeoDataFrame from a DataFrame with xy points.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        input dataframe
+    xcol : str, optional
+        column name with x values. The default is  'x'.
+    ycol : str, optional
+        column name with y values. The default is  'x'.
+    crs : int, optional
+        coordinate reference system, by default 28992 (RD new).
+
+    Returns
+    -------
+    geopandas GeoDataFrame
+        geodataframe
+    """
     from geopandas import GeoDataFrame
     from shapely.geometry import Point
 
     gdf = GeoDataFrame(
-        df.copy(), geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()]
+        df.copy(),
+        geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()],
+        crs=crs,
     )
     return gdf
 
