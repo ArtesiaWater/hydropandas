@@ -121,7 +121,7 @@ class Obs(pd.DataFrame):
 
         return buf.getvalue()
 
-    def _repr_html_(self, collapse=False):
+    def _repr_html_(self, collapse=True):
         """
         Uses the pandas DataFrame html representation with the metadata
         prepended.
@@ -140,14 +140,23 @@ class Obs(pd.DataFrame):
         observations = super()._repr_html_()
 
         if collapse:
-            collapse_button = '<button type="button" class="collapsible" id="meta">v Metadata</button>'
-            js_collapse_button = '<script>\nvar coll = document.getElementsByClassName("collapsible");\nvar i;\n\nfor (i = 0; i < coll.length; i++) {\n  coll[i].addEventListener("click", function() {\n    this.classList.toggle("active");\n    var content = this.nextElementSibling;\n    if (content.style.display === "block") {\n\t  button = document.getElementById("meta").textContent = "-> Metadata;"\n      content.style.display = "none";\n    } else {\n      content.style.display = "block";\n\t  button = document.getElementById("meta").textContent = "v Metadata"\n    }\n  });\n} \n</script>'
-
+            collapse_button_meta = '<button type="button" class="collapsible active" id="meta"><i class="arrow right"></i> Metadata</button>\n'
+            collapse_button_obs = '<button type="button" class="collapsible active" id="obs"><i class="arrow right"></i> Observations</button>\n'
+            css_arrow = "<style>\n\t.arrow {\n\t  border: solid black;\n\t  border-width: 0 3px 3px 0;\n\t  display: inline-block;\n\t  padding: 3px;\n\t}\n\n\t.right {\n\t  transform: rotate(-45deg);\n\t  -webkit-transform: rotate(-45deg);\n\t}\n\n\t.left {\n\t  transform: rotate(135deg);\n\t  -webkit-transform: rotate(135deg);\n\t}\n\n\t.up {\n\t  transform: rotate(-135deg);\n\t  -webkit-transform: rotate(-135deg);\n\t}\n\n\t.down {\n\t  transform: rotate(45deg);\n\t  -webkit-transform: rotate(45deg);\n\t}\n</style>\n"
+            metadata = metadata.replace(
+                "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
+            )
+            observations = observations.replace(
+                "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
+            )
+            js_collapse_button = '<script>\nvar coll = document.getElementsByClassName("collapsible");\nvar i;\n\nfor (i = 0; i < coll.length; i++) {\n  coll[i].addEventListener("click", function() {\n    this.classList.toggle("active");\n    \n\tvar content = this.nextElementSibling;\n    if (content.style.display === "block") {\n\t\tcontent.style.display = "none";\n\t\tif (this.getAttribute(\'id\') == \'meta\') {\n\t\t\tthis.innerHTML = \'<i class="arrow right"></i> Metadata\';\n\t\t\t}\n\t\telse {\n\t\t\tthis.innerHTML = \'<i class="arrow right"></i> Observations\';\n\t\t\t}\n    } \t\n\telse {\n\t\tcontent.style.display = "block";\n\t\tif (this.getAttribute(\'id\') == \'meta\') {\n\t\t\tthis.innerHTML = \'<i class="arrow down"></i> Metadata\';\n\t\t\t}\n\t\telse {\n\t\t\tthis.innerHTML = \'<i class="arrow down"></i> Observations\';\n\t\t\t}\n    }\n  });\n} \n</script>'
             return (
                 obs_type
-                + collapse_button
+                + css_arrow
+                + collapse_button_meta
                 + metadata
                 + "<br>\n"
+                + collapse_button_obs
                 + observations
                 + js_collapse_button
             )
