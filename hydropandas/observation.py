@@ -141,8 +141,16 @@ class Obs(pd.DataFrame):
 
         observations = super()._repr_html_()
         if collapse:
-            collapse_button_meta = '<button type="button" class="collapsible active" id="meta"><i class="arrow right"></i> Metadata</button>\n'
-            collapse_button_obs = '<button type="button" class="collapsible active" id="obs"><i class="arrow right"></i> Observations</button>\n'
+            collapse_button_meta = (
+                '<button type="button" class="collapsible '
+                'active" id="meta"><i class="arrow right">'
+                "</i> Metadata</button>\n"
+            )
+            collapse_button_obs = (
+                '<button type="button" class="collapsible '
+                'active" id="obs"><i class="arrow right">'
+                "</i> Observations</button>\n"
+            )
 
             with open(
                 os.path.join(os.path.dirname(__file__), "static/style.css"), "r"
