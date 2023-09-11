@@ -14,9 +14,8 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
-import os
-
 import logging
+import os
 import warnings
 from typing import List, Optional
 
