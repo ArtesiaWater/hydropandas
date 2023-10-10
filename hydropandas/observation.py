@@ -15,6 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import logging
+import os
 import warnings
 from typing import List, Optional
 
@@ -120,6 +121,64 @@ class Obs(pd.DataFrame):
         )
 
         return buf.getvalue()
+
+    def _repr_html_(self, collapse=True):
+        """
+        Uses the pandas DataFrame html representation with the metadata
+        prepended.
+        """
+        obs_type = f'<p style="color:#808080";>hydropandas.{type(self).__name__}</p>\n'
+
+        metadata_dic = {key: getattr(self, key) for key in self._metadata}
+        metadata_dic.pop("meta")
+        metadata_df = pd.DataFrame(
+            columns=[metadata_dic.pop("name")],
+            index=metadata_dic.keys(),
+            data=metadata_dic.values(),
+        )
+        metadata = metadata_df._repr_html_()
+
+        observations = super()._repr_html_()
+        if collapse:
+            collapse_button_meta = (
+                '<button type="button" class="collapsible '
+                'active" id="meta"><i class="arrow right">'
+                "</i> Metadata</button>\n"
+            )
+            collapse_button_obs = (
+                '<button type="button" class="collapsible '
+                'active" id="obs"><i class="arrow right">'
+                "</i> Observations</button>\n"
+            )
+
+            with open(
+                os.path.join(os.path.dirname(__file__), "static/style.css"), "r"
+            ) as fo:
+                css_arrow = fo.read()
+
+            metadata = metadata.replace(
+                "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
+            )
+            observations = observations.replace(
+                "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
+            )
+
+            with open(
+                os.path.join(os.path.dirname(__file__), "static/js_collapse.html"), "r"
+            ) as fo:
+                js_collapse_button = fo.read()
+
+            return (
+                obs_type
+                + css_arrow
+                + collapse_button_meta
+                + metadata
+                + "<br>\n"
+                + collapse_button_obs
+                + observations
+                + js_collapse_button
+            )
+        return obs_type + metadata + "<br>\n" + observations
 
     @property
     def _constructor(self):
