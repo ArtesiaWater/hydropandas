@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 URL_DAILY_PREC = "https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen"
 URL_DAILY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
 URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
-LOOK_BACK_DAYS = 365
 
 
 def get_knmi_obs(
@@ -437,17 +436,6 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     knmi_df, variables, station_meta = download_knmi_data(
         stn, meteo_var, start, end, settings, stn_name
     )
-    if knmi_df.empty or (end > knmi_df.index[-1]):
-        # check latest date at which measurements are available at De Bilt
-        new_end = _check_latest_measurement_date_de_bilt(
-            meteo_var,
-            use_api=settings["use_api"],
-            start=None if knmi_df.empty else knmi_df.index[-1],
-            end=end,
-        )
-        if new_end < end:
-            end = new_end
-            logger.warning(f'changing end_date to {end.strftime("%Y-%m-%d")}')
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
@@ -471,6 +459,18 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
             stn, meteo_var, start, end, settings, stn_name
         )
         ignore.append(stn)
+
+    if end > knmi_df.index[-1]:
+        # check latest date at which measurements are available at De Bilt
+        new_end = _check_latest_measurement_date_de_bilt(
+            meteo_var,
+            use_api=settings["use_api"],
+            start=start if knmi_df.empty else knmi_df.index[-1],
+            end=end,
+        )
+        if new_end < end:
+            end = new_end
+            logger.warning(f'changing end_date to {end.strftime("%Y-%m-%d")}')
 
     # find missing values
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
@@ -639,7 +639,7 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
             raise ValueError(e)
 
     if knmi_df.empty:
-        logger.info(
+        logger.debug(
             "no measurements found for station "
             f"{stn}-{stn_name} between {start} and {end}"
         )
@@ -1408,7 +1408,7 @@ def _check_latest_measurement_date_de_bilt(
         last date with measurements at station de Bilt
     """
     if start is None:
-        start = dt.datetime.now() - pd.Timedelta(LOOK_BACK_DAYS, unit="D")
+        start = dt.datetime.now() - pd.Timedelta(365, unit="D")
     if end is None:
         end = dt.datetime.now() + pd.Timedelta(10, unit="D")
     if meteo_var == "RD":
@@ -1433,16 +1433,18 @@ def _check_latest_measurement_date_de_bilt(
             knmi_df, _, _ = get_knmi_daily_meteo_url(260, meteo_var, start, end)
 
     knmi_df = knmi_df.dropna()
+    end_str = end.strftime("%Y-%m-%d")
     if knmi_df.empty:
+        start_str = start.strftime("%Y-%m-%d")
         raise ValueError(
-            "knmi station de Bilt has no measurements "
-            f"in the past {LOOK_BACK_DAYS} days for variable {meteo_var}."
+            "knmi station de Bilt has no measurements between "
+            f"{start_str} and {end_str} for variable {meteo_var}."
         )
 
     last_measurement_date_debilt = knmi_df.index[-1]
 
     logger.info(
-        f"last {meteo_var} measurement available at the Bilt is from"
+        f"last {meteo_var} measurement available at the Bilt until {end_str} is from"
         f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}'
     )
     logger.debug(
