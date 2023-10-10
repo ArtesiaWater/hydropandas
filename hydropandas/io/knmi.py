@@ -439,7 +439,7 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     )
     if knmi_df.empty or (end > knmi_df.index[-1]):
         # check latest date at which measurements are available at De Bilt
-        new_end = _check_latest_measurement_date_debilt(
+        new_end = _check_latest_measurement_date_de_bilt(
             meteo_var,
             use_api=settings["use_api"],
             start=None if knmi_df.empty else knmi_df.index[-1],
@@ -1373,7 +1373,7 @@ def read_knmi_hourly(f, meteo_var, start=None, end=None):
     return df.loc[start:end, [meteo_var]], variables
 
 
-def _check_latest_measurement_date_debilt(
+def _check_latest_measurement_date_de_bilt(
     meteo_var, use_api=True, start=None, end=None
 ):
     """According to the website of the knmi it can take up to 3 weeks before
@@ -1395,6 +1395,12 @@ def _check_latest_measurement_date_debilt(
         if True the api is used to obtain the data, API documentation is here:
             https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
         Default is True.
+    start : pd.TimeStamp or None, optional
+        start date of observations. Set to 365 days before today when None. The default
+        is None.
+    end : pd.TimeStamp or None, optional
+        end date of observations. Set to 10 days after today when None. The default is
+        None.
 
     Returns
     -------
@@ -1741,7 +1747,7 @@ def get_knmi_obslist(
                 )
             else:
                 raise ValueError(
-                    "stns, location and xy are all None. Please specify one of these"
+                    "stns, location and xy are all None. Please specify one of these arguments."
                 )
             _stns = np.unique(_stns)
 
