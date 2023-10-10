@@ -97,9 +97,12 @@ def get_knmi_obs(
     if stn is not None:
         stn = int(stn)
 
+        start_str = str(start).replace(" 00:00:00", "")
+        end_str = str(end).replace(" 00:00:00", "")
+
         logger.info(
-            f"get KNMI data from station {stn} and meteo variable {meteo_var} "
-            f"from {start} to {end}"
+            f"get data from station {stn} and variable {meteo_var} "
+            f"from {start_str} to {end_str}"
         )
         ts, meta = get_knmi_timeseries_stn(stn, meteo_var, settings, start, end)
     elif fname is not None:
@@ -476,7 +479,7 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
 
     missing = knmi_df[meteo_var].isna()
-    logger.info(f"station {stn} has {missing.sum()} missing measurements")
+    logger.debug(f"station {stn} has {missing.sum()} missing measurements")
 
     knmi_df.loc[~missing, "station"] = str(stn)
 
@@ -497,8 +500,9 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
         else:
             stn_comp = stn_comp[0]
 
+        n_missing = missing.sum()
         logger.info(
-            f"trying to fill {missing.sum()} measurements with station {stn_comp}"
+            f"trying to fill {n_missing} missing measurements with station {stn_comp}"
         )
 
         stn_name_comp = get_station_name(stn_comp, stations)
