@@ -53,7 +53,7 @@ def get_knmi_obs(
         RD coördinates of a location in the Netherlands. The station nearest
         to this location used. The Default is None.
     meteo_var : str or None, optional
-        meteo variable e.g. "RH" or "EV24". See list with al options in the
+        meteo variable e.g. "RH" or "EV24". See list with all options in the
         hydropandas documentation.
     start : str, datetime or None, optional
         start date of observations. The default is None.
@@ -99,7 +99,7 @@ def get_knmi_obs(
         stn = int(stn)
 
         logger.info(
-            f"get KNMI data from station {stn} and meteo variable {meteo_var}"
+            f"get KNMI data from station {stn} and meteo variable {meteo_var} "
             f"from {start} to {end}"
         )
         ts, meta = get_knmi_timeseries_stn(stn, meteo_var, settings, start, end)
@@ -433,22 +433,21 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     if stn_name is None:
         stn_name = get_station_name(stn=stn, stations=stations)
 
-    # check latest date at which measurements are available at De Bilt
-    if (meteo_var in ["RD", "RH"]) and (
-        end > (dt.datetime.now() - pd.Timedelta(LOOK_BACK_DAYS, unit="D"))
-    ):
-        end = min(
-            end,
-            _check_latest_measurement_date_RD_debilt(
-                meteo_var, use_api=settings["use_api"]
-            ),
-        )
-        logger.info(f'changing end_date to {end.strftime("%Y-%m-%d")}')
-
     # download data from station
     knmi_df, variables, station_meta = download_knmi_data(
         stn, meteo_var, start, end, settings, stn_name
     )
+    if knmi_df.empty or (end > knmi_df.index[-1]):
+        # check latest date at which measurements are available at De Bilt
+        new_end = _check_latest_measurement_date_debilt(
+            meteo_var,
+            use_api=settings["use_api"],
+            start=None if knmi_df.empty else knmi_df.index[-1],
+            end=end,
+        )
+        if new_end < end:
+            end = new_end
+            logger.warning(f'changing end_date to {end.strftime("%Y-%m-%d")}')
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
@@ -487,13 +486,9 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
             stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
         )
 
-        logger.info(
-            f"trying to fill {missing.sum()} " f"measurements with station {stn_comp}"
-        )
-
         if stn_comp is None:
             logger.info(
-                "could not fill all missing measurements there are "
+                "could not fill all missing measurements as there are "
                 "no stations left to check"
             )
 
@@ -501,6 +496,11 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
             break
         else:
             stn_comp = stn_comp[0]
+
+        logger.info(
+            f"trying to fill {missing.sum()} measurements with station {stn_comp}"
+        )
+
         stn_name_comp = get_station_name(stn_comp, stations)
         knmi_df_comp, _, __ = download_knmi_data(
             stn_comp, meteo_var, start, end, settings, stn_name_comp
@@ -583,8 +583,8 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
         information about the measurement station.
     """
 
-    logger.info(
-        f"download knmi {meteo_var} data from station "
+    logger.debug(
+        f"download KNMI {meteo_var} data from station "
         f"{stn}-{stn_name} between {start} and {end}"
     )
 
@@ -1373,7 +1373,9 @@ def read_knmi_hourly(f, meteo_var, start=None, end=None):
     return df.loc[start:end, [meteo_var]], variables
 
 
-def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
+def _check_latest_measurement_date_debilt(
+    meteo_var, use_api=True, start=None, end=None
+):
     """According to the website of the knmi it can take up to 3 weeks before
     precipitation data is updated. If you use the fill_missing_measurements
     method to fill a time series untill today, it will keep looking at all
@@ -1399,9 +1401,10 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
     last_measurement_date_debilt : pd.TimeStamp
         last date with measurements at station de Bilt
     """
-
-    start = dt.datetime.now() - pd.Timedelta(LOOK_BACK_DAYS, unit="D")
-    end = dt.datetime.now() + pd.Timedelta(10, unit="D")
+    if start is None:
+        start = dt.datetime.now() - pd.Timedelta(LOOK_BACK_DAYS, unit="D")
+    if end is None:
+        end = dt.datetime.now() + pd.Timedelta(10, unit="D")
     if meteo_var == "RD":
         if use_api:
             try:
@@ -1432,7 +1435,7 @@ def _check_latest_measurement_date_RD_debilt(meteo_var, use_api=True):
 
     last_measurement_date_debilt = knmi_df.index[-1]
 
-    logger.debug(
+    logger.info(
         f"last {meteo_var} measurement available at the Bilt is from"
         f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}'
     )
@@ -1697,6 +1700,9 @@ def get_knmi_obslist(
 
     settings = _get_default_settings(kwargs)
 
+    if isinstance(meteo_vars, str):
+        meteo_vars = [meteo_vars]
+
     if starts is None:
         starts = [None] * len(meteo_vars)
     elif isinstance(starts, (str, dt.datetime)):
@@ -1735,7 +1741,7 @@ def get_knmi_obslist(
                 )
             else:
                 raise ValueError(
-                    "stns, location and x are all None" "please specify one of these"
+                    "stns, location and xy are all None. Please specify one of these"
                 )
             _stns = np.unique(_stns)
 
