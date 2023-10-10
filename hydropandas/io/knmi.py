@@ -1749,7 +1749,8 @@ def get_knmi_obslist(
                 )
             else:
                 raise ValueError(
-                    "stns, location and xy are all None. Please specify one of these arguments."
+                    "stns, location and xy are all None. "
+                    "Please specify one of these arguments."
                 )
             _stns = np.unique(_stns)
 
