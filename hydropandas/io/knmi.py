@@ -175,7 +175,7 @@ def _get_default_settings(settings=None):
     only the non-existing settings are added with their default value.
 
     The default settings are:
-    fill_missing_obs = True
+    fill_missing_obs = False
         nan values in time series are filled with nearby time series.
     interval = 'daily'
         desired time interval for observations. Can be 'daily' or 'hourly'.
@@ -1447,7 +1447,7 @@ def _check_latest_measurement_date_de_bilt(
 
     last_measurement_date_debilt = knmi_df.index[-1]
 
-    logger.info(
+    logger.debug(
         f"last {meteo_var} measurement available at the Bilt until {end_str} is from"
         f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}'
     )
