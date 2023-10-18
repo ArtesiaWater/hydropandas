@@ -9,8 +9,10 @@ import xml.etree.ElementTree
 import numpy as np
 import pandas as pd
 import requests
-from pyproj import Transformer
+from pyproj import Proj, Transformer
 from tqdm import tqdm
+
+from ..util import EPSG_28992
 
 logger = logging.getLogger(__name__)
 
@@ -422,7 +424,7 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
     return meta
 
 
-def get_metadata_from_gmw(bro_id, tube_nr):
+def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
     """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
 
@@ -473,8 +475,20 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
 
     # x and y
-    xy = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
-    meta["x"], meta["y"] = [float(val) for val in xy.text.split()]
+    xy_elem = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
+    xy = [float(val) for val in xy_elem.text.split()]
+
+    # convert crs
+    srsname = gmw.find("dsgmw:deliveredLocation//gmwcommon:location", ns).attrib[
+        "srsName"
+    ]
+    epsg_gwm = int(srsname.split(":")[-1])
+    proj_from = Proj(f"EPSG:{epsg_gwm}")
+    proj_to = Proj(EPSG_28992)
+    transformer = Transformer.from_proj(proj_from, proj_to)
+    xy = transformer.transform(xy[0], xy[1])
+
+    meta["x"], meta["y"] = xy
 
     # ground_level
     vert_pos = gmw.find("dsgmw:deliveredVerticalPosition", ns)

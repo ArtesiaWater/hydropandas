@@ -1905,7 +1905,7 @@ class ObsCollection(pd.DataFrame):
 
         fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_gdf(self, xcol="x", ycol="y"):
+    def to_gdf(self, xcol="x", ycol="y", crs=28992, drop_obs=True):
         """convert ObsCollection to GeoDataFrame.
 
         Parameters
@@ -1914,31 +1914,23 @@ class ObsCollection(pd.DataFrame):
             column name with x values
         ycol : str
             column name with y values
+        crs : int, optional
+            coordinate reference system, by default 28992 (RD new).
+        drop_obs : bool, optional
+            drop the column with observations. Useful for basic geodataframe
+            manipulations that require JSON serializable columns. The default
+            is True.
 
         Returns
         -------
         gdf : geopandas.GeoDataFrame
         """
-        return util.df2gdf(self, xcol, ycol)
 
-    def to_report_table(
-        self,
-        columns=(
-            "monitoring_well",
-            "tube_nr",
-            "startdate",
-            "enddate",
-            "# measurements",
-        ),
-    ):
-        if "startdate" in columns:
-            self["startdate"] = self.obs.apply(lambda x: x.index[0])
-        if "enddate" in columns:
-            self["enddate"] = self.obs.apply(lambda x: x.index[-1])
-        if "# measurements" in columns:
-            self["# measurements"] = self.obs.apply(lambda x: x.shape[0])
-
-        return self[columns]
+        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=crs)
+        if drop_obs:
+            return gdf.drop(columns="obs")
+        else:
+            return gdf
 
     def to_pastastore(
         self,
