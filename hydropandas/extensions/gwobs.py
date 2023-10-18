@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 try:
     from tqdm import tqdm
@@ -371,7 +372,7 @@ class GwObsAccessor:
         # check if column exists in obscollection
         if "tube_nr" in self._obj.columns:
             # set type to numeric
-            if self._obj["tube_nr"].dtype != np.number:
+            if not is_numeric_dtype(self._obj["tube_nr"]):
                 self._obj["tube_nr"] = pd.to_numeric(
                     self._obj["tube_nr"], errors="coerce"
                 )

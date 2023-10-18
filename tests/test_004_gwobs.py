@@ -18,7 +18,7 @@ def test_get_modellayers_mf2005():
     import flopy
 
     modelname = "test_mf2005"
-    ml = flopy.modflow.Modflow(modelname, exe_name="mf2005")
+    ml = flopy.modflow.Modflow(modelname)
     # Model domain and grid definition
     Lx = 300000.0
     Ly = 400000.0

@@ -16,6 +16,7 @@ def test_read_wiski_csv() -> None:
         header_identifier=":",
         verbose=True,
         parse_dates={"datetime": [0, 1]},
+        dayfirst=True,
         index_col=["datetime"],
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
