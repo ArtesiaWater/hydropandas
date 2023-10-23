@@ -46,7 +46,7 @@ def read_waterinfo_file(
         )
 
     if index_cols is None:
-        index_cols = ["WAARNEMINGDATUM", "WAARNEMINGTIJD"]
+        index_cols = ["WAARNEMINGDATUM", "WAARNEMINGTIJD (MET/CET)"]
 
     if value_col is None:
         value_col = "NUMERIEKEWAARDE"
