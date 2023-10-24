@@ -745,6 +745,38 @@ class GroundwaterObs(Obs):
 
         return cls(data, meta=metadata, **metadata)
 
+    @classmethod
+    def from_pastastore(cls, pstore, libname, name, metadata_mapping=None):
+        """Read item from pastastore library.
+
+        Parameters
+        ----------
+        pstore : pastastore.PastaStore
+            pastastore object
+        libname : str
+            name of library containinig item
+        name : str
+            name of item
+        metadata_mapping : dict, optional
+            dictionary containing map between metadata field names in pastastore and
+            metadata field names expected by hydropandas, by default None.
+        """
+        from .io import pastas
+
+        data, metadata = pastas.read_pastastore_item(pstore, libname, name)
+
+        if metadata_mapping is not None:
+            for pstore_name, oc_name in metadata_mapping.items():
+                metadata[oc_name] = metadata.get(pstore_name, None)
+
+        metadata["source"] = "pastastore"
+        kwargs = {}
+        for key, value in metadata.items():
+            if key in cls._metadata:
+                kwargs[key] = value
+
+        return cls(data, meta=metadata, **kwargs)
+
 
 class WaterQualityObs(Obs):
     """class for water quality ((grond)watersamenstelling) point
