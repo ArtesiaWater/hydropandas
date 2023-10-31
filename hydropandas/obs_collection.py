@@ -1954,7 +1954,8 @@ class ObsCollection(pd.DataFrame):
             Name of the column in the Obs dataframe to be used. If None the
             first numeric column in the Obs Dataframe is used.
         kind : str, optional
-            The kind of series that is added to the pastastore
+            The kind of series that is added to the pastastore. Use 'oseries'
+            for observations and anything else for stresses.
         add_metadata : boolean, optional
             If True metadata from the observations added to the pastastore
         conn : pastastore.connectors or None, optional
