@@ -325,7 +325,7 @@ def test_knmi_collection_from_grid():
 
 
 def test_waterinfo_from_dir():
-    path = "./tests/data/waterinfo-test"
+    path = "./tests/data/2023-waterinfo-test"
     hpd.read_waterinfo(path)
 
 

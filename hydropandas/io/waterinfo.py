@@ -45,9 +45,6 @@ def read_waterinfo_file(
             "File type '{}' not supported!".format(os.path.splitext(path)[-1])
         )
 
-    if index_cols is None:
-        index_cols = ["WAARNEMINGDATUM", "WAARNEMINGTIJD"]
-
     if value_col is None:
         value_col = "NUMERIEKEWAARDE"
 
@@ -66,10 +63,24 @@ def read_waterinfo_file(
         sep=";",
         decimal=",",
         encoding="ISO-8859-1",
-        parse_dates=[index_cols],
         dayfirst=True,
-        index_col="_".join(index_cols),
     )
+
+    if index_cols is None:
+        index_cols = ["WAARNEMINGDATUM"]
+        if "WAARNEMINGTIJD (MET/CET)" in df.columns:
+            index_cols += ["WAARNEMINGTIJD (MET/CET)"]
+        elif "WAARNEMINGTIJD" in df.columns:
+            index_cols += ["WAARNEMINGTIJD"]
+        else:
+            raise KeyError(
+                "expected column with WAARNEMINGSTIJD but could not find one"
+            )
+
+    df.index = pd.to_datetime(
+        df[index_cols[0]] + " " + df[index_cols[1]], dayfirst=True
+    )
+    df.drop(columns=index_cols, inplace=True)
 
     # do some conversions
     df.loc[df[value_col] == 999999999, value_col] = np.NaN
