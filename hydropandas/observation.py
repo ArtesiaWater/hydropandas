@@ -758,8 +758,8 @@ class GroundwaterObs(Obs):
         name : str
             name of item
         metadata_mapping : dict, optional
-            dictionary containing map between metadata field names in pastastore and
-            metadata field names expected by hydropandas, by default None.
+            dictionary containing map between metadata field names in pastastore (keys)
+            and metadata field names expected by hydropandas (values), by default None.
         """
         from .io import pastas
 

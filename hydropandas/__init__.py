@@ -20,6 +20,7 @@ from .obs_collection import (
     read_pickle,
     read_waterinfo,
     read_wiski,
+    read_pastastore,
 )
 from .observation import (
     EvaporationObs,

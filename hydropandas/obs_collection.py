@@ -725,6 +725,39 @@ def read_wiski(
     return oc
 
 
+def read_pastastore(
+    pstore,
+    libname,
+    ObsClass=obs.GroundwaterObs,
+    metadata_mapping=None,
+):
+    """Read pastastore library.
+
+    Parameters
+    ----------
+    pstore : pastastore.PastaStore
+        PastaStore object
+    libname : str
+        name of library (e.g. oseries or stresses)
+    ObsClass : Obs, optional
+        type of Obs to read data as, by default obs.GroundwaterObs
+    metadata_mapping : dict, optional
+        dictionary containing map between metadata field names in pastastore and
+        metadata field names expected by hydropandas, by default None.
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection containing data
+    """
+    return ObsCollection.from_pastastore(
+        pstore=pstore,
+        libname=libname,
+        ObsClass=ObsClass,
+        metadata_mapping=metadata_mapping,
+    )
+
+
 class ObsCollection(pd.DataFrame):
     """class for a collection of point observations.
 
