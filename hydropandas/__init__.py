@@ -17,6 +17,7 @@ from .obs_collection import (
     read_knmi,
     read_menyanthes,
     read_modflow,
+    read_pastastore,
     read_pickle,
     read_waterinfo,
     read_wiski,

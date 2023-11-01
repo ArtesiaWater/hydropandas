@@ -725,6 +725,39 @@ def read_wiski(
     return oc
 
 
+def read_pastastore(
+    pstore,
+    libname,
+    ObsClass=obs.GroundwaterObs,
+    metadata_mapping=None,
+):
+    """Read pastastore library.
+
+    Parameters
+    ----------
+    pstore : pastastore.PastaStore
+        PastaStore object
+    libname : str
+        name of library (e.g. oseries or stresses)
+    ObsClass : Obs, optional
+        type of Obs to read data as, by default obs.GroundwaterObs
+    metadata_mapping : dict, optional
+        dictionary containing map between metadata field names in pastastore and
+        metadata field names expected by hydropandas, by default None.
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection containing data
+    """
+    return ObsCollection.from_pastastore(
+        pstore=pstore,
+        libname=libname,
+        ObsClass=ObsClass,
+        metadata_mapping=metadata_mapping,
+    )
+
+
 class ObsCollection(pd.DataFrame):
     """class for a collection of point observations.
 
@@ -1847,6 +1880,43 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
+
+    @classmethod
+    def from_pastastore(
+        cls, pstore, libname, ObsClass=obs.GroundwaterObs, metadata_mapping=None
+    ):
+        """Read pastastore library.
+
+        Parameters
+        ----------
+        pstore : pastastore.PastaStore
+            PastaStore object
+        libname : str
+            name of library (e.g. oseries or stresses)
+        ObsClass : Obs, optional
+            type of Obs to read data as, by default obs.GroundwaterObs
+        metadata_mapping : dict, optional
+            dictionary containing map between metadata field names in pastastore and
+            metadata field names expected by hydropandas, by default None.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io import pastas
+
+        obs_list = pastas.read_pastastore_library(
+            pstore, libname, ObsClass=ObsClass, metadata_mapping=metadata_mapping
+        )
+        obs_df = util._obslist_to_frame(obs_list)
+
+        meta = {
+            "name": pstore.name,
+            "conntype": pstore.conn.conn_type,
+            "library": libname,
+        }
+        return cls(obs_df, name=pstore.name, meta=meta)
 
     def to_excel(self, path, meta_sheet_name="metadata"):
         """Write an ObsCollection to an excel, the first sheet in the
