@@ -44,7 +44,7 @@ class CollectionPlots:
             if True plot multiple tubes at the same monitoring_well in one
             figure
         **kwargs :
-            will be passed to the Obs.to_interactive_plot method, options
+            will be passed to the Obs.interactive_plot method, options
             include:
 
             - cols : list of str or None
@@ -55,7 +55,7 @@ class CollectionPlots:
             - hoover_names : list of str
             - plot_colors : list of str
             - ylabel : str
-            - add_filter_to_legend : boolean
+            - add_screen_to_legend : boolean
         """
         _color_cycle = (
             "blue",
@@ -184,7 +184,7 @@ class CollectionPlots:
             if True interactive plots will be created, if False the iplot_fname
             in the meta ditctionary of the observations is used.
         **kwargs :
-            will be passed to the to_interactive_plots method options are:
+            will be passed to the interactive_plots method options are:
 
             - cols : list of str or None
             - hoover_names : list of str
@@ -194,7 +194,7 @@ class CollectionPlots:
             - hoover_names : list of str
             - plot_colors : list of str
             - ylabel : str
-            - add_filter_to_legend : boolean
+            - add_screen_to_legend : boolean
             - tmin : dt.datetime
             - tmax : dt.datetime
 
