@@ -87,6 +87,7 @@ version = { attr = "hydropandas.version.__version__" }
 
 [tool.setuptools.package-data]
 "hydropandas.data" = ["*.json"]
+"hydropandas.static" = ["*.html", "*.css"]
 
 [tool.black]
 line-length = 88

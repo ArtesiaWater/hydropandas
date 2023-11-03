@@ -1,4 +1,7 @@
+import os
+
 import pandas as pd
+import pastastore as pst
 import pytest
 from requests.exceptions import ConnectionError
 
@@ -193,7 +196,17 @@ def test_to_pastastore():
     dino_gw = test_obscollection_dinozip_gw()
     # drop duplicate
     dino_gw.drop("B22D0155-001", inplace=True)
-    dino_gw.to_pastastore()
+    pstore = dino_gw.to_pastastore()
+    # export to zip for read test
+    pstore.to_zip("test_pastastore.zip")
+
+
+def test_from_pastastore():
+    pstore = pst.PastaStore.from_zip(
+        "test_pastastore.zip", conn=pst.DictConnector("pastas_db")
+    )
+    _ = hpd.read_pastastore(pstore, "oseries")
+    os.remove("test_pastastore.zip")
 
 
 # %% excel
@@ -325,7 +338,7 @@ def test_knmi_collection_from_grid():
 
 
 def test_waterinfo_from_dir():
-    path = "./tests/data/waterinfo-test"
+    path = "./tests/data/2023-waterinfo-test"
     hpd.read_waterinfo(path)
 
 
