@@ -111,7 +111,7 @@ def get_files(
         force unzip, by default False.
     preserve_datetime : bool, optional
         preserve datetime of unzipped files, by default False. Used for
-        checking whether data has changed).
+        checking whether data has changed.
     """
     # check if unpackdir is same as file_or_dir, if same, this can cause
     # problems when the unpackdir still contains zips that will be unpacked
