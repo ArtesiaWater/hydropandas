@@ -263,13 +263,13 @@ def get_color_logger(level="INFO"):
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)
 
-    l = logging.getLogger()
-    l.handlers[:] = []
-    l.addHandler(handler)
-    l.setLevel(getattr(logging, level))
+    clogger = logging.getLogger()
+    clogger.handlers[:] = []
+    clogger.addHandler(handler)
+    clogger.setLevel(getattr(logging, level))
 
     logging.captureWarnings(True)
-    return l
+    return clogger
 
 
 def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
