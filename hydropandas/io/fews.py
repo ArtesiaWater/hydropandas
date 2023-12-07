@@ -395,11 +395,13 @@ def read_xml_root(
                 [d + " " + t for d, t in zip(date, time)], errors="coerce"
             )
             ts = pd.DataFrame(events, index=index)
-            ts.loc[:, "value"] = ts.loc[:, "value"].astype(float)
 
-            if remove_nan and (not ts.empty):
-                ts.dropna(subset=["value"], inplace=True)
-                header["unit"] = "m NAP"
+            if not ts.empty:
+                ts.loc[:, "value"] = ts.loc[:, "value"].astype(float)
+
+                if remove_nan:
+                    ts.dropna(subset=["value"], inplace=True)
+                    header["unit"] = "m NAP"
 
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             if locationIds is not None:
