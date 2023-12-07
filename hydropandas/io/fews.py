@@ -397,7 +397,7 @@ def read_xml_root(
             ts = pd.DataFrame(events, index=index)
 
             if not ts.empty:
-                ts.loc[:, "value"] = ts.loc[:, "value"].astype(float)
+                ts["value"] = ts["value"].astype(float)
 
                 if remove_nan:
                     ts.dropna(subset=["value"], inplace=True)
