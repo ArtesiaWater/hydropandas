@@ -67,11 +67,10 @@ class Obs(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._metadata:
-                    if (key in Obs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if (len(args) > 0) and isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in Obs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
@@ -122,7 +121,7 @@ class Obs(pd.DataFrame):
 
         return buf.getvalue()
 
-    def _repr_html_(self, collapse=True):
+    def _repr_html_(self, collapse=False):
         """
         Uses the pandas DataFrame html representation with the metadata
         prepended.
@@ -714,8 +713,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_wiski(cls, path, **kwargs):
-        """
-        Read data from a WISKI file.
+        """Read data from a WISKI file.
 
         Parameters:
         -----------
@@ -779,7 +777,7 @@ class GroundwaterObs(Obs):
 
 
 class WaterQualityObs(Obs):
-    """class for water quality ((grond)watersamenstelling) point
+    """Class for water quality ((grond)watersamenstelling) point
     observations.
 
     Subclass of the Obs class
@@ -814,7 +812,7 @@ class WaterQualityObs(Obs):
 
     @classmethod
     def from_dino(cls, path, **kwargs):
-        """read dino file with groundwater quality data.
+        """Read dino file with groundwater quality data.
 
         Parameters
         ----------

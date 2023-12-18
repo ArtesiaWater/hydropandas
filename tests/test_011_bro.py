@@ -53,7 +53,7 @@ def test_get_gld_ids_from_gmw():
 
 
 def test_obs_list_from_extent():
-    extent = (102395, 103121, 434331, 434750)
+    # extent = (102395, 103121, 434331, 434750)
     extent = [116500, 120000, 439000, 442000]
     bro.get_obs_list_from_extent(
         extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992, only_metadata=True
