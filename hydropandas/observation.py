@@ -558,6 +558,53 @@ class GroundwaterObs(Obs):
         )
 
     @classmethod
+    def from_lizard_code(cls,
+                    code, 
+                    tube_nr=None,
+                    tmin = None, tmax = None,
+                    type_timeseries = 'merge',
+                    url_lizard='https://vitens.lizard.net/api/v4/'):
+        """
+        extracts the metadata and timeseries of a observation well from a LIZARD-API based on
+        the code of a monitoring well         
+
+        Parameters
+        ----------
+        code : str
+            code of the measuring well  
+        tube_nr : int, optional
+            select specific tube top
+            Default selects tube_nr = 1
+        tmin : str YYYY-m-d, optional
+            start of the observations, by default the entire serie is returned
+        tmax : Ttr YYYY-m-d, optional
+            end of the observations, by default the entire serie is returned
+        type_timeseries : str, optional
+            hand: returns only hand measurements
+            diver: returns only diver measurements  
+            merge: the hand and diver measurements into one time series (merge; default) or
+            combine: keeps hand and diver measurements separeted       
+            The default is merge.
+        url_lizard : str
+            location of the LIZARD-API.
+    
+        Returns
+        -------
+        returns a DataFrame with metadata and timeseries 
+        """
+
+        from .io import lizard
+
+        measurements, meta = lizard.read_lizard_groundwater_from_code(
+            code,
+            tube_nr,
+            tmin,
+            tmax,
+            type_timeseries,
+            url_lizard)
+        return cls(measurements, meta=meta)
+    
+    @classmethod
     def from_dino(
         cls,
         fname=None,

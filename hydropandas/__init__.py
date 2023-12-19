@@ -14,6 +14,8 @@ from .obs_collection import (
     read_fews,
     read_imod,
     read_knmi,
+	read_lizard_from_list,
+	read_lizard_from_extent,
     read_menyanthes,
     read_modflow,
     read_pickle,
