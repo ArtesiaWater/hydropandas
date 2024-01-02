@@ -16,7 +16,14 @@ maintainers = [
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
 requires-python = ">=3.7"
-dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama"]
+dependencies = [
+    "scipy",
+    "pandas<2.1.0",
+    "matplotlib",
+    "tqdm",
+    "requests",
+    "colorama",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -27,6 +34,7 @@ classifiers = [
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     "Operating System :: OS Independent",
     'Topic :: Scientific/Engineering :: Hydrology',
 ]
@@ -48,17 +56,17 @@ full = [
     "xarray",
     "shapely",
     "pyproj",
-    "contextily"
+    "contextily",
+    "lxml",
 ]
 rtd = [
     "hydropandas[full]",
     "imod",
-    "lxml",
     "requests",
     "Shapely",
     "nbconvert",
     "ipykernel",
-    "netCDF4==1.5.8",
+    "netCDF4",
     "docutils<0.18",
     "sphinx_rtd_theme",
     "Ipython",
@@ -79,6 +87,7 @@ version = { attr = "hydropandas.version.__version__" }
 
 [tool.setuptools.package-data]
 "hydropandas.data" = ["*.json"]
+"hydropandas.static" = ["*.html", "*.css"]
 
 [tool.black]
 line-length = 88
@@ -98,7 +107,7 @@ markers = ["slow: mark test as slow."]
 legacy_tox_ini = """
     [tox]
     requires = tox>=4
-    env_list = format, lint, notebooks, py{37, 38, 39, 310}
+    env_list = format, lint, notebooks, py{37, 38, 39, 310, 311}
 
     [testenv]
     description = run unit tests

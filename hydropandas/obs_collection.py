@@ -173,6 +173,39 @@ def read_bro(
     return oc
 
 
+def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
+    """get all the metadata from files in a directory. Files are GMW files of
+    well construction, and are subbmitted to
+    https://www.bronhouderportaal-bro.nl .
+
+
+    Parameters
+    ----------
+    dirname : str
+        name of directory that holds XML files
+    full_meta : bool, optional
+        process not only the standard metadata to ObsCollection
+    add_to_df : bool, optional
+        add all the metadata to the ObsCollection DataFrame
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection DataFrame without the 'obs' column
+
+    """
+
+    oc = ObsCollection.from_bronhouderportaal_bro(
+        dirname=dirname,
+        full_meta=full_meta,
+    )
+
+    if add_to_df:
+        oc.add_meta_to_df(key="all")
+
+    return oc
+
+
 def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
@@ -301,7 +334,7 @@ def read_fews(
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
     unpackdir : str
-        destination directory to unzip file if fname is a .zip
+        destination directory to unzip file if file_or_dir is a .zip
     force_unpack : boolean, optional
         force unpack if dst already exists
     preserve_datetime : boolean, optional
@@ -392,7 +425,10 @@ def read_knmi(
     starts=None,
     ends=None,
     ObsClasses=None,
-    **kwargs,
+    fill_missing_obs=False,
+    interval="daily",
+    use_api=True,
+    raise_exceptions=True,
 ):
     """Get knmi observations from a list of locations or a list of
     stations.
@@ -548,20 +584,23 @@ def read_knmi(
         starts=starts,
         ends=ends,
         ObsClasses=ObsClasses,
-        **kwargs,
+        fill_missing_obs=fill_missing_obs,
+        interval=interval,
+        use_api=use_api,
+        raise_exceptions=raise_exceptions,
     )
 
     return oc
 
 
 def read_menyanthes(
-    fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+    path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
 ):
     """read a Menyanthes file
 
     Parameters
     ----------
-    fname : str
+    path : str
         full path of the .men file.
     name : str, optional
         name of the observation collection. The default is "".
@@ -580,7 +619,7 @@ def read_menyanthes(
     """
 
     oc = ObsCollection.from_menyanthes(
-        fname=fname,
+        path=path,
         name=name,
         ObsClass=ObsClass,
         load_oseries=load_oseries,
@@ -776,6 +815,39 @@ def read_wiski(
     return oc
 
 
+def read_pastastore(
+    pstore,
+    libname,
+    ObsClass=obs.GroundwaterObs,
+    metadata_mapping=None,
+):
+    """Read pastastore library.
+
+    Parameters
+    ----------
+    pstore : pastastore.PastaStore
+        PastaStore object
+    libname : str
+        name of library (e.g. oseries or stresses)
+    ObsClass : Obs, optional
+        type of Obs to read data as, by default obs.GroundwaterObs
+    metadata_mapping : dict, optional
+        dictionary containing map between metadata field names in pastastore and
+        metadata field names expected by hydropandas, by default None.
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection containing data
+    """
+    return ObsCollection.from_pastastore(
+        pstore=pstore,
+        libname=libname,
+        ObsClass=ObsClass,
+        metadata_mapping=metadata_mapping,
+    )
+
+
 class ObsCollection(pd.DataFrame):
     """class for a collection of point observations.
 
@@ -808,7 +880,10 @@ class ObsCollection(pd.DataFrame):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
 
-        if isinstance(args[0], (list, tuple)):
+        if len(args) == 0:
+            logger.debug("Create empty ObsCollection")
+            super().__init__(**kwargs)
+        elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
             super().__init__(obs_df, *args[1:], **kwargs)
@@ -1107,6 +1182,28 @@ class ObsCollection(pd.DataFrame):
 
             return oc
 
+    def copy(self, deep=False):
+        """Make a copy of this object's indices and data.
+
+        Parameters
+        ----------
+        deep : bool, default True
+            Make a deep copy, including a deep copy of the observation objects.
+            With ``deep=False`` neither the indices nor the data are copied.
+
+        Returns
+        -------
+        ObsCollection
+        """
+
+        if deep:
+            oc = super().copy(deep=deep)
+            # manually make a deep copy of the observations
+            oc["obs"] = [o.copy(deep=deep) for o in oc.obs.values]
+            return oc
+
+        return super().copy(deep=deep)
+
     @classmethod
     def from_bro(
         cls,
@@ -1281,6 +1378,41 @@ class ObsCollection(pd.DataFrame):
                                         tmax,
                                         type_timeseries,
                                         url_lizard)
+        return cls(obs_df)
+
+    @classmethod
+    def from_bronhouderportaal_bro(
+        cls,
+        dirname,
+        full_meta=False,
+    ):
+        """get all the metadata from dirname.
+
+
+        Parameters
+        ----------
+        dirname : str
+            name of dirname that holds XML files
+        full_meta : bool , optional
+            process all metadata. The default is False.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame without the 'obs' column
+
+        """
+
+        from .io.bronhouderportaal_bro import get_obs_list_from_dir
+
+        obs_list = get_obs_list_from_dir(
+            dirname,
+            obs.GroundwaterObs,
+            full_meta=full_meta,
+        )
+
+        obs_df = util._obslist_to_frame(obs_list)
+
         return cls(obs_df)
 
     @classmethod
@@ -1549,7 +1681,7 @@ class ObsCollection(pd.DataFrame):
             remove nan values from measurements, flag information about the
             nan values is also lost, only used if low_memory=False
         unpackdir : str
-            destination directory to unzip file if fname is a .zip
+            destination directory to unzip file if path is a .zip
         force_unpack : boolean, optional
             force unpack if dst already exists
         preserve_datetime : boolean, optional
@@ -1669,7 +1801,10 @@ class ObsCollection(pd.DataFrame):
         starts=None,
         ends=None,
         ObsClasses=None,
-        **kwargs,
+        fill_missing_obs=False,
+        interval="daily",
+        use_api=True,
+        raise_exceptions=True,
     ):
         """Get knmi observations from a list of locations or a list of
         stations.
@@ -1685,7 +1820,7 @@ class ObsCollection(pd.DataFrame):
             xy coordinates of the locations. e.g. [[10,25], [5,25]]
         meteo_vars : list or tuple of str
             meteo variables e.g. ["RH", "EV24"]. The default is ("RH").
-            See list of all possible variables below
+            See list of all possible variables in the hpd.read_knmi docstring.
         name : str, optional
             name of the obscollection. The default is ''
         starts : None, str, datetime or list, optional
@@ -1708,104 +1843,22 @@ class ObsCollection(pd.DataFrame):
             class of the observations, can be PrecipitationObs, EvaporationObs
             or MeteoObs. If None the type of observations is derived from the
             meteo_vars.
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is False.
+        interval : str, optional
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
-
-        List of possible variables:
-            neerslagstations:
-            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
-            voorafgaande dag tot 0800 utc op de vermelde datum meteostations:
-            DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
-            90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
-            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
-            / Vector mean wind direction in degrees (360=north, 90=east,
-            180=south, 270=west, 0=calm/variable)
-            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie
-            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
-            / Vector mean windspeed (in 0.1 m/s)
-            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean
-            windspeed (in 0.1 m/s)
-            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum
-            hourly mean windspeed (in 0.1 m/s)
-            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which
-            FHX was measured
-            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum
-            hourly mean windspeed (in 0.1 m/s)
-            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which
-            FHN was measured
-            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in
-            0.1 m/s)
-            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which
-            FXX was measured
-            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) /
-            Daily mean temperature in (0.1 degrees Celsius)
-            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum
-            temperature (in 0.1 degrees Celsius)
-            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN
-            was measured
-            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum
-            temperature (in 0.1 degrees Celsius)
-            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX
-            was measured
-            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden
-            Celsius) / Minimum temperature at 10 cm above surface (in 0.1
-            degrees Celsius)
-            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division
-            in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT,
-            24=18-24 UT
-            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale
-            straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour)
-            calculated from global radiation (-1 for <0.05 hour)
-            SP    = Percentage van de langst mogelijke zonneschijnduur /
-            Percentage of maximum potential sunshine duration
-            Q     = Globale straling (in J/cm2) / Global radiation (in J/cm2)
-            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration
-            (in 0.1 hour)
-            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
-            Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
-            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
-            <0.05 mm)
-            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
-            RHX was measured
-            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1
-            hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure
-            (in 0.1 hPa) calculated from 24 hourly values
-            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau
-            (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
-            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX
-            was measured
-            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau
-            (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
-            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
-            was measured
-            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
-            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
-            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
-            ..., 89: >70 km)
-            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which
-            VVN was measured
-            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m,
-            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
-            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
-            ..., 89: >70 km)
-            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which
-            VVX was measured
-            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de
-            bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily
-            cloud cover (in octants, 9=sky invisible)
-            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) /
-            Daily mean relative atmospheric humidity (in percents)
-            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum
-            relative atmospheric humidity (in percents)
-            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX
-            was measured
-            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum
-            relative atmospheric humidity (in percents)
-            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN
-            was measured
-            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
-            Potential evapotranspiration (Makkink) (in 0.1 mm)
         """
 
         from .io.knmi import get_knmi_obslist
@@ -1813,10 +1866,10 @@ class ObsCollection(pd.DataFrame):
         # obtain ObsClass
         if ObsClasses is None:
             ObsClasses = []
-            for meteovar in meteo_vars:
-                if meteovar in ("RH", "RD"):
+            for meteo_var in meteo_vars:
+                if meteo_var in ("RH", "RD"):
                     ObsClasses.append(obs.PrecipitationObs)
-                elif meteovar == "EV24":
+                elif meteo_var == "EV24":
                     ObsClasses.append(obs.EvaporationObs)
                 else:
                     ObsClasses.append(obs.MeteoObs)
@@ -1851,10 +1904,13 @@ class ObsCollection(pd.DataFrame):
             stns,
             xy,
             meteo_vars,
-            ObsClasses=ObsClasses,
             starts=starts,
             ends=ends,
-            **kwargs,
+            ObsClasses=ObsClasses,
+            fill_missing_obs=fill_missing_obs,
+            interval=interval,
+            use_api=use_api,
+            raise_exceptions=raise_exceptions,
         )
 
         obs_df = util._obslist_to_frame(obs_list)
@@ -1877,14 +1933,14 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_menyanthes(
-        cls, fname, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+        cls, path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
     ):
         from .io.menyanthes import read_file
 
-        menyanthes_meta = {"filename": fname, "type": ObsClass}
+        menyanthes_meta = {"path": path, "type": ObsClass}
 
         obs_list = read_file(
-            fname, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
+            path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
         )
         obs_df = util._obslist_to_frame(obs_list)
 
@@ -2012,6 +2068,43 @@ class ObsCollection(pd.DataFrame):
 
         return cls(obs_df, name=name, meta=meta)
 
+    @classmethod
+    def from_pastastore(
+        cls, pstore, libname, ObsClass=obs.GroundwaterObs, metadata_mapping=None
+    ):
+        """Read pastastore library.
+
+        Parameters
+        ----------
+        pstore : pastastore.PastaStore
+            PastaStore object
+        libname : str
+            name of library (e.g. oseries or stresses)
+        ObsClass : Obs, optional
+            type of Obs to read data as, by default obs.GroundwaterObs
+        metadata_mapping : dict, optional
+            dictionary containing map between metadata field names in pastastore and
+            metadata field names expected by hydropandas, by default None.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io import pastas
+
+        obs_list = pastas.read_pastastore_library(
+            pstore, libname, ObsClass=ObsClass, metadata_mapping=metadata_mapping
+        )
+        obs_df = util._obslist_to_frame(obs_list)
+
+        meta = {
+            "name": pstore.name,
+            "conntype": pstore.conn.conn_type,
+            "library": libname,
+        }
+        return cls(obs_df, name=pstore.name, meta=meta)
+
     def to_excel(self, path, meta_sheet_name="metadata"):
         """Write an ObsCollection to an excel, the first sheet in the
         excel contains the metadata, the other tabs are the timeseries of each
@@ -2069,7 +2162,7 @@ class ObsCollection(pd.DataFrame):
 
         fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_gdf(self, xcol="x", ycol="y"):
+    def to_gdf(self, xcol="x", ycol="y", crs=28992, drop_obs=True):
         """convert ObsCollection to GeoDataFrame.
 
         Parameters
@@ -2078,31 +2171,23 @@ class ObsCollection(pd.DataFrame):
             column name with x values
         ycol : str
             column name with y values
+        crs : int, optional
+            coordinate reference system, by default 28992 (RD new).
+        drop_obs : bool, optional
+            drop the column with observations. Useful for basic geodataframe
+            manipulations that require JSON serializable columns. The default
+            is True.
 
         Returns
         -------
         gdf : geopandas.GeoDataFrame
         """
-        return util.df2gdf(self, xcol, ycol)
 
-    def to_report_table(
-        self,
-        columns=(
-            "monitoring_well",
-            "tube_nr",
-            "startdate",
-            "enddate",
-            "# measurements",
-        ),
-    ):
-        if "startdate" in columns:
-            self["startdate"] = self.obs.apply(lambda x: x.index[0])
-        if "enddate" in columns:
-            self["enddate"] = self.obs.apply(lambda x: x.index[-1])
-        if "# measurements" in columns:
-            self["# measurements"] = self.obs.apply(lambda x: x.shape[0])
-
-        return self[columns]
+        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=crs)
+        if drop_obs:
+            return gdf.drop(columns="obs")
+        else:
+            return gdf
 
     def to_pastastore(
         self,
@@ -2126,7 +2211,8 @@ class ObsCollection(pd.DataFrame):
             Name of the column in the Obs dataframe to be used. If None the
             first numeric column in the Obs Dataframe is used.
         kind : str, optional
-            The kind of series that is added to the pastastore
+            The kind of series that is added to the pastastore. Use 'oseries'
+            for observations and anything else for stresses.
         add_metadata : boolean, optional
             If True metadata from the observations added to the pastastore
         conn : pastastore.connectors or None, optional
@@ -2155,12 +2241,12 @@ class ObsCollection(pd.DataFrame):
 
         return pstore
 
-    def to_shapefile(self, fname, xcol="x", ycol="y"):
+    def to_shapefile(self, path, xcol="x", ycol="y"):
         """save ObsCollection as shapefile.
 
         Parameters
         ----------
-        fname : str
+        path : str
             filename of shapefile (.shp) or geopackage (.gpkg). A geopackage
             has the advantage that column names will not be truncated.
         xcol : str
@@ -2188,9 +2274,9 @@ class ObsCollection(pd.DataFrame):
             elif np.issubdtype(coltype, np.datetime64):
                 gdf[colname] = gdf[colname].astype(str)
 
-        gdf.to_file(fname)
+        gdf.to_file(path)
 
-    def add_meta_to_df(self, key):
+    def add_meta_to_df(self, key="all"):
         """Get the values from the meta dictionary of each observation object
         and add these to the ObsCollection as a column.
 
@@ -2198,13 +2284,22 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        key : str
-            key in meta dictionary of observation object
+        key : str, int, tuple, list, set or None, optional
+            key in meta dictionary of observation object. If key is 'all', all
+            keys are added. The default is 'all'.
         """
 
-        self[key] = [
-            o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
-        ]
+        if isinstance(key, str) and key == "all":
+            keys = set().union(*[o.meta for o in self.obs.values])
+            for key in keys:
+                self[key] = [
+                    o.meta[key] if key in o.meta.keys() else None
+                    for o in self.obs.values
+                ]
+        else:
+            self[key] = [
+                o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+            ]
 
     def get_series(self, tmin=None, tmax=None, col=None):
         """

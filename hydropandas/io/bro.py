@@ -9,8 +9,10 @@ import xml.etree.ElementTree
 import numpy as np
 import pandas as pd
 import requests
-from pyproj import Transformer
+from pyproj import Proj, Transformer
 from tqdm import tqdm
+
+from ..util import EPSG_28992
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +75,7 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
             bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata
         )
         if o.empty:
-            logger.warning(
+            logger.debug(
                 f"no measurements found for gmw_id {gmw_id} and tube number {tube_nr}"
             )
             if keep_all_obs:
@@ -121,7 +123,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
         metadata.
 
     """
-    logger.info(f"reading bro_id {bro_id}")
+    logger.debug(f"reading bro_id {bro_id}")
 
     if bro_id.startswith("GLD"):
         if only_metadata:
@@ -194,7 +196,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     d = json.loads(req.text)
 
     if len(d["monitoringTubeReferences"]) == 0:
-        logger.info(
+        logger.debug(
             f"no groundwater level dossier for {bro_id} and tube number {tube_nr}"
         )
         return None
@@ -202,7 +204,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     for tube in d["monitoringTubeReferences"]:
         if tube["tubeNumber"] == tube_nr:
             if len(tube["gldReferences"]) == 0:
-                logger.info(
+                logger.debug(
                     f"no groundwater level dossier for {bro_id} and tube number"
                     f"{tube_nr}"
                 )
@@ -318,7 +320,7 @@ def measurements_from_gld(
     if df.index.has_duplicates and drop_duplicate_times:
         duplicates = df.index.duplicated(keep="first")
         message = "{} contains {} duplicates (of {}). Keeping only first values."
-        logger.info(message.format(bro_id, duplicates.sum(), len(df)))
+        logger.debug(message.format(bro_id, duplicates.sum(), len(df)))
         df = df[~duplicates]
 
     df = df.sort_index()
@@ -422,7 +424,7 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
     return meta
 
 
-def get_metadata_from_gmw(bro_id, tube_nr):
+def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
     """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
 
@@ -473,8 +475,20 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
 
     # x and y
-    xy = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
-    meta["x"], meta["y"] = [float(val) for val in xy.text.split()]
+    xy_elem = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
+    xy = [float(val) for val in xy_elem.text.split()]
+
+    # convert crs
+    srsname = gmw.find("dsgmw:deliveredLocation//gmwcommon:location", ns).attrib[
+        "srsName"
+    ]
+    epsg_gwm = int(srsname.split(":")[-1])
+    proj_from = Proj(f"EPSG:{epsg_gwm}")
+    proj_to = Proj(EPSG_28992)
+    transformer = Transformer.from_proj(proj_from, proj_to)
+    xy = transformer.transform(xy[0], xy[1])
+
+    meta["x"], meta["y"] = xy
 
     # ground_level
     vert_pos = gmw.find("dsgmw:deliveredVerticalPosition", ns)
@@ -634,7 +648,7 @@ def get_obs_list_from_extent(
                 only_metadata=only_metadata,
             )
             if o.empty:
-                logger.warning(
+                logger.debug(
                     f"no measurements found for gmw_id {gmw_id} and tube number"
                     f"{tube_nr}"
                 )

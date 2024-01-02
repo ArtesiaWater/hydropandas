@@ -16,6 +16,10 @@ jobs:
       fail-fast: true
       matrix:
         include:
+          - name: Test suite with py311-ubuntu
+            python: "3.11"
+            os: ubuntu-latest
+            toxenv: py311
           - name: Test suite with py310-ubuntu
             python: "3.10"
             os: ubuntu-latest

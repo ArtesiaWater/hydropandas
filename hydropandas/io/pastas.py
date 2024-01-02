@@ -6,6 +6,10 @@
 import logging
 import numbers
 
+from tqdm.auto import tqdm
+
+from ..observation import GroundwaterObs
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,11 +42,11 @@ def _get_metadata_from_obs(o):
                 elif isinstance(v, numbers.Number):
                     meta[k] = float(v)
                 else:
-                    logger.info(
+                    logger.debug(
                         f"did not add {k} to metadata because datatype is {type(v)}"
                     )
         else:
-            logger.info(
+            logger.debug(
                 f"did not add {attr_key} to metadata because datatype is {type(val)}"
             )
 
@@ -95,7 +99,7 @@ def create_pastastore(
         pstore = pst.PastaStore(name=pstore_name, connector=conn)
 
     for o in oc.obs.values:
-        logger.info("add to pastastore -> {}".format(o.name))
+        logger.debug("add to pastastore -> {}".format(o.name))
 
         if add_metadata:
             meta = _get_metadata_from_obs(o)
@@ -113,3 +117,76 @@ def create_pastastore(
             )
 
     return pstore
+
+
+def read_pastastore_item(pstore, libname, name):
+    """Read item from pastastore library.
+
+    Parameters
+    ----------
+    pstore : pastastore.PastaStore
+        pastastore object
+    libname : str
+        name of library containing item
+    name : str
+        name of item
+
+    Returns
+    -------
+    series : pd.Series
+        time series for item
+    meta : dict
+        dictionary containing metadata
+
+    Raises
+    ------
+    ValueError
+        if library is not oseries or stresses
+    """
+    if libname == "oseries":
+        series, meta = pstore.get_oseries(name, return_metadata=True)
+    elif libname == "stresses":
+        series, meta = pstore.get_stresses(name, return_metadata=True)
+    else:
+        raise ValueError(
+            f"Cannot store items from library '{libname}' in ObsCollection."
+        )
+    return series, meta
+
+
+def read_pastastore_library(
+    pstore, libname, ObsClass=GroundwaterObs, metadata_mapping=None
+):
+    """Read pastastore library.
+
+    Parameters
+    ----------
+    pstore : pastastore.PastaStore
+        pastastore object
+    libname : str
+        name of library to read
+    ObsClass : Obs, optional
+        type of Obs to read data as, by default GroundwaterObs
+    metadata_mapping : dict, optional
+        dictionary containing map between metadata field names in pastastore and
+        metadata field names expected by hydropandas, by default None.
+
+    Returns
+    -------
+    obs_list : list of Obs
+        list of Obs containing data
+    """
+    names = pstore.conn._parse_names(None, libname)
+
+    obs_list = []
+    for name in tqdm(names, desc=f"Read Pastastore '{libname}'"):
+        try:
+            o = ObsClass.from_pastastore(
+                pstore, libname, name, metadata_mapping=metadata_mapping
+            )
+        except AttributeError:
+            series, meta = read_pastastore_item(pstore, libname, name)
+            o = ObsClass(series, meta=meta)
+        obs_list.append(o)
+
+    return obs_list

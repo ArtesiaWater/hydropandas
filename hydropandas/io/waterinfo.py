@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 def read_waterinfo_file(
-    path_to_file,
+    path,
     index_cols=None,
     return_metadata=False,
     value_col=None,
@@ -20,8 +20,8 @@ def read_waterinfo_file(
 
     Parameters
     ----------
-    path_to_file : str
-        path to file
+    path : str
+        path to waterinfo file (.zip or .csv)
 
     Returns
     -------
@@ -33,20 +33,17 @@ def read_waterinfo_file(
     """
     from pyproj import Transformer
 
-    name = os.path.splitext(os.path.basename(path_to_file))[0]
+    name = os.path.splitext(os.path.basename(path))[0]
 
-    if path_to_file.endswith(".csv"):
-        f = path_to_file
-    elif path_to_file.endswith(".zip"):
-        zf = zipfile.ZipFile(path_to_file)
+    if path.endswith(".csv"):
+        f = path
+    elif path.endswith(".zip"):
+        zf = zipfile.ZipFile(path)
         f = zf.open("{}.csv".format(name))
     else:
         raise NotImplementedError(
-            "File type '{}' not supported!".format(os.path.splitext(path_to_file)[-1])
+            "File type '{}' not supported!".format(os.path.splitext(path)[-1])
         )
-
-    if index_cols is None:
-        index_cols = ["WAARNEMINGDATUM", "WAARNEMINGTIJD"]
 
     if value_col is None:
         value_col = "NUMERIEKEWAARDE"
@@ -66,11 +63,24 @@ def read_waterinfo_file(
         sep=";",
         decimal=",",
         encoding="ISO-8859-1",
-        parse_dates=[index_cols],
         dayfirst=True,
-        infer_datetime_format=True,
-        index_col="_".join(index_cols),
     )
+
+    if index_cols is None:
+        index_cols = ["WAARNEMINGDATUM"]
+        if "WAARNEMINGTIJD (MET/CET)" in df.columns:
+            index_cols += ["WAARNEMINGTIJD (MET/CET)"]
+        elif "WAARNEMINGTIJD" in df.columns:
+            index_cols += ["WAARNEMINGTIJD"]
+        else:
+            raise KeyError(
+                "expected column with WAARNEMINGSTIJD but could not find one"
+            )
+
+    df.index = pd.to_datetime(
+        df[index_cols[0]] + " " + df[index_cols[1]], dayfirst=True
+    )
+    df.drop(columns=index_cols, inplace=True)
 
     # do some conversions
     df.loc[df[value_col] == 999999999, value_col] = np.NaN

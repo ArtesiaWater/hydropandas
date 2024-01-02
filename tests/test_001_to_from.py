@@ -1,4 +1,7 @@
+import os
+
 import pandas as pd
+import pastastore as pst
 import pytest
 from requests.exceptions import ConnectionError
 
@@ -44,20 +47,20 @@ dinozip = "./tests/data/2019-Dino-test/dino.zip"
 
 def test_observation_gwq():
     # single observation
-    fname = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
-    hpd.WaterQualityObs.from_dino(fname)
+    path = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
+    hpd.WaterQualityObs.from_dino(path)
     return
 
 
 def test_observation_wl():
-    fname = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
-    hpd.WaterlvlObs.from_dino(fname)
+    path = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
+    hpd.WaterlvlObs.from_dino(path)
     return
 
 
 def test_observation_gw():
-    fname = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
-    o = hpd.GroundwaterObs.from_dino(fname=fname)
+    path = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
+    o = hpd.GroundwaterObs.from_dino(path=path)
     return o
 
 
@@ -79,7 +82,9 @@ def test_obscollection_from_df():
 
     hpd.ObsCollection(df)
 
-    return
+
+def test_obscollection_empty():
+    hpd.ObsCollection()
 
 
 # read dino directories
@@ -167,6 +172,7 @@ def test_observation_wiskicsv_gw():
         header_identifier=":",
         parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
+        dayfirst=True,
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
@@ -190,7 +196,17 @@ def test_to_pastastore():
     dino_gw = test_obscollection_dinozip_gw()
     # drop duplicate
     dino_gw.drop("B22D0155-001", inplace=True)
-    dino_gw.to_pastastore()
+    pstore = dino_gw.to_pastastore()
+    # export to zip for read test
+    pstore.to_zip("test_pastastore.zip")
+
+
+def test_from_pastastore():
+    pstore = pst.PastaStore.from_zip(
+        "test_pastastore.zip", conn=pst.DictConnector("pastas_db")
+    )
+    _ = hpd.read_pastastore(pstore, "oseries")
+    os.remove("test_pastastore.zip")
 
 
 # %% excel
@@ -215,7 +231,7 @@ def test_from_excel():
 
 def test_pressure_obs_from_stn():
     hpd.MeteoObs.from_knmi(
-        310, meteo_var="P", interval="hourly", fill_missing_obs=False
+        stn=310, meteo_var="P", interval="hourly", start="2022-1-1", end="2023-1-1"
     )
 
 
@@ -223,12 +239,9 @@ def test_pressure_read_knmi():
     hpd.read_knmi(
         stns=(310,),
         meteo_vars=("P",),
-        settings={
-            "interval": "hourly",
-            "fill_missing_obs": False,
-            "inseason": False,
-            "normalize_index": True,
-        },
+        interval="hourly",
+        starts="2022-1-1",
+        ends="2023-1-1",
     )
 
 
@@ -236,59 +249,54 @@ def test_pressure_read_knmi():
 
 
 def test_evap_obs_from_file():
-    fname = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
-    hpd.EvaporationObs.from_knmi_file(fname)
+    path = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
+    hpd.EvaporationObs.from_knmi(fname=path)
 
 
 def test_evap_obs_from_stn():
-    hpd.EvaporationObs.from_knmi(260, et_type="EV24")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="EV24")
 
 
 def test_evap_obs_from_stn_makkink():
-    hpd.EvaporationObs.from_knmi(260, et_type="makkink")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="makkink")
 
 
 def test_evap_obs_from_stn_penman():
-    hpd.EvaporationObs.from_knmi(260, et_type="penman")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="penman")
 
 
 def test_evap_obs_from_stn_hargreaves():
-    hpd.EvaporationObs.from_knmi(260, et_type="hargreaves")
+    hpd.EvaporationObs.from_knmi(stn=260, meteo_var="hargreaves")
 
 
 # %% Precipitation
 
 
 def test_precip_obs_from_file():
-    fname = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
-    hpd.PrecipitationObs.from_knmi_file(fname)
+    path = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
+    hpd.PrecipitationObs.from_knmi(fname=path)
 
 
 def test_precip_obs_from_stn():
-    hpd.PrecipitationObs.from_knmi(233, "precipitation")
+    hpd.PrecipitationObs.from_knmi(stn=233, meteo_var="RD")
 
 
 def test_knmi_obs_from_stn_no_api():
-    hpd.PrecipitationObs.from_knmi(233, "precipitation", use_api=False)
+    hpd.PrecipitationObs.from_knmi(stn=233, meteo_var="RD", use_api=False)
 
 
 def test_knmi_obs_from_stn_without_any_data():
     hpd.EvaporationObs.from_knmi(
-        210, startdate="19500101", enddate="19600101", fill_missing_obs=False
+        stn=210, start="19500101", end="19600101", fill_missing_obs=False
     )
 
 
 def test_knmi_obs_from_stn_with_missing_data_in_time_period():
-    hpd.PrecipitationObs.from_knmi("441", "precipitation", startdate="2010-1-2")
+    hpd.PrecipitationObs.from_knmi(stn=441, meteo_var="RD", start="2010-1-2")
 
 
 def test_knmi_obs_from_xy():
-    hpd.PrecipitationObs.from_nearest_xy((100000, 350000))
-
-
-def test_knmi_obs_from_obs():
-    pb = test_observation_gw()
-    hpd.PrecipitationObs.from_obs(pb, fill_missing_obs=False)
+    hpd.PrecipitationObs.from_knmi(xy=(100000, 350000))
 
 
 # @pytest.xfail(
@@ -330,15 +338,13 @@ def test_knmi_collection_from_grid():
 
 
 def test_waterinfo_from_dir():
-    path = "./tests/data/waterinfo-test"
+    path = "./tests/data/2023-waterinfo-test"
     hpd.read_waterinfo(path)
 
 
-# %% MENYANTHES (still need a small menyanthes file to do the test)
+# %% MENYANTHES
 
-# def test_obscollection_menyanthes():
-#
-#    fname = r'export_from_ADI.men'
-#    obsc = oc.ObsCollection.from_menyanthes(fname)
-#
-#    return obsc
+
+def test_obscollection_menyanthes():
+    fname = "./tests/data/2023-MEN-test/test.men"
+    hpd.read_menyanthes(fname, ObsClass=hpd.GroundwaterObs)

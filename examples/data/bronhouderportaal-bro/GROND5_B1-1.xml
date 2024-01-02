@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<registrationRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.broservices.nl/xsd/isgmw/1.1">
+  <requestReference xmlns="http://www.broservices.nl/xsd/brocommon/3.0">GROND5_B1-1#000</requestReference>
+  <deliveryAccountableParty xmlns="http://www.broservices.nl/xsd/brocommon/3.0">111</deliveryAccountableParty>
+  <qualityRegime xmlns="http://www.broservices.nl/xsd/brocommon/3.0">IMBRO</qualityRegime>
+  <sourceDocument>
+    <GMW_Construction>
+      <objectIdAccountableParty>B1-1</objectIdAccountableParty>
+      <deliveryContext codeSpace="urn:bro:gmw:DeliveryContext">WW</deliveryContext>
+      <constructionStandard codeSpace="urn:bro:gmw:ConstructionStandard">NEN5766</constructionStandard>
+      <initialFunction codeSpace="urn:bro:gmw:InitialFunction">stand</initialFunction>
+      <numberOfMonitoringTubes>2</numberOfMonitoringTubes>
+      <groundLevelStable>ja</groundLevelStable>
+      <owner>111</owner>
+      <wellHeadProtector codeSpace="urn:bro:gmw:WellHeadProtector">kokerNietMetaal</wellHeadProtector>
+      <wellConstructionDate>
+        <date xmlns="http://www.broservices.nl/xsd/brocommon/3.0">2020-06-23</date>
+      </wellConstructionDate>
+      <deliveredLocation>
+        <location d5p1:id="notUsed2" srsName="urn:ogc:def:crs:EPSG::28992" xmlns:d5p1="http://www.opengis.net/gml/3.2" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">
+          <d5p1:pos>56525.207 386749.698</d5p1:pos>
+        </location>
+        <horizontalPositioningMethod codeSpace="urn:bro:gmw:HorizontalPositioningMethod" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">RTKGPS5tot10cm</horizontalPositioningMethod>
+      </deliveredLocation>
+      <deliveredVerticalPosition>
+        <localVerticalReferencePoint codeSpace="urn:bro:gmw:LocalVerticalReferencePoint" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">NAP</localVerticalReferencePoint>
+        <offset uom="m" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">0.000</offset>
+        <verticalDatum codeSpace="urn:bro:gmw:VerticalDatum" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">NAP</verticalDatum>
+        <groundLevelPosition uom="m" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">0.360</groundLevelPosition>
+        <groundLevelPositioningMethod codeSpace="urn:bro:gmw:GroundLevelPositioningMethod" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">tachymetrie0tot10cm</groundLevelPositioningMethod>
+      </deliveredVerticalPosition>
+      <monitoringTube>
+        <tubeNumber>1</tubeNumber>
+        <tubeType codeSpace="urn:bro:gmw:TubeType">standaardbuis</tubeType>
+        <artesianWellCapPresent>ja</artesianWellCapPresent>
+        <sedimentSumpPresent>ja</sedimentSumpPresent>
+        <numberOfGeoOhmCables>0</numberOfGeoOhmCables>
+        <tubeTopDiameter uom="mm">25</tubeTopDiameter>
+        <variableDiameter>nee</variableDiameter>
+        <tubeStatus codeSpace="urn:bro:gmw:TubeStatus">gebruiksklaar</tubeStatus>
+        <tubeTopPosition uom="m">0.860</tubeTopPosition>
+        <tubeTopPositioningMethod codeSpace="urn:bro:gmw:TubeTopPositioningMethod">RTKGPS4tot10cm</tubeTopPositioningMethod>
+        <materialUsed>
+          <tubePackingMaterial codeSpace="urn:bro:gmw:TubePackingMaterial" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">filtergrind</tubePackingMaterial>
+          <tubeMaterial codeSpace="urn:bro:gmw:TubeMaterial" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">pvc</tubeMaterial>
+          <glue codeSpace="urn:bro:gmw:Glue" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">geen</glue>
+        </materialUsed>
+        <screen>
+          <screenLength uom="m">1.000</screenLength>
+          <sockMaterial codeSpace="urn:bro:gmw:SockMaterial">geen</sockMaterial>
+        </screen>
+        <plainTubePart>
+          <plainTubePartLength uom="m" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">11.500</plainTubePartLength>
+        </plainTubePart>
+        <sedimentSump>
+          <sedimentSumpLength uom="m" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">1</sedimentSumpLength>
+        </sedimentSump>
+      </monitoringTube>
+      <monitoringTube>
+        <tubeNumber>2</tubeNumber>
+        <tubeType codeSpace="urn:bro:gmw:TubeType">standaardbuis</tubeType>
+        <artesianWellCapPresent>ja</artesianWellCapPresent>
+        <sedimentSumpPresent>ja</sedimentSumpPresent>
+        <numberOfGeoOhmCables>0</numberOfGeoOhmCables>
+        <tubeTopDiameter uom="mm">25</tubeTopDiameter>
+        <variableDiameter>nee</variableDiameter>
+        <tubeStatus codeSpace="urn:bro:gmw:TubeStatus">gebruiksklaar</tubeStatus>
+        <tubeTopPosition uom="m">1.070</tubeTopPosition>
+        <tubeTopPositioningMethod codeSpace="urn:bro:gmw:TubeTopPositioningMethod">RTKGPS4tot10cm</tubeTopPositioningMethod>
+        <materialUsed>
+          <tubePackingMaterial codeSpace="urn:bro:gmw:TubePackingMaterial" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">filtergrind</tubePackingMaterial>
+          <tubeMaterial codeSpace="urn:bro:gmw:TubeMaterial" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">pvc</tubeMaterial>
+          <glue codeSpace="urn:bro:gmw:Glue" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">geen</glue>
+        </materialUsed>
+        <screen>
+          <screenLength uom="m">1.000</screenLength>
+          <sockMaterial codeSpace="urn:bro:gmw:SockMaterial">geen</sockMaterial>
+        </screen>
+        <plainTubePart>
+          <plainTubePartLength uom="m" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">2.210</plainTubePartLength>
+        </plainTubePart>
+        <sedimentSump>
+          <sedimentSumpLength uom="m" xmlns="http://www.broservices.nl/xsd/gmwcommon/1.1">1</sedimentSumpLength>
+        </sedimentSump>
+      </monitoringTube>
+    </GMW_Construction>
+  </sourceDocument>
+</registrationRequest>

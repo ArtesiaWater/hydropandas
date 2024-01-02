@@ -15,6 +15,9 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import logging
+import os
+import warnings
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -64,11 +67,10 @@ class Obs(pd.DataFrame):
         **kwargs can be one of the attributes listed in _metadata or
         keyword arguments for the constructor of a pandas.DataFrame.
         """
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._metadata:
-                    if (key in Obs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if (len(args) > 0) and isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in Obs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
@@ -118,6 +120,64 @@ class Obs(pd.DataFrame):
         )
 
         return buf.getvalue()
+
+    def _repr_html_(self, collapse=False):
+        """
+        Uses the pandas DataFrame html representation with the metadata
+        prepended.
+        """
+        obs_type = f'<p style="color:#808080";>hydropandas.{type(self).__name__}</p>\n'
+
+        metadata_dic = {key: getattr(self, key) for key in self._metadata}
+        metadata_dic.pop("meta")
+        metadata_df = pd.DataFrame(
+            columns=[metadata_dic.pop("name")],
+            index=metadata_dic.keys(),
+            data=metadata_dic.values(),
+        )
+        metadata = metadata_df._repr_html_()
+
+        observations = super()._repr_html_()
+        if collapse:
+            collapse_button_meta = (
+                '<button type="button" class="collapsible '
+                'active" id="meta"><i class="arrow right">'
+                "</i> Metadata</button>\n"
+            )
+            collapse_button_obs = (
+                '<button type="button" class="collapsible '
+                'active" id="obs"><i class="arrow right">'
+                "</i> Observations</button>\n"
+            )
+
+            with open(
+                os.path.join(os.path.dirname(__file__), "static/style.css"), "r"
+            ) as fo:
+                css_arrow = fo.read()
+
+            metadata = metadata.replace(
+                "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
+            )
+            observations = observations.replace(
+                "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
+            )
+
+            with open(
+                os.path.join(os.path.dirname(__file__), "static/js_collapse.html"), "r"
+            ) as fo:
+                js_collapse_button = fo.read()
+
+            return (
+                obs_type
+                + css_arrow
+                + collapse_button_meta
+                + metadata
+                + "<br>\n"
+                + collapse_button_obs
+                + observations
+                + js_collapse_button
+            )
+        return obs_type + metadata + "<br>\n" + observations
 
     @property
     def _constructor(self):
@@ -211,7 +271,8 @@ class Obs(pd.DataFrame):
         return d
 
     def merge_metadata(self, right, overlap="error"):
-        """Merge the metadata of an Obs object with new metadata.
+        """Merge the metadata of an Obs object with metadata from another Obs
+        object.
 
         Parameters
         ----------
@@ -245,18 +306,18 @@ class Obs(pd.DataFrame):
                     same_metadata = False
                     if overlap == "error":
                         raise ValueError(
-                            f"existing observation {key} differs from new observation"
+                            f"left observation {key} differs from right observation"
                         )
                     elif overlap == "use_left":
                         logger.info(
-                            f"existing observation {key} differs from new "
-                            "observation, use existing"
+                            f"left observation {key} differs from right "
+                            "observation, use left"
                         )
                         new_metadata[key] = v1
                     elif overlap == "use_right":
                         logger.info(
-                            f"existing observation {key} differs from new "
-                            "observation, use new"
+                            f"left observation {key} differs from right "
+                            "observation, use right"
                         )
                         new_metadata[key] = v2
                 else:
@@ -265,22 +326,22 @@ class Obs(pd.DataFrame):
                 same_metadata = False
                 if overlap == "error":
                     raise ValueError(
-                        f"existing observation {key} differs from new observation"
+                        f"left observation {key} differs from right observation"
                     )
                 elif overlap == "use_left":
                     logger.info(
-                        f"existing observation {key} differs from new "
-                        "observation, use existing"
+                        f"left observation {key} differs from right "
+                        "observation, use left"
                     )
                     new_metadata[key] = v1
                 elif overlap == "use_right":
                     logger.info(
-                        f"existing observation {key} differs from new "
-                        "observation, use new"
+                        f"left observation {key} differs from right "
+                        "observation, use right"
                     )
                     new_metadata[key] = v2
         if same_metadata:
-            logger.info("new and existing observation have the same metadata")
+            logger.info("left and right observation have the same metadata")
 
         return new_metadata
 
@@ -295,10 +356,9 @@ class Obs(pd.DataFrame):
             How to deal with overlapping timeseries with different values.
             Options are:
                 error : Raise a ValueError
-                use_left : use the part of the overlapping timeseries from the
-                existing observation
-                use_right : use the part of the overlapping timeseries from the
-                new observation
+                use_left : use the part of the overlapping timeseries from self
+                use_right : use the part of the overlapping timeseries from
+                right
             Default is 'error'.
 
         Raises
@@ -314,10 +374,10 @@ class Obs(pd.DataFrame):
 
         # check if time series are the same
         if self.equals(right):
-            logger.info("new and existing observation have the same time series")
+            logger.info("left and right observation have the same time series")
             return self
 
-        logger.info("new observation has a different time series")
+        logger.info("right observation has a different time series")
         logger.info("merge time series")
 
         # merge overlapping columns
@@ -418,8 +478,8 @@ class Obs(pd.DataFrame):
         # check observation type
         if not isinstance(right, type(self)):
             raise TypeError(
-                f"existing observation has a different type {type(self)} than"
-                f"new observation {type(right)}"
+                f"observation left has a different type {type(self)} than"
+                f"observation right {type(right)}"
             )
 
         # merge timeseries
@@ -558,20 +618,23 @@ class GroundwaterObs(Obs):
         )
 
     @classmethod
-    def from_lizard_code(cls,
-                    code, 
-                    tube_nr=None,
-                    tmin = None, tmax = None,
-                    type_timeseries = 'merge',
-                    url_lizard='https://vitens.lizard.net/api/v4/'):
+    def from_lizard_code(
+        cls,
+        code,
+        tube_nr=None,
+        tmin=None,
+        tmax=None,
+        type_timeseries="merge",
+        url_lizard="https://vitens.lizard.net/api/v4/",
+    ):
         """
         extracts the metadata and timeseries of a observation well from a LIZARD-API based on
-        the code of a monitoring well         
+        the code of a monitoring well
 
         Parameters
         ----------
         code : str
-            code of the measuring well  
+            code of the measuring well
         tube_nr : int, optional
             select specific tube top
             Default selects tube_nr = 1
@@ -581,79 +644,126 @@ class GroundwaterObs(Obs):
             end of the observations, by default the entire serie is returned
         type_timeseries : str, optional
             hand: returns only hand measurements
-            diver: returns only diver measurements  
+            diver: returns only diver measurements
             merge: the hand and diver measurements into one time series (merge; default) or
-            combine: keeps hand and diver measurements separeted       
+            combine: keeps hand and diver measurements separeted
             The default is merge.
         url_lizard : str
             location of the LIZARD-API.
-    
+
         Returns
         -------
-        returns a DataFrame with metadata and timeseries 
+        returns a DataFrame with metadata and timeseries
         """
 
         from .io import lizard
 
         measurements, meta = lizard.read_lizard_groundwater_from_code(
-            code,
-            tube_nr,
-            tmin,
-            tmax,
-            type_timeseries,
-            url_lizard)
+            code, tube_nr, tmin, tmax, type_timeseries, url_lizard
+        )
         return cls(measurements, meta=meta)
-    
+
+    def from_bronhouderportaal_bro(
+        cls,
+        path,
+        tube_nr,
+        full_meta=False,
+    ):
+        """load BRO groundwater metadata from XML file. Mind that
+        bro_id is applicable, because file is not yet imported in BRO
+
+
+        Parameters
+        ----------
+        path : str
+            filepath of XML file.
+        tube_nr : int
+            tube number.
+        full_meta : bool
+            process not only the standard metadata to ObsCollection.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+
+        from .io import bronhouderportaal_bro
+
+        meta = bronhouderportaal_bro.get_metadata_from_gmw(
+            path, tube_nr, full_meta=full_meta
+        )
+
+        empty_df = pd.DataFrame()
+
+        return cls(
+            empty_df,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            filename=meta.pop("filename"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+            meta=meta,
+        )
+
     @classmethod
     def from_dino(
         cls,
-        fname=None,
+        path=None,
         **kwargs,
     ):
         """download dino data from the server.
 
         Parameters
         ----------
-        fname : str, optional
-            dino csv filename
+        path : str, optional
+            path of dino csv file
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
-            if fname is not None and otherwise to hydropandas.io.dino.findMeetreeks
+            if path is not None and otherwise to hydropandas.io.dino.findMeetreeks
         """
         from .io import dino
 
         # read dino csv file
-        measurements, meta = dino.read_dino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_artdino_file(cls, fname=None, **kwargs):
+    def from_artdino_file(cls, path=None, **kwargs):
         """read a dino csv file (artdiver style).
 
         Parameters
         ----------
-        fname : str, optional
-            dino csv filename
+        path : str, optional
+            path of dino csv filename
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io._dino.read_dino_groundwater_csv
         """
         from .io import dino
 
         # read artdino csv file
-        measurements, meta = dino.read_artdino_groundwater_csv(fname, **kwargs)
+        measurements, meta = dino.read_artdino_groundwater_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_wiski(cls, fname, **kwargs):
-        """
-        Read data from a WISKI file.
+    def from_wiski(cls, path, **kwargs):
+        """Read data from a WISKI file.
 
         Parameters:
         -----------
-        fname : str
-            The name of the file to be read.
+        path : str
+            The path of the file to be read.
         sep : str, optional (default=";")
             The delimiter used to separate fields in the file.
         header_sep : str, optional (default=None)
@@ -663,8 +773,6 @@ class GroundwaterObs(Obs):
             The character used to identify header lines.
         read_series : bool, optional (default=True)
             Whether to read the time series data from the file.
-        infer_datetime_format : bool, optional (default=True)
-            Whether to infer the datetime format of the timestamp column.
         translate_dic : dict, optional (default=None)
             A dictionary mapping header field names to the desired output names.
         tz_localize : bool, optional (default=True)
@@ -676,13 +784,45 @@ class GroundwaterObs(Obs):
         """
         from .io import wiski
 
-        data, metadata = wiski.read_wiski_file(fname, **kwargs)
+        data, metadata = wiski.read_wiski_file(path, **kwargs)
 
         return cls(data, meta=metadata, **metadata)
 
+    @classmethod
+    def from_pastastore(cls, pstore, libname, name, metadata_mapping=None):
+        """Read item from pastastore library.
+
+        Parameters
+        ----------
+        pstore : pastastore.PastaStore
+            pastastore object
+        libname : str
+            name of library containinig item
+        name : str
+            name of item
+        metadata_mapping : dict, optional
+            dictionary containing map between metadata field names in pastastore (keys)
+            and metadata field names expected by hydropandas (values), by default None.
+        """
+        from .io import pastas
+
+        data, metadata = pastas.read_pastastore_item(pstore, libname, name)
+
+        if metadata_mapping is not None:
+            for pstore_name, oc_name in metadata_mapping.items():
+                metadata[oc_name] = metadata.get(pstore_name, None)
+
+        metadata["source"] = "pastastore"
+        kwargs = {}
+        for key, value in metadata.items():
+            if key in cls._metadata:
+                kwargs[key] = value
+
+        return cls(data, meta=metadata, **kwargs)
+
 
 class WaterQualityObs(Obs):
-    """class for water quality ((grond)watersamenstelling) point
+    """Class for water quality ((grond)watersamenstelling) point
     observations.
 
     Subclass of the Obs class
@@ -716,20 +856,20 @@ class WaterQualityObs(Obs):
         return WaterQualityObs
 
     @classmethod
-    def from_dino(cls, fname, **kwargs):
-        """read dino file with groundwater quality data.
+    def from_dino(cls, path, **kwargs):
+        """Read dino file with groundwater quality data.
 
         Parameters
         ----------
-        fname : str
-            dino txt filename
+        path : str
+            path of dino txt filename
         kwargs : key-word arguments
             these arguments are passed to
             hydropandas.io.dino.read_dino_groundwater_quality_txt
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_groundwater_quality_txt(fname, **kwargs)
+        measurements, meta = dino.read_dino_groundwater_quality_txt(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
@@ -759,29 +899,29 @@ class WaterlvlObs(Obs):
         return WaterlvlObs
 
     @classmethod
-    def from_dino(cls, fname, **kwargs):
+    def from_dino(cls, path, **kwargs):
         """read a dino file with waterlvl data.
 
         Parameters
         ----------
-        fname : str
-            dino csv filename
+        path : str
+            path of dino csv filename
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_waterlvl_csv
         """
         from .io import dino
 
-        measurements, meta = dino.read_dino_waterlvl_csv(fname, **kwargs)
+        measurements, meta = dino.read_dino_waterlvl_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_waterinfo(cls, fname, **kwargs):
+    def from_waterinfo(cls, path, **kwargs):
         """Read data from waterinfo csv-file or zip.
 
         Parameters
         ----------
-        fname : str
+        path : str
             path to file (file can zip or csv)
 
         Returns
@@ -797,7 +937,7 @@ class WaterlvlObs(Obs):
         from .io import waterinfo
 
         df, metadata = waterinfo.read_waterinfo_file(
-            fname, return_metadata=True, **kwargs
+            path, return_metadata=True, **kwargs
         )
         return cls(df, meta=metadata, **metadata)
 
@@ -853,141 +993,51 @@ class MeteoObs(Obs):
     @classmethod
     def from_knmi(
         cls,
-        stn,
-        meteo_var="RH",
-        startdate=None,
-        enddate=None,
-        fill_missing_obs=True,
+        meteo_var,
+        stn=None,
+        fname=None,
+        xy=None,
+        start=None,
+        end=None,
+        fill_missing_obs=False,
         interval="daily",
-        inseason=False,
         use_api=True,
         raise_exceptions=True,
+        startdate=None,
+        enddate=None,
     ):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
         Parameters
         ----------
-        stn : int or str
-            measurement station e.g. 829.
-        meteo_var : str,
-            meteo variable e.g. "RH" or "EV24". See list with al options below.
-        startdate : str, datetime or None, optional
+        meteo_var : str
+            meteo variable e.g. "RH" or "EV24". For a list of possible
+            variables see the hydropandas.read_knmi function.
+        stn : int, str or None, optional
+            measurement station e.g. 829. The default is None.
+        fname : str, path object, file-like object or None, optional
+            filename of a knmi file. The default is None.
+        xy : list, tuple or None, optional
+            RD coördinates of a location in the Netherlands. The station nearest
+            to this location used. The Default is None.
+        start : str, datetime or None, optional
             start date of observations. The default is None.
-        enddate : str, datetime or None, optional
+        end : str, datetime or None, optional
             end date of observations. The default is None.
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
-            The default is True.
+            The default is False.
         interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
-
-        List of possible variables:
-            neerslagstations:
-            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
-            voorafgaande dag tot 0800 utc op de vermelde datum
-
-            meteostations:
-            DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
-            90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
-            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
-            / Vector mean wind direction in degrees (360=north, 90=east,
-            180=south, 270=west, 0=calm/variable)
-            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie
-            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
-            / Vector mean windspeed (in 0.1 m/s)
-            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean
-            windspeed (in 0.1 m/s)
-            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum
-            hourly mean windspeed (in 0.1 m/s)
-            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which
-            FHX was measured
-            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum
-            hourly mean windspeed (in 0.1 m/s)
-            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which
-            FHN was measured
-            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in
-            0.1 m/s)
-            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which
-            FXX was measured
-            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) /
-            Daily mean temperature in (0.1 degrees Celsius)
-            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum
-            temperature (in 0.1 degrees Celsius)
-            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN
-            was measured
-            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum
-            temperature (in 0.1 degrees Celsius)
-            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX
-            was measured
-            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden
-            Celsius) / Minimum temperature at 10 cm above surface (in 0.1
-            degrees Celsius)
-            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division
-            in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT,
-            24=18-24 UT
-            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale
-            straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour)
-            calculated from global radiation (-1 for <0.05 hour)
-            SP    = Percentage van de langst mogelijke zonneschijnduur /
-            Percentage of maximum potential sunshine duration
-            Q     = Globale straling (in J/cm2) / Global radiation (in J/cm2)
-            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration
-            (in 0.1 hour)
-            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
-            Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
-            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
-            <0.05 mm)
-            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
-            RHX was measured
-            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1
-            hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure
-            (in 0.1 hPa) calculated from 24 hourly values
-            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau
-            (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
-            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX
-            was measured
-            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau
-            (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
-            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
-            was measured
-            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
-            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
-            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
-            ..., 89: >70 km)
-            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which
-            VVN was measured
-            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m,
-            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
-            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
-            ..., 89: >70 km)
-            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which
-            VVX was measured
-            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de
-            bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily
-            cloud cover (in octants, 9=sky invisible)
-            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) /
-            Daily mean relative atmospheric humidity (in percents)
-            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum
-            relative atmospheric humidity (in percents)
-            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX
-            was measured
-            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum
-            relative atmospheric humidity (in percents)
-            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN
-            was measured
-            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
-            Potential evapotranspiration (Makkink) (in 0.1 mm)
 
         Returns
         -------
@@ -995,339 +1045,83 @@ class MeteoObs(Obs):
         """
         from .io import knmi
 
-        if fill_missing_obs and interval == "hourly":
-            fill_missing_obs = False
-
-        if interval == "hourly" and meteo_var == "RD":
-            raise NotImplementedError(
-                "hourly values are not available for precipitation stations"
+        if startdate is not None:
+            warnings.warn(
+                "please use 'start' instead of startdate'", DeprecationWarning
             )
+            start = startdate
+        if enddate is not None:
+            warnings.warn("please use 'end' instead of enddate'", DeprecationWarning)
+            end = enddate
 
-        settings = {
-            "fill_missing_obs": fill_missing_obs,
-            "interval": interval,
-            "inseason": inseason,
-            "use_api": use_api,
-            "raise_exceptions": raise_exceptions,
-        }
-
-        ts, meta = knmi.get_knmi_timeseries_stn(
-            stn, meteo_var, startdate, enddate, settings=settings
+        ts, meta = knmi.get_knmi_obs(
+            stn=stn,
+            fname=fname,
+            xy=xy,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            fill_missing_obs=fill_missing_obs,
+            interval=interval,
+            use_api=use_api,
+            raise_exceptions=raise_exceptions,
         )
 
         return cls(
             ts,
             meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
+            station=meta.pop("station"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            name=meta.pop("name"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
             meteo_var=meteo_var,
         )
 
     @classmethod
-    def from_nearest_xy(
+    def from_wow(
         cls,
-        xy,
-        meteo_var,
-        startdate=None,
-        enddate=None,
-        fill_missing_obs=True,
-        interval="daily",
-        inseason=False,
-        use_precipitation_stn=True,
-        use_api=True,
-        raise_exceptions=False,
+        meteo_var: str,
+        stn: str = None,
+        xy: List[float] = None,
+        start: Optional[pd.Timestamp] = None,
+        end: Optional[pd.Timestamp] = None,
     ):
-        """Get a MeteoObs object from the KNMI station closest to the given
-        (x,y) coordinates.
+        """Get a MeteoObs timeseries from a wow.knmi.nl station
 
         Parameters
         ----------
-        xy : list. tuple or numpy array of int or floats
-            xy coordinates. e.g. [10.1,25.05]
-        meteo_var : str,
-            meteo variable e.g. "RH" or "EV24". See list with al options below.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_precipitation_stn : bool, optional
-            if True a combination of neerslagstations and meteo stations are used.
-            If False only meteo stations are used to obtain precipitation data.
-            Default is True.
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
-            data is read from there. Default is True since the api is back
-            online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
+        meteo_var : str
+            wow meteo variable
+        stn : Optional[int, str], optional
+            station name
+        xy : Optinal[List[float]], optinial
+            longitude latitude of location [lon, lat] eg: [4.85, 51.95]
+        start : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+        end : Optional[pd.Timestamp], optional
+            start date of observations, by default None
 
         Returns
         -------
-        MeteoObs object with meteorological observations
+        MeteoObs
         """
-        from .io import knmi
+        from .io import wow
 
-        settings = {
-            "fill_missing_obs": fill_missing_obs,
-            "interval": interval,
-            "inseason": inseason,
-            "use_api": use_api,
-            "raise_exceptions": raise_exceptions,
-            "use_precipitation_stn": use_precipitation_stn,
-        }
-
-        ts, meta = knmi.get_knmi_timeseries_xy(
-            xy, meteo_var, startdate, enddate, settings=settings
+        wow_df, meta = wow.get_wow(
+            stn=stn, xy=xy, meteo_var=meteo_var, start=start, end=end
         )
 
         return cls(
-            ts,
+            wow_df,
             meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
-            meteo_var=meteo_var,
-        )
-
-    @classmethod
-    def from_obs(
-        cls,
-        obs,
-        meteo_var,
-        startdate=None,
-        enddate=None,
-        fill_missing_obs=True,
-        interval="daily",
-        inseason=False,
-        use_precipitation_stn=True,
-        use_api=True,
-        raise_exceptions=False,
-    ):
-        """Get a MeteoObs object with measurements from the KNMI station
-        closest to the given observation. Uses the x and y coordinates of the
-        observation to obtain the nearest KNMI station. Uses the start- and
-        enddate of the observation as start- and enddate of the meteo time
-        series (unless startdate and enddatet are specified explicitly).
-
-        Parameters
-        ----------
-        obs : hydropandas.Obs
-            Observation object.
-        meteo_var : str,
-            meteo variable e.g. "RH" or "EV24". See list with al options below.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_precipitation_stn : bool, optional
-            if True a combination of neerslagstations and meteo stations are used.
-            If False only meteo stations are used to obtain precipitation data.
-            Default is True.
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
-            data is read from there. Default is True since the api is back
-            online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
-
-        List of possible variables:
-            neerslagstations:
-            RD    = de 24-uurs neerslagsom, gemeten van 0800 utc op de
-            voorafgaande dag tot 0800 utc op de vermelde datum
-
-            meteostations:
-            DDVEC = Vectorgemiddelde windrichting in graden (360=noord,
-            90=oost, 180=zuid, 270=west, 0=windstil/variabel). Zie
-            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
-            / Vector mean wind direction in degrees (360=north, 90=east,
-            180=south, 270=west, 0=calm/variable)
-            FHVEC = Vectorgemiddelde windsnelheid (in 0.1 m/s). Zie
-            http://www.knmi.nl/kennis-en-datacentrum/achtergrond/klimatologische-brochures-en-boeken
-            / Vector mean windspeed (in 0.1 m/s)
-            FG    = Etmaalgemiddelde windsnelheid (in 0.1 m/s) / Daily mean
-            windspeed (in 0.1 m/s)
-            FHX   = Hoogste uurgemiddelde windsnelheid (in 0.1 m/s) / Maximum
-            hourly mean windspeed (in 0.1 m/s)
-            FHXH  = Uurvak waarin FHX is gemeten / Hourly division in which
-            FHX was measured
-            FHN   = Laagste uurgemiddelde windsnelheid (in 0.1 m/s) / Minimum
-            hourly mean windspeed (in 0.1 m/s)
-            FHNH  = Uurvak waarin FHN is gemeten / Hourly division in which
-            FHN was measured
-            FXX   = Hoogste windstoot (in 0.1 m/s) / Maximum wind gust (in
-            0.1 m/s)
-            FXXH  = Uurvak waarin FXX is gemeten / Hourly division in which
-            FXX was measured
-            TG    = Etmaalgemiddelde temperatuur (in 0.1 graden Celsius) /
-            Daily mean temperature in (0.1 degrees Celsius)
-            TN    = Minimum temperatuur (in 0.1 graden Celsius) / Minimum
-            temperature (in 0.1 degrees Celsius)
-            TNH   = Uurvak waarin TN is gemeten / Hourly division in which TN
-            was measured
-            TX    = Maximum temperatuur (in 0.1 graden Celsius) / Maximum
-            temperature (in 0.1 degrees Celsius)
-            TXH   = Uurvak waarin TX is gemeten / Hourly division in which TX
-            was measured
-            T10N  = Minimum temperatuur op 10 cm hoogte (in 0.1 graden
-            Celsius) / Minimum temperature at 10 cm above surface (in 0.1
-            degrees Celsius)
-            T10NH = 6-uurs tijdvak waarin T10N is gemeten / 6-hourly division
-            in which T10N was measured; 6=0-6 UT, 12=6-12 UT, 18=12-18 UT,
-            24=18-24 UT
-            SQ    = Zonneschijnduur (in 0.1 uur) berekend uit de globale
-            straling (-1 voor <0.05 uur) / Sunshine duration (in 0.1 hour)
-            calculated from global radiation (-1 for <0.05 hour)
-            SP    = Percentage van de langst mogelijke zonneschijnduur /
-            Percentage of maximum potential sunshine duration
-            Q     = Globale straling (in J/cm2) / Global radiation (in J/cm2)
-            DR    = Duur van de neerslag (in 0.1 uur) / Precipitation duration
-            (in 0.1 hour)
-            RH    = Etmaalsom van de neerslag (in 0.1 mm) (-1 voor <0.05 mm) /
-            Daily precipitation amount (in 0.1 mm) (-1 for <0.05 mm)
-            RHX   = Hoogste uursom van de neerslag (in 0.1 mm) (-1 voor <0.05
-            mm) / Maximum hourly precipitation amount (in 0.1 mm) (-1 for
-            <0.05 mm)
-            RHXH  = Uurvak waarin RHX is gemeten / Hourly division in which
-            RHX was measured
-            PG    = Etmaalgemiddelde luchtdruk herleid tot zeeniveau (in 0.1
-            hPa) berekend uit 24 uurwaarden / Daily mean sea level pressure
-            (in 0.1 hPa) calculated from 24 hourly values
-            PX    = Hoogste uurwaarde van de luchtdruk herleid tot zeeniveau
-            (in 0.1 hPa) / Maximum hourly sea level pressure (in 0.1 hPa)
-            PXH   = Uurvak waarin PX is gemeten / Hourly division in which PX
-            was measured
-            PN    = Laagste uurwaarde van de luchtdruk herleid tot zeeniveau
-            (in 0.1 hPa) / Minimum hourly sea level pressure (in 0.1 hPa)
-            PNH   = Uurvak waarin PN is gemeten / Hourly division in which PN
-            was measured
-            VVN   = Minimum opgetreden zicht / Minimum visibility; 0: <100 m,
-            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
-            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
-            ..., 89: >70 km)
-            VVNH  = Uurvak waarin VVN is gemeten / Hourly division in which
-            VVN was measured
-            VVX   = Maximum opgetreden zicht / Maximum visibility; 0: <100 m,
-            1:100-200 m, 2:200-300 m,..., 49:4900-5000 m, 50:5-6 km,
-            56:6-7 km, 57:7-8 km,..., 79:29-30 km, 80:30-35 km, 81:35-40 km,
-            ..., 89: >70 km)
-            VVXH  = Uurvak waarin VVX is gemeten / Hourly division in which
-            VVX was measured
-            NG    = Etmaalgemiddelde bewolking (bedekkingsgraad van de
-            bovenlucht in achtsten, 9=bovenlucht onzichtbaar) / Mean daily
-            cloud cover (in octants, 9=sky invisible)
-            UG    = Etmaalgemiddelde relatieve vochtigheid (in procenten) /
-            Daily mean relative atmospheric humidity (in percents)
-            UX    = Maximale relatieve vochtigheid (in procenten) / Maximum
-            relative atmospheric humidity (in percents)
-            UXH   = Uurvak waarin UX is gemeten / Hourly division in which UX
-            was measured
-            UN    = Minimale relatieve vochtigheid (in procenten) / Minimum
-            relative atmospheric humidity (in percents)
-            UNH   = Uurvak waarin UN is gemeten / Hourly division in which UN
-            was measured
-            EV24  = Referentiegewasverdamping (Makkink) (in 0.1 mm) /
-            Potential evapotranspiration (Makkink) (in 0.1 mm)
-
-        Returns
-        -------
-        MeteoObs object with meteorological observations
-        """
-        from .io import knmi
-
-        settings = {
-            "fill_missing_obs": fill_missing_obs,
-            "interval": interval,
-            "inseason": inseason,
-            "use_api": use_api,
-            "raise_exceptions": raise_exceptions,
-            "use_precipitation_stn": use_precipitation_stn,
-        }
-
-        xy = (obs.x, obs.y)
-
-        if startdate is None:
-            startdate = obs.index[0]
-        if enddate is None:
-            enddate = obs.index[-1]
-
-        ts, meta = knmi.get_knmi_timeseries_xy(
-            xy, meteo_var, startdate, enddate, settings=settings
-        )
-
-        return cls(
-            ts,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
-            meteo_var=meteo_var,
-        )
-
-    @classmethod
-    def from_knmi_file(cls, fname, meteo_var="RH", startdate=None, enddate=None):
-        """Get a MeteoObs timeseries from the KNMI meteo data.
-
-        Parameters
-        ----------
-        fname : str
-            full path of a knmi .txt file
-        meteo_var : str,
-            meteo variable e.g. "RH" or "EV24".
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-
-        Returns
-        -------
-        MeteoObs object with meteorological observations
-        """
-        from .io import knmi
-
-        if not fname.endswith(".txt"):
-            fname += ".txt"
-
-        knmi_df, meta = knmi.read_knmi_timeseries_file(
-            fname, meteo_var, startdate, enddate
-        )
-
-        return cls(
-            knmi_df,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
+            station=meta["site"]["id"],
+            x=meta["site"]["geo"]["coordinates"][1],
+            y=meta["site"]["geo"]["coordinates"][0],
+            name=meta["site"]["name"],
+            source="wow.knmi.nl",
+            unit=wow_df.columns[0].split(" ")[-1],
             meteo_var=meteo_var,
         )
 
@@ -1354,38 +1148,42 @@ class EvaporationObs(MeteoObs):
     @classmethod
     def from_knmi(
         cls,
-        stn,
-        et_type="EV24",
-        meteo_var=None,
+        meteo_var="EV24",
+        stn=None,
+        fname=None,
+        xy=None,
+        start=None,
+        end=None,
+        fill_missing_obs=False,
+        interval="daily",
+        use_api=True,
+        raise_exceptions=True,
         startdate=None,
         enddate=None,
-        fill_missing_obs=True,
-        interval="daily",
-        inseason=False,
-        use_api=True,
-        raise_exceptions=False,
     ):
         """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
         Parameters
         ----------
-        stn : int or str
-            measurement station e.g. 829.
-        et_type: str
-            type of evapotranspiration to get from KNMI. Choice between
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
-            'EV24' which collects the KNMI Makkink EV24 evaporation.
-        meteo_var : None
-            not used in this method.
-        startdate : str, datetime or None, optional
+        meteo_var : str, optional
+            meteo variable should be "EV24".
+        stn : int, str or None, optional
+            measurement station e.g. 829. The default is None.
+        fname : str, path object, file-like object or None, optional
+            filename of a knmi file. The default is None.
+        xy : list, tuple or None, optional
+            RD coördinates of a location in the Netherlands. The station nearest
+            to this location used. The Default is None.
+        start : str, datetime or None, optional
             start date of observations. The default is None.
-        enddate : str, datetime or None, optional
+        end : str, datetime or None, optional
             end date of observations. The default is None.
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
-            The default is True.
+            The default is False.
         interval : str, optional
-            desired time interval for observations. The default is 'daily'.
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
         inseason : boolean, optional
             flag to obtain inseason data. The default is False
         raise_exceptions : bool, optional
@@ -1393,7 +1191,7 @@ class EvaporationObs(MeteoObs):
         use_api : bool, optional
             if True the api is used to obtain the data, API documentation is here:
                 https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
+            if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
 
@@ -1402,228 +1200,20 @@ class EvaporationObs(MeteoObs):
         -------
         EvaporationObs object with an evaporation time series and attributes
         """
-        from .io import knmi
 
-        if interval == "hourly":
-            fill_missing_obs = False
-
-        settings = {
-            "fill_missing_obs": fill_missing_obs,
-            "interval": interval,
-            "inseason": inseason,
-            "use_api": use_api,
-            "raise_exceptions": raise_exceptions,
-        }
-
-        ts, meta = knmi.get_evaporation(
-            stn, et_type, start=startdate, end=enddate, settings=settings
-        )
-
-        return cls(
-            ts,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
-            meteo_var=et_type,
-        )
-
-    @classmethod
-    def from_nearest_xy(
-        cls,
-        xy,
-        et_type="EV24",
-        startdate=None,
-        enddate=None,
-        fill_missing_obs=True,
-        interval="daily",
-        inseason=False,
-        use_api=True,
-        raise_exceptions=False,
-    ):
-        """Get an EvaporationObs object with evaporation measurements from the
-        KNMI station closest to the given (x,y) coordinates.
-
-        Parameters
-        ----------
-        xy : list. tuple or numpy array of int or floats
-            xy coordinates. e.g. (10.1,25.05)
-        et_type: str
-            type of evapotranspiration to get from KNMI. Choice between
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
-            'EV24' which collects the KNMI Makkink EV24 evaporation.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
-            data is read from there. Default is True since the api is back
-            online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
-
-
-        Returns
-        -------
-        EvaporationObs object with an evaporation time series and attributes
-        """
-        from .io import knmi
-
-        settings = {
-            "fill_missing_obs": fill_missing_obs,
-            "interval": interval,
-            "inseason": inseason,
-            "use_api": use_api,
-            "raise_exceptions": raise_exceptions,
-        }
-
-        stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
-        ts, meta = knmi.get_evaporation(
-            stn, et_type, start=startdate, end=enddate, settings=settings
-        )
-
-        return cls(
-            ts,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
-            meteo_var=et_type,
-        )
-
-    @classmethod
-    def from_obs(
-        cls,
-        obs,
-        et_type="EV24",
-        startdate=None,
-        enddate=None,
-        fill_missing_obs=True,
-        use_api=True,
-        interval="daily",
-        inseason=False,
-        raise_exceptions=False,
-    ):
-        """Get an EvaporationObs object with evaporation measurements from the
-        KNMI station closest to the given observation. Uses the x and y
-        coordinates of the observation to obtain the nearest KNMI evaporation
-        time series. Uses the start- and enddate of the observation as start-
-        and enddate of the evaporation time series (unless startdate and
-        enddatet are specified explicitly).
-
-        Parameters
-        ----------
-        obs : hydropandas.Obs
-            Observation object.
-        et_type: str
-            type of evapotranspiration to get from KNMI. Choice between
-            'EV24', 'penman', 'makkink' or 'hargraves'. Defaults to
-            'EV24' which collects the KNMI Makkink EV24 evaporation.
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-        fill_missing_obs : bool
-            if True missing observations are filled with values of next closest
-            KNMI station
-        interval : str, optional
-            desired time interval for observations. The default is 'daily'.
-        inseason : boolean, optional
-            flag to obtain inseason data. The default is False
-        use_api : bool, optional
-            if True the api is used to obtain the data, API documentation is here:
-                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-            if False a text file is downloaded into a temporary folder and the
-            data is read from there. Default is True since the api is back
-            online (July 2021).
-        raise_exceptions : bool, optional
-            if True you get errors when no data is returned. The default is False.
-
-        Returns
-        -------
-        EvaporationObs object with an evaporation time series and attributes
-        """
-        from .io import knmi
-
-        settings = {
-            "fill_missing_obs": fill_missing_obs,
-            "interval": interval,
-            "inseason": inseason,
-            "use_api": use_api,
-            "raise_exceptions": raise_exceptions,
-        }
-
-        xy = (obs.x, obs.y)
-
-        stn = knmi.get_n_nearest_stations_xy(xy, "EV24")[0]
-        ts, meta = knmi.get_evaporation(
-            stn, et_type, start=startdate, end=enddate, settings=settings
-        )
-
-        return cls(
-            ts,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            meteo_var=et_type,
-            source=meta["source"],
-            unit=meta["unit"],
-        )
-
-    @classmethod
-    def from_knmi_file(cls, fname, startdate=None, enddate=None):
-        """Get a EvaporationObs timeseries from the KNMI meteo data.
-
-        Parameters
-        ----------
-        fname : str
-            full path of a knmi .txt file
-        startdate : str, datetime or None, optional
-            start date of observations. The default is None.
-        enddate : str, datetime or None, optional
-            end date of observations. The default is None.
-
-        Returns
-        -------
-        MeteoObs object with meteorological observations
-        """
-        from .io import knmi
-
-        if not fname.endswith(".txt"):
-            fname += ".txt"
-
-        knmi_df, meta = knmi.read_knmi_timeseries_file(
-            fname, "EV24", startdate, enddate
-        )
-
-        return cls(
-            knmi_df,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
-            meteo_var="EV24",
+        return super().from_knmi(
+            meteo_var,
+            stn=stn,
+            fname=fname,
+            xy=xy,
+            start=start,
+            end=end,
+            fill_missing_obs=fill_missing_obs,
+            interval=interval,
+            use_api=use_api,
+            raise_exceptions=raise_exceptions,
+            startdate=startdate,
+            enddate=enddate,
         )
 
 
@@ -1649,7 +1239,21 @@ class PrecipitationObs(MeteoObs):
         return PrecipitationObs
 
     @classmethod
-    def from_knmi(cls, stn, stn_type="meteo", meteo_var=None, **kwargs):
+    def from_knmi(
+        cls,
+        meteo_var="RH",
+        stn=None,
+        fname=None,
+        xy=None,
+        start=None,
+        end=None,
+        fill_missing_obs=False,
+        interval="daily",
+        use_api=True,
+        raise_exceptions=True,
+        startdate=None,
+        enddate=None,
+    ):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for.
 
@@ -1660,194 +1264,99 @@ class PrecipitationObs(MeteoObs):
             2. Daily data from meteo stations
             3. Hourly data from meteo stations
 
-        1. If you want to get data from a neerslagstation stn should be the
-        station number with '_neerslag_station' at the end e.g. for De Bilt:
-            stn = '550_neerslag_station'.
-        2. If you want to get daily data from a meteo station stn should be the
-        number of the meteo station, can be string or integer
-        3. If you want to get hourly data from a meteo station, stn should be
-        the number of the meteo station and interval should 'hourly'.
+        1. For daily data from a precipitation station (neerslagstation) meteo_var
+        should be 'RD'.
+        2. For daily data from a meteo station meteo_var should be 'RH' and
+        interval should be 'daily' (default).
+        3. For hourly data from a meteo station meteo_var should be 'RH' and
+        interval should be 'hourly'.
 
         More information about the differences between neerslag and meteo
-        stations can be found in the 02_knmi_observations notebook inside the
-        examples directory on github:
-            https://github.com/ArtesiaWater/hydropandas
+        stations can be found in the hydropandas documentation ->
+        02_knmi_observations notebook.
 
         Parameters
         ----------
-        stn : int or str
-            measurement station e.g. 829.
-        stn_type : str, optional
-            type of measurements station. Can be 'meteo' or 'precipitation'.
-            Default is 'meteo'.
-        meteo_var : None
-            not used.
-        **kwargs:
-            startdate : str, datetime or None, optional
-                start date of observations. The default is None.
-            enddate : str, datetime or None, optional
-                end date of observations. The default is None.
-            fill_missing_obs : bool, optional
-                if True nan values in time series are filled with nearby time series.
-                The default is True.
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
-                the data is read from there. Default is True since the api is
-                back online (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is False.
-
-        Returns
-        -------
-        PrecipitationObs object with a precipitation time series and attributes
-        """
-        if stn_type == "meteo":
-            meteo_var = "RH"
-            kwargs.pop("meteo_var", None)
-        elif stn_type == "precipitation":
-            meteo_var = "RD"
-            kwargs.pop("meteo_var", None)
-        else:
-            raise ValueError(f"invalid measurement station type -> {stn_type}")
-
-        return super().from_knmi(stn, meteo_var=meteo_var, **kwargs)
-
-    @classmethod
-    def from_nearest_xy(cls, xy, stn_type="meteo", **kwargs):
-        """Get a PrecipitationObs object with precipitation measurements from
-        the meteo or precipitation station closest to the given (x,y)
-        coordinates.
-
-        Parameters
-        ----------
-        xy : list. tuple or numpy array of ints or floats
-            xy coordinates. e.g. [10.1,25.05]
-        stn_type : str, optional
-            type of measurements station. Can be 'meteo' or 'precipitation'.
-            Default is 'meteo'.
-        **kwargs:
-            startdate : str, datetime or None, optional
-                start date of observations. The default is None.
-            enddate : str, datetime or None, optional
-                end date of observations. The default is None.
-            fill_missing_obs : bool
-                if True missing observations are filled with values of next closest
-                KNMI station
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
-                the data is read from there. Default is True since the api is
-                back online (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is False.
-
-        Returns
-        -------
-        PrecipitationObs object with a precipitation time series and attributes
-        """
-        if stn_type == "meteo":
-            meteo_var = "RH"
-        elif stn_type == "precipitation":
-            meteo_var = "RD"
-        else:
-            raise ValueError(f"invalid measurement station type -> {stn_type}")
-
-        return super().from_nearest_xy(xy, meteo_var=meteo_var, **kwargs)
-
-    @classmethod
-    def from_obs(cls, obs, stn_type="meteo", **kwargs):
-        """Get a PrecipitationObs object with precipitation measurements from the
-        the meteo or precipitation station closest to the given observation.
-        Uses the x and y coordinates of the observation to obtain the nearest
-        KNMI precipitation time series. Uses the start- and enddate of the
-        observation as start- and enddate of the time series (unless startdate
-        and enddate are specified explicitly).
-
-        Parameters
-        ----------
-        obs : hydropandas.Obs
-            Observation object.
-        stn_type : str, optional
-            type of measurements station. Can be 'meteo' or 'precipitation'.
-            Default is 'meteo'.
-        **kwargs
-            startdate : str, datetime or None, optional
-                start date of observations. The default is None.
-            enddate : str, datetime or None, optional
-                end date of observations. The default is None.
-            fill_missing_obs : bool
-                if True missing observations are filled with values of next closest
-                KNMI station
-            interval : str, optional
-                desired time interval for observations. The default is 'daily'.
-            inseason : boolean, optional
-                flag to obtain inseason data. The default is False
-            use_api : bool, optional
-                if True the api is used to obtain the data, API documentation is here:
-                    https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-                if False a text file is downloaded into a temporary folder and
-                the data is read from there. Default is True since the api is
-                back online (July 2021).
-            raise_exceptions : bool, optional
-                if True you get errors when no data is returned. The default is False.
-
-        Returns
-        -------
-        PrecipitationObs object with a precipitation time series and attributes
-        """
-
-        if stn_type == "meteo":
-            meteo_var = "RH"
-        elif stn_type == "precipitation":
-            meteo_var = "RD"
-        else:
-            raise ValueError(f"invalid measurement station type -> {stn_type}")
-
-        return super().from_obs(obs, meteo_var=meteo_var, **kwargs)
-
-    @classmethod
-    def from_knmi_file(cls, fname, startdate=None, enddate=None):
-        """Get a PrecipitationObs timeseries from the KNMI meteo data.
-
-        Parameters
-        ----------
-        fname : str
-            full path of a knmi .txt file
-        startdate : str, datetime or None, optional
+        meteo_var : str, optional
+            meteo variable can be "RH" or "RD". "RD" if you want data from a
+            precipitation station (neerslagstation). "RH" if you want data from
+            a meteo station. The default is "RH".
+        stn : int, str or None, optional
+            measurement station e.g. 829. The default is None.
+        fname : str, path object, file-like object or None, optional
+            filename of a knmi file. The default is None.
+        xy : list, tuple or None, optional
+            RD coördinates of a location in the Netherlands. The station nearest
+            to this location used. The Default is None.
+        start : str, datetime or None, optional
             start date of observations. The default is None.
-        enddate : str, datetime or None, optional
+        end : str, datetime or None, optional
             end date of observations. The default is None.
+        fill_missing_obs : bool, optional
+            if True nan values in time series are filled with nearby time series.
+            The default is False.
+        interval : str, optional
+            desired time interval for observations. Options are 'daily' and
+            'hourly'. The default is 'daily'.
+        use_api : bool, optional
+            if True the api is used to obtain the data, API documentation is here:
+                https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
+            if False a text file is downloaded into a temporary folder and the
+            data is read from there. Default is True since the api is back
+            online (July 2021).
+        raise_exceptions : bool, optional
+            if True you get errors when no data is returned. The default is False.
 
         Returns
         -------
-        PrecipitationObs object with precipitation observations
+        PrecipitationObs object with a precipitation time series and attributes
         """
-        from .io import knmi
 
-        if not fname.endswith(".txt"):
-            fname += ".txt"
+        assert meteo_var in [
+            "RD",
+            "RH",
+        ], 'meteo_var for precipitation should be "RD" or "RH"'
 
-        knmi_df, meta = knmi.read_knmi_timeseries_file(fname, "RD", startdate, enddate)
+        return super().from_knmi(
+            meteo_var,
+            stn=stn,
+            fname=fname,
+            xy=xy,
+            start=start,
+            end=end,
+            fill_missing_obs=fill_missing_obs,
+            interval=interval,
+            use_api=use_api,
+            raise_exceptions=raise_exceptions,
+            startdate=startdate,
+            enddate=enddate,
+        )
 
-        return cls(
-            knmi_df,
-            meta=meta,
-            station=meta["station"],
-            x=meta["x"],
-            y=meta["y"],
-            name=meta["name"],
-            source=meta["source"],
-            unit=meta["unit"],
-            meteo_var="RD",
+    @classmethod
+    def from_wow(
+        cls,
+        stn: str = None,
+        xy: List[float] = None,
+        start: Optional[pd.Timestamp] = None,
+        end: Optional[pd.Timestamp] = None,
+    ):
+        """Get a PrecipitationObs timeseries from a wow.knmi.nl station
+
+        Parameters
+        ----------
+        stn : Optional[int, str], optional
+            station name
+        xy : Optinal[List[float]], optinial
+            longitude latitude of location [lon, lat] eg: [4.85, 51.95]
+        start : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+        end : Optional[pd.Timestamp], optional
+            start date of observations, by default None
+
+        Returns
+        -------
+        PrecipitationObs
+        """
+        return super().from_wow(
+            meteo_var="rain_rate", stn=stn, xy=xy, start=start, end=end
         )

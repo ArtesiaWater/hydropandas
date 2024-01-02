@@ -2,6 +2,12 @@ import logging
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
+
+try:
+    from tqdm import tqdm
+except ModuleNotFoundError:
+    tqdm = None
 
 from . import accessor
 
@@ -230,8 +236,8 @@ def get_zvec(x, y, gwf=None, ds=None):
     gwf : flopy.mf6.modflow.mfgwf.ModflowGwf
         modflow model with top and bottoms
     ds : xarray.Dataset
-        xarray Dataset typically create in nlmod. Must have
-        dimensions 'x' and 'y' and variables 'top' and 'botm'.
+        xarray Dataset typically created in nlmod. Must have
+        variables 'top' and 'botm'.
 
     Raises
     ------
@@ -275,11 +281,19 @@ def get_zvec(x, y, gwf=None, ds=None):
             )
     elif ds and not gwf:
         # assuming modflow type definition with 1 top and N botms
-        # check extent
-        xmin, xmax, ymin, ymax = ds.attrs["extent"]
-        if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
-            zvec = np.nan
-        elif ds.gridtype == "vertex":
+        # first check if point is within the extent
+        if "angrot" in ds.attrs and ds.attrs["angrot"] != 0.0:
+            import nlmod
+
+            pol = nlmod.dims.get_extent_polygon(ds)
+            if not Point(x, y).within(pol):
+                return np.nan
+        else:
+            xmin, xmax, ymin, ymax = ds.attrs["extent"]
+            if (x < xmin) or (x > xmax) or (y < ymin) or (y > ymax):
+                return np.nan
+
+        if ds.gridtype == "vertex":
             import nlmod
 
             cid = nlmod.dims.xy_to_icell2d((x, y), ds)
@@ -291,8 +305,12 @@ def get_zvec(x, y, gwf=None, ds=None):
             zvec[mask] = zvec[idx[mask]]
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
-            first_notna = np.nonzero(np.isfinite(sel["top"].data))[0][0]
-            zvec = np.concatenate([sel["top"].data[[first_notna]], sel["botm"].data])
+            first_notna = np.nonzero(np.isfinite(np.atleast_1d(sel["top"].data)))[0][0]
+            if sel["top"].data.shape == tuple():
+                top = np.atleast_1d(sel["top"].data)
+            else:
+                top = np.atleast_1d(sel["top"].data[[first_notna]])
+            zvec = np.concatenate([top, sel["botm"].data])
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)
@@ -354,7 +372,7 @@ class GwObsAccessor:
         # check if column exists in obscollection
         if "tube_nr" in self._obj.columns:
             # set type to numeric
-            if self._obj["tube_nr"].dtype != np.number:
+            if not is_numeric_dtype(self._obj["tube_nr"]):
                 self._obj["tube_nr"] = pd.to_numeric(
                     self._obj["tube_nr"], errors="coerce"
                 )
@@ -534,8 +552,11 @@ class GwObsAccessor:
         -------
         pd.Series with the names of the regis layer of each observation
         """
-
-        return self._obj.obs.apply(lambda o: o.gwobs.get_regis_layer())
+        if tqdm is not None:
+            tqdm.pandas()
+            return self._obj.obs.progress_apply(lambda o: o.gwobs.get_regis_layer())
+        else:
+            return self._obj.obs.apply(lambda o: o.gwobs.get_regis_layer())
 
 
 @accessor.register_obs_accessor("gwobs")

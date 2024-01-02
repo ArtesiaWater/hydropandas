@@ -191,11 +191,14 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
         dictionary with metadata
     """
 
-    fname = ""
+    if isinstance(f, str):
+        fname = f
+    else:
+        fname = f.name.split(os.sep)[-1]
     if isinstance(f, (str, Path)):
         if isinstance(f, str):
             f = Path(f)
-        fname = f.stem
+        fname = str(f.stem)
         f = f.open("r")
 
     logger.info("reading -> {}".format(fname))
@@ -218,21 +221,40 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
     locatie = pd.read_csv(f, sep="\t", nrows=nrows)
     # there is always only one location (change if this is not the case)
     assert nrows == 1
-
     locatie = locatie.squeeze()
 
-    # KWALITEIT gegevens VLOEIBAAR
+    # KWALITEIT gegevens
     f.seek(eind_locatie)
-    line = f.readline().rstrip("\n")
-    assert line == "KWALITEIT gegevens VLOEIBAAR"
+    read_quality = False
+    while line:
+        if line.startswith("KWALITEIT gegevens VAST\n"):
+            logger.warning("ignoring 'KWALITEIT gegevens VAST'! ")
 
-    measurements = pd.read_csv(
-        f,
-        sep="\t",
-        parse_dates=["Monster datum", "Analyse datum"],
-        dayfirst=True,
-        index_col="Monster datum",
-    )
+        if line.startswith("KWALITEIT gegevens VLOEIBAAR"):
+            read_quality = True
+            break
+        line = f.readline()
+
+    if read_quality:
+        strt_locatie = f.tell()
+        nrows = -1
+        while line not in ["\n", ""]:
+            nrows += 1
+            line = f.readline()
+        eind_locatie = f.tell()
+        f.seek(strt_locatie)
+
+        measurements = pd.read_csv(
+            f,
+            sep="\t",
+            parse_dates=["Monster datum", "Analyse datum"],
+            dayfirst=True,
+            index_col="Monster datum",
+            nrows=nrows,
+        )
+    else:
+        measurements = pd.Series()
+
     f.close()
 
     meta = {
@@ -436,13 +458,13 @@ def _read_artdino_groundwater_measurements(f, line):
     return line, measurements
 
 
-def read_artdino_groundwater_csv(fname, to_mnap=True, read_series=True):
+def read_artdino_groundwater_csv(path, to_mnap=True, read_series=True):
     """Read dino groundwater quantity data from a CSV file as exported by
     ArtDiver.
 
     Parameters
     ----------
-    fname : str
+    path : str
         path to csv file
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
@@ -455,32 +477,32 @@ def read_artdino_groundwater_csv(fname, to_mnap=True, read_series=True):
     meta : dict
         dictionary with metadata
     """
-    logger.info(f"reading -> {os.path.split(fname)[-1]}")
+    logger.info(f"reading -> {os.path.split(path)[-1]}")
 
-    with open(fname, "r") as f:
+    with open(path, "r") as f:
         # read header
         line, header = _read_dino_groundwater_header(f)
         line = _read_empty(f, line)
         if not header:
-            logger.warning(f"could not read header -> {fname}")
+            logger.warning(f"could not read header -> {path}")
 
         # read metadata
         line, meta = _read_artdino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
 
         if not meta["metadata_available"]:
-            logger.warning(f"could not read metadata -> {fname}")
+            logger.warning(f"could not read metadata -> {path}")
 
-        meta["filename"] = fname
+        meta["filename"] = path
         meta["source"] = "dino"
 
         # read measurements
         if read_series:
             line, measurements = _read_artdino_groundwater_measurements(f, line)
             if measurements is None:
-                logger.warning(f"could not read measurements -> {fname}")
+                logger.warning(f"could not read measurements -> {path}")
             elif measurements[~measurements["stand_cm_nap"].isna()].empty:
-                logger.warning(f"no NAP measurements available -> {fname}")
+                logger.warning(f"no NAP measurements available -> {path}")
             if to_mnap and measurements is not None:
                 measurements["stand_m_tov_nap"] = measurements["stand_cm_nap"] / 100.0
                 meta["unit"] = "m NAP"
@@ -566,14 +588,14 @@ def read_artdino_dir(
     # read individual files
     obs_list = []
     for _, file in enumerate(files):
-        fname = os.path.join(dirname, subdir, file)
-        obs = ObsClass.from_artdino_file(fname=fname, **kwargs)
+        path = os.path.join(dirname, subdir, file)
+        obs = ObsClass.from_artdino_file(path=path, **kwargs)
         if obs.metadata_available and (not obs.empty):
             obs_list.append(obs)
         elif keep_all_obs:
             obs_list.append(obs)
         else:
-            logging.info(f"not added to collection -> {fname}")
+            logging.info(f"not added to collection -> {path}")
 
     return obs_list
 
@@ -658,7 +680,8 @@ def read_dino_waterlvl_csv(
 
     Parameters
     ----------
-    fname : str
+    f : str, Path, FileIO
+        path to dino water level csv file
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
     read_series : boolean, optional
@@ -751,7 +774,7 @@ def read_dino_dir(
     obs_list = []
 
     def get_dino_obs(f: Union[str, FileIO]):
-        obs = ObsClass.from_dino(fname=f, **kwargs)
+        obs = ObsClass.from_dino(f, **kwargs)
         if obs.metadata_available and (not obs.empty):
             return obs
         elif keep_all_obs:

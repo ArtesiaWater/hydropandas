@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from lxml.etree import iterparse
 
 from .. import observation
 from ..observation import Obs
@@ -148,6 +147,8 @@ def iterparse_pi_xml(
     obs_list : list of pandas Series
         list of timeseries if 'return_df' is False
     """
+    from lxml.etree import iterparse
+
     if translate_dic is None:
         translate_dic = {"locationId": "monitoring_well"}
 
@@ -394,11 +395,13 @@ def read_xml_root(
                 [d + " " + t for d, t in zip(date, time)], errors="coerce"
             )
             ts = pd.DataFrame(events, index=index)
-            ts.loc[:, "value"] = ts.loc[:, "value"].astype(float)
 
-            if remove_nan and (not ts.empty):
-                ts.dropna(subset=["value"], inplace=True)
-                header["unit"] = "m NAP"
+            if not ts.empty:
+                ts["value"] = ts["value"].astype(float)
+
+                if remove_nan:
+                    ts.dropna(subset=["value"], inplace=True)
+                    header["unit"] = "m NAP"
 
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
             if locationIds is not None:

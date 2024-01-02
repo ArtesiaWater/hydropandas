@@ -9,6 +9,7 @@ from .io.fews import get_fews_pid
 from .obs_collection import (
     ObsCollection,
     read_bro,
+    read_bronhouderportaal_bro,
     read_dino,
     read_excel,
     read_fews,
@@ -18,6 +19,7 @@ from .obs_collection import (
 	read_lizard_from_extent,
     read_menyanthes,
     read_modflow,
+    read_pastastore,
     read_pickle,
     read_waterinfo,
     read_wiski,

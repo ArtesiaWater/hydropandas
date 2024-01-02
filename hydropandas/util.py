@@ -12,12 +12,18 @@ import time
 import zipfile
 from typing import Dict, List, Optional
 
+import pandas as pd
 from colorama import Back, Fore, Style
-from numpy import unique
-from pandas import DataFrame, DatetimeIndex
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
+
+EPSG_28992 = (
+    "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 "
+    "+x_0=155000 +y_0=463000 +ellps=bessel "
+    "+towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m "
+    "+no_defs"
+)
 
 
 def _obslist_to_frame(obs_list):
@@ -34,7 +40,7 @@ def _obslist_to_frame(obs_list):
         DataFrame containing all data
     """
     if len(obs_list) > 0:
-        obs_df = DataFrame(
+        obs_df = pd.DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
@@ -42,7 +48,7 @@ def _obslist_to_frame(obs_list):
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
-        obs_df = DataFrame()
+        obs_df = pd.DataFrame()
 
     return obs_df
 
@@ -96,14 +102,16 @@ def get_files(
     Parameters
     ----------
     file_or_dir : str
-        file or path to data
+        file or path to data.
     ext : str
-        extension of filenames to store in list
+        extension of filenames to store in list.
+    unpackdir : str
+        directory to story unpacked zip file, only used in case of a zipfile.
     force_unpack : bool, optional
-        force unzip, by default False
+        force unzip, by default False.
     preserve_datetime : bool, optional
-        preserve datetime of unzipped files, by default False
-        (useful for checking whether data has changed)
+        preserve datetime of unzipped files, by default False. Used for
+        checking whether data has changed.
     """
     # check if unpackdir is same as file_or_dir, if same, this can cause
     # problems when the unpackdir still contains zips that will be unpacked
@@ -111,6 +119,7 @@ def get_files(
     if unpackdir is not None:
         if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
             raise ValueError("Please specify a different folder to unpack files!")
+
     # identify whether file_or_dir started as zip
     if file_or_dir.endswith(".zip"):
         iszip = True
@@ -162,14 +171,32 @@ def get_files(
     return dirname, unzip_fnames
 
 
-def df2gdf(df, xcol="x", ycol="y"):
-    """Make a GeoDataFrame from a DataFrame, assuming the geometry are
-    points."""
+def df2gdf(df, xcol="x", ycol="y", crs=28992):
+    """Create a GeoDataFrame from a DataFrame with xy points.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        input dataframe
+    xcol : str, optional
+        column name with x values. The default is  'x'.
+    ycol : str, optional
+        column name with y values. The default is  'x'.
+    crs : int, optional
+        coordinate reference system, by default 28992 (RD new).
+
+    Returns
+    -------
+    geopandas GeoDataFrame
+        geodataframe
+    """
     from geopandas import GeoDataFrame
     from shapely.geometry import Point
 
     gdf = GeoDataFrame(
-        df.copy(), geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()]
+        df.copy(),
+        geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()],
+        crs=crs,
     )
     return gdf
 
@@ -236,37 +263,50 @@ def get_color_logger(level="INFO"):
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger()
-    logger.handlers[:] = []
-    logger.addHandler(handler)
-    logger.setLevel(getattr(logging, level))
+    clogger = logging.getLogger()
+    clogger.handlers[:] = []
+    clogger.addHandler(handler)
+    clogger.setLevel(getattr(logging, level))
 
     logging.captureWarnings(True)
-    return logger
+    return clogger
 
 
-def oc_to_df(oc, col: Optional[str] = None) -> DataFrame:
-    obs_times = DatetimeIndex(unique([obs.index for obs in oc.obs]))
-    df = DataFrame(index=obs_times, columns=oc.index, dtype="float").sort_index()
-    for obs in oc.obs:
+def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
+    """convert an observation collection to a DataFrame where every column
+    has one observation.
+
+    Parameters
+    ----------
+    oc : hydropandas ObsCollection
+        observation collection
+    col : Optional[str], optional
+        Name of a column in hte observation collection, by default None
+
+    Returns
+    -------
+    DataFrame
+        _description_
+    """
+    df_list = []
+    for obs in oc.obs.values:
         if not obs.empty:
             if col is None:
                 vals = obs.loc[:, obs._get_first_numeric_col_name()]
             else:
                 vals = obs.loc[:, col]
-            df.loc[obs.index, obs.name] = vals.values
-
-    return df
+            df_list.append(vals)
+    return pd.concat(df_list, axis=1)
 
 
 def interpolate(
     xy: List[List[float]],
-    obsdf: DataFrame,
-    obsloc: DataFrame,
+    obsdf: pd.DataFrame,
+    obsloc: pd.DataFrame,
     kernel: str = "thin_plate_spline",
     kernel2: str = "linear",
     epsilon: Optional[int] = None,
-) -> DataFrame:
+) -> pd.DataFrame:
     """Interpolation method using the Scipy radial basis function (RBF)
 
 
@@ -308,7 +348,7 @@ def interpolate(
         min_val = len(obsdf.index)
 
     fill_df = (
-        DataFrame(
+        pd.DataFrame(
             index=obsdf.index,
             columns=[f"{int(_xy[0])}_{int(_xy[1])}" for _xy in xy],
         )
