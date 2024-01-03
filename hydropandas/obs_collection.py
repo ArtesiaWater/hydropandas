@@ -1296,7 +1296,7 @@ class ObsCollection(pd.DataFrame):
 
         """
 
-        from .io.lizard import get_obs_list_from_extent, get_obs_list_from_codes
+        from .io.lizard import get_obs_list_from_codes, get_obs_list_from_extent
 
         if extent is not None:
             obs_list = get_obs_list_from_extent(

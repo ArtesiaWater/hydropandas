@@ -1,14 +1,14 @@
+import concurrent.futures
+import logging
+import math
+import pathlib
+
+import geopandas
 import pandas as pd
 import requests
 from pyproj import Transformer
-import logging
-import numpy as np
-import pathlib
 from shapely.geometry import Polygon
 from tqdm import tqdm
-import math
-import geopandas
-import concurrent.futures
 
 logger = logging.getLogger(__name__)
 
@@ -136,14 +136,14 @@ def get_metadata_mw_from_code(code):
         ][0]
 
     except IndexError:
-        raise ValueError("Code is invalid")
+        raise ValueError(f"Code {code} is invalid")
 
     return groundwaterstation_metadata
 
 
 def _prepare_API_input(nr_pages, url_groundwater):
     """
-    prepare API data pages within the defined extent
+    get API data pages within the defined extent
 
     Parameters
     ----------
@@ -154,42 +154,38 @@ def _prepare_API_input(nr_pages, url_groundwater):
 
     Returns
     -------
-    proces_input : list
+    urls : list
         list of the page number and the corresponding url
 
     """
-    proces_input = []
+    urls = []
     for page in range(nr_pages):
         true_page = (
             page + 1
         )  # Het echte paginanummer wordt aan de import thread gekoppeld
-        url = url_groundwater + "&page={}".format(true_page)
-        item = [true_page, url]
-        proces_input += [item]
-    return proces_input
+        urls = [url_groundwater + "&page={}".format(true_page)]
+    return urls
 
 
-def _download(data):
+def _download(url, timeout=1800):
     """
     Function to download the data from the API using the ThreadPoolExecutor
 
     Parameters
     ----------
-    data : list
-        list of the page number and the corresponding url
+    url : str
+        url of an API page
+    timeout : int, optional
+        number of seconds to wait before terminating request
 
     Returns
     -------
-    None.
+    dictionary with timeseries data
 
     """
-    page, url = data
-    try:
-        data = requests.get(url=url)
-        # succes += 1
-        data = data.json()["results"]
-    except:
-        data = []
+    data = requests.get(url=url, timeout=timeout)
+    data = data.json()["results"]
+
     return data
 
 
@@ -200,7 +196,8 @@ def get_metadata_tube(metadata_mw, tube_nr):
     Parameters
     ----------
     metadata_mw : dict
-        dictionary with all available metadata of the monitoring well and all its filters
+        dictionary with all available metadata of the monitoring well and all its
+        filters
     tube_nr : int or None
         select metadata from a specific tube number
 
@@ -300,10 +297,10 @@ def get_timeseries_uuid(uuid, code, tube_nr, tmin, tmax, page_size=100000):
 
     url_timeseries = URL_LIZARD + "timeseries/{}".format(uuid)
 
-    if tmin != None:
+    if tmin is not None:
         tmin = pd.to_datetime(tmin).isoformat("T")
 
-    if tmax != None:
+    if tmax is not None:
         tmax = pd.to_datetime(tmax).isoformat("T")
 
     params = {"start": tmin, "end": tmax, "page_size": page_size}
@@ -351,7 +348,7 @@ def _merge_timeseries(hand_measurements, diver_measurements):
     if hand_measurements.empty and diver_measurements.empty:
         measurements = pd.DataFrame()
 
-    elif diver_measurements.first_valid_index() == None:
+    elif diver_measurements.first_valid_index() is None:
         measurements = hand_measurements
         print(
             "no diver measuremets available for {}".format(
@@ -419,7 +416,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
         type of timeseries to;
             hand: returns only hand measurements
             diver: returns only diver measurements
-            merge: the hand and diver measurements into one time series (merge; default) or
+            merge: the hand and diver measurements into one time series (default)
             combine: keeps hand and diver measurements separeted
         The default is merge.
 
@@ -672,14 +669,12 @@ def get_obs_list_from_extent(
     if nr_threads > nr_pages:
         nr_threads = nr_pages
 
-    proces_input = _prepare_API_input(nr_pages, url_groundwaterstation_extent)
+    urls = _prepare_API_input(nr_pages, url_groundwaterstation_extent)
 
     arg_tuple = (ObsClass, tube_nr, tmin, tmax, type_timeseries, only_metadata)
     codes = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=nr_threads) as executor:
-        for result in tqdm(
-            executor.map(_download, proces_input), total=nr_pages, desc="Page"
-        ):
+        for result in tqdm(executor.map(_download, urls), total=nr_pages, desc="Page"):
             codes += [(d["code"],) + arg_tuple for d in result]
 
     l = []
