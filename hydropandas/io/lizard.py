@@ -567,8 +567,8 @@ def get_obs_list_from_codes(
 
     Returns
     -------
-    ObsCollection
-        ObsCollection DataFrame with the 'obs' column
+    obs_list
+        list of observations
 
     """
 
@@ -578,7 +578,7 @@ def get_obs_list_from_codes(
     if not hasattr(codes, "__iter__"):
         raise TypeError("argument 'codes' should be an iterable")
 
-    l = []
+    obs_list = []
     for code in codes:
         groundwaterstation_metadata = get_metadata_mw_from_code(code)
         if tube_nr == "all":
@@ -592,14 +592,14 @@ def get_obs_list_from_codes(
                     type_timeseries,
                     only_metadata=only_metadata,
                 )
-                l.append(o)
+                obs_list.append(o)
         else:
             o = ObsClass.from_lizard(
                 code, tube_nr, tmin, tmax, type_timeseries, only_metadata=only_metadata
             )
-            l.append(o)
+            obs_list.append(o)
 
-    return l
+    return obs_list
 
 
 def get_obs_list_from_extent(
