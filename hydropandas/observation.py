@@ -631,8 +631,8 @@ class GroundwaterObs(Obs):
         only_metadata=False,
     ):
         """
-        extracts the metadata and timeseries of a observation well from a LIZARD-API based on
-        the code of a monitoring well
+        extracts the metadata and timeseries of a observation well from a LIZARD-API
+        based on the code of a monitoring well
 
         Parameters
         ----------
@@ -648,7 +648,7 @@ class GroundwaterObs(Obs):
         type_timeseries : str, optional
             hand: returns only hand measurements
             diver: returns only diver measurements
-            merge: the hand and diver measurements into one time series (merge; default) or
+            merge: the hand and diver measurements into one time series (default)
             combine: keeps hand and diver measurements separeted
             The default is merge.
         only_metadata : bool, optional
