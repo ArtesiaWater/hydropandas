@@ -677,13 +677,13 @@ def get_obs_list_from_extent(
         for result in tqdm(executor.map(_download, urls), total=nr_pages, desc="Page"):
             codes += [(d["code"],) + arg_tuple for d in result]
 
-    l = []
+    obs_list = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        for obs_list in tqdm(
+        for obs_list_mw in tqdm(
             executor.map(lambda args: get_obs_list_from_codes(*args), codes),
             total=len(codes),
             desc="monitoring well",
         ):
-            l += obs_list
+            obs_list += obs_list_mw
 
-    return l
+    return obs_list
