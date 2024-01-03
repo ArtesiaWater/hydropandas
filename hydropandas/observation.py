@@ -580,6 +580,9 @@ class GroundwaterObs(Obs):
         drop_duplicate_times : bool, optional
             if True rows with a duplicate time stamp are removed keeping only the
             first row. The default is True.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False
 
         Returns
         -------
@@ -618,14 +621,14 @@ class GroundwaterObs(Obs):
         )
 
     @classmethod
-    def from_lizard_code(
+    def from_lizard(
         cls,
         code,
         tube_nr=None,
         tmin=None,
         tmax=None,
         type_timeseries="merge",
-        url_lizard="https://vitens.lizard.net/api/v4/",
+        only_metadata=False,
     ):
         """
         extracts the metadata and timeseries of a observation well from a LIZARD-API based on
@@ -648,8 +651,10 @@ class GroundwaterObs(Obs):
             merge: the hand and diver measurements into one time series (merge; default) or
             combine: keeps hand and diver measurements separeted
             The default is merge.
-        url_lizard : str
-            location of the LIZARD-API.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False.
+
 
         Returns
         -------
@@ -658,11 +663,32 @@ class GroundwaterObs(Obs):
 
         from .io import lizard
 
-        measurements, meta = lizard.read_lizard_groundwater_from_code(
-            code, tube_nr, tmin, tmax, type_timeseries, url_lizard
+        measurements, meta = lizard.get_lizard_groundwater(
+            code,
+            tube_nr,
+            tmin,
+            tmax,
+            type_timeseries,
+            only_metadata=only_metadata,
         )
-        return cls(measurements, meta=meta)
+        return cls(
+            measurements,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+            meta=meta,
+        )
 
+    @classmethod
     def from_bronhouderportaal_bro(
         cls,
         path,

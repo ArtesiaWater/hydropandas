@@ -20,22 +20,28 @@ from . import util
 logger = logging.getLogger(__name__)
 
 
-def read_lizard_from_list(
-        code,
-        tube_nr='all', 
-        tmin = None, 
-        tmax = None,
-        type_timeseries = 'merge',
-        url_lizard='https://vitens.lizard.net/api/v4/'):
+def read_lizard(
+    extent=None,
+    codes=None,
+    name="",
+    tube_nr="all",
+    tmin=None,
+    tmax=None,
+    type_timeseries="merge",
+    only_metadata=False,
+):
     """
-    get all observations from a list of codes of the monitoring wells and a 
-    list of tube numbers 
+    get all observations from a list of codes of the monitoring wells and a
+    list of tube numbers
 
     Parameters
     ----------
-    code : lst of str 
-        codes of the monitoring wells 
-    tube_nr : lst of str 
+    extent : list, shapefile path or None
+        get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+        or within a predefined Polygon from a shapefile
+    codes : lst of str or None
+        codes of the monitoring wells
+    tube_nr : lst of str
         list of tube numbers of the monitoring wells that should be selected.
         By default 'all' available tubes are selected.
     tmin : str YYYY-m-d, optional
@@ -44,71 +50,32 @@ def read_lizard_from_list(
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
         hand: returns only hand measurements
-        diver: returns only diver measurements  
+        diver: returns only diver measurements
         merge: the hand and diver measurements into one time series (merge; default) or
-        combine: keeps hand and diver measurements separeted       
+        combine: keeps hand and diver measurements separeted
         The default is merge.
-    url_lizard : str
-        location of the LIZARD-API.
+    only_metadata : bool, optional
+        if True only metadata is returned and no time series data. The
+        default is False.
+
     Returns
     -------
     ObsCollection
         ObsCollection DataFrame with the 'obs' column
 
     """
-    oc = ObsCollection.from_lizard_list(
-            code = code,
-            tube_nr= tube_nr, 
-            tmin = tmin, 
-            tmax = tmax,
-            type_timeseries = type_timeseries,
-            url_lizard=url_lizard)
+    oc = ObsCollection.from_lizard(
+        extent=extent,
+        codes=codes,
+        name=name,
+        tube_nr=tube_nr,
+        tmin=tmin,
+        tmax=tmax,
+        type_timeseries=type_timeseries,
+        only_metadata=only_metadata,
+    )
     return oc
 
-def read_lizard_from_extent(
-        extent,
-        extract_timeseries = True,
-        tmin = None, 
-        tmax = None,
-        type_timeseries = 'merge',
-        url_lizard='https://vitens.lizard.net/api/v4/'):
-    """
-    get all observations within a specified extent 
-
-    Parameters
-    ----------
-    extent : list or a shapefile 
-        get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
-        or within a predefined Polygon from a shapefile 
-    extract_timeseries : Bool, optional
-        Extract timeseries or not, if not only metadata are returned 
-    tmin : str YYYY-m-d, optional
-        start of the observations, by default the entire serie is returned
-    tmax : Ttr YYYY-m-d, optional
-        end of the observations, by default the entire serie is returned
-    type_timeseries : str, optional
-        hand: returns only hand measurements
-        diver: returns only diver measurements  
-        merge: the hand and diver measurements into one time series (merge; default) or
-        combine: keeps hand and diver measurements separeted       
-        The default is merge.
-    url_lizard : str
-        location of the LIZARD-API.
-
-    Returns
-    -------
-    obs_col : TYPE
-        ObsCollection DataFrame with the 'obs' column
-
-    """
-    oc = ObsCollection.from_lizard_extent(
-            extent = extent,
-            extract_timeseries = extract_timeseries,
-            tmin = tmin, 
-            tmax = tmax,
-            type_timeseries = type_timeseries,
-            url_lizard=url_lizard)
-    return oc
 
 def read_bro(
     extent=None,
@@ -1282,24 +1249,30 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
-    
+
     @classmethod
-    def from_lizard_list(
+    def from_lizard(
         cls,
-        code,
-        tube_nr='all', 
-        tmin = None, tmax = None,
-        type_timeseries = 'merge',
-        url_lizard='https://vitens.lizard.net/api/v4/'):
+        extent=None,
+        codes=None,
+        name="",
+        tube_nr="all",
+        tmin=None,
+        tmax=None,
+        type_timeseries="merge",
+        only_metadata=False,
+    ):
         """
-        get all observations from a list of codes of the monitoring wells and a 
-        list of tube numbers 
-    
+        get all observations within a specified extent
+
         Parameters
         ----------
-        code : lst of str 
-            codes of the monitoring wells 
-        tube_nr : lst of str 
+        extent : list, shapefile path or None
+            get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+            or within a predefined Polygon from a shapefile
+        codes : lst of str or None
+            codes of the monitoring wells
+        tube_nr : lst of str
             list of tube numbers of the monitoring wells that should be selected.
             By default 'all' available tubes are selected.
         tmin : str YYYY-m-d, optional
@@ -1308,77 +1281,47 @@ class ObsCollection(pd.DataFrame):
             end of the observations, by default the entire serie is returned
         type_timeseries : str, optional
             hand: returns only hand measurements
-            diver: returns only diver measurements  
+            diver: returns only diver measurements
             merge: the hand and diver measurements into one time series (merge; default) or
-            combine: keeps hand and diver measurements separeted       
+            combine: keeps hand and diver measurements separeted
             The default is merge.
-        url_lizard : str
-            location of the LIZARD-API.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False.
+
         Returns
         -------
         ObsCollection
             ObsCollection DataFrame with the 'obs' column
-    
-        """
-        
-        from .io.lizard import  get_obs_list_from_code
-        
-        obs_df = get_obs_list_from_code(code,
-                                        tube_nr,
-                                        tmin,
-                                        tmax,
-                                        type_timeseries,
-                                        url_lizard)
-    
 
-        return cls(obs_df)
-    @classmethod
-    def from_lizard_extent(
-        cls,
-        extent,
-        extract_timeseries = True,
-        tmin = None, tmax = None,
-        type_timeseries = 'merge',
-        url_lizard='https://vitens.lizard.net/api/v4/'):
-        '''
-        get all observations within a specified extent 
-    
-        Parameters
-        ----------
-        extent : list or a shapefile 
-            get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
-            or within a predefined Polygon from a shapefile 
-        extract_timeseries : Bool, optional
-            Extract timeseries or not, if not only metadata are returned 
-        tmin : str YYYY-m-d, optional
-            start of the observations, by default the entire serie is returned
-        tmax : Ttr YYYY-m-d, optional
-            end of the observations, by default the entire serie is returned
-        type_timeseries : str, optional
-            hand: returns only hand measurements
-            diver: returns only diver measurements  
-            merge: the hand and diver measurements into one time series (merge; default) or
-            combine: keeps hand and diver measurements separeted       
-            The default is merge.
-        url_lizard : str
-            location of the LIZARD-API.
-    
-        Returns
-        -------
-        obs_col : TYPE
-            ObsCollection DataFrame with the 'obs' column
-    
-        '''
-        
-        from .io.lizard import  get_obs_list_from_extent
-        
-        obs_df = get_obs_list_from_extent(extent,
-                                        extract_timeseries,
-                                        tmin,
-                                        tmax,
-                                        type_timeseries,
-                                        url_lizard)
-        return cls(obs_df)
+        """
+
+        from .io.lizard import get_obs_list_from_extent, get_obs_list_from_codes
+
+        if extent is not None:
+            obs_list = get_obs_list_from_extent(
+                extent,
+                obs.GroundwaterObs,
+                tube_nr,
+                tmin,
+                tmax,
+                type_timeseries,
+                only_metadata=only_metadata,
+            )
+        elif codes is not None:
+            obs_list = get_obs_list_from_codes(
+                codes,
+                obs.GroundwaterObs,
+                tube_nr,
+                tmin,
+                tmax,
+                type_timeseries,
+                only_metadata=only_metadata,
+            )
+        else:
+            raise ValueError("specify codes or extent")
+
+        return cls(obs_list, name=name)
 
     @classmethod
     def from_bronhouderportaal_bro(
