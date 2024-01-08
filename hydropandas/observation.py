@@ -580,6 +580,9 @@ class GroundwaterObs(Obs):
         drop_duplicate_times : bool, optional
             if True rows with a duplicate time stamp are removed keeping only the
             first row. The default is True.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False
 
         Returns
         -------
@@ -615,6 +618,74 @@ class GroundwaterObs(Obs):
             monitoring_well=meta.pop("monitoring_well"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
+        )
+
+    @classmethod
+    def from_lizard(
+        cls,
+        code,
+        tube_nr=None,
+        tmin=None,
+        tmax=None,
+        type_timeseries="merge",
+        only_metadata=False,
+    ):
+        """
+        extracts the metadata and timeseries of a observation well from a LIZARD-API
+        based on the code of a monitoring well
+
+        Parameters
+        ----------
+        code : str
+            code of the measuring well
+        tube_nr : int, optional
+            select specific tube top
+            Default selects tube_nr = 1
+        tmin : str YYYY-m-d, optional
+            start of the observations, by default the entire serie is returned
+        tmax : Ttr YYYY-m-d, optional
+            end of the observations, by default the entire serie is returned
+        type_timeseries : str, optional
+            hand: returns only hand measurements
+            diver: returns only diver measurements
+            merge: the hand and diver measurements into one time series (default)
+            combine: keeps hand and diver measurements separeted
+            The default is merge.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False.
+
+
+        Returns
+        -------
+        returns a DataFrame with metadata and timeseries
+        """
+
+        from .io import lizard
+
+        measurements, meta = lizard.get_lizard_groundwater(
+            code,
+            tube_nr,
+            tmin,
+            tmax,
+            type_timeseries,
+            only_metadata=only_metadata,
+        )
+        return cls(
+            measurements,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+            meta=meta,
         )
 
     @classmethod

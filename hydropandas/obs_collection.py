@@ -20,6 +20,63 @@ from . import util
 logger = logging.getLogger(__name__)
 
 
+def read_lizard(
+    extent=None,
+    codes=None,
+    name="",
+    tube_nr="all",
+    tmin=None,
+    tmax=None,
+    type_timeseries="merge",
+    only_metadata=False,
+):
+    """
+    get all observations from a list of codes of the monitoring wells and a
+    list of tube numbers
+
+    Parameters
+    ----------
+    extent : list, shapefile path or None
+        get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+        or within a predefined Polygon from a shapefile
+    codes : lst of str or None
+        codes of the monitoring wells
+    tube_nr : lst of str
+        list of tube numbers of the monitoring wells that should be selected.
+        By default 'all' available tubes are selected.
+    tmin : str YYYY-m-d, optional
+        start of the observations, by default the entire serie is returned
+    tmax : Ttr YYYY-m-d, optional
+        end of the observations, by default the entire serie is returned
+    type_timeseries : str, optional
+        hand: returns only hand measurements
+        diver: returns only diver measurements
+        merge: the hand and diver measurements into one time series (merge; default) or
+        combine: keeps hand and diver measurements separeted
+        The default is merge.
+    only_metadata : bool, optional
+        if True only metadata is returned and no time series data. The
+        default is False.
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection DataFrame with the 'obs' column
+
+    """
+    oc = ObsCollection.from_lizard(
+        extent=extent,
+        codes=codes,
+        name=name,
+        tube_nr=tube_nr,
+        tmin=tmin,
+        tmax=tmax,
+        type_timeseries=type_timeseries,
+        only_metadata=only_metadata,
+    )
+    return oc
+
+
 def read_bro(
     extent=None,
     bro_id=None,
@@ -1192,6 +1249,79 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
+
+    @classmethod
+    def from_lizard(
+        cls,
+        extent=None,
+        codes=None,
+        name="",
+        tube_nr="all",
+        tmin=None,
+        tmax=None,
+        type_timeseries="merge",
+        only_metadata=False,
+    ):
+        """
+        get all observations within a specified extent
+
+        Parameters
+        ----------
+        extent : list, shapefile path or None
+            get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+            or within a predefined Polygon from a shapefile
+        codes : lst of str or None
+            codes of the monitoring wells
+        tube_nr : lst of str
+            list of tube numbers of the monitoring wells that should be selected.
+            By default 'all' available tubes are selected.
+        tmin : str YYYY-m-d, optional
+            start of the observations, by default the entire serie is returned
+        tmax : Ttr YYYY-m-d, optional
+            end of the observations, by default the entire serie is returned
+        type_timeseries : str, optional
+            hand: returns only hand measurements
+            diver: returns only diver measurements
+            merge: the hand and diver measurements into one time series (default)
+            combine: keeps hand and diver measurements separeted
+            The default is merge.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False.
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection DataFrame with the 'obs' column
+
+        """
+
+        from .io.lizard import get_obs_list_from_codes, get_obs_list_from_extent
+
+        if extent is not None:
+            obs_list = get_obs_list_from_extent(
+                extent,
+                obs.GroundwaterObs,
+                tube_nr,
+                tmin,
+                tmax,
+                type_timeseries,
+                only_metadata=only_metadata,
+            )
+        elif codes is not None:
+            obs_list = get_obs_list_from_codes(
+                codes,
+                obs.GroundwaterObs,
+                tube_nr,
+                tmin,
+                tmax,
+                type_timeseries,
+                only_metadata=only_metadata,
+            )
+        else:
+            raise ValueError("specify codes or extent")
+
+        return cls(obs_list, name=name)
 
     @classmethod
     def from_bronhouderportaal_bro(

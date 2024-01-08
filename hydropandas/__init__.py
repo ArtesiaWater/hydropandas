@@ -15,6 +15,7 @@ from .obs_collection import (
     read_fews,
     read_imod,
     read_knmi,
+    read_lizard,
     read_menyanthes,
     read_modflow,
     read_pastastore,
