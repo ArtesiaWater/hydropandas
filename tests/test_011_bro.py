@@ -19,7 +19,7 @@ def test_metadata_full():
 
 
 def test_groundwater_monitoring_net_metadata():
-    bro_id = "GMN000000000163"
+    bro_id = "GMN000000000001"
     bro.get_obs_list_from_gmn(bro_id, hpd.GroundwaterObs, only_metadata=True)
 
 
