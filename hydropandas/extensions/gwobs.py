@@ -298,19 +298,19 @@ def get_zvec(x, y, gwf=None, ds=None):
 
             cid = nlmod.dims.xy_to_icell2d((x, y), ds)
             sel = ds.sel(icell2d=cid)
-            zvec = np.concatenate(([sel["top"].data], sel["botm"].data))
+            zvec = np.concatenate(([sel["top"].values], sel["botm"].values))
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)
             zvec[mask] = zvec[idx[mask]]
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
-            first_notna = np.nonzero(np.isfinite(np.atleast_1d(sel["top"].data)))[0][0]
-            if sel["top"].data.shape == tuple():
-                top = np.atleast_1d(sel["top"].data)
+            first_notna = np.nonzero(np.isfinite(np.atleast_1d(sel["top"].values)))[0][0]
+            if sel["top"].values.shape == tuple():
+                top = np.atleast_1d(sel["top"].values)
             else:
-                top = np.atleast_1d(sel["top"].data[[first_notna]])
-            zvec = np.concatenate([top, sel["botm"].data])
+                top = np.atleast_1d(sel["top"].values[[first_notna]])
+            zvec = np.concatenate([top, sel["botm"].values])
             mask = np.isnan(zvec)
             idx = np.where(~mask, np.arange(mask.size), 0)
             np.maximum.accumulate(idx, axis=0, out=idx)
