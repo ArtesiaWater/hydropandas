@@ -646,24 +646,28 @@ class CollectionPlots:
 
         return fig, axes
 
-    def series_per_unique_location(self, plot_column, savefig=True, outputdir="."):
-        """Plot time series per unique location.
+    def series_per_group(self, plot_column, by=None, savefig=True, outputdir="."):
+        """Plot time series per group.
 
-        Unique location is derived from unique x, y coordinates.
+        The default groupby is based on identical x, y coordinates, so plots unique
+        time series per location.
 
         Parameters
         ----------
         plot_column : str
             name of column containing time series data
+        by : (list of) str or (list of) array-like
+            groupby parameters, default is None which sets groupby to
+            columns ["x", "y"].
         savefig : bool, optional
             save figures, by default True
         outputdir : str, optional
             path to output directory, by default the current directory (".")
         """
-        gr = self._obj.groupby(by=["x", "y"])
-        for _, group in tqdm(
-            gr, desc="Plotting series per unique location", total=len(gr)
-        ):
+        if by is None:
+            by = ["x", "y"]
+        gr = self._obj.groupby(by=by)
+        for _, group in tqdm(gr, desc="Plotting series per group", total=len(gr)):
             f, ax = plt.subplots(1, 1, figsize=(10, 3))
             for name, row in group.iterrows():
                 if isinstance(row.obs, GroundwaterObs):
