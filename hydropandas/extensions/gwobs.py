@@ -305,7 +305,9 @@ def get_zvec(x, y, gwf=None, ds=None):
             zvec[mask] = zvec[idx[mask]]
         else:
             sel = ds.sel(x=x, y=y, method="nearest")
-            first_notna = np.nonzero(np.isfinite(np.atleast_1d(sel["top"].values)))[0][0]
+            first_notna = np.nonzero(np.isfinite(np.atleast_1d(sel["top"].values)))[0][
+                0
+            ]
             if sel["top"].values.shape == tuple():
                 top = np.atleast_1d(sel["top"].values)
             else:

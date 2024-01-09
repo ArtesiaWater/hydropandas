@@ -27,7 +27,7 @@ EPSG_28992 = (
 
 
 def _obslist_to_frame(obs_list):
-    """convert a list of observations to a pandas DataFrame.
+    """Convert a list of observations to a pandas DataFrame.
 
     Parameters
     ----------
@@ -96,8 +96,7 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
 def get_files(
     file_or_dir, ext, unpackdir=None, force_unpack=False, preserve_datetime=False
 ):
-    """internal method to get list of files with specific extension from
-    dirname.
+    """Internal method to get list of files with specific extension from dirname.
 
     Parameters
     ----------
@@ -273,8 +272,8 @@ def get_color_logger(level="INFO"):
 
 
 def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
-    """convert an observation collection to a DataFrame where every column
-    has one observation.
+    """Convert an observation collection to a DataFrame where every column has one
+    observation.
 
     Parameters
     ----------
@@ -308,7 +307,6 @@ def interpolate(
     epsilon: Optional[int] = None,
 ) -> pd.DataFrame:
     """Interpolation method using the Scipy radial basis function (RBF)
-
 
     Parameters
     ----------
