@@ -777,6 +777,46 @@ class GroundwaterObs(Obs):
 
         return cls(data, meta=metadata, **kwargs)
 
+    @classmethod
+    def from_soilinst(
+            cls,
+            path,
+            transform_coords=True,
+            screen_bottom=None, screen_top=None, ground_level=None,
+            tube_nr=None, tube_top=None):
+        """Read data from Soilinst xle file.
+
+        Parameters
+        ----------
+        path : str
+            path to file (file can zip or xle)
+
+        """
+        from .io import soilinst
+
+        df, meta = soilinst.read_soilinst_file(
+            path,
+            transform_coords=transform_coords
+        )
+
+        return cls(
+            df,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            filename=meta.pop("filename"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=screen_bottom,
+            screen_top=screen_top,
+            ground_level=ground_level,
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=tube_nr,
+            tube_top=tube_top,
+            meta=meta,
+        )
+
 
 class WaterQualityObs(Obs):
     """class for water quality ((grond)watersamenstelling) point
