@@ -27,7 +27,7 @@ EPSG_28992 = (
 
 
 def _obslist_to_frame(obs_list):
-    """convert a list of observations to a pandas DataFrame.
+    """Convert a list of observations to a pandas DataFrame.
 
     Parameters
     ----------
@@ -96,20 +96,21 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
 def get_files(
     file_or_dir, ext, unpackdir=None, force_unpack=False, preserve_datetime=False
 ):
-    """internal method to get list of files with specific extension from
-    dirname.
+    """Internal method to get list of files with specific extension from dirname.
 
     Parameters
     ----------
     file_or_dir : str
-        file or path to data
+        file or path to data.
     ext : str
-        extension of filenames to store in list
+        extension of filenames to store in list.
+    unpackdir : str
+        directory to story unpacked zip file, only used in case of a zipfile.
     force_unpack : bool, optional
-        force unzip, by default False
+        force unzip, by default False.
     preserve_datetime : bool, optional
-        preserve datetime of unzipped files, by default False
-        (useful for checking whether data has changed)
+        preserve datetime of unzipped files, by default False. Used for
+        checking whether data has changed.
     """
     # check if unpackdir is same as file_or_dir, if same, this can cause
     # problems when the unpackdir still contains zips that will be unpacked
@@ -117,6 +118,7 @@ def get_files(
     if unpackdir is not None:
         if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
             raise ValueError("Please specify a different folder to unpack files!")
+
     # identify whether file_or_dir started as zip
     if file_or_dir.endswith(".zip"):
         iszip = True
@@ -260,17 +262,18 @@ def get_color_logger(level="INFO"):
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger()
-    logger.handlers[:] = []
-    logger.addHandler(handler)
-    logger.setLevel(getattr(logging, level))
+    clogger = logging.getLogger()
+    clogger.handlers[:] = []
+    clogger.addHandler(handler)
+    clogger.setLevel(getattr(logging, level))
 
     logging.captureWarnings(True)
-    return logger
+    return clogger
 
 
 def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
-    """convert an observation collection to
+    """Convert an observation collection to a DataFrame where every column has one
+    observation.
 
     Parameters
     ----------
@@ -304,7 +307,6 @@ def interpolate(
     epsilon: Optional[int] = None,
 ) -> pd.DataFrame:
     """Interpolation method using the Scipy radial basis function (RBF)
-
 
     Parameters
     ----------

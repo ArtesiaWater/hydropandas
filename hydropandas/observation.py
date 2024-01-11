@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class Obs(pd.DataFrame):
-    """generic class for a time series with measurements at a certain location.
+    """Generic class for a time series with measurements at a certain location.
 
     Unless specified explicitly the first numeric column in the observation is
     used for analysis and plotting.
@@ -61,17 +61,16 @@ class Obs(pd.DataFrame):
     _metadata = ["name", "x", "y", "meta", "filename", "source", "unit"]
 
     def __init__(self, *args, **kwargs):
-        """constructor of Obs class.
+        """Constructor of Obs class.
 
-        *args must be input for the pandas.DataFrame constructor,
-        **kwargs can be one of the attributes listed in _metadata or
-        keyword arguments for the constructor of a pandas.DataFrame.
+        *args must be input for the pandas.DataFrame constructor, **kwargs can be one of
+        the attributes listed in _metadata or keyword arguments for the constructor of a
+        pandas.DataFrame.
         """
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._metadata:
-                    if (key in Obs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if (len(args) > 0) and isinstance(args[0], Obs):
+            for key in args[0]._metadata:
+                if (key in Obs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
@@ -122,11 +121,8 @@ class Obs(pd.DataFrame):
 
         return buf.getvalue()
 
-    def _repr_html_(self, collapse=True):
-        """
-        Uses the pandas DataFrame html representation with the metadata
-        prepended.
-        """
+    def _repr_html_(self, collapse=False):
+        """Uses the pandas DataFrame html representation with the metadata prepended."""
         obs_type = f'<p style="color:#808080";>hydropandas.{type(self).__name__}</p>\n'
 
         metadata_dic = {key: getattr(self, key) for key in self._metadata}
@@ -185,13 +181,12 @@ class Obs(pd.DataFrame):
         return Obs
 
     def _get_first_numeric_col_name(self):
-        """get the first numeric column name of the observations
+        """Get the first numeric column name of the observations.
 
         Returns
         -------
         col : str or int
             column name.
-
         """
         if self.empty:
             return None
@@ -203,7 +198,7 @@ class Obs(pd.DataFrame):
         return col
 
     def copy(self, deep=True):
-        """create a copy of the observation.
+        """Create a copy of the observation.
 
         When ``deep=True`` (default), a new object will be created with a
         copy of the calling object's data and indices. Modifications to
@@ -241,8 +236,7 @@ class Obs(pd.DataFrame):
         return o
 
     def to_collection_dict(self, include_meta=False):
-        """get dictionary with registered attributes and their values of an Obs
-        object.
+        """Get dictionary with registered attributes and their values of an Obs object.
 
         This method can be used to create a dataframe from a collection
         of Obs objects.
@@ -272,8 +266,7 @@ class Obs(pd.DataFrame):
         return d
 
     def merge_metadata(self, right, overlap="error"):
-        """Merge the metadata of an Obs object with metadata from another Obs
-        object.
+        """Merge the metadata of an Obs object with metadata from another Obs object.
 
         Parameters
         ----------
@@ -347,7 +340,7 @@ class Obs(pd.DataFrame):
         return new_metadata
 
     def _merge_timeseries(self, right, overlap="error"):
-        """merge two timeseries.
+        """Merge two timeseries.
 
         Parameters
         ----------
@@ -525,10 +518,13 @@ class GroundwaterObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
-        """
-        *args must be input for the pandas.DataFrame constructor,
-        **kwargs can be one of the attributes listed in _metadata or
-        keyword arguments for the constructor of a pandas.DataFrame.
+        """Constructor for ObsCollection.
+
+        Parameters
+        ----------
+        *args must be input for the pandas.DataFrame constructor
+        **kwargs can be one of the attributes listed in _metadata or keyword arguments
+        for the constructor of a pandas.DataFrame.
         """
         if len(args) > 0:
             if isinstance(args[0], Obs):
@@ -561,8 +557,7 @@ class GroundwaterObs(Obs):
         drop_duplicate_times=True,
         only_metadata=False,
     ):
-        """download BRO groundwater observations from the server.
-
+        """Download BRO groundwater observations from the server.
 
         Parameters
         ----------
@@ -581,12 +576,14 @@ class GroundwaterObs(Obs):
         drop_duplicate_times : bool, optional
             if True rows with a duplicate time stamp are removed keeping only the
             first row. The default is True.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False
 
         Returns
         -------
         TYPE
             DESCRIPTION.
-
         """
 
         from .io import bro
@@ -619,15 +616,80 @@ class GroundwaterObs(Obs):
         )
 
     @classmethod
+    def from_lizard(
+        cls,
+        code,
+        tube_nr=None,
+        tmin=None,
+        tmax=None,
+        type_timeseries="merge",
+        only_metadata=False,
+    ):
+        """Extracts the metadata and timeseries of a observation well from a LIZARD-API
+        based on the code of a monitoring well.
+
+        Parameters
+        ----------
+        code : str
+            code of the measuring well
+        tube_nr : int, optional
+            select specific tube top
+            Default selects tube_nr = 1
+        tmin : str YYYY-m-d, optional
+            start of the observations, by default the entire serie is returned
+        tmax : Ttr YYYY-m-d, optional
+            end of the observations, by default the entire serie is returned
+        type_timeseries : str, optional
+            hand: returns only hand measurements
+            diver: returns only diver measurements
+            merge: the hand and diver measurements into one time series (default)
+            combine: keeps hand and diver measurements separated
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False.
+
+        Returns
+        -------
+        ObsCollection
+            Returns a DataFrame with metadata and timeseries
+        """
+
+        from .io import lizard
+
+        measurements, meta = lizard.get_lizard_groundwater(
+            code,
+            tube_nr,
+            tmin,
+            tmax,
+            type_timeseries,
+            only_metadata=only_metadata,
+        )
+        return cls(
+            measurements,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=meta.pop("screen_bottom"),
+            screen_top=meta.pop("screen_top"),
+            ground_level=meta.pop("ground_level"),
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=meta.pop("tube_nr"),
+            tube_top=meta.pop("tube_top"),
+            meta=meta,
+        )
+
+    @classmethod
     def from_bronhouderportaal_bro(
         cls,
         path,
         tube_nr,
         full_meta=False,
     ):
-        """load BRO groundwater metadata from XML file. Mind that
-        bro_id is applicable, because file is not yet imported in BRO
-
+        """Load BRO groundwater metadata from XML file. Mind that bro_id is applicable,
+        because file is not yet imported in BRO.
 
         Parameters
         ----------
@@ -640,9 +702,8 @@ class GroundwaterObs(Obs):
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
-
+        ObsCollection
+            ObsCollection containing observations from XML file.
         """
 
         from .io import bronhouderportaal_bro
@@ -677,7 +738,7 @@ class GroundwaterObs(Obs):
         path=None,
         **kwargs,
     ):
-        """download dino data from the server.
+        """Download dino data from the server.
 
         Parameters
         ----------
@@ -696,7 +757,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_artdino_file(cls, path=None, **kwargs):
-        """read a dino csv file (artdiver style).
+        """Read a dino csv file (artdiver style).
 
         Parameters
         ----------
@@ -714,8 +775,7 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_wiski(cls, path, **kwargs):
-        """
-        Read data from a WISKI file.
+        """Read data from a WISKI file.
 
         Parameters:
         -----------
@@ -779,8 +839,7 @@ class GroundwaterObs(Obs):
 
 
 class WaterQualityObs(Obs):
-    """class for water quality ((grond)watersamenstelling) point
-    observations.
+    """Class for water quality ((grond)watersamenstelling) point observations.
 
     Subclass of the Obs class
     """
@@ -814,7 +873,7 @@ class WaterQualityObs(Obs):
 
     @classmethod
     def from_dino(cls, path, **kwargs):
-        """read dino file with groundwater quality data.
+        """Read dino file with groundwater quality data.
 
         Parameters
         ----------
@@ -832,7 +891,7 @@ class WaterQualityObs(Obs):
 
 
 class WaterlvlObs(Obs):
-    """class for water level point observations.
+    """Class for water level point observations.
 
     Subclass of the Obs class
     """
@@ -857,7 +916,7 @@ class WaterlvlObs(Obs):
 
     @classmethod
     def from_dino(cls, path, **kwargs):
-        """read a dino file with waterlvl data.
+        """Read a dino file with waterlvl data.
 
         Parameters
         ----------
@@ -900,7 +959,7 @@ class WaterlvlObs(Obs):
 
 
 class ModelObs(Obs):
-    """class for model point results.
+    """Class for model point results.
 
     Subclass of the Obs class
     """
@@ -924,7 +983,7 @@ class ModelObs(Obs):
 
 
 class MeteoObs(Obs):
-    """class for meteorological timeseries.
+    """Class for meteorological timeseries.
 
     Subclass of the Obs class
     """
@@ -1045,7 +1104,7 @@ class MeteoObs(Obs):
         start: Optional[pd.Timestamp] = None,
         end: Optional[pd.Timestamp] = None,
     ):
-        """Get a MeteoObs timeseries from a wow.knmi.nl station
+        """Get a MeteoObs timeseries from a wow.knmi.nl station.
 
         Parameters
         ----------
@@ -1084,7 +1143,7 @@ class MeteoObs(Obs):
 
 
 class EvaporationObs(MeteoObs):
-    """class for evaporation timeseries.
+    """Class for evaporation timeseries.
 
     Subclass of the MeteoObs class
     """
@@ -1175,7 +1234,7 @@ class EvaporationObs(MeteoObs):
 
 
 class PrecipitationObs(MeteoObs):
-    """class for precipitation timeseries.
+    """Class for precipitation timeseries.
 
     Subclass of the MeteoObs class
     """
@@ -1297,7 +1356,7 @@ class PrecipitationObs(MeteoObs):
         start: Optional[pd.Timestamp] = None,
         end: Optional[pd.Timestamp] = None,
     ):
-        """Get a PrecipitationObs timeseries from a wow.knmi.nl station
+        """Get a PrecipitationObs timeseries from a wow.knmi.nl station.
 
         Parameters
         ----------
