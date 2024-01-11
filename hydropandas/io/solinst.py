@@ -1,20 +1,22 @@
+import logging
 import os
 import zipfile
 
 import numpy as np
 import pandas as pd
 
+logger = logging.getLogger(__name__)
 
-def read_soilinst_file(
+def read_solinst_file(
     path,
     transform_coords=True,
 ):
-    """Read Soilinst file (XLE)
+    """Read Solinst logger file (XLE)
 
     Parameters
     ----------
     path : str
-        path to Soilint file (.xle)
+        path to Solinst file (.xle)
     transform_coords : boolean
         convert coordinates from WGS84 to RD
 
@@ -22,8 +24,8 @@ def read_soilinst_file(
     -------
     df : pandas.DataFrame
         DataFrame containing file content
-    metadata : dict, optional
-        dict containing metadata
+    meta : dict, optional
+        dict containing meta
     """
     from pyproj import Transformer
 
@@ -38,6 +40,8 @@ def read_soilinst_file(
         raise NotImplementedError(
             "File type '{}' not supported!".format(os.path.splitext(path)[-1])
         )
+
+    logger.info("reading -> {}".format(f))
 
     # read channel 1 data header
     df_ch1_data_header = pd.read_xml(
@@ -80,8 +84,8 @@ def read_soilinst_file(
 
     df.drop(columns=drop_cols, inplace=True)
 
-    # parse metadata into dict, per group in XLE file
-    metadata = {}
+    # parse meta into dict, per group in XLE file
+    meta = {}
     # read file info
     df_file_info = pd.read_xml(
         path,
@@ -104,26 +108,37 @@ def read_soilinst_file(
     dict_instrument_info_data_header = df_instrument_info_data_header.T.iloc[
         :, 0].to_dict()
 
-    metadata = {**dict_file_info,
+    meta = {**dict_file_info,
                 **dict_instrument_info,
                 **dict_instrument_info_data_header}
 
     if transform_coords:
-        transformer = Transformer.from_crs("epsg:4326", "epsg:28992")
-        x, y = transformer.transform(metadata["Latitude"], metadata["Longtitude"])
-        x = np.round(x, 2)
-        y = np.round(y, 2)
+        # lat and lon has 0,000 when location is not supplied
+        # replace comma with point first
+        if isinstance(meta["Latitude"], str):
+            meta["Latitude"] = float(meta["Latitude"].replace(',', '.'))
+        if isinstance(meta["Longtitude"], str):
+            meta["Longtitude"] = float(meta["Longtitude"].replace(',', '.'))
+        if (meta["Latitude"] != 0) & (meta["Longtitude"] != 0):
+            transformer = Transformer.from_crs("epsg:4326", "epsg:28992")
+            x, y = transformer.transform(meta["Latitude"], meta["Longtitude"])
+            x = np.round(x, 2)
+            y = np.round(y, 2)
+        else:
+            logger.warning("file has no location included")
+            x = None
+            y = None
     else:
-        x = metadata["Latitude"]
-        y = metadata["Longtitude"]
-    metadata["x"] = x
-    metadata["y"] = y
-    metadata["filename"] = f
-    metadata["source"] = metadata["Created_by"]
-    metadata["name"] = name
-    metadata["monitoring_well"] = name
-    metadata["unit"] = series_ch1_data_header.Unit.lower()
-    metadata["metadata_available"] = True
+        x = meta["Latitude"]
+        y = meta["Longtitude"]
+    meta["x"] = x
+    meta["y"] = y
+    meta["filename"] = f
+    meta["source"] = meta["Created_by"]
+    meta["name"] = name
+    meta["monitoring_well"] = name
+    meta["unit"] = series_ch1_data_header.Unit.lower()
+    meta["metadata_available"] = True
 
-    return df, metadata
+    return df, meta
 

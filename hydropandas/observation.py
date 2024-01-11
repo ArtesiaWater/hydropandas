@@ -778,13 +778,13 @@ class GroundwaterObs(Obs):
         return cls(data, meta=metadata, **kwargs)
 
     @classmethod
-    def from_soilinst(
+    def from_solinst(
             cls,
             path,
             transform_coords=True,
             screen_bottom=None, screen_top=None, ground_level=None,
             tube_nr=None, tube_top=None):
-        """Read data from Soilinst xle file.
+        """Read data from Solinst xle file.
 
         Parameters
         ----------
@@ -792,9 +792,9 @@ class GroundwaterObs(Obs):
             path to file (file can zip or xle)
 
         """
-        from .io import soilinst
+        from .io import solinst
 
-        df, meta = soilinst.read_soilinst_file(
+        df, meta = solinst.read_solinst_file(
             path,
             transform_coords=transform_coords
         )
