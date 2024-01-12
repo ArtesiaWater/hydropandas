@@ -779,11 +779,15 @@ class GroundwaterObs(Obs):
 
     @classmethod
     def from_solinst(
-            cls,
-            path,
-            transform_coords=True,
-            screen_bottom=None, screen_top=None, ground_level=None,
-            tube_nr=None, tube_top=None):
+        cls,
+        path,
+        transform_coords=True,
+        screen_bottom=None,
+        screen_top=None,
+        ground_level=None,
+        tube_nr=None,
+        tube_top=None,
+    ):
         """Read data from Solinst xle file.
 
         Parameters
@@ -794,13 +798,11 @@ class GroundwaterObs(Obs):
         """
         from .io import solinst
 
-        df, meta = solinst.read_solinst_file(
-            path,
-            transform_coords=transform_coords
-        )
+        df, meta = solinst.read_solinst_file(path, transform_coords=transform_coords)
 
         return cls(
             df,
+            meta=meta,
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
@@ -814,7 +816,6 @@ class GroundwaterObs(Obs):
             monitoring_well=meta.pop("monitoring_well"),
             tube_nr=tube_nr,
             tube_top=tube_top,
-            meta=meta,
         )
 
 
