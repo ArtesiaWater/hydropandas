@@ -1,0 +1,4164 @@
+<?xml version="1.0" ?>
+<Body_xle>
+<File_info>
+<Company></Company>
+<LICENCE></LICENCE>
+<Date>2023/12/22</Date>
+<Time>10:18:47</Time>
+<FileName></FileName>
+<Created_by>iOS App Version 3.5.1</Created_by>
+<Downloaded_by>iOS App Version 3.5.1</Downloaded_by>
+<Program_by>iOS App Version 3.5.1</Program_by>
+<Interface>Desktop Reader</Interface>
+</File_info>
+<Instrument_info>
+<Instrument_type>L5_LT</Instrument_type>
+<Model_number>M5</Model_number>
+<Instrument_state>Stopped</Instrument_state>
+<Serial_number>2170536</Serial_number>
+<Battery_voltage>3.50600</Battery_voltage>
+<Battery_charge>1378.03</Battery_charge>
+<Last_calibration>1970/01/01 00:00:00</Last_calibration>
+<Channel>2</Channel>
+<Firmware>1.006</Firmware>
+</Instrument_info>
+<Instrument_info_data_header>
+<Project_ID>20231123</Project_ID>
+<Location>slugtest</Location>
+<Latitude>51.4253</Latitude>
+<Longtitude>3.91670</Longtitude>
+<Sample_rate>12</Sample_rate>
+<Sample_mode>0</Sample_mode>
+<!-- Linear -->
+<Memory_mode>Slate</Memory_mode>
+<Event_ch>2</Event_ch>
+<Event_threshold>0.000000</Event_threshold>
+<Schedule/>
+<Start_time>2023/12/22 10:16:37</Start_time>
+<Stop_time>2023/12/22 10:17:50</Stop_time>
+<Num_log>587</Num_log>
+</Instrument_info_data_header>
+<Ch1_data_header>
+<Identification>LEVEL</Identification>
+<Unit>m</Unit>
+<Parameters>
+<Offset Val="0.000000" Unit="m" />
+</Parameters>
+</Ch1_data_header>
+<Ch2_data_header>
+<Identification>TEMPERATURE</Identification>
+<Unit>°C</Unit>
+<Parameters />
+</Ch2_data_header>
+<Data>
+<Log id="1">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>0</ms>
+<ch1>10.2388</ch1>
+<ch2>15.462</ch2>
+</Log>
+<Log id="2">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.462</ch2>
+</Log>
+<Log id="3">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>250</ms>
+<ch1>10.2389</ch1>
+<ch2>15.463</ch2>
+</Log>
+<Log id="4">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>375</ms>
+<ch1>10.2389</ch1>
+<ch2>15.464</ch2>
+</Log>
+<Log id="5">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>500</ms>
+<ch1>10.2390</ch1>
+<ch2>15.464</ch2>
+</Log>
+<Log id="6">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="7">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>750</ms>
+<ch1>10.2389</ch1>
+<ch2>15.464</ch2>
+</Log>
+<Log id="8">
+<Date>2023/12/22</Date>
+<Time>10:16:37</Time>
+<ms>875</ms>
+<ch1>10.2389</ch1>
+<ch2>15.463</ch2>
+</Log>
+<Log id="9">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>0</ms>
+<ch1>10.2389</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="10">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>125</ms>
+<ch1>10.2389</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="11">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>250</ms>
+<ch1>10.2392</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="12">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>375</ms>
+<ch1>10.2387</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="13">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>500</ms>
+<ch1>10.2390</ch1>
+<ch2>15.468</ch2>
+</Log>
+<Log id="14">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.467</ch2>
+</Log>
+<Log id="15">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>750</ms>
+<ch1>10.2389</ch1>
+<ch2>15.468</ch2>
+</Log>
+<Log id="16">
+<Date>2023/12/22</Date>
+<Time>10:16:38</Time>
+<ms>875</ms>
+<ch1>10.2386</ch1>
+<ch2>15.465</ch2>
+</Log>
+<Log id="17">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>0</ms>
+<ch1>10.2388</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="18">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.467</ch2>
+</Log>
+<Log id="19">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>250</ms>
+<ch1>10.2388</ch1>
+<ch2>15.468</ch2>
+</Log>
+<Log id="20">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>375</ms>
+<ch1>10.2388</ch1>
+<ch2>15.466</ch2>
+</Log>
+<Log id="21">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>500</ms>
+<ch1>10.2387</ch1>
+<ch2>15.468</ch2>
+</Log>
+<Log id="22">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>625</ms>
+<ch1>10.2390</ch1>
+<ch2>15.469</ch2>
+</Log>
+<Log id="23">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>750</ms>
+<ch1>10.2389</ch1>
+<ch2>15.467</ch2>
+</Log>
+<Log id="24">
+<Date>2023/12/22</Date>
+<Time>10:16:39</Time>
+<ms>875</ms>
+<ch1>10.2390</ch1>
+<ch2>15.468</ch2>
+</Log>
+<Log id="25">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>0</ms>
+<ch1>10.2390</ch1>
+<ch2>15.467</ch2>
+</Log>
+<Log id="26">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.469</ch2>
+</Log>
+<Log id="27">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>250</ms>
+<ch1>10.2390</ch1>
+<ch2>15.470</ch2>
+</Log>
+<Log id="28">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.470</ch2>
+</Log>
+<Log id="29">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.471</ch2>
+</Log>
+<Log id="30">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.469</ch2>
+</Log>
+<Log id="31">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.471</ch2>
+</Log>
+<Log id="32">
+<Date>2023/12/22</Date>
+<Time>10:16:40</Time>
+<ms>875</ms>
+<ch1>10.2393</ch1>
+<ch2>15.471</ch2>
+</Log>
+<Log id="33">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>0</ms>
+<ch1>10.2392</ch1>
+<ch2>15.471</ch2>
+</Log>
+<Log id="34">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.471</ch2>
+</Log>
+<Log id="35">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.469</ch2>
+</Log>
+<Log id="36">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>375</ms>
+<ch1>10.2393</ch1>
+<ch2>15.470</ch2>
+</Log>
+<Log id="37">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>500</ms>
+<ch1>10.2392</ch1>
+<ch2>15.472</ch2>
+</Log>
+<Log id="38">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>625</ms>
+<ch1>10.2392</ch1>
+<ch2>15.471</ch2>
+</Log>
+<Log id="39">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>750</ms>
+<ch1>10.2393</ch1>
+<ch2>15.474</ch2>
+</Log>
+<Log id="40">
+<Date>2023/12/22</Date>
+<Time>10:16:41</Time>
+<ms>875</ms>
+<ch1>10.2393</ch1>
+<ch2>15.473</ch2>
+</Log>
+<Log id="41">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.473</ch2>
+</Log>
+<Log id="42">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>125</ms>
+<ch1>10.2393</ch1>
+<ch2>15.473</ch2>
+</Log>
+<Log id="43">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>250</ms>
+<ch1>10.2393</ch1>
+<ch2>15.473</ch2>
+</Log>
+<Log id="44">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.474</ch2>
+</Log>
+<Log id="45">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>500</ms>
+<ch1>10.2393</ch1>
+<ch2>15.474</ch2>
+</Log>
+<Log id="46">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>625</ms>
+<ch1>10.2393</ch1>
+<ch2>15.476</ch2>
+</Log>
+<Log id="47">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>750</ms>
+<ch1>10.2394</ch1>
+<ch2>15.476</ch2>
+</Log>
+<Log id="48">
+<Date>2023/12/22</Date>
+<Time>10:16:42</Time>
+<ms>875</ms>
+<ch1>10.2394</ch1>
+<ch2>15.474</ch2>
+</Log>
+<Log id="49">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.475</ch2>
+</Log>
+<Log id="50">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>125</ms>
+<ch1>10.2395</ch1>
+<ch2>15.478</ch2>
+</Log>
+<Log id="51">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.475</ch2>
+</Log>
+<Log id="52">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>375</ms>
+<ch1>10.2395</ch1>
+<ch2>15.474</ch2>
+</Log>
+<Log id="53">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>500</ms>
+<ch1>10.2396</ch1>
+<ch2>15.476</ch2>
+</Log>
+<Log id="54">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>625</ms>
+<ch1>10.2395</ch1>
+<ch2>15.477</ch2>
+</Log>
+<Log id="55">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>750</ms>
+<ch1>10.2395</ch1>
+<ch2>15.477</ch2>
+</Log>
+<Log id="56">
+<Date>2023/12/22</Date>
+<Time>10:16:43</Time>
+<ms>875</ms>
+<ch1>10.2393</ch1>
+<ch2>15.476</ch2>
+</Log>
+<Log id="57">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.477</ch2>
+</Log>
+<Log id="58">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.479</ch2>
+</Log>
+<Log id="59">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>250</ms>
+<ch1>10.2396</ch1>
+<ch2>15.478</ch2>
+</Log>
+<Log id="60">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>375</ms>
+<ch1>10.2394</ch1>
+<ch2>15.478</ch2>
+</Log>
+<Log id="61">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>500</ms>
+<ch1>10.2392</ch1>
+<ch2>15.478</ch2>
+</Log>
+<Log id="62">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>625</ms>
+<ch1>10.2393</ch1>
+<ch2>15.478</ch2>
+</Log>
+<Log id="63">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>750</ms>
+<ch1>10.2394</ch1>
+<ch2>15.481</ch2>
+</Log>
+<Log id="64">
+<Date>2023/12/22</Date>
+<Time>10:16:44</Time>
+<ms>875</ms>
+<ch1>10.2396</ch1>
+<ch2>15.478</ch2>
+</Log>
+<Log id="65">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.479</ch2>
+</Log>
+<Log id="66">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>125</ms>
+<ch1>10.2393</ch1>
+<ch2>15.479</ch2>
+</Log>
+<Log id="67">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.481</ch2>
+</Log>
+<Log id="68">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>375</ms>
+<ch1>10.2391</ch1>
+<ch2>15.481</ch2>
+</Log>
+<Log id="69">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.479</ch2>
+</Log>
+<Log id="70">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.481</ch2>
+</Log>
+<Log id="71">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.479</ch2>
+</Log>
+<Log id="72">
+<Date>2023/12/22</Date>
+<Time>10:16:45</Time>
+<ms>875</ms>
+<ch1>10.2390</ch1>
+<ch2>15.481</ch2>
+</Log>
+<Log id="73">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>0</ms>
+<ch1>10.2391</ch1>
+<ch2>15.483</ch2>
+</Log>
+<Log id="74">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>125</ms>
+<ch1>10.2389</ch1>
+<ch2>15.482</ch2>
+</Log>
+<Log id="75">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>250</ms>
+<ch1>10.2386</ch1>
+<ch2>15.482</ch2>
+</Log>
+<Log id="76">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>375</ms>
+<ch1>10.2388</ch1>
+<ch2>15.482</ch2>
+</Log>
+<Log id="77">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>500</ms>
+<ch1>10.2389</ch1>
+<ch2>15.483</ch2>
+</Log>
+<Log id="78">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.483</ch2>
+</Log>
+<Log id="79">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>750</ms>
+<ch1>10.2386</ch1>
+<ch2>15.483</ch2>
+</Log>
+<Log id="80">
+<Date>2023/12/22</Date>
+<Time>10:16:46</Time>
+<ms>875</ms>
+<ch1>10.2384</ch1>
+<ch2>15.485</ch2>
+</Log>
+<Log id="81">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>0</ms>
+<ch1>10.2387</ch1>
+<ch2>15.485</ch2>
+</Log>
+<Log id="82">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>125</ms>
+<ch1>10.2385</ch1>
+<ch2>15.484</ch2>
+</Log>
+<Log id="83">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>250</ms>
+<ch1>10.2386</ch1>
+<ch2>15.485</ch2>
+</Log>
+<Log id="84">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>375</ms>
+<ch1>10.2387</ch1>
+<ch2>15.485</ch2>
+</Log>
+<Log id="85">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>500</ms>
+<ch1>10.2390</ch1>
+<ch2>15.485</ch2>
+</Log>
+<Log id="86">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>625</ms>
+<ch1>10.2388</ch1>
+<ch2>15.485</ch2>
+</Log>
+<Log id="87">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.487</ch2>
+</Log>
+<Log id="88">
+<Date>2023/12/22</Date>
+<Time>10:16:47</Time>
+<ms>875</ms>
+<ch1>10.2388</ch1>
+<ch2>15.487</ch2>
+</Log>
+<Log id="89">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>0</ms>
+<ch1>10.2390</ch1>
+<ch2>15.488</ch2>
+</Log>
+<Log id="90">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.486</ch2>
+</Log>
+<Log id="91">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.486</ch2>
+</Log>
+<Log id="92">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>375</ms>
+<ch1>10.2390</ch1>
+<ch2>15.489</ch2>
+</Log>
+<Log id="93">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>500</ms>
+<ch1>10.2390</ch1>
+<ch2>15.488</ch2>
+</Log>
+<Log id="94">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.486</ch2>
+</Log>
+<Log id="95">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.488</ch2>
+</Log>
+<Log id="96">
+<Date>2023/12/22</Date>
+<Time>10:16:48</Time>
+<ms>875</ms>
+<ch1>10.2393</ch1>
+<ch2>15.488</ch2>
+</Log>
+<Log id="97">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>0</ms>
+<ch1>10.2389</ch1>
+<ch2>15.491</ch2>
+</Log>
+<Log id="98">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.491</ch2>
+</Log>
+<Log id="99">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>250</ms>
+<ch1>10.2390</ch1>
+<ch2>15.490</ch2>
+</Log>
+<Log id="100">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.489</ch2>
+</Log>
+<Log id="101">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.489</ch2>
+</Log>
+<Log id="102">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>625</ms>
+<ch1>10.2392</ch1>
+<ch2>15.490</ch2>
+</Log>
+<Log id="103">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.492</ch2>
+</Log>
+<Log id="104">
+<Date>2023/12/22</Date>
+<Time>10:16:49</Time>
+<ms>875</ms>
+<ch1>10.2391</ch1>
+<ch2>15.490</ch2>
+</Log>
+<Log id="105">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>0</ms>
+<ch1>10.2390</ch1>
+<ch2>15.491</ch2>
+</Log>
+<Log id="106">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.491</ch2>
+</Log>
+<Log id="107">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.491</ch2>
+</Log>
+<Log id="108">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>375</ms>
+<ch1>10.2391</ch1>
+<ch2>15.491</ch2>
+</Log>
+<Log id="109">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>500</ms>
+<ch1>10.2389</ch1>
+<ch2>15.493</ch2>
+</Log>
+<Log id="110">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.493</ch2>
+</Log>
+<Log id="111">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.492</ch2>
+</Log>
+<Log id="112">
+<Date>2023/12/22</Date>
+<Time>10:16:50</Time>
+<ms>875</ms>
+<ch1>10.2388</ch1>
+<ch2>15.494</ch2>
+</Log>
+<Log id="113">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>0</ms>
+<ch1>10.2390</ch1>
+<ch2>15.494</ch2>
+</Log>
+<Log id="114">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>125</ms>
+<ch1>10.2390</ch1>
+<ch2>15.496</ch2>
+</Log>
+<Log id="115">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>250</ms>
+<ch1>10.2389</ch1>
+<ch2>15.495</ch2>
+</Log>
+<Log id="116">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>375</ms>
+<ch1>10.2390</ch1>
+<ch2>15.496</ch2>
+</Log>
+<Log id="117">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>500</ms>
+<ch1>10.2390</ch1>
+<ch2>15.495</ch2>
+</Log>
+<Log id="118">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.496</ch2>
+</Log>
+<Log id="119">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.495</ch2>
+</Log>
+<Log id="120">
+<Date>2023/12/22</Date>
+<Time>10:16:51</Time>
+<ms>875</ms>
+<ch1>10.2391</ch1>
+<ch2>15.494</ch2>
+</Log>
+<Log id="121">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>0</ms>
+<ch1>10.2387</ch1>
+<ch2>15.497</ch2>
+</Log>
+<Log id="122">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>125</ms>
+<ch1>10.2386</ch1>
+<ch2>15.495</ch2>
+</Log>
+<Log id="123">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>250</ms>
+<ch1>10.2389</ch1>
+<ch2>15.497</ch2>
+</Log>
+<Log id="124">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>375</ms>
+<ch1>10.2390</ch1>
+<ch2>15.498</ch2>
+</Log>
+<Log id="125">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>500</ms>
+<ch1>10.2390</ch1>
+<ch2>15.497</ch2>
+</Log>
+<Log id="126">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.497</ch2>
+</Log>
+<Log id="127">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.497</ch2>
+</Log>
+<Log id="128">
+<Date>2023/12/22</Date>
+<Time>10:16:52</Time>
+<ms>875</ms>
+<ch1>10.2391</ch1>
+<ch2>15.498</ch2>
+</Log>
+<Log id="129">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>0</ms>
+<ch1>10.2390</ch1>
+<ch2>15.498</ch2>
+</Log>
+<Log id="130">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.499</ch2>
+</Log>
+<Log id="131">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>250</ms>
+<ch1>10.2388</ch1>
+<ch2>15.499</ch2>
+</Log>
+<Log id="132">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>375</ms>
+<ch1>10.2390</ch1>
+<ch2>15.500</ch2>
+</Log>
+<Log id="133">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>500</ms>
+<ch1>10.2389</ch1>
+<ch2>15.498</ch2>
+</Log>
+<Log id="134">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>625</ms>
+<ch1>10.2395</ch1>
+<ch2>15.501</ch2>
+</Log>
+<Log id="135">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>750</ms>
+<ch1>10.2393</ch1>
+<ch2>15.501</ch2>
+</Log>
+<Log id="136">
+<Date>2023/12/22</Date>
+<Time>10:16:53</Time>
+<ms>875</ms>
+<ch1>10.2391</ch1>
+<ch2>15.500</ch2>
+</Log>
+<Log id="137">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>0</ms>
+<ch1>10.2392</ch1>
+<ch2>15.502</ch2>
+</Log>
+<Log id="138">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.502</ch2>
+</Log>
+<Log id="139">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.503</ch2>
+</Log>
+<Log id="140">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>375</ms>
+<ch1>10.2390</ch1>
+<ch2>15.501</ch2>
+</Log>
+<Log id="141">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>500</ms>
+<ch1>10.2389</ch1>
+<ch2>15.504</ch2>
+</Log>
+<Log id="142">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.501</ch2>
+</Log>
+<Log id="143">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.502</ch2>
+</Log>
+<Log id="144">
+<Date>2023/12/22</Date>
+<Time>10:16:54</Time>
+<ms>875</ms>
+<ch1>10.2389</ch1>
+<ch2>15.503</ch2>
+</Log>
+<Log id="145">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>0</ms>
+<ch1>10.2387</ch1>
+<ch2>15.504</ch2>
+</Log>
+<Log id="146">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>125</ms>
+<ch1>10.2390</ch1>
+<ch2>15.504</ch2>
+</Log>
+<Log id="147">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>250</ms>
+<ch1>10.2389</ch1>
+<ch2>15.504</ch2>
+</Log>
+<Log id="148">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>375</ms>
+<ch1>10.2389</ch1>
+<ch2>15.503</ch2>
+</Log>
+<Log id="149">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.504</ch2>
+</Log>
+<Log id="150">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.504</ch2>
+</Log>
+<Log id="151">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>750</ms>
+<ch1>10.2391</ch1>
+<ch2>15.503</ch2>
+</Log>
+<Log id="152">
+<Date>2023/12/22</Date>
+<Time>10:16:55</Time>
+<ms>875</ms>
+<ch1>10.2391</ch1>
+<ch2>15.507</ch2>
+</Log>
+<Log id="153">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>0</ms>
+<ch1>10.2393</ch1>
+<ch2>15.508</ch2>
+</Log>
+<Log id="154">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>125</ms>
+<ch1>10.2390</ch1>
+<ch2>15.507</ch2>
+</Log>
+<Log id="155">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>250</ms>
+<ch1>10.2392</ch1>
+<ch2>15.506</ch2>
+</Log>
+<Log id="156">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.506</ch2>
+</Log>
+<Log id="157">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.509</ch2>
+</Log>
+<Log id="158">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>625</ms>
+<ch1>10.2393</ch1>
+<ch2>15.506</ch2>
+</Log>
+<Log id="159">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>750</ms>
+<ch1>10.2391</ch1>
+<ch2>15.507</ch2>
+</Log>
+<Log id="160">
+<Date>2023/12/22</Date>
+<Time>10:16:56</Time>
+<ms>875</ms>
+<ch1>10.2392</ch1>
+<ch2>15.508</ch2>
+</Log>
+<Log id="161">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>0</ms>
+<ch1>10.2391</ch1>
+<ch2>15.509</ch2>
+</Log>
+<Log id="162">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.509</ch2>
+</Log>
+<Log id="163">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.510</ch2>
+</Log>
+<Log id="164">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.509</ch2>
+</Log>
+<Log id="165">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>500</ms>
+<ch1>10.2396</ch1>
+<ch2>15.511</ch2>
+</Log>
+<Log id="166">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>625</ms>
+<ch1>10.2392</ch1>
+<ch2>15.510</ch2>
+</Log>
+<Log id="167">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.509</ch2>
+</Log>
+<Log id="168">
+<Date>2023/12/22</Date>
+<Time>10:16:57</Time>
+<ms>875</ms>
+<ch1>10.2392</ch1>
+<ch2>15.510</ch2>
+</Log>
+<Log id="169">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.511</ch2>
+</Log>
+<Log id="170">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.512</ch2>
+</Log>
+<Log id="171">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.513</ch2>
+</Log>
+<Log id="172">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>375</ms>
+<ch1>10.2395</ch1>
+<ch2>15.512</ch2>
+</Log>
+<Log id="173">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.511</ch2>
+</Log>
+<Log id="174">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>625</ms>
+<ch1>10.2393</ch1>
+<ch2>15.512</ch2>
+</Log>
+<Log id="175">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>750</ms>
+<ch1>10.2393</ch1>
+<ch2>15.511</ch2>
+</Log>
+<Log id="176">
+<Date>2023/12/22</Date>
+<Time>10:16:58</Time>
+<ms>875</ms>
+<ch1>10.2395</ch1>
+<ch2>15.512</ch2>
+</Log>
+<Log id="177">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.514</ch2>
+</Log>
+<Log id="178">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.514</ch2>
+</Log>
+<Log id="179">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.513</ch2>
+</Log>
+<Log id="180">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>375</ms>
+<ch1>10.2394</ch1>
+<ch2>15.515</ch2>
+</Log>
+<Log id="181">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>500</ms>
+<ch1>10.2393</ch1>
+<ch2>15.514</ch2>
+</Log>
+<Log id="182">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>625</ms>
+<ch1>10.2394</ch1>
+<ch2>15.515</ch2>
+</Log>
+<Log id="183">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>750</ms>
+<ch1>10.2393</ch1>
+<ch2>15.514</ch2>
+</Log>
+<Log id="184">
+<Date>2023/12/22</Date>
+<Time>10:16:59</Time>
+<ms>875</ms>
+<ch1>10.2392</ch1>
+<ch2>15.514</ch2>
+</Log>
+<Log id="185">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>0</ms>
+<ch1>10.2393</ch1>
+<ch2>15.517</ch2>
+</Log>
+<Log id="186">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>125</ms>
+<ch1>10.2393</ch1>
+<ch2>15.516</ch2>
+</Log>
+<Log id="187">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.518</ch2>
+</Log>
+<Log id="188">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>375</ms>
+<ch1>10.2393</ch1>
+<ch2>15.518</ch2>
+</Log>
+<Log id="189">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>500</ms>
+<ch1>10.2392</ch1>
+<ch2>15.517</ch2>
+</Log>
+<Log id="190">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.517</ch2>
+</Log>
+<Log id="191">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.517</ch2>
+</Log>
+<Log id="192">
+<Date>2023/12/22</Date>
+<Time>10:17:00</Time>
+<ms>875</ms>
+<ch1>10.2393</ch1>
+<ch2>15.518</ch2>
+</Log>
+<Log id="193">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>0</ms>
+<ch1>10.2392</ch1>
+<ch2>15.517</ch2>
+</Log>
+<Log id="194">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.519</ch2>
+</Log>
+<Log id="195">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>250</ms>
+<ch1>10.2392</ch1>
+<ch2>15.520</ch2>
+</Log>
+<Log id="196">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.520</ch2>
+</Log>
+<Log id="197">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>500</ms>
+<ch1>10.2393</ch1>
+<ch2>15.521</ch2>
+</Log>
+<Log id="198">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>625</ms>
+<ch1>10.2392</ch1>
+<ch2>15.519</ch2>
+</Log>
+<Log id="199">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>750</ms>
+<ch1>10.2393</ch1>
+<ch2>15.522</ch2>
+</Log>
+<Log id="200">
+<Date>2023/12/22</Date>
+<Time>10:17:01</Time>
+<ms>875</ms>
+<ch1>10.2394</ch1>
+<ch2>15.521</ch2>
+</Log>
+<Log id="201">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>0</ms>
+<ch1>10.2392</ch1>
+<ch2>15.520</ch2>
+</Log>
+<Log id="202">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>125</ms>
+<ch1>10.2393</ch1>
+<ch2>15.521</ch2>
+</Log>
+<Log id="203">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.521</ch2>
+</Log>
+<Log id="204">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>375</ms>
+<ch1>10.2394</ch1>
+<ch2>15.522</ch2>
+</Log>
+<Log id="205">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>500</ms>
+<ch1>10.2393</ch1>
+<ch2>15.521</ch2>
+</Log>
+<Log id="206">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.524</ch2>
+</Log>
+<Log id="207">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.522</ch2>
+</Log>
+<Log id="208">
+<Date>2023/12/22</Date>
+<Time>10:17:02</Time>
+<ms>875</ms>
+<ch1>10.2392</ch1>
+<ch2>15.525</ch2>
+</Log>
+<Log id="209">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.526</ch2>
+</Log>
+<Log id="210">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.523</ch2>
+</Log>
+<Log id="211">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.524</ch2>
+</Log>
+<Log id="212">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>375</ms>
+<ch1>10.2394</ch1>
+<ch2>15.526</ch2>
+</Log>
+<Log id="213">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.524</ch2>
+</Log>
+<Log id="214">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>625</ms>
+<ch1>10.2394</ch1>
+<ch2>15.524</ch2>
+</Log>
+<Log id="215">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>750</ms>
+<ch1>10.2394</ch1>
+<ch2>15.525</ch2>
+</Log>
+<Log id="216">
+<Date>2023/12/22</Date>
+<Time>10:17:03</Time>
+<ms>875</ms>
+<ch1>10.2394</ch1>
+<ch2>15.527</ch2>
+</Log>
+<Log id="217">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>0</ms>
+<ch1>10.2397</ch1>
+<ch2>15.525</ch2>
+</Log>
+<Log id="218">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.526</ch2>
+</Log>
+<Log id="219">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.527</ch2>
+</Log>
+<Log id="220">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>375</ms>
+<ch1>10.2390</ch1>
+<ch2>15.526</ch2>
+</Log>
+<Log id="221">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>500</ms>
+<ch1>10.2389</ch1>
+<ch2>15.526</ch2>
+</Log>
+<Log id="222">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.528</ch2>
+</Log>
+<Log id="223">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.527</ch2>
+</Log>
+<Log id="224">
+<Date>2023/12/22</Date>
+<Time>10:17:04</Time>
+<ms>875</ms>
+<ch1>10.2390</ch1>
+<ch2>15.529</ch2>
+</Log>
+<Log id="225">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>0</ms>
+<ch1>10.2387</ch1>
+<ch2>15.528</ch2>
+</Log>
+<Log id="226">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>125</ms>
+<ch1>10.2389</ch1>
+<ch2>15.530</ch2>
+</Log>
+<Log id="227">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>250</ms>
+<ch1>10.2389</ch1>
+<ch2>15.530</ch2>
+</Log>
+<Log id="228">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>375</ms>
+<ch1>10.2389</ch1>
+<ch2>15.528</ch2>
+</Log>
+<Log id="229">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>500</ms>
+<ch1>10.2388</ch1>
+<ch2>15.530</ch2>
+</Log>
+<Log id="230">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>625</ms>
+<ch1>10.2389</ch1>
+<ch2>15.529</ch2>
+</Log>
+<Log id="231">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>750</ms>
+<ch1>10.2386</ch1>
+<ch2>15.531</ch2>
+</Log>
+<Log id="232">
+<Date>2023/12/22</Date>
+<Time>10:17:05</Time>
+<ms>875</ms>
+<ch1>10.2386</ch1>
+<ch2>15.532</ch2>
+</Log>
+<Log id="233">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>0</ms>
+<ch1>10.2385</ch1>
+<ch2>15.532</ch2>
+</Log>
+<Log id="234">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.532</ch2>
+</Log>
+<Log id="235">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>250</ms>
+<ch1>10.2392</ch1>
+<ch2>15.532</ch2>
+</Log>
+<Log id="236">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>375</ms>
+<ch1>10.2392</ch1>
+<ch2>15.532</ch2>
+</Log>
+<Log id="237">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.534</ch2>
+</Log>
+<Log id="238">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.531</ch2>
+</Log>
+<Log id="239">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>750</ms>
+<ch1>10.2391</ch1>
+<ch2>15.533</ch2>
+</Log>
+<Log id="240">
+<Date>2023/12/22</Date>
+<Time>10:17:06</Time>
+<ms>875</ms>
+<ch1>10.2395</ch1>
+<ch2>15.532</ch2>
+</Log>
+<Log id="241">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.534</ch2>
+</Log>
+<Log id="242">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>125</ms>
+<ch1>10.2395</ch1>
+<ch2>15.533</ch2>
+</Log>
+<Log id="243">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>250</ms>
+<ch1>10.2395</ch1>
+<ch2>15.535</ch2>
+</Log>
+<Log id="244">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>375</ms>
+<ch1>10.2395</ch1>
+<ch2>15.536</ch2>
+</Log>
+<Log id="245">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.536</ch2>
+</Log>
+<Log id="246">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>625</ms>
+<ch1>10.2395</ch1>
+<ch2>15.535</ch2>
+</Log>
+<Log id="247">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.536</ch2>
+</Log>
+<Log id="248">
+<Date>2023/12/22</Date>
+<Time>10:17:07</Time>
+<ms>875</ms>
+<ch1>10.2398</ch1>
+<ch2>15.535</ch2>
+</Log>
+<Log id="249">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>0</ms>
+<ch1>10.2396</ch1>
+<ch2>15.537</ch2>
+</Log>
+<Log id="250">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.537</ch2>
+</Log>
+<Log id="251">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>250</ms>
+<ch1>10.2388</ch1>
+<ch2>15.536</ch2>
+</Log>
+<Log id="252">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>375</ms>
+<ch1>10.2393</ch1>
+<ch2>15.537</ch2>
+</Log>
+<Log id="253">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>500</ms>
+<ch1>10.2395</ch1>
+<ch2>15.537</ch2>
+</Log>
+<Log id="254">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>625</ms>
+<ch1>10.2395</ch1>
+<ch2>15.536</ch2>
+</Log>
+<Log id="255">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>750</ms>
+<ch1>10.2401</ch1>
+<ch2>15.538</ch2>
+</Log>
+<Log id="256">
+<Date>2023/12/22</Date>
+<Time>10:17:08</Time>
+<ms>875</ms>
+<ch1>10.2403</ch1>
+<ch2>15.538</ch2>
+</Log>
+<Log id="257">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>0</ms>
+<ch1>10.2405</ch1>
+<ch2>15.538</ch2>
+</Log>
+<Log id="258">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>125</ms>
+<ch1>10.2400</ch1>
+<ch2>15.539</ch2>
+</Log>
+<Log id="259">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>250</ms>
+<ch1>10.2403</ch1>
+<ch2>15.540</ch2>
+</Log>
+<Log id="260">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>375</ms>
+<ch1>10.2402</ch1>
+<ch2>15.539</ch2>
+</Log>
+<Log id="261">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>500</ms>
+<ch1>10.2402</ch1>
+<ch2>15.540</ch2>
+</Log>
+<Log id="262">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>625</ms>
+<ch1>10.2400</ch1>
+<ch2>15.540</ch2>
+</Log>
+<Log id="263">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>750</ms>
+<ch1>10.2399</ch1>
+<ch2>15.541</ch2>
+</Log>
+<Log id="264">
+<Date>2023/12/22</Date>
+<Time>10:17:09</Time>
+<ms>875</ms>
+<ch1>10.2401</ch1>
+<ch2>15.540</ch2>
+</Log>
+<Log id="265">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>0</ms>
+<ch1>10.2398</ch1>
+<ch2>15.541</ch2>
+</Log>
+<Log id="266">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>125</ms>
+<ch1>10.2401</ch1>
+<ch2>15.541</ch2>
+</Log>
+<Log id="267">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>250</ms>
+<ch1>10.2404</ch1>
+<ch2>15.542</ch2>
+</Log>
+<Log id="268">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>375</ms>
+<ch1>10.2401</ch1>
+<ch2>15.541</ch2>
+</Log>
+<Log id="269">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>500</ms>
+<ch1>10.2403</ch1>
+<ch2>15.542</ch2>
+</Log>
+<Log id="270">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>625</ms>
+<ch1>10.2399</ch1>
+<ch2>15.542</ch2>
+</Log>
+<Log id="271">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>750</ms>
+<ch1>10.2401</ch1>
+<ch2>15.542</ch2>
+</Log>
+<Log id="272">
+<Date>2023/12/22</Date>
+<Time>10:17:10</Time>
+<ms>875</ms>
+<ch1>10.2400</ch1>
+<ch2>15.542</ch2>
+</Log>
+<Log id="273">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>0</ms>
+<ch1>10.2400</ch1>
+<ch2>15.544</ch2>
+</Log>
+<Log id="274">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>125</ms>
+<ch1>10.2400</ch1>
+<ch2>15.544</ch2>
+</Log>
+<Log id="275">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>250</ms>
+<ch1>10.2397</ch1>
+<ch2>15.544</ch2>
+</Log>
+<Log id="276">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>375</ms>
+<ch1>10.2399</ch1>
+<ch2>15.546</ch2>
+</Log>
+<Log id="277">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>500</ms>
+<ch1>10.2399</ch1>
+<ch2>15.545</ch2>
+</Log>
+<Log id="278">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.545</ch2>
+</Log>
+<Log id="279">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>750</ms>
+<ch1>10.2398</ch1>
+<ch2>15.546</ch2>
+</Log>
+<Log id="280">
+<Date>2023/12/22</Date>
+<Time>10:17:11</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.546</ch2>
+</Log>
+<Log id="281">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.546</ch2>
+</Log>
+<Log id="282">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.545</ch2>
+</Log>
+<Log id="283">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>250</ms>
+<ch1>10.2397</ch1>
+<ch2>15.547</ch2>
+</Log>
+<Log id="284">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.546</ch2>
+</Log>
+<Log id="285">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>500</ms>
+<ch1>10.2396</ch1>
+<ch2>15.548</ch2>
+</Log>
+<Log id="286">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.549</ch2>
+</Log>
+<Log id="287">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.547</ch2>
+</Log>
+<Log id="288">
+<Date>2023/12/22</Date>
+<Time>10:17:12</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.549</ch2>
+</Log>
+<Log id="289">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.548</ch2>
+</Log>
+<Log id="290">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>125</ms>
+<ch1>10.2395</ch1>
+<ch2>15.549</ch2>
+</Log>
+<Log id="291">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>250</ms>
+<ch1>10.2395</ch1>
+<ch2>15.548</ch2>
+</Log>
+<Log id="292">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>375</ms>
+<ch1>10.2398</ch1>
+<ch2>15.550</ch2>
+</Log>
+<Log id="293">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.550</ch2>
+</Log>
+<Log id="294">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.550</ch2>
+</Log>
+<Log id="295">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>750</ms>
+<ch1>10.2398</ch1>
+<ch2>15.551</ch2>
+</Log>
+<Log id="296">
+<Date>2023/12/22</Date>
+<Time>10:17:13</Time>
+<ms>875</ms>
+<ch1>10.2396</ch1>
+<ch2>15.549</ch2>
+</Log>
+<Log id="297">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>0</ms>
+<ch1>10.2398</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="298">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>125</ms>
+<ch1>10.2398</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="299">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>250</ms>
+<ch1>10.2396</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="300">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>375</ms>
+<ch1>10.2396</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="301">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="302">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="303">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>750</ms>
+<ch1>10.2398</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="304">
+<Date>2023/12/22</Date>
+<Time>10:17:14</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.552</ch2>
+</Log>
+<Log id="305">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>0</ms>
+<ch1>10.2398</ch1>
+<ch2>15.553</ch2>
+</Log>
+<Log id="306">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>125</ms>
+<ch1>10.2399</ch1>
+<ch2>15.553</ch2>
+</Log>
+<Log id="307">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>250</ms>
+<ch1>10.2397</ch1>
+<ch2>15.554</ch2>
+</Log>
+<Log id="308">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.554</ch2>
+</Log>
+<Log id="309">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>500</ms>
+<ch1>10.2398</ch1>
+<ch2>15.555</ch2>
+</Log>
+<Log id="310">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.553</ch2>
+</Log>
+<Log id="311">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>750</ms>
+<ch1>10.2396</ch1>
+<ch2>15.556</ch2>
+</Log>
+<Log id="312">
+<Date>2023/12/22</Date>
+<Time>10:17:15</Time>
+<ms>875</ms>
+<ch1>10.2396</ch1>
+<ch2>15.555</ch2>
+</Log>
+<Log id="313">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>0</ms>
+<ch1>10.2396</ch1>
+<ch2>15.554</ch2>
+</Log>
+<Log id="314">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>125</ms>
+<ch1>10.2398</ch1>
+<ch2>15.555</ch2>
+</Log>
+<Log id="315">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>250</ms>
+<ch1>10.2398</ch1>
+<ch2>15.556</ch2>
+</Log>
+<Log id="316">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>375</ms>
+<ch1>10.2396</ch1>
+<ch2>15.556</ch2>
+</Log>
+<Log id="317">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>500</ms>
+<ch1>10.2395</ch1>
+<ch2>15.554</ch2>
+</Log>
+<Log id="318">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>625</ms>
+<ch1>10.2402</ch1>
+<ch2>15.559</ch2>
+</Log>
+<Log id="319">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>750</ms>
+<ch1>10.2403</ch1>
+<ch2>15.559</ch2>
+</Log>
+<Log id="320">
+<Date>2023/12/22</Date>
+<Time>10:17:16</Time>
+<ms>875</ms>
+<ch1>10.2400</ch1>
+<ch2>15.558</ch2>
+</Log>
+<Log id="321">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>0</ms>
+<ch1>10.2400</ch1>
+<ch2>15.557</ch2>
+</Log>
+<Log id="322">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>125</ms>
+<ch1>10.2398</ch1>
+<ch2>15.557</ch2>
+</Log>
+<Log id="323">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>250</ms>
+<ch1>10.2398</ch1>
+<ch2>15.557</ch2>
+</Log>
+<Log id="324">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>375</ms>
+<ch1>10.2399</ch1>
+<ch2>15.558</ch2>
+</Log>
+<Log id="325">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>500</ms>
+<ch1>10.2399</ch1>
+<ch2>15.558</ch2>
+</Log>
+<Log id="326">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>625</ms>
+<ch1>10.2399</ch1>
+<ch2>15.558</ch2>
+</Log>
+<Log id="327">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>750</ms>
+<ch1>10.2396</ch1>
+<ch2>15.560</ch2>
+</Log>
+<Log id="328">
+<Date>2023/12/22</Date>
+<Time>10:17:17</Time>
+<ms>875</ms>
+<ch1>10.2398</ch1>
+<ch2>15.560</ch2>
+</Log>
+<Log id="329">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>0</ms>
+<ch1>10.2397</ch1>
+<ch2>15.559</ch2>
+</Log>
+<Log id="330">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>125</ms>
+<ch1>10.2399</ch1>
+<ch2>15.559</ch2>
+</Log>
+<Log id="331">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>250</ms>
+<ch1>10.2399</ch1>
+<ch2>15.561</ch2>
+</Log>
+<Log id="332">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>375</ms>
+<ch1>10.2398</ch1>
+<ch2>15.561</ch2>
+</Log>
+<Log id="333">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>500</ms>
+<ch1>10.2399</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="334">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="335">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.561</ch2>
+</Log>
+<Log id="336">
+<Date>2023/12/22</Date>
+<Time>10:17:18</Time>
+<ms>875</ms>
+<ch1>10.2398</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="337">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>0</ms>
+<ch1>10.2397</ch1>
+<ch2>15.563</ch2>
+</Log>
+<Log id="338">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>125</ms>
+<ch1>10.2399</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="339">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>250</ms>
+<ch1>10.2399</ch1>
+<ch2>15.563</ch2>
+</Log>
+<Log id="340">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>375</ms>
+<ch1>10.2399</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="341">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>500</ms>
+<ch1>10.2400</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="342">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.564</ch2>
+</Log>
+<Log id="343">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>750</ms>
+<ch1>10.2399</ch1>
+<ch2>15.563</ch2>
+</Log>
+<Log id="344">
+<Date>2023/12/22</Date>
+<Time>10:17:19</Time>
+<ms>875</ms>
+<ch1>10.2399</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="345">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>0</ms>
+<ch1>10.2399</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="346">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>125</ms>
+<ch1>10.2400</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="347">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>250</ms>
+<ch1>10.2398</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="348">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>375</ms>
+<ch1>10.2398</ch1>
+<ch2>15.564</ch2>
+</Log>
+<Log id="349">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>500</ms>
+<ch1>10.2398</ch1>
+<ch2>15.564</ch2>
+</Log>
+<Log id="350">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="351">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>750</ms>
+<ch1>10.2399</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="352">
+<Date>2023/12/22</Date>
+<Time>10:17:20</Time>
+<ms>875</ms>
+<ch1>10.2400</ch1>
+<ch2>15.566</ch2>
+</Log>
+<Log id="353">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>0</ms>
+<ch1>10.2399</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="354">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>125</ms>
+<ch1>10.2399</ch1>
+<ch2>15.564</ch2>
+</Log>
+<Log id="355">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>250</ms>
+<ch1>10.2399</ch1>
+<ch2>15.564</ch2>
+</Log>
+<Log id="356">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="357">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.566</ch2>
+</Log>
+<Log id="358">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.562</ch2>
+</Log>
+<Log id="359">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.566</ch2>
+</Log>
+<Log id="360">
+<Date>2023/12/22</Date>
+<Time>10:17:21</Time>
+<ms>875</ms>
+<ch1>10.2398</ch1>
+<ch2>15.567</ch2>
+</Log>
+<Log id="361">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>0</ms>
+<ch1>10.2398</ch1>
+<ch2>15.566</ch2>
+</Log>
+<Log id="362">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>125</ms>
+<ch1>10.2399</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="363">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>250</ms>
+<ch1>10.2397</ch1>
+<ch2>15.567</ch2>
+</Log>
+<Log id="364">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>375</ms>
+<ch1>10.2396</ch1>
+<ch2>15.567</ch2>
+</Log>
+<Log id="365">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="366">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.567</ch2>
+</Log>
+<Log id="367">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>750</ms>
+<ch1>10.2394</ch1>
+<ch2>15.567</ch2>
+</Log>
+<Log id="368">
+<Date>2023/12/22</Date>
+<Time>10:17:22</Time>
+<ms>875</ms>
+<ch1>10.2396</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="369">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="370">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>125</ms>
+<ch1>10.2395</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="371">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>250</ms>
+<ch1>10.2397</ch1>
+<ch2>15.567</ch2>
+</Log>
+<Log id="372">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>375</ms>
+<ch1>10.2396</ch1>
+<ch2>15.565</ch2>
+</Log>
+<Log id="373">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>500</ms>
+<ch1>10.2396</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="374">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>625</ms>
+<ch1>10.2395</ch1>
+<ch2>15.566</ch2>
+</Log>
+<Log id="375">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>750</ms>
+<ch1>10.2395</ch1>
+<ch2>15.570</ch2>
+</Log>
+<Log id="376">
+<Date>2023/12/22</Date>
+<Time>10:17:23</Time>
+<ms>875</ms>
+<ch1>10.2395</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="377">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="378">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="379">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>250</ms>
+<ch1>10.2395</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="380">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>375</ms>
+<ch1>10.2395</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="381">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.570</ch2>
+</Log>
+<Log id="382">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>625</ms>
+<ch1>10.2395</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="383">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>750</ms>
+<ch1>10.2391</ch1>
+<ch2>15.572</ch2>
+</Log>
+<Log id="384">
+<Date>2023/12/22</Date>
+<Time>10:17:24</Time>
+<ms>875</ms>
+<ch1>10.2394</ch1>
+<ch2>15.570</ch2>
+</Log>
+<Log id="385">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.568</ch2>
+</Log>
+<Log id="386">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="387">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>250</ms>
+<ch1>10.2393</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="388">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>375</ms>
+<ch1>10.2393</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="389">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>500</ms>
+<ch1>10.2395</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="390">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.570</ch2>
+</Log>
+<Log id="391">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>750</ms>
+<ch1>10.2394</ch1>
+<ch2>15.569</ch2>
+</Log>
+<Log id="392">
+<Date>2023/12/22</Date>
+<Time>10:17:25</Time>
+<ms>875</ms>
+<ch1>10.2396</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="393">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>0</ms>
+<ch1>10.2396</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="394">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="395">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>250</ms>
+<ch1>10.2398</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="396">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>375</ms>
+<ch1>10.2395</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="397">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>500</ms>
+<ch1>10.2395</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="398">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>625</ms>
+<ch1>10.2394</ch1>
+<ch2>15.570</ch2>
+</Log>
+<Log id="399">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>750</ms>
+<ch1>10.2393</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="400">
+<Date>2023/12/22</Date>
+<Time>10:17:26</Time>
+<ms>875</ms>
+<ch1>10.2393</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="401">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>0</ms>
+<ch1>10.2396</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="402">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>125</ms>
+<ch1>10.2395</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="403">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>250</ms>
+<ch1>10.2395</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="404">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>375</ms>
+<ch1>10.2394</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="405">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.572</ch2>
+</Log>
+<Log id="406">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>625</ms>
+<ch1>10.2396</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="407">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>750</ms>
+<ch1>10.2395</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="408">
+<Date>2023/12/22</Date>
+<Time>10:17:27</Time>
+<ms>875</ms>
+<ch1>10.2395</ch1>
+<ch2>15.572</ch2>
+</Log>
+<Log id="409">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>0</ms>
+<ch1>10.2396</ch1>
+<ch2>15.572</ch2>
+</Log>
+<Log id="410">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="411">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>250</ms>
+<ch1>10.2395</ch1>
+<ch2>15.572</ch2>
+</Log>
+<Log id="412">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="413">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>500</ms>
+<ch1>10.2400</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="414">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>625</ms>
+<ch1>10.2400</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="415">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>750</ms>
+<ch1>10.2398</ch1>
+<ch2>15.571</ch2>
+</Log>
+<Log id="416">
+<Date>2023/12/22</Date>
+<Time>10:17:28</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="417">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>0</ms>
+<ch1>10.2400</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="418">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="419">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>250</ms>
+<ch1>10.2398</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="420">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>375</ms>
+<ch1>10.2398</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="421">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="422">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="423">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>750</ms>
+<ch1>10.2398</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="424">
+<Date>2023/12/22</Date>
+<Time>10:17:29</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="425">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>0</ms>
+<ch1>10.2397</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="426">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>125</ms>
+<ch1>10.2398</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="427">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>250</ms>
+<ch1>10.2396</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="428">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="429">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="430">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>625</ms>
+<ch1>10.2399</ch1>
+<ch2>15.574</ch2>
+</Log>
+<Log id="431">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.573</ch2>
+</Log>
+<Log id="432">
+<Date>2023/12/22</Date>
+<Time>10:17:30</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="433">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>0</ms>
+<ch1>10.2397</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="434">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="435">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>250</ms>
+<ch1>10.2396</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="436">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>375</ms>
+<ch1>10.2400</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="437">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>500</ms>
+<ch1>10.2398</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="438">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="439">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>750</ms>
+<ch1>10.2400</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="440">
+<Date>2023/12/22</Date>
+<Time>10:17:31</Time>
+<ms>875</ms>
+<ch1>10.2400</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="441">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>0</ms>
+<ch1>10.2401</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="442">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>125</ms>
+<ch1>10.2400</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="443">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>250</ms>
+<ch1>10.2402</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="444">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>375</ms>
+<ch1>10.2402</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="445">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>500</ms>
+<ch1>10.2401</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="446">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>625</ms>
+<ch1>10.2401</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="447">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>750</ms>
+<ch1>10.2401</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="448">
+<Date>2023/12/22</Date>
+<Time>10:17:32</Time>
+<ms>875</ms>
+<ch1>10.2402</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="449">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>0</ms>
+<ch1>10.2400</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="450">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>125</ms>
+<ch1>10.2401</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="451">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>250</ms>
+<ch1>10.2400</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="452">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>375</ms>
+<ch1>10.2398</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="453">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>500</ms>
+<ch1>10.2399</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="454">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>625</ms>
+<ch1>10.2400</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="455">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="456">
+<Date>2023/12/22</Date>
+<Time>10:17:33</Time>
+<ms>875</ms>
+<ch1>10.2394</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="457">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>0</ms>
+<ch1>10.2392</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="458">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="459">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>250</ms>
+<ch1>10.2395</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="460">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>375</ms>
+<ch1>10.2393</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="461">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="462">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>625</ms>
+<ch1>10.2400</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="463">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>750</ms>
+<ch1>10.2402</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="464">
+<Date>2023/12/22</Date>
+<Time>10:17:34</Time>
+<ms>875</ms>
+<ch1>10.2400</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="465">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>0</ms>
+<ch1>10.2401</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="466">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>125</ms>
+<ch1>10.2400</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="467">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>250</ms>
+<ch1>10.2400</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="468">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="469">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="470">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>625</ms>
+<ch1>10.2394</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="471">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>750</ms>
+<ch1>10.2396</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="472">
+<Date>2023/12/22</Date>
+<Time>10:17:35</Time>
+<ms>875</ms>
+<ch1>10.2398</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="473">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>0</ms>
+<ch1>10.2399</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="474">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>125</ms>
+<ch1>10.2398</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="475">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>250</ms>
+<ch1>10.2400</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="476">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>375</ms>
+<ch1>10.2401</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="477">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>500</ms>
+<ch1>10.2402</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="478">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>625</ms>
+<ch1>10.2401</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="479">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>750</ms>
+<ch1>10.2400</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="480">
+<Date>2023/12/22</Date>
+<Time>10:17:36</Time>
+<ms>875</ms>
+<ch1>10.2399</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="481">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>0</ms>
+<ch1>10.2397</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="482">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>125</ms>
+<ch1>10.2396</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="483">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>250</ms>
+<ch1>10.2398</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="484">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>375</ms>
+<ch1>10.2397</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="485">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>500</ms>
+<ch1>10.2396</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="486">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>625</ms>
+<ch1>10.2397</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="487">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>750</ms>
+<ch1>10.2397</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="488">
+<Date>2023/12/22</Date>
+<Time>10:17:37</Time>
+<ms>875</ms>
+<ch1>10.2396</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="489">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>0</ms>
+<ch1>10.2395</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="490">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>125</ms>
+<ch1>10.2399</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="491">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>250</ms>
+<ch1>10.2399</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="492">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>375</ms>
+<ch1>10.2400</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="493">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>500</ms>
+<ch1>10.2399</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="494">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>625</ms>
+<ch1>10.2401</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="495">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>750</ms>
+<ch1>10.2402</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="496">
+<Date>2023/12/22</Date>
+<Time>10:17:38</Time>
+<ms>875</ms>
+<ch1>10.2404</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="497">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>0</ms>
+<ch1>10.2407</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="498">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>125</ms>
+<ch1>10.2405</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="499">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>250</ms>
+<ch1>10.2404</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="500">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>375</ms>
+<ch1>10.2404</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="501">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>500</ms>
+<ch1>10.2406</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="502">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>625</ms>
+<ch1>10.2410</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="503">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>750</ms>
+<ch1>10.2409</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="504">
+<Date>2023/12/22</Date>
+<Time>10:17:39</Time>
+<ms>875</ms>
+<ch1>10.2409</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="505">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>0</ms>
+<ch1>10.2408</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="506">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>125</ms>
+<ch1>10.2414</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="507">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>250</ms>
+<ch1>10.2415</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="508">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>375</ms>
+<ch1>10.2415</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="509">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>500</ms>
+<ch1>10.2417</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="510">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>625</ms>
+<ch1>10.2418</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="511">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>750</ms>
+<ch1>10.2414</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="512">
+<Date>2023/12/22</Date>
+<Time>10:17:40</Time>
+<ms>875</ms>
+<ch1>10.2415</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="513">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>0</ms>
+<ch1>10.2418</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="514">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>125</ms>
+<ch1>10.2416</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="515">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>250</ms>
+<ch1>10.2415</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="516">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>375</ms>
+<ch1>10.2418</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="517">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>500</ms>
+<ch1>10.2420</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="518">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>625</ms>
+<ch1>10.2419</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="519">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>750</ms>
+<ch1>10.2420</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="520">
+<Date>2023/12/22</Date>
+<Time>10:17:41</Time>
+<ms>875</ms>
+<ch1>10.2417</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="521">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>0</ms>
+<ch1>10.2416</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="522">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>125</ms>
+<ch1>10.2413</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="523">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>250</ms>
+<ch1>10.2415</ch1>
+<ch2>15.582</ch2>
+</Log>
+<Log id="524">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>375</ms>
+<ch1>10.2415</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="525">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>500</ms>
+<ch1>10.2413</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="526">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>625</ms>
+<ch1>10.2414</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="527">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>750</ms>
+<ch1>10.2412</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="528">
+<Date>2023/12/22</Date>
+<Time>10:17:42</Time>
+<ms>875</ms>
+<ch1>10.2411</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="529">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>0</ms>
+<ch1>10.2408</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="530">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>125</ms>
+<ch1>10.2407</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="531">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>250</ms>
+<ch1>10.2404</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="532">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>375</ms>
+<ch1>10.2404</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="533">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>500</ms>
+<ch1>10.2401</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="534">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>625</ms>
+<ch1>10.2402</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="535">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>750</ms>
+<ch1>10.2400</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="536">
+<Date>2023/12/22</Date>
+<Time>10:17:43</Time>
+<ms>875</ms>
+<ch1>10.2402</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="537">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>0</ms>
+<ch1>10.2407</ch1>
+<ch2>15.581</ch2>
+</Log>
+<Log id="538">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>125</ms>
+<ch1>10.2448</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="539">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>250</ms>
+<ch1>10.2389</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="540">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>375</ms>
+<ch1>10.2394</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="541">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="542">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>625</ms>
+<ch1>10.2398</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="543">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>750</ms>
+<ch1>10.2399</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="544">
+<Date>2023/12/22</Date>
+<Time>10:17:44</Time>
+<ms>875</ms>
+<ch1>10.2397</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="545">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>0</ms>
+<ch1>10.2398</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="546">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>125</ms>
+<ch1>10.2398</ch1>
+<ch2>15.580</ch2>
+</Log>
+<Log id="547">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>250</ms>
+<ch1>10.2397</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="548">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>375</ms>
+<ch1>10.2396</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="549">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>500</ms>
+<ch1>10.2397</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="550">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>625</ms>
+<ch1>10.2396</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="551">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>750</ms>
+<ch1>10.2394</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="552">
+<Date>2023/12/22</Date>
+<Time>10:17:45</Time>
+<ms>875</ms>
+<ch1>10.2395</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="553">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>0</ms>
+<ch1>10.2396</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="554">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>125</ms>
+<ch1>10.2394</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="555">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>250</ms>
+<ch1>10.2394</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="556">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>375</ms>
+<ch1>10.2395</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="557">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>500</ms>
+<ch1>10.2394</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="558">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>625</ms>
+<ch1>10.2392</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="559">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>750</ms>
+<ch1>10.2392</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="560">
+<Date>2023/12/22</Date>
+<Time>10:17:46</Time>
+<ms>875</ms>
+<ch1>10.2390</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="561">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>0</ms>
+<ch1>10.2394</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="562">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>125</ms>
+<ch1>10.2392</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="563">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>250</ms>
+<ch1>10.2391</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="564">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>375</ms>
+<ch1>10.2391</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="565">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>500</ms>
+<ch1>10.2392</ch1>
+<ch2>15.579</ch2>
+</Log>
+<Log id="566">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>625</ms>
+<ch1>10.2392</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="567">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>750</ms>
+<ch1>10.2390</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="568">
+<Date>2023/12/22</Date>
+<Time>10:17:47</Time>
+<ms>875</ms>
+<ch1>10.2390</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="569">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>0</ms>
+<ch1>10.2390</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="570">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="571">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>250</ms>
+<ch1>10.2392</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="572">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>375</ms>
+<ch1>10.2393</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="573">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="574">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>625</ms>
+<ch1>10.2393</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="575">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>750</ms>
+<ch1>10.2391</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="576">
+<Date>2023/12/22</Date>
+<Time>10:17:48</Time>
+<ms>875</ms>
+<ch1>10.2392</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="577">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>0</ms>
+<ch1>10.2392</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="578">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>125</ms>
+<ch1>10.2391</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="579">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>250</ms>
+<ch1>10.2392</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="580">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>375</ms>
+<ch1>10.2391</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="581">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>500</ms>
+<ch1>10.2391</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="582">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>625</ms>
+<ch1>10.2391</ch1>
+<ch2>15.575</ch2>
+</Log>
+<Log id="583">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>750</ms>
+<ch1>10.2391</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="584">
+<Date>2023/12/22</Date>
+<Time>10:17:49</Time>
+<ms>875</ms>
+<ch1>10.2392</ch1>
+<ch2>15.577</ch2>
+</Log>
+<Log id="585">
+<Date>2023/12/22</Date>
+<Time>10:17:50</Time>
+<ms>0</ms>
+<ch1>10.2389</ch1>
+<ch2>15.578</ch2>
+</Log>
+<Log id="586">
+<Date>2023/12/22</Date>
+<Time>10:17:50</Time>
+<ms>125</ms>
+<ch1>10.2387</ch1>
+<ch2>15.576</ch2>
+</Log>
+<Log id="587">
+<Date>2023/12/22</Date>
+<Time>10:17:50</Time>
+<ms>250</ms>
+<ch1>10.2390</ch1>
+<ch2>15.578</ch2>
+</Log>
+</Data>
+</Body_xle>
