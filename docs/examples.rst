@@ -7,23 +7,15 @@ Jupyter Notebooks with more detailed examples.
 Example snippets
 ----------------
 
-Importing a single CSV-file downloaded from DINOLoket::
+Importing a groundwater time series from the BRO using the BRO-id and the tube number::
 
    import hydropandas as hpd
-   fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-   gw = hpd.GroundwaterObs.from_dino(fname=fname, verbose=True)
+   gw_bro = hpd.GroundwaterObs.from_bro("GMW000000041261", 1)
 
 
-Or for a zipfile::
+Or import all groundwater time series from the BRO within a certain extent::
 
-   import hydropandas as hpd
-   dinozip = './tests/data/2019-Dino-test/dino.zip'
-   dino_gw = hpd.ObsCollection.from_dino(dirname=dinozip,
-                                         subdir='Grondwaterstanden_Put',
-                                         suffix='1.csv',
-                                         ObsClass=hpd.GroundwaterObs,
-                                         keep_all_obs=False,
-                                         verbose=False)
+   oc = hpd.read_bro(extent=(117850, 118180, 439550, 439900))
 
 Example notebooks
 -----------------
