@@ -36,7 +36,7 @@ The HydroPandas package also provides convenient read functions for Dutch hydrol
 - MODFLOW groundwater models
 - IMOD groundwater models
 - [Pastastore](https://github.com/pastas/pastastore)
-- [waterinfo](https://waterinfo.rws.nl/)
+- [Waterinfo](https://waterinfo.rws.nl/)
 - WISKI csv files
 
 ## Install
