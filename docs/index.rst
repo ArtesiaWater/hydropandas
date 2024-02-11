@@ -12,14 +12,15 @@ Supported data sources
 Currently supported datasources that can be read:
 
 - `BRO <https://www.broloket.nl>`_
-- `FEWS PI-XML <https://publicwiki.deltares.nl/display/FEWSDOC/The+Delft-Fews+Published+Interface>`_
 - `DINOLoket CSV <www.dinoloket.nl>`_
-- WISKI csv files
-- `Pastastore <https://github.com/pastas/pastastore>`_, for managing Pastas timeseries and models
-- `KNMI data <https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script>`_
-- MODFLOW groundwater models
+- `FEWS PI-XML <https://publicwiki.deltares.nl/display/FEWSDOC/The+Delft-Fews+Published+Interface>`_
 - IMOD groundwater models
+- `KNMI data <https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script>`_
+- `Lizard <https://vitens.lizard.net>`_
+- MODFLOW groundwater models
+- `Pastastore <https://github.com/pastas/pastastore>`_, for managing Pastas timeseries and models
 - `Waterinfo <https://waterinfo.rws.nl>`_
+- WISKI csv files
 
 ObsCollection can be exported to:
 

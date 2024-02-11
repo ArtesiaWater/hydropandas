@@ -11,7 +11,7 @@ Importing a single CSV-file downloaded from DINOLoket::
 
    import hydropandas as hpd
    fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
-   gw = hpd.GroundwaterObs.from_dino(fname=fname, verbose=True)
+   gw = hpd.GroundwaterObs.from_dino(path=fname)
 
 
 Or for a zipfile::
@@ -22,8 +22,7 @@ Or for a zipfile::
                                          subdir='Grondwaterstanden_Put',
                                          suffix='1.csv',
                                          ObsClass=hpd.GroundwaterObs,
-                                         keep_all_obs=False,
-                                         verbose=False)
+                                         keep_all_obs=False)
 
 Example notebooks
 -----------------
