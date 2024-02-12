@@ -243,7 +243,7 @@ class CollectionPlots:
 
         # create map if no map is given
         if m is None:
-            m = folium.Map([northing, easting], zoom_start=zoom_start)
+            m = folium.Map([northing, easting], zoom_start=zoom_start, tiles=tiles)
 
         # get oc name if no legend name is given
         if legend_name is None:
