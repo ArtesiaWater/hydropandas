@@ -49,9 +49,9 @@ def test_get_nearest_point():
     # every point must find itself as the nearest point
     dino_gw = ttf.test_obscollection_dinozip_gw()
     fl = ttf.test_obscollection_dinozip_wl()
-    dino_gw[
-        ["nearest point", "distance nearest point"]
-    ] = dino_gw.geo.get_nearest_point(fl)
+    dino_gw[["nearest point", "distance nearest point"]] = (
+        dino_gw.geo.get_nearest_point(fl)
+    )
 
 
 def test_get_nearest_polygon():
@@ -82,9 +82,9 @@ def test_get_nearest_polygon():
     )
     gdf = gpd.GeoDataFrame({"name": [1, 2], "geometry": [polygon1, polygon2]})
 
-    dino_gw[
-        ["nearest polygon", "distance nearest polygon"]
-    ] = dino_gw.geo.get_nearest_polygon(gdf)
+    dino_gw[["nearest polygon", "distance nearest polygon"]] = (
+        dino_gw.geo.get_nearest_polygon(gdf)
+    )
     assert (dino_gw["nearest polygon"] == 0.0).all()
     assert (dino_gw["distance nearest polygon"] == 0.0).all()
 
