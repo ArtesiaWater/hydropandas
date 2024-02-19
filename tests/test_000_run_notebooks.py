@@ -1,4 +1,5 @@
 """run notebooks in the examples directory."""
+
 import os
 
 import nbformat

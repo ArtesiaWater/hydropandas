@@ -32,10 +32,11 @@ The HydroPandas package also provides convenient read functions for Dutch hydrol
 - [DINO](https://www.dinoloket.nl)
 - FEWS PI-XML
 - [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script)
+- [Lizard](https://vitens.lizard.net/)
 - MODFLOW groundwater models
 - IMOD groundwater models
 - [Pastastore](https://github.com/pastas/pastastore)
-- [waterinfo](https://waterinfo.rws.nl/)
+- [Waterinfo](https://waterinfo.rws.nl/)
 - WISKI csv files
 
 ## Install
