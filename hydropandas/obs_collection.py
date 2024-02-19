@@ -1,4 +1,4 @@
-"""module with ObsCollection class for a collection of observations.
+"""Module with ObsCollection class for a collection of observations.
 
 The ObsCollection class is a subclass of a pandas DataFrame with
 additional attributes and methods.
@@ -30,14 +30,13 @@ def read_lizard(
     type_timeseries="merge",
     only_metadata=False,
 ):
-    """
-    get all observations from a list of codes of the monitoring wells and a
-    list of tube numbers
+    """Get all observations from a list of codes of the monitoring wells and a list of
+    tube numbers.
 
     Parameters
     ----------
     extent : list, shapefile path or None
-        get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+        get groundwater monitoring wells within this extent [xmin, ymin, xmax, ymax]
         or within a predefined Polygon from a shapefile
     codes : lst of str or None
         codes of the monitoring wells
@@ -45,15 +44,14 @@ def read_lizard(
         list of tube numbers of the monitoring wells that should be selected.
         By default 'all' available tubes are selected.
     tmin : str YYYY-m-d, optional
-        start of the observations, by default the entire serie is returned
+        start of the observations, by default the entire time series is returned
     tmax : Ttr YYYY-m-d, optional
-        end of the observations, by default the entire serie is returned
+        end of the observations, by default the entire time series is returned
     type_timeseries : str, optional
         hand: returns only hand measurements
         diver: returns only diver measurements
-        merge: the hand and diver measurements into one time series (merge; default) or
+        merge: the hand and diver measurements into one time series (default)
         combine: keeps hand and diver measurements separeted
-        The default is merge.
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
@@ -62,7 +60,6 @@ def read_lizard(
     -------
     ObsCollection
         ObsCollection DataFrame with the 'obs' column
-
     """
     oc = ObsCollection.from_lizard(
         extent=extent,
@@ -88,9 +85,7 @@ def read_bro(
     epsg=28992,
     ignore_max_obs=False,
 ):
-    """get all the observations within an extent or within a
-    groundwatermonitoring net.
-
+    """Get all the observations within an extent or within a groundwatermonitoring net.
 
     Parameters
     ----------
@@ -122,7 +117,6 @@ def read_bro(
     -------
     ObsCollection
         ObsCollection DataFrame with the 'obs' column
-
     """
 
     oc = ObsCollection.from_bro(
@@ -182,8 +176,8 @@ def read_dino(
     name=None,
     **kwargs,
 ):
-    """Read dino observations within an extent from the server or from a
-    directory with downloaded files.
+    """Read dino observations within an extent from the server or from a directory with
+    downloaded files.
 
     Parameters
     ----------
@@ -224,9 +218,9 @@ def read_dino(
 
 
 def read_excel(path, meta_sheet_name="metadata"):
-    """Create an observation collection from an excel file. The excel file
-    should have the same format as excel files created with the `to_excel`
-    method of an ObsCollection.
+    """Create an observation collection from an excel file. The excel file should have
+    the same format as excel files created with the `to_excel` method of an
+    ObsCollection.
 
     Parameters
     ----------
@@ -397,8 +391,7 @@ def read_knmi(
     use_api=True,
     raise_exceptions=True,
 ):
-    """Get knmi observations from a list of locations or a list of
-    stations.
+    """Get knmi observations from a list of locations or a list of stations.
 
     Parameters
     ----------
@@ -563,7 +556,7 @@ def read_knmi(
 def read_menyanthes(
     path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
 ):
-    """read a Menyanthes file
+    """Read a Menyanthes file.
 
     Parameters
     ----------
@@ -653,7 +646,7 @@ def read_pickle(
     compression="infer",
     storage_options=None,
 ):
-    """wrapper around pd.read_pickle
+    """Wrapper around pd.read_pickle.
 
     Parameters
     ----------
@@ -816,7 +809,7 @@ def read_pastastore(
 
 
 class ObsCollection(pd.DataFrame):
-    """class for a collection of point observations.
+    """Class for a collection of point observations.
 
     An ObsCollection object is a subclass of a pandas.DataFrame and allows for
     additional attributes and methods. Additional attributes are
@@ -830,7 +823,6 @@ class ObsCollection(pd.DataFrame):
             name of the observation collection
         meta : dic
             metadata of the observation collection
-
     """
 
     # temporary properties
@@ -1022,8 +1014,8 @@ class ObsCollection(pd.DataFrame):
         return True
 
     def add_observation(self, o, check_consistency=True, **kwargs):
-        """add an observation to an existing observation collection. If the
-        observation exists the two observations are merged.
+        """Add an observation to an existing observation collection. If the observation
+        exists the two observations are merged.
 
         Parameters
         ----------
@@ -1059,7 +1051,6 @@ class ObsCollection(pd.DataFrame):
         Returns
         -------
         None.
-
         """
         if check_consistency:
             if not self._is_consistent():
@@ -1086,8 +1077,8 @@ class ObsCollection(pd.DataFrame):
     def add_obs_collection(
         self, obs_collection, check_consistency=True, inplace=False, **kwargs
     ):
-        """add one observation collection to another observation
-        collection. See add_observation method for more details
+        """Add one observation collection to another observation collection. See
+        add_observation method for more details.
 
         Parameters
         ----------
@@ -1125,7 +1116,6 @@ class ObsCollection(pd.DataFrame):
         -------
         ObsCollection or None
             merged ObsCollection if ``inplace=True``.
-
         """
         if check_consistency:
             if not self._is_consistent():
@@ -1184,9 +1174,8 @@ class ObsCollection(pd.DataFrame):
         epsg=28992,
         ignore_max_obs=False,
     ):
-        """get all the observations within an extent or within a
-        groundwatermonitoring net.
-
+        """Get all the observations within an extent or within a groundwatermonitoring
+        net.
 
         Parameters
         ----------
@@ -1218,7 +1207,6 @@ class ObsCollection(pd.DataFrame):
         -------
         ObsCollection
             ObsCollection DataFrame with the 'obs' column
-
         """
 
         from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
@@ -1262,8 +1250,7 @@ class ObsCollection(pd.DataFrame):
         type_timeseries="merge",
         only_metadata=False,
     ):
-        """
-        get all observations within a specified extent
+        """Get all observations within a specified extent.
 
         Parameters
         ----------
@@ -1293,7 +1280,6 @@ class ObsCollection(pd.DataFrame):
         -------
         ObsCollection
             ObsCollection DataFrame with the 'obs' column
-
         """
 
         from .io.lizard import get_obs_list_from_codes, get_obs_list_from_extent
@@ -1329,8 +1315,7 @@ class ObsCollection(pd.DataFrame):
         dirname,
         full_meta=False,
     ):
-        """get all the metadata from dirname.
-
+        """Get all the metadata from dirname.
 
         Parameters
         ----------
@@ -1343,7 +1328,6 @@ class ObsCollection(pd.DataFrame):
         -------
         ObsCollection
             ObsCollection DataFrame without the 'obs' column
-
         """
 
         from .io.bronhouderportaal_bro import get_obs_list_from_dir
@@ -1360,8 +1344,8 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
-        """Create an observation collection from a DataFrame by adding a column
-        with empty observations.
+        """Create an observation collection from a DataFrame by adding a column with
+        empty observations.
 
         Parameters
         ----------
@@ -1391,9 +1375,9 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_excel(cls, path, meta_sheet_name="metadata"):
-        """Create an observation collection from an excel file. The excel file
-        should have the same format as excel files created with the `to_excel`
-        method of an ObsCollection.
+        """Create an observation collection from an excel file. The excel file should
+        have the same format as excel files created with the `to_excel` method of an
+        ObsCollection.
 
         Parameters
         ----------
@@ -1445,8 +1429,8 @@ class ObsCollection(pd.DataFrame):
         name=None,
         **kwargs,
     ):
-        """Read dino data within an extent from the server or from a directory
-        with downloaded files.
+        """Read dino data within an extent from the server or from a directory with
+        downloaded files.
 
         Parameters
         ----------
@@ -1749,8 +1733,7 @@ class ObsCollection(pd.DataFrame):
         use_api=True,
         raise_exceptions=True,
     ):
-        """Get knmi observations from a list of locations or a list of
-        stations.
+        """Get knmi observations from a list of locations or a list of stations.
 
         Parameters
         ----------
@@ -1862,7 +1845,7 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_list(cls, obs_list, name=""):
-        """read observations from a list of obs objects.
+        """Read observations from a list of obs objects.
 
         Parameters
         ----------
@@ -2049,9 +2032,8 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=pstore.name, meta=meta)
 
     def to_excel(self, path, meta_sheet_name="metadata"):
-        """Write an ObsCollection to an excel, the first sheet in the
-        excel contains the metadata, the other tabs are the timeseries of each
-        observation.
+        """Write an ObsCollection to an excel, the first sheet in the excel contains the
+        metadata, the other tabs are the timeseries of each observation.
 
         The excel can be read using the read_excel function of hydropandas.
 
@@ -2106,7 +2088,7 @@ class ObsCollection(pd.DataFrame):
         fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
     def to_gdf(self, xcol="x", ycol="y", crs=28992, drop_obs=True):
-        """convert ObsCollection to GeoDataFrame.
+        """Convert ObsCollection to GeoDataFrame.
 
         Parameters
         ----------
@@ -2142,7 +2124,7 @@ class ObsCollection(pd.DataFrame):
         conn=None,
         overwrite=False,
     ):
-        """add observations to a new or existing pastastore.
+        """Add observations to a new or existing pastastore.
 
         Parameters
         ----------
@@ -2185,7 +2167,7 @@ class ObsCollection(pd.DataFrame):
         return pstore
 
     def to_shapefile(self, path, xcol="x", ycol="y"):
-        """save ObsCollection as shapefile.
+        """Save ObsCollection as shapefile.
 
         Parameters
         ----------
@@ -2220,8 +2202,8 @@ class ObsCollection(pd.DataFrame):
         gdf.to_file(path)
 
     def add_meta_to_df(self, key="all"):
-        """Get the values from the meta dictionary of each observation object
-        and add these to the ObsCollection as a column.
+        """Get the values from the meta dictionary of each observation object and add
+        these to the ObsCollection as a column.
 
         to the ObsCollection
 
@@ -2284,8 +2266,8 @@ class ObsCollection(pd.DataFrame):
         epsilon: Optional[int] = None,
         col: Optional[str] = None,
     ):
-        """Interpolation method for ObsCollections using the Scipy radial basis
-        function (RBF)
+        """Interpolation method for ObsCollections using the Scipy radial basis function
+        (RBF)
 
         Parameters
         ----------

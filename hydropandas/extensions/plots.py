@@ -4,7 +4,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.gridspec import GridSpec
+from tqdm.auto import tqdm
 
+from ..observation import GroundwaterObs
 from . import accessor
 
 logger = logging.getLogger(__name__)
@@ -643,6 +645,59 @@ class CollectionPlots:
                 logger.error(f"Save of figure {name} failed ({fn_save}).")
 
         return fig, axes
+
+    def series_per_group(self, plot_column, by=None, savefig=True, outputdir="."):
+        """Plot time series per group.
+
+        The default groupby is based on identical x, y coordinates, so plots unique
+        time series per location.
+
+        Parameters
+        ----------
+        plot_column : str
+            name of column containing time series data
+        by : (list of) str or (list of) array-like
+            groupby parameters, default is None which sets groupby to
+            columns ["x", "y"].
+        savefig : bool, optional
+            save figures, by default True
+        outputdir : str, optional
+            path to output directory, by default the current directory (".")
+        """
+        if by is None:
+            by = ["x", "y"]
+        gr = self._obj.groupby(by=by)
+        for _, group in tqdm(gr, desc="Plotting series per group", total=len(gr)):
+            f, ax = plt.subplots(1, 1, figsize=(10, 3))
+            for name, row in group.iterrows():
+                if isinstance(row.obs, GroundwaterObs):
+                    lbl = (
+                        f"{name} (NAP{row['screen_top']:+.1f}"
+                        f"-{row['screen_bottom']:+.1f}m)"
+                    )
+                else:
+                    lbl = f"{name}"
+                ax.plot(
+                    row.obs.index,
+                    row.obs[plot_column],
+                    label=lbl,
+                )
+            ax.legend(
+                loc=(0, 1),
+                frameon=False,
+                ncol=min(group.index.size, 3),
+                fontsize="x-small",
+            )
+            ax.set_ylabel(row["unit"])
+            ax.grid(True)
+            f.tight_layout()
+            if savefig:
+                if isinstance(row.obs, GroundwaterObs):
+                    name = name.split("-")[0]
+                f.savefig(
+                    os.path.join(outputdir, f"{name}.png"), bbox_inches="tight", dpi=150
+                )
+                plt.close(f)
 
 
 @accessor.register_obs_accessor("plots")
