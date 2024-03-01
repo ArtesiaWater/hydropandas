@@ -161,7 +161,7 @@ def _prepare_API_input(nr_pages, url_groundwater):
     urls = []
     for page in range(nr_pages):
         true_page = page + 1  # The real page number is attached to the import thread
-        urls = [url_groundwater + "&page={}".format(true_page)]
+        urls += [url_groundwater + "&page={}".format(true_page)]
     return urls
 
 
@@ -183,6 +183,32 @@ def _download(url, timeout=1800):
     data = data.json()["results"]
 
     return data
+
+
+def _split_mw_tube_nr(code):
+    """get the tube number from a code that consists of the name and the tube number.
+
+    Parameters
+    ----------
+    code : str
+        name + tube_nr. e.g. 'BUWP014-11' or 'BUWP014012'
+
+    Returns
+    -------
+    monitoring well, tube_number (str, int)
+
+    Notes
+    -----
+    The format of the name + tube_nr is not very consistent and this function may need
+    further finetuning.
+    """
+
+    if code[-3:].isdigit():
+        return code[:-3], int(code[-3:])
+    else:
+        # assume there is a '-' to split name and filter number
+        tube_nr = code.split("-")[-1]
+        return code.strip(f"-{tube_nr}"), int(tube_nr)
 
 
 def get_metadata_tube(metadata_mw, tube_nr):
@@ -218,19 +244,52 @@ def get_metadata_tube(metadata_mw, tube_nr):
         "status": None,
     }
 
+    metadata_tube_list = []
     for metadata_tube in metadata_mw["filters"]:
-        if metadata_tube["code"].endswith(str(tube_nr)):
-            break
-    else:
+        # check if name+filternr ends with three digits
+        code, tbnr = _split_mw_tube_nr(metadata_tube["code"])
+        if tbnr == tube_nr:
+            metadata_tube_list.append(metadata_tube)
+
+    if len(metadata_tube_list) == 0:
         raise ValueError(f"{metadata_mw['name']} doesn't have a tube number {tube_nr}")
+    elif len(metadata_tube_list) == 1:
+        mtd_tube = metadata_tube_list[0]
+    elif len(metadata_tube_list) > 1:
+        # tube has probably been replaced, multiple tubes with the same code and tube nr
+        # merge metadata from all tubes
+        logger.info(
+            f"there are {len(metadata_tube_list)} instances of {code} and tube {tube_nr}, trying to merge all in one observation object"
+        )
+        mtd_tube = metadata_tube_list[0].copy()
+        relevant_keys = {
+            "top_level",
+            "filter_top_level",
+            "filter_bottom_level",
+            "timeseries",
+        }
+        for metadata_tube in metadata_tube_list:
+            for key in set(metadata_tube.keys()) & relevant_keys:
+                # check if properties are always the same for a tube number
+                val = metadata_tube[key]
+                if key in ["top_level", "filter_top_level", "filter_bottom_level"]:
+                    if val != mtd_tube[key]:
+                        logger.warning(
+                            f"multiple {key} values found ({val} & {mtd_tube[key]}) for {code} and tube {tube_nr}, using {mtd_tube[key]}"
+                        )
+                # merge time series from all tubes with the same code and tube number
+                elif key == "timeseries":
+                    mtd_tube[key] += val
+
+        mtd_tube["code"] = f"{code}{tube_nr}"
 
     metadata.update(
         {
             "tube_nr": tube_nr,
-            "name": metadata_tube["code"].replace("-", ""),
-            "tube_top": metadata_tube["top_level"],
-            "screen_top": metadata_tube["filter_top_level"],
-            "screen_bottom": metadata_tube["filter_bottom_level"],
+            "name": mtd_tube["code"].replace("-", ""),
+            "tube_top": mtd_tube["top_level"],
+            "screen_top": mtd_tube["filter_top_level"],
+            "screen_bottom": mtd_tube["filter_bottom_level"],
         }
     )
 
@@ -238,10 +297,10 @@ def get_metadata_tube(metadata_mw, tube_nr):
     transformer = Transformer.from_crs("WGS84", "EPSG:28992")
     metadata["x"], metadata["y"] = transformer.transform(lat, lon)
 
-    if not metadata_tube["timeseries"]:
+    if not mtd_tube["timeseries"]:
         metadata["timeseries_type"] = None
     else:
-        for series in metadata_tube["timeseries"]:
+        for series in mtd_tube["timeseries"]:
             series_info = requests.get(series).json()
             if series_info["name"] == "WNS9040.hand":
                 metadata["uuid_hand"] = series_info["uuid"]
@@ -382,8 +441,6 @@ def _combine_timeseries(hand_measurements, diver_measurements):
     measurements = measurements.loc[
         :, ["value_hand", "value_diver", "flag_hand", "flag_diver"]
     ]
-    measurements.loc[:, "name"] = hand_measurements.loc[:, "name"][0]
-    measurements.loc[:, "filter_nr"] = hand_measurements.loc[:, "filter_nr"][0]
 
     return measurements
 
@@ -413,6 +470,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
     metadata_df : dict
         metadata of the monitoring well
     """
+
     if tube_metadata["timeseries_type"] is None:
         return pd.DataFrame(), tube_metadata
 
@@ -559,18 +617,23 @@ def get_obs_list_from_codes(
     obs_list = []
     for code in codes:
         groundwaterstation_metadata = get_metadata_mw_from_code(code)
+        tubes = []
         if tube_nr == "all":
             for metadata_tube in groundwaterstation_metadata["filters"]:
-                tube_nr = int(metadata_tube["code"][-3:])
-                o = ObsClass.from_lizard(
-                    code,
-                    tube_nr,
-                    tmin,
-                    tmax,
-                    type_timeseries,
-                    only_metadata=only_metadata,
-                )
-                obs_list.append(o)
+                tnr = _split_mw_tube_nr(metadata_tube["code"])[-1]
+                if tnr not in tubes:
+                    logger.info(f"get {code}{tnr}")
+                    o = ObsClass.from_lizard(
+                        code,
+                        tnr,
+                        tmin,
+                        tmax,
+                        type_timeseries,
+                        only_metadata=only_metadata,
+                    )
+                    obs_list.append(o)
+                    tubes.append(tnr)
+
         else:
             o = ObsClass.from_lizard(
                 code, tube_nr, tmin, tmax, type_timeseries, only_metadata=only_metadata
