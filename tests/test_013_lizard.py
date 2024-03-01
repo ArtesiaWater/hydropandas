@@ -23,11 +23,13 @@ def test_codes():
 def test_many_tubed_well():
 
     oc = hpd.read_lizard(codes="EEWP004", tube_nr="all")
+    assert not oc.empty
 
 
 def test_complex_well():
 
     oc = hpd.read_lizard(codes="BUWP014", tube_nr="all")
+    assert not oc.empty
 
 
 def test_combine():

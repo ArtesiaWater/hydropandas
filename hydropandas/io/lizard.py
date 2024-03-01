@@ -259,7 +259,8 @@ def get_metadata_tube(metadata_mw, tube_nr):
         # tube has probably been replaced, multiple tubes with the same code and tube nr
         # merge metadata from all tubes
         logger.info(
-            f"there are {len(metadata_tube_list)} instances of {code} and tube {tube_nr}, trying to merge all in one observation object"
+            f"there are {len(metadata_tube_list)} instances of {code} and tube "
+            f"{tube_nr}, trying to merge all in one observation object"
         )
         mtd_tube = metadata_tube_list[0].copy()
         relevant_keys = {
@@ -275,7 +276,8 @@ def get_metadata_tube(metadata_mw, tube_nr):
                 if key in ["top_level", "filter_top_level", "filter_bottom_level"]:
                     if val != mtd_tube[key]:
                         logger.warning(
-                            f"multiple {key} values found ({val} & {mtd_tube[key]}) for {code} and tube {tube_nr}, using {mtd_tube[key]}"
+                            f"multiple {key} values found ({val} & {mtd_tube[key]})"
+                            f" for {code} and tube {tube_nr}, using {mtd_tube[key]}"
                         )
                 # merge time series from all tubes with the same code and tube number
                 elif key == "timeseries":
