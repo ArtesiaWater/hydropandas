@@ -120,13 +120,13 @@ def get_files(
             raise ValueError("Please specify a different folder to unpack files!")
 
     # identify whether file_or_dir started as zip
-    if file_or_dir.endswith(".zip"):
+    if str(file_or_dir).endswith(".zip"):
         iszip = True
     else:
         iszip = False
 
     # unzip dir
-    if file_or_dir.endswith(".zip"):
+    if iszip:
         zipf = file_or_dir
         if unpackdir is None:
             file_or_dir = tempfile.TemporaryDirectory().name
