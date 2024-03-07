@@ -2031,6 +2031,50 @@ class ObsCollection(pd.DataFrame):
         }
         return cls(obs_df, name=pstore.name, meta=meta)
 
+    def get_obs(self, name=None, **kwargs):
+        """get an observation object from a collection
+
+        Parameters
+        ----------
+        name : str or None, optional
+            name of the observation you want to select, by default None
+        **kwargs : any metadata, value pair e.g. for a collection of GroundwaterObs:
+            tube_nr = 1 or source = 'BRO'
+
+        Returns
+        -------
+        hpd.Obs
+            Observation object from the collection.
+
+        Raises
+        ------
+        ValueError
+            If multiple observations in the collection match the given attribute values.
+        ValueError
+            If no observation in the collection match the given attribute values.
+        """
+
+        # select by name
+        if name is None:
+            selected_obs = self
+        else:
+            selected_obs = self.loc[[name]]
+
+        # select by condition
+        for key, item in kwargs.items():
+            condition = selected_obs[key] == item
+            selected_obs = selected_obs.loc[condition]
+
+        # return an Obs objet
+        if len(selected_obs) == 1:
+            return selected_obs["obs"].values[0]
+        elif len(selected_obs) == 0:
+            raise ValueError("no observations for given conditions")
+        else:
+            raise ValueError(
+                f"multiple observations for given conditions {selected_obs.index}"
+            )
+
     def to_excel(self, path, meta_sheet_name="metadata"):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
         metadata, the other tabs are the timeseries of each observation.

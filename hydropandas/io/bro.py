@@ -148,14 +148,12 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
             empty_df = pd.DataFrame()
             return empty_df, meta
 
+        dfl = []
         for i, gld_id in enumerate(gld_ids):
-            if i == 0:
-                df, meta_new = measurements_from_gld(gld_id, **kwargs)
-                meta.update(meta_new)
-            else:
-                df_new, meta_new = measurements_from_gld(gld_id, **kwargs)
-                df = pd.concat([df, df_new], axis=1)
-                meta.update(meta_new)
+            df, meta_new = measurements_from_gld(gld_id, **kwargs)
+            meta.update(meta_new)
+            dfl.append(df)
+        df = pd.concat(dfl, axis=0)
 
         return df, meta
 
@@ -305,7 +303,7 @@ def measurements_from_gld(
 
     # to dataframe
     df = pd.DataFrame(
-        index=pd.to_datetime(times),
+        index=pd.to_datetime(times, utc=True).tz_convert("CET"),
         data={"values": values, "qualifier": qualifiers},
     )
 
@@ -313,7 +311,7 @@ def measurements_from_gld(
     if to_wintertime:
         # remove time zone information by transforming to dutch winter time
         df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(
-            1, unit="H"
+            1, unit="h"
         )
 
     # duplicates
