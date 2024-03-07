@@ -156,7 +156,9 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
         # get location and convert to m RD
         for stn in df[location_col].unique():
             mask = df[location_col] == stn
-            x, y = transformer.transform(df.loc[mask, "X"][-1], df.loc[mask, "Y"][-1])
+            x, y = transformer.transform(
+                df.loc[mask, "X"].iloc[-1], df.loc[mask, "Y"].iloc[-1]
+            )
             metadata = {
                 "name": stn,
                 "x": x,

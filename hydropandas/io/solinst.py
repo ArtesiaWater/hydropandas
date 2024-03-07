@@ -31,6 +31,7 @@ def read_solinst_file(
     """
 
     # open file
+    path = str(path)
     name = os.path.splitext(os.path.basename(path))[0]
     if path.endswith(".xle"):
         f = path
