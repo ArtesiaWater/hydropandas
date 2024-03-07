@@ -2052,8 +2052,6 @@ class ObsCollection(pd.DataFrame):
             If multiple observations in the collection match the given attribute values.
         ValueError
             If no observation in the collection match the given attribute values.
-        
-       
         """
 
         # select by name
@@ -2071,7 +2069,7 @@ class ObsCollection(pd.DataFrame):
         if len(selected_obs) == 1:
             return selected_obs["obs"].values[0]
         elif len(selected_obs) == 0:
-            raise ValueError(f"no observations for given conditions")
+            raise ValueError("no observations for given conditions")
         else:
             raise ValueError(
                 f"multiple observations for given conditions {selected_obs.index}"
