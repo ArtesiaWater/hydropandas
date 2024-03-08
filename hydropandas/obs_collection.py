@@ -2117,14 +2117,14 @@ class ObsCollection(pd.DataFrame):
             oc["obs"] = [type(o).__name__ for o in obseries]
 
             # write ObsCollection dataframe to first sheet
-            super(ObsCollection, oc).to_excel(writer, meta_sheet_name)
+            super(ObsCollection, oc).to_excel(writer, sheet_name=meta_sheet_name)
 
             # write each observation time series to next sheets
             for o in obseries:
                 sheetname = o.name
                 for ch in ["[", "]", ":", "*", "?", "/", "\\"]:
                     sheetname = sheetname.replace(ch, "_")
-                o.to_excel(writer, sheetname)
+                o.to_excel(writer, sheet_name=sheetname)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import fews
