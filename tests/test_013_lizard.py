@@ -14,5 +14,24 @@ def test_extent():
 
 
 def test_codes():
-    oc = hpd.read_lizard(codes="27BP0003")
+    oc = hpd.read_lizard(
+        codes=["39F-0735", "39F-0736", "39F-0737"], type_timeseries="merge"
+    )
     assert not oc.empty
+
+
+def test_many_tubed_well():
+
+    oc = hpd.read_lizard(codes="EEWP004", tube_nr="all")
+    assert not oc.empty
+
+
+def test_complex_well():
+
+    oc = hpd.read_lizard(codes="BUWP014", tube_nr="all")
+    assert not oc.empty
+
+
+def test_combine():
+
+    hpd.GroundwaterObs.from_lizard("39F-0736", tube_nr=1, type_timeseries="combine")

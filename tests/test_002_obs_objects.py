@@ -1,19 +1,11 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 import hydropandas as hpd
 
-# import sys
-# sys.path.insert(1, "..")
 
-
-# TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-# PROJECT_DIR = os.path.abspath(os.path.join(TEST_DIR, os.pardir))
-# sys.path.insert(0, PROJECT_DIR)
-# os.chdir(TEST_DIR)
-
-
-def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
+def _get_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"),
         data={"values": np.random.rand(10)},
@@ -41,7 +33,7 @@ def test_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
     return o
 
 
-def test_waterlvl_obs():
+def _get_waterlvl_obs():
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"),
         data={"values": np.random.rand(10)},
@@ -60,6 +52,16 @@ def test_waterlvl_obs():
     return o
 
 
+def _obscollection_from_list():
+    o_list = []
+    for i in range(10):
+        o_list.append(_get_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
+
+    oc = hpd.ObsCollection.from_list(o_list)
+
+    return oc
+
+
 def test_groundwater_quality_obs():
     df = pd.DataFrame(
         index=pd.date_range("2020-1-1", "2020-1-10"), data={"pH": np.random.rand(10)}
@@ -75,25 +77,15 @@ def test_groundwater_quality_obs():
     )
 
 
-def test_obscollection_from_list():
-    o_list = []
-    for i in range(10):
-        o_list.append(test_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
-
-    oc = hpd.ObsCollection.from_list(o_list)
-
-    return oc
-
-
 def test_add_meta_to_df():
-    oc = test_obscollection_from_list()
+    oc = _obscollection_from_list()
     oc.add_meta_to_df(key="all")
 
     assert "info" in oc.columns, "unexpected result for add_meta_to_df"
 
 
 def test_copy_obs():
-    o = test_groundwater_obs(name="groundwaterobs_001", tube_nr=2)
+    o = _get_groundwater_obs(name="groundwaterobs_001", tube_nr=2)
     o2 = o.copy()
 
     o.meta["hello"] = "world"
@@ -133,10 +125,10 @@ def test_convert_waterlvl_groundwater_obs():
 
 def test_merge_observations_same_timeseries():
     # base
-    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with different metadata, same time series
-    o2 = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    o2 = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
     o2.iloc[:, 0] = o.iloc[:, 0]
 
     omerged = o.merge_observation(o2, merge_metadata=False)
@@ -146,7 +138,7 @@ def test_merge_observations_same_timeseries():
 
 def test_merge_observations_different_timeseries():
     # base
-    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with different time series
     o2 = o.copy()
@@ -163,7 +155,7 @@ def test_merge_observations_different_timeseries():
 
 def test_merge_overlapping():
     # base
-    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with partially overlapping time series and extra columns
     o2 = o.copy()
@@ -182,29 +174,47 @@ def test_merge_overlapping():
 
 def test_merge_errors():
     # base
-    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     # observation with partially overlapping time series and extra columns
-    o2 = test_waterlvl_obs()
+    o2 = _get_waterlvl_obs()
 
-    try:
+    with pytest.raises(TypeError):
         o.merge_observation(o2)
-    except TypeError:
-        return
-
-    raise RuntimeError("function should raise an error")
 
 
 def test_add_observation_to_oc():
-    oc = test_obscollection_from_list()
+    oc = _obscollection_from_list()
 
-    o = test_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
 
     oc.add_observation(o)
 
 
 def test_interpolate_obscollection():
-    oc = test_obscollection_from_list()
+    oc = _obscollection_from_list()
 
     xy = [[500, 11000], [9000, 18000]]
     oc.interpolate(xy)
+
+
+def test_get_obs():
+    oc = _obscollection_from_list()
+
+    # by name
+    o = oc.get_obs(name="groundwaterobs_001")
+    assert isinstance(o, hpd.GroundwaterObs)
+    assert o.name == "groundwaterobs_001"
+
+    # by attributes
+    o = oc.get_obs(monitoring_well="groundwaterobs", tube_nr=2)
+    assert isinstance(o, hpd.GroundwaterObs)
+    assert o.tube_nr == 2
+
+    # multiple observations
+    with pytest.raises(ValueError):
+        oc.get_obs(monitoring_well="groundwaterobs")
+
+    # no observations
+    with pytest.raises(ValueError):
+        oc.get_obs(monitoring_well="I do not exist")

@@ -120,13 +120,13 @@ def get_files(
             raise ValueError("Please specify a different folder to unpack files!")
 
     # identify whether file_or_dir started as zip
-    if file_or_dir.endswith(".zip"):
+    if str(file_or_dir).endswith(".zip"):
         iszip = True
     else:
         iszip = False
 
     # unzip dir
-    if file_or_dir.endswith(".zip"):
+    if iszip:
         zipf = file_or_dir
         if unpackdir is None:
             file_or_dir = tempfile.TemporaryDirectory().name
@@ -288,12 +288,13 @@ def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
         _description_
     """
     df_list = []
-    for obs in oc.obs.values:
-        if not obs.empty:
+    for o in oc.obs.values:
+        if not o.empty:
             if col is None:
-                vals = obs.loc[:, obs._get_first_numeric_col_name()]
+                vals = o.loc[:, o._get_first_numeric_col_name()]
             else:
-                vals = obs.loc[:, col]
+                vals = o.loc[:, col]
+            vals.name = o.name
             df_list.append(vals)
     return pd.concat(df_list, axis=1)
 

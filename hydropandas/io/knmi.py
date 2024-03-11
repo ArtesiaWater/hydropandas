@@ -108,7 +108,9 @@ def get_knmi_obs(
         ts, meta = get_knmi_timeseries_stn(stn, meteo_var, settings, start, end)
     elif fname is not None:
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
-        ts, meta = get_knmi_timeseries_fname(fname, meteo_var, settings, start, end)
+        ts, meta = get_knmi_timeseries_fname(
+            str(fname), meteo_var, settings, start, end
+        )
     elif xy is not None:
         logger.info(
             f"get KNMI data from station nearest to coordinates {xy} and meteo"

@@ -837,6 +837,47 @@ class GroundwaterObs(Obs):
 
         return cls(data, meta=metadata, **kwargs)
 
+    @classmethod
+    def from_solinst(
+        cls,
+        path,
+        transform_coords=True,
+        screen_bottom=None,
+        screen_top=None,
+        ground_level=None,
+        tube_nr=None,
+        tube_top=None,
+    ):
+        """Read data from Solinst xle file.
+
+        Parameters
+        ----------
+        path : str
+            path to file (file can zip or xle)
+
+        """
+        from .io import solinst
+
+        df, meta = solinst.read_solinst_file(path, transform_coords=transform_coords)
+
+        return cls(
+            df,
+            meta=meta,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            filename=meta.pop("filename"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            screen_bottom=screen_bottom,
+            screen_top=screen_top,
+            ground_level=ground_level,
+            metadata_available=meta.pop("metadata_available"),
+            monitoring_well=meta.pop("monitoring_well"),
+            tube_nr=tube_nr,
+            tube_top=tube_top,
+        )
+
 
 class WaterQualityObs(Obs):
     """Class for water quality ((grond)watersamenstelling) point observations.
