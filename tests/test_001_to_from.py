@@ -207,7 +207,7 @@ def test_obscollection_wiskizip_gw():
 
 # %% PASTASTORE
 def test_to_pastastore():
-    dino_gw = test_obscollection_dinozip_gw()
+    dino_gw = obscollection_dinozip_gw()
     # drop duplicate
     dino_gw.drop("B22D0155-001", inplace=True)
     pstore = dino_gw.to_pastastore()
@@ -318,7 +318,7 @@ def test_knmi_obs_from_xy():
 #     " https://github.com/ArtesiaWater/hydropandas/issues/103"
 # )
 def test_knmi_collection_from_locations():
-    obsc = test_obscollection_dinozip_gw()
+    obsc = obscollection_dinozip_gw()
     try:
         hpd.read_knmi(
             locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
