@@ -107,13 +107,17 @@ def create_pastastore(
             meta = dict()
 
         if col is None:
-            col = o._get_first_numeric_col_name()
+            use_col = o._get_first_numeric_col_name()
+        else:
+            use_col = col
 
         if kind == "oseries":
-            pstore.conn.add_oseries(o[col], o.name, metadata=meta, overwrite=overwrite)
+            pstore.conn.add_oseries(
+                o[use_col], o.name, metadata=meta, overwrite=overwrite
+            )
         else:
             pstore.conn.add_stress(
-                o[col], o.name, kind, metadata=meta, overwrite=overwrite
+                o[use_col], o.name, kind, metadata=meta, overwrite=overwrite
             )
 
     return pstore
