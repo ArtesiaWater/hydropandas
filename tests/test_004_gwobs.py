@@ -3,12 +3,12 @@ import test_001_to_from as ttf
 
 
 def test_set_tube_nr():
-    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw = ttf.obscollection_dinozip_gw()
     dino_gw.gwobs.set_tube_nr(if_exists="replace")
 
 
 def test_set_tube_nr_monitoring_well():
-    fews_gw_prod = ttf.test_obscollection_fews_lowmemory()
+    fews_gw_prod = ttf.obscollection_fews_lowmemory()
     fews_gw_prod.gwobs.set_tube_nr_monitoring_well(
         "monitoring_well", if_exists="replace"
     )
@@ -44,7 +44,7 @@ def test_get_modellayers_mf2005():
         yul=700000,
     )
 
-    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw = ttf.obscollection_dinozip_gw()
     dino_gw.gwobs.get_modellayers(ml)
 
 
@@ -79,10 +79,10 @@ def test_get_modellayers_mf6_structured():
         top=ztop,
         botm=botm[1:],
     )
-    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw = ttf.obscollection_dinozip_gw()
     dino_gw.gwobs.get_modellayers(gwf)
 
 
 def test_get_regis_layer():
-    dino_gw = ttf.test_obscollection_dinozip_gw()
+    dino_gw = ttf.obscollection_dinozip_gw()
     dino_gw.gwobs.get_regis_layers()
