@@ -16,12 +16,11 @@ logger = logging.getLogger(__name__)
 def _read_dino_groundwater_header(f):
     line = f.readline()
     header = dict()
-    while line not in ["\n", "", "\r\n"]:
+    while line.strip().strip(',') != '' and line.strip() != '':
         if "," in line:  # for csv from dinoloket
-            propval = line.split(",")
+            propval = line.replace('"', '').strip().split(",")
             prop = propval[0]
             prop = prop.replace(":", "")
-            prop = prop.strip()
             val = propval[1]
             if propval[2] != "":
                 val = val + " " + propval[2].replace(":", "") + " " + propval[3]
@@ -37,18 +36,17 @@ def _read_dino_groundwater_header(f):
 
 
 def _read_empty(f, line):
-    while (line == "\n") or (line == "\r\n"):
+    while line.strip(',').strip() == '' or (line == "\n") or (line == "\r\n"):
         line = f.readline()
     return line
 
 
 def _read_dino_groundwater_referencelvl(f, line):
     ref = {}
-    while line not in ["\n", "", "\r\n"]:
-        propval = line.split(",")
+    while line.strip().strip(',') != '' and line.strip() != '':
+        propval = line.replace('"', '').strip().split(",")
         prop = propval[0]
         prop = prop.replace(":", "")
-        prop = prop.strip()
         if len(propval) > 1:
             val = propval[1]
             ref[prop] = val
@@ -70,13 +68,12 @@ def _read_dino_groundwater_metadata(f, line):
     }
     metalist = list()
     line = line.strip()
-    properties = line.split(",")
+    properties = line.replace('"', '').strip().split(",")
     line = f.readline()
 
-    while line not in ["\n", "", "\r\n"]:
+    while line.strip().strip(',') != '' and line.strip() != '':
         meta = dict()
-        line = line.strip()
-        values = line.split(",")
+        values = line.replace('"', '').strip().split(",")
         for i, val in enumerate(values):
             meta[properties[i].lower()] = val
         metalist.append(meta)
