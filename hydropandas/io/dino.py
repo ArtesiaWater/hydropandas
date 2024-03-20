@@ -70,8 +70,8 @@ def _read_dino_groundwater_metadata(f, line, fname):
     line = line.strip()
     properties = line.replace('"', "").strip().split(",")
     if "vandezeputzijngeenstandenopgenomen" in properties[0].replace(" ", "").lower():
-    logger.info(f"No waterlevels and metadata have been included in -> {fname}")
-    return "nodata", {}, {}
+        logger.info(f"No waterlevels and metadata have been included in -> {fname}")
+        return "nodata", {}, {}
 
     line = f.readline()
 
