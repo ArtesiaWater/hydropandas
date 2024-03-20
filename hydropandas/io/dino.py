@@ -54,7 +54,7 @@ def _read_dino_groundwater_referencelvl(f, line):
     return line, ref
 
 
-def _read_dino_groundwater_metadata(f, line):
+def _read_dino_groundwater_metadata(f, line, fname):
     _translate_dic_float = {
         "x-coordinaat": "x",
         "y-coordinaat": "y",
@@ -69,6 +69,10 @@ def _read_dino_groundwater_metadata(f, line):
     metalist = list()
     line = line.strip()
     properties = line.replace('"', "").strip().split(",")
+    if "vandezeputzijngeenstandenopgenomen" in properties[0].replace(" ", "").lower():
+    logger.info(f"No waterlevels and metadata have been included in -> {fname}")
+    return "nodata", {}, {}
+
     line = f.readline()
 
     while line.strip().strip(",") != "" and line.strip() != "":
@@ -325,7 +329,9 @@ def read_dino_groundwater_csv(
         logger.warning(f"could not read reference level -> {fname}")
 
     # read metadata
-    line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
+    line, meta, meta_ts = _read_dino_groundwater_metadata(f, line, fname)
+    if line == "nodata" and meta == {} and meta_ts == {}:
+        return None, {}
     line = _read_empty(f, line)
     if not meta["metadata_available"]:
         logger.warning(f"could not read metadata -> {fname}")
