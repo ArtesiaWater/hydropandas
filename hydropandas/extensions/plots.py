@@ -646,7 +646,9 @@ class CollectionPlots:
 
         return fig, axes
 
-    def series_per_group(self, plot_column, by=None, savefig=True, outputdir="."):
+    def series_per_group(
+        self, plot_column, by=None, savefig=True, outputdir=".", naming_method=None
+    ):
         """Plot time series per group.
 
         The default groupby is based on identical x, y coordinates, so plots unique
@@ -660,14 +662,35 @@ class CollectionPlots:
             groupby parameters, default is None which sets groupby to
             columns ["x", "y"].
         savefig : bool, optional
-            save figures, by default True
+            save figures, by default True, if False returns axes handles to plots.
         outputdir : str, optional
             path to output directory, by default the current directory (".")
+        naming_method : str, optional
+            method to determine file names for plots, default is None, which uses the
+            following template:
+                "series_by_{groupby columns}_group_{groupby values}.png".
+            If a string is passed, it is interpreted as a column name and the filename
+            contains the unique values from that column per group:
+                "series_group_{unique values in column}.png"
+            The final option includes "infer_name_monitoring_well", which attempts to
+            obtain the name of the monitoring well from the final name in the group,
+            by splitting the string on "-" or "_", and using the first part.
+            For example, if the name is "PB001-001", the filename will be "PB001.png".
+
+        Returns
+        -------
+        axes : list
+            returns list of axes handles if savefig=False
         """
         if by is None:
             by = ["x", "y"]
         gr = self._obj.groupby(by=by)
-        for _, group in tqdm(gr, desc="Plotting series per group", total=len(gr)):
+
+        axes = []
+
+        for groupname, group in tqdm(
+            gr, desc="Plotting series per group", total=len(gr)
+        ):
             f, ax = plt.subplots(1, 1, figsize=(10, 3))
             for name, row in group.iterrows():
                 if isinstance(row.obs, GroundwaterObs):
@@ -691,13 +714,37 @@ class CollectionPlots:
             ax.set_ylabel(row["unit"])
             ax.grid(True)
             f.tight_layout()
+
             if savefig:
-                if isinstance(row.obs, GroundwaterObs):
-                    name = name.split("-")[0]
+                if naming_method is None:
+                    if isinstance(by, list):
+                        by_name = "-".join(by)
+                        groupname = "-".join(groupname)
+                    else:
+                        by_name = by
+                    filename = f"series_by_{by_name}_group_{groupname}.png"
+                elif naming_method == "infer_name_monitoring_well":
+                    if "-" in name:
+                        filename = f"{name.split('-')[0]}.png"
+                    elif "_" in name:
+                        filename = f"{name.split('_')[0]}.png"
+                    else:
+                        filename = f"{name}.png"
+                elif isinstance(naming_method, str):
+                    filename = (
+                        "series_group_"
+                        f"{'-'.join(group[naming_method].unique().tolist())}.png"
+                    )
+
                 f.savefig(
-                    os.path.join(outputdir, f"{name}.png"), bbox_inches="tight", dpi=150
+                    os.path.join(outputdir, filename), bbox_inches="tight", dpi=150
                 )
                 plt.close(f)
+            else:
+                axes.append(ax)
+
+        if not savefig:
+            return axes
 
 
 @accessor.register_obs_accessor("plots")
