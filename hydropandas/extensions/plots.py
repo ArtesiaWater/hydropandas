@@ -716,12 +716,12 @@ class CollectionPlots:
             f.tight_layout()
 
             if savefig:
+                if isinstance(by, list):
+                    by_name = "-".join(by)
+                else:
+                    by_name = by
+                    groupname = "-".join(groupname)
                 if naming_method is None:
-                    if isinstance(by, list):
-                        by_name = "-".join(by)
-                        groupname = "-".join(groupname)
-                    else:
-                        by_name = by
                     filename = f"series_by_{by_name}_group_{groupname}.png"
                 elif naming_method == "infer_name_monitoring_well":
                     if "-" in name:
@@ -732,7 +732,7 @@ class CollectionPlots:
                         filename = f"{name}.png"
                 elif isinstance(naming_method, str):
                     filename = (
-                        "series_group_"
+                        f"series_by_{by_name}_group_"
                         f"{'-'.join(group[naming_method].unique().tolist())}.png"
                     )
 
