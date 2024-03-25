@@ -16,6 +16,8 @@ import pandas as pd
 from colorama import Back, Fore, Style
 from scipy.interpolate import RBFInterpolator
 
+from hydropandas.version import __version__ as hpd_version
+
 logger = logging.getLogger(__name__)
 
 EPSG_28992 = (
@@ -198,26 +200,6 @@ def df2gdf(df, xcol="x", ycol="y", crs=28992):
         crs=crs,
     )
     return gdf
-
-
-def show_versions():
-    """Method to print the version of dependencies."""
-    from sys import version as os_version
-
-    from matplotlib import __version__ as mpl_version
-    from numpy import __version__ as np_version
-    from pandas import __version__ as pd_version
-    from scipy import __version__ as sc_version
-
-    msg = (
-        f"Python version    : {os_version}\n"
-        f"Numpy version     : {np_version}\n"
-        f"Scipy version     : {sc_version}\n"
-        f"Pandas version    : {pd_version}\n"
-        f"Matplotlib version: {mpl_version}"
-    )
-
-    return print(msg)
 
 
 class ColoredFormatter(logging.Formatter):
