@@ -16,8 +16,6 @@ import pandas as pd
 from colorama import Back, Fore, Style
 from scipy.interpolate import RBFInterpolator
 
-from hydropandas.version import __version__ as hpd_version
-
 logger = logging.getLogger(__name__)
 
 EPSG_28992 = (
