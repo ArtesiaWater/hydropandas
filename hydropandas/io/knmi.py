@@ -364,7 +364,17 @@ def get_stations(meteo_var):
     with pd.option_context("future.no_silent_downcasting", True):
         stations = pd.concat([mstations, pstations], axis=0).fillna(False)
 
-    return stations[stations.loc[:, meteo_var]]
+    return stations.loc[
+        stations.loc[:, meteo_var],
+        [
+            "lon",
+            "lat",
+            "naam",
+            "x",
+            "y",
+            "hoogte",
+        ],
+    ]
 
 
 def get_station_name(stn, stations=None):
