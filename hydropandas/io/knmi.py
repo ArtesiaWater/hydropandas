@@ -363,7 +363,8 @@ def get_stations(meteo_var):
 
     with pd.option_context("future.no_silent_downcasting", True):
         stations = pd.concat([mstations, pstations], axis=0).fillna(False)
-
+    if meteo_var in ("makkink", "penman", "hargreaves"):
+        meteo_var = "EV24"
     return stations.loc[
         stations.loc[:, meteo_var],
         [
