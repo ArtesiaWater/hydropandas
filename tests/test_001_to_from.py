@@ -245,14 +245,14 @@ def test_from_excel():
 
 def test_pressure_obs_from_stn():
     hpd.MeteoObs.from_knmi(
-        stn=310, meteo_var="P", interval="hourly", start="2022-1-1", end="2023-1-1"
+        stn=310, meteo_var="PG", interval="hourly", start="2022-1-1", end="2023-1-1"
     )
 
 
 def test_pressure_read_knmi():
     hpd.read_knmi(
         stns=(310,),
-        meteo_vars=("P",),
+        meteo_vars=("PG",),
         interval="hourly",
         starts="2022-1-1",
         ends="2023-1-1",
