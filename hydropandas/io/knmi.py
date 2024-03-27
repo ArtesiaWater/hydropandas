@@ -1315,7 +1315,7 @@ def get_knmi_hourly_api(stn, meteo_var, start, end):
 
     params["end"] = end.strftime("%Y%m%d") + "24"
 
-    s = start - pd.Timedelta(1, unit="H")
+    s = start - pd.Timedelta(1, unit="h")
     params["start"] = s.strftime("%Y%m%d") + "01"
 
     result = requests.get(url, params=params)
