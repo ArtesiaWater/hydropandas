@@ -356,15 +356,26 @@ def get_stations(meteo_var):
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    if meteo_var == "RD":
-        # read precipitation station data only
-        fname = "../data/knmi_neerslagstation.json"
-        stations = pd.read_json(os.path.join(dir_path, fname))
-    else:
-        fname = "../data/knmi_meteostation.json"
-        stations = pd.read_json(os.path.join(dir_path, fname))
+    mstations = pd.read_json(os.path.join(dir_path, "../data/knmi_meteostation.json"))
+    pstations = pd.read_json(
+        os.path.join(dir_path, "../data/knmi_neerslagstation.json")
+    )
 
-    return stations
+    with pd.option_context("future.no_silent_downcasting", True):
+        stations = pd.concat([mstations, pstations], axis=0).fillna(False)
+    if meteo_var in ("makkink", "penman", "hargreaves"):
+        meteo_var = "EV24"
+    return stations.loc[
+        stations.loc[:, meteo_var],
+        [
+            "lon",
+            "lat",
+            "naam",
+            "x",
+            "y",
+            "hoogte",
+        ],
+    ]
 
 
 def get_station_name(stn, stations=None):
@@ -1231,6 +1242,7 @@ def read_knmi_daily_meteo_file(path, meteo_var, start=None, end=None):
 def read_knmi_daily_meteo(f, meteo_var):
     f, stations = _read_station_location(f)
     f, variables, header = _read_knmi_header(f, meteo_var)
+
     header[0] = header[0].lstrip("# ")
     df = pd.read_csv(f, header=None, names=header, na_values="     ")
     f.close()
@@ -1303,7 +1315,7 @@ def get_knmi_hourly_api(stn, meteo_var, start, end):
 
     params["end"] = end.strftime("%Y%m%d") + "24"
 
-    s = start - pd.Timedelta(1, unit="H")
+    s = start - pd.Timedelta(1, unit="h")
     params["start"] = s.strftime("%Y%m%d") + "01"
 
     result = requests.get(url, params=params)
