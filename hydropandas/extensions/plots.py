@@ -647,7 +647,13 @@ class CollectionPlots:
         return fig, axes
 
     def series_per_group(
-        self, plot_column, by=None, savefig=True, outputdir=".", naming_method=None
+        self,
+        plot_column,
+        by=None,
+        savefig=True,
+        outputdir=".",
+        naming_method=None,
+        units_for_well_screen_depth="mNAP",
     ):
         """Plot time series per group.
 
@@ -676,6 +682,10 @@ class CollectionPlots:
             obtain the name of the monitoring well from the final name in the group,
             by splitting the string on "-" or "_", and using the first part.
             For example, if the name is "PB001-001", the filename will be "PB001.png".
+        units_for_well_screen_depth : str, optional
+            if the observations are GroundWaterObs, the units of the screen depth are
+            added to the legend. This keyword argument defines the units for the screen
+            depth. Default is 'mNAP'.
 
         Returns
         -------
@@ -694,10 +704,17 @@ class CollectionPlots:
             f, ax = plt.subplots(1, 1, figsize=(10, 3))
             for name, row in group.iterrows():
                 if isinstance(row.obs, GroundwaterObs):
-                    lbl = (
-                        f"{name} (NAP{row['screen_top']:+.1f}"
-                        f"-{row['screen_bottom']:+.1f}m)"
-                    )
+                    if units_for_well_screen_depth == "mNAP":
+                        lbl = (
+                            f"{name} (NAP{row['screen_top']:+.1f}"
+                            f"-{row['screen_bottom']:+.1f} m)"
+                        )
+                    else:
+                        lbl = (
+                            f"{name} ({row['screen_top']:.1f}"
+                            f"-{row['screen_bottom']:.1f} "
+                            f"{units_for_well_screen_depth})"
+                        )
                 else:
                     lbl = f"{name}"
                 ax.plot(
