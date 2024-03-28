@@ -16,12 +16,11 @@ logger = logging.getLogger(__name__)
 def _read_dino_groundwater_header(f):
     line = f.readline()
     header = dict()
-    while line not in ["\n", "", "\r\n"]:
+    while line.strip().strip(",") != "" and line.strip() != "":
         if "," in line:  # for csv from dinoloket
-            propval = line.split(",")
+            propval = line.replace('"', "").strip().split(",")
             prop = propval[0]
             prop = prop.replace(":", "")
-            prop = prop.strip()
             val = propval[1]
             if propval[2] != "":
                 val = val + " " + propval[2].replace(":", "") + " " + propval[3]
@@ -37,18 +36,17 @@ def _read_dino_groundwater_header(f):
 
 
 def _read_empty(f, line):
-    while (line == "\n") or (line == "\r\n"):
+    while line.strip(",").strip() == "" or (line == "\n") or (line == "\r\n"):
         line = f.readline()
     return line
 
 
 def _read_dino_groundwater_referencelvl(f, line):
     ref = {}
-    while line not in ["\n", "", "\r\n"]:
-        propval = line.split(",")
+    while line.strip().strip(",") != "" and line.strip() != "":
+        propval = line.replace('"', "").strip().split(",")
         prop = propval[0]
         prop = prop.replace(":", "")
-        prop = prop.strip()
         if len(propval) > 1:
             val = propval[1]
             ref[prop] = val
@@ -56,7 +54,7 @@ def _read_dino_groundwater_referencelvl(f, line):
     return line, ref
 
 
-def _read_dino_groundwater_metadata(f, line):
+def _read_dino_groundwater_metadata(f, line, fname):
     _translate_dic_float = {
         "x-coordinaat": "x",
         "y-coordinaat": "y",
@@ -70,13 +68,16 @@ def _read_dino_groundwater_metadata(f, line):
     }
     metalist = list()
     line = line.strip()
-    properties = line.split(",")
+    properties = line.replace('"', "").strip().split(",")
+    if "vandezeputzijngeenstandenopgenomen" in properties[0].replace(" ", "").lower():
+        logger.info(f"No waterlevels and metadata have been included in -> {fname}")
+        return "nodata", {}, {}
+
     line = f.readline()
 
-    while line not in ["\n", "", "\r\n"]:
+    while line.strip().strip(",") != "" and line.strip() != "":
         meta = dict()
-        line = line.strip()
-        values = line.split(",")
+        values = line.replace('"', "").strip().split(",")
         for i, val in enumerate(values):
             meta[properties[i].lower()] = val
         metalist.append(meta)
@@ -328,7 +329,9 @@ def read_dino_groundwater_csv(
         logger.warning(f"could not read reference level -> {fname}")
 
     # read metadata
-    line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
+    line, meta, meta_ts = _read_dino_groundwater_metadata(f, line, fname)
+    if line == "nodata" and meta == {} and meta_ts == {}:
+        return None, {}
     line = _read_empty(f, line)
     if not meta["metadata_available"]:
         logger.warning(f"could not read metadata -> {fname}")
