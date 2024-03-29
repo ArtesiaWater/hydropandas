@@ -1093,7 +1093,7 @@ def get_knmi_api(url: str, params: Dict[str, str]) -> StringIO:
     result_str = result.text
 
     if result_str.startswith("<!DOCTYPE html>"):
-        raise RuntimeError("KNMI API down\m" + result_str)
+        raise RuntimeError("KNMI API down\n" + result_str)
 
     return StringIO(result_str)
 
