@@ -14,7 +14,6 @@ The main function to read time series txt files is:
 import datetime as dt
 import logging
 import os
-import re
 import tempfile
 from functools import lru_cache
 from io import StringIO

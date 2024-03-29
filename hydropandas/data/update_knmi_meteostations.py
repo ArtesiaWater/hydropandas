@@ -4,7 +4,6 @@ from requests import ConnectionError
 
 from hydropandas.io import knmi
 
-
 meteo_df = pd.read_json("knmi_meteostation.json")
 meteo_dft = meteo_df.copy()
 
