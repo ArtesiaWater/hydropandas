@@ -107,19 +107,29 @@ def get_knmi_obs(
             f"get data from station {stn} and variable {meteo_var} "
             f"from {start_str} to {end_str}"
         )
-        ts, meta = get_knmi_timeseries_stn(stn=stn, meteo_var=meteo_var, settings=settings, start=start, end=end)
+        ts, meta = get_knmi_timeseries_stn(
+            stn=stn, meteo_var=meteo_var, settings=settings, start=start, end=end
+        )
     elif fname is not None:
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
         ts, meta = get_knmi_timeseries_fname(
-            fname=str(fname), eteo_var=meteo_var, settings=settings, start=start, end=end
+            fname=str(fname),
+            eteo_var=meteo_var,
+            settings=settings,
+            start=start,
+            end=end,
         )
     elif xy is not None:
         logger.info(
             f"get KNMI data from station nearest to coordinates {xy} and meteo"
             f"variable {meteo_var}"
         )
-        stns = get_n_nearest_stations_xy(xy=xy, meteo_var=meteo_var, n=1, stations=None, ignore=None)
-        ts, meta = get_knmi_timeseries_stn(stn=stns[0], meteo_var=meteo_var, settings=settings, start=start, end=end)
+        stns = get_n_nearest_stations_xy(
+            xy=xy, meteo_var=meteo_var, n=1, stations=None, ignore=None
+        )
+        ts, meta = get_knmi_timeseries_stn(
+            stn=stns[0], meteo_var=meteo_var, settings=settings, start=start, end=end
+        )
     else:
         raise ValueError(
             "specify KNMI station (stn), filename (fname) or coordinates (xy)"
@@ -137,12 +147,25 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     elif "etmgeg" in fname:
         # meteo station
         df, meta = read_knmi_meteo_file(fname)
-
-        ts, meta = interpret_knmi_url_meteo_file(df=df, meta=meta, meteo_var=meteo_var, start=start, end=end)
+        ts, meta, _ = interpret_knmi_meteo_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=True,
+        )
     elif "uurgeg" in fname:
         # hourly station
         df, meta = read_knmi_meteo_file(fname)
-        ts, meta = interpret_knmi_url_meteo_file(df=df, meta=meta, meteo_var=meteo_var, start=start, end=end)
+        ts, meta, _ = interpret_knmi_meteo_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=False,
+        )
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
@@ -151,11 +174,25 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     elif settings["interval"] == "daily":
         # meteo station
         df, meta = read_knmi_meteo_file(fname)
-        ts, meta = interpret_knmi_url_meteo_file(df=df, meta=meta, meteo_var=meteo_var, start=start, end=end)
+        ts, meta, _ = interpret_knmi_meteo_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=True,
+        )
     elif settings["interval"] == "hourly":
         # uurlijks station
         df, meta = read_knmi_meteo_file(fname)
-        ts, meta = interpret_knmi_url_meteo_file(df=df, meta=meta, meteo_var=meteo_var, start=start, end=end)
+        ts, meta, _ = interpret_knmi_meteo_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=False,
+        )
     else:
         raise ValueError(
             "please indicate how to read the file by specifying a meteo_var and"
@@ -314,16 +351,28 @@ def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
     elif settings["fill_missing_obs"]:
         # download data
         knmi_df, meta = fill_missing_measurements(
-            stn=stn, meteo_var=meteo_var, start=start, end=end, settings=settings, stn_name=stn_name
+            stn=stn,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            settings=settings,
+            stn_name=stn_name,
         )
 
         return knmi_df, meta
     elif meteo_var in ["penman", "makkink", "hargreaves"]:
         # compute evaporation from data
-        knmi_df, meta = get_evaporation(meteo_var=meteo_var,stn=stn, start=start, end=end, settigns=settings)
+        knmi_df, meta = get_evaporation(
+            meteo_var=meteo_var, stn=stn, start=start, end=end, settings=settings
+        )
     else:
         knmi_df, variables, station_meta = download_knmi_data(
-stn=stn, meteo_var=meteo_var, start=start, end=end, settings=settings, stn_name=stn_name
+            stn=stn,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            settings=settings,
+            stn_name=stn_name,
         )
 
         if str(stn) in station_meta.index:
@@ -624,16 +673,34 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
             if settings["use_api"]:
                 if settings["interval"].startswith("hour"):
                     # hourly data from meteorological stations
-                    knmi_df, variables = get_knmi_hourly_meteo_api(
-                        stn, meteo_var, start, end
+                    df, meta = get_knmi_hourly_meteo_api(
+                        stn=stn, meteo_var=meteo_var, start=start, end=end
+                    )
+                    knmi_df, variables, _ = interpret_knmi_meteo_file(
+                        df=df,
+                        meta=meta,
+                        meteo_var=meteo_var,
+                        start=start,
+                        end=end,
+                        adjust_time=False,
                     )
                 elif meteo_var == "RD":
                     # daily data from rainfall-stations
-                    knmi_df, variables = get_knmi_daily_rainfall_api(stn, start, end)
+                    knmi_df, variables = get_knmi_daily_rainfall_api(
+                        stn=stn, start=start, end=end
+                    )
                 else:
                     # daily data from meteorological stations
-                    knmi_df, variables, stations = get_knmi_daily_meteo_api(
-                        stn, meteo_var, start, end
+                    df, meta = get_knmi_daily_meteo_api(
+                        stn=stn, meteo_var=meteo_var, start=start, end=end
+                    )
+                    knmi_df, variables, _ = interpret_knmi_meteo_file(
+                        df=df,
+                        meta=meta,
+                        meteo_var=meteo_var,
+                        start=start,
+                        end=end,
+                        adjust_time=True,
                     )
 
         except (RuntimeError, requests.ConnectionError) as e:
@@ -658,8 +725,13 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
             else:
                 # daily data from meteorological stations
                 df, meta = get_knmi_daily_meteo_url(stn=stn)
-                knmi_df, variables = interpret_knmi_url_meteo_file(
-                    df=df, meta=meta, meteo_var=meteo_var, start=start, end=end
+                knmi_df, variables, _ = interpret_knmi_meteo_file(
+                    df=df,
+                    meta=meta,
+                    meteo_var=meteo_var,
+                    start=start,
+                    end=end,
+                    adjust_time=True,
                 )
     except (ValueError, KeyError) as e:
         logger.error(e)
@@ -1189,7 +1261,9 @@ def read_knmi_meteo_file(
         raise ValueError(f"No data in file {path}")
 
 
-def interpret_knmi_url_meteo_file(df, meta, meteo_var, start=None, end=None):
+def interpret_knmi_meteo_file(
+    df, meta, meteo_var, start=None, end=None, adjust_time=True
+):
     """read knmi daily data from a file
 
     Parameters
@@ -1216,12 +1290,17 @@ def interpret_knmi_url_meteo_file(df, meta, meteo_var, start=None, end=None):
         measurements.
     variables : dictionary
         additional information about the variables
+    station : int
+        meteostation
     """
 
-    # step 1: add a full day for meteorological data, so that the
-    # timestamp is at the end of the period in the data
-    # step 2: from UT to UT+1 (standard-time in the Netherlands)
-    df.index = df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
+    if adjust_time:
+        # step 1: add a full day for meteorological data, so that the
+        # timestamp is at the end of the period in the data
+        # step 2: from UT to UT+1 (standard-time in the Netherlands)
+        df.index = (
+            df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
+        )
 
     station = df.at[df.index[0], "STN"]
 
@@ -1231,7 +1310,7 @@ def interpret_knmi_url_meteo_file(df, meta, meteo_var, start=None, end=None):
     variables["unit"] = ""
     variables["station"] = station
 
-    return meteo_df, variables
+    return meteo_df, variables, station
 
 
 @lru_cache()
@@ -1343,8 +1422,8 @@ def _check_latest_measurement_date_de_bilt(
     else:
         if use_api:
             try:
-                knmi_df, _, _ = get_knmi_daily_meteo_api(
-                    260, meteo_var, start=start, end=end
+                knmi_df, _ = get_knmi_daily_meteo_api(
+                    stn=260, meteo_var=meteo_var, start=start, end=end
                 )
             except (RuntimeError, requests.ConnectionError):
                 logger.warning("KNMI API failed, switching to non-API method")
@@ -1733,7 +1812,7 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
             d["TN"],
             d["TX"],
             d["TG"].index,
-            meta["LAT_north"],
+            meta["lat"] if "lat" in meta else 52.1,
         ).to_frame(name=meteo_var)
     elif meteo_var == "makkink":
         d = {}
@@ -1765,8 +1844,8 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
             d["FG"],
             d["UG"],
             d["TG"].index,
-            meta["LAT_north"],
-            meta["ALT_m"],
+            meta["lat"] if "lat" in meta else 52.1,
+            meta["hoogte"] if "hoogte" in meta else 0.0,
         ).to_frame(name=meteo_var)
     else:
         raise ValueError(
