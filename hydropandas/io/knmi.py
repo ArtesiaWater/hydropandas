@@ -9,7 +9,7 @@ import tempfile
 from functools import lru_cache
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -25,12 +25,12 @@ URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
 
 
 def get_knmi_obs(
-    stn=None,
-    fname=None,
-    xy=None,
-    meteo_var=None,
-    start=None,
-    end=None,
+    stn: Union[int, None] = None,
+    fname: Union[str, None] = None,
+    xy: Union[List[float], Tuple[float], None] = None,
+    meteo_var: Union[str, None] = None,
+    start: Union[pd.Timestamp, str, None] = None,
+    end: Union[pd.Timestamp, str, None] = None,
     **kwargs,
 ):
     """get knmi observation from stn, fname or nearest xy coordinates.
@@ -85,7 +85,8 @@ def get_knmi_obs(
 
     settings = _get_default_settings(kwargs)
 
-    start, end = _start_end_to_datetime(start, end)
+    start = start if start is None else pd.to_datetime(start)
+    end = end if end is None else pd.to_datetime(end)
 
     if stn is not None:
         stn = int(stn)
@@ -128,7 +129,13 @@ def get_knmi_obs(
     return ts, meta
 
 
-def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
+def get_knmi_timeseries_fname(
+    fname: str,
+    meteo_var: str,
+    settings: Dict[str, Any],
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+):
     df, meta = read_knmi_file(fname)
     # first try to figure out filetype by it's name
     if "neerslaggeg" in fname:
@@ -183,7 +190,7 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     return ts, meta
 
 
-def _get_default_settings(settings=None):
+def _get_default_settings(settings=None) -> Dict[str, Any]:
     """adds the default settings to a dictinary with settings. If settings
     is None all the settings are default. If there are already settings given
     only the non-existing settings are added with their default value.
@@ -238,33 +245,6 @@ def _get_default_settings(settings=None):
             settings[key] = value
 
     return settings
-
-
-def _start_end_to_datetime(start, end):
-    """convert start and endtime to datetime.
-
-    Parameters
-    ----------
-    start : str, datetime, None
-        start time
-    end : str, datetime, None
-        start time
-
-    Returns
-    -------
-    start : pd.TimeStamp or None
-        start time
-    end : pd.TimeStamp or None
-        end time
-    """
-
-    if start is not None:
-        start = pd.to_datetime(start)
-
-    if end is not None:
-        end = pd.to_datetime(end)
-
-    return start, end
 
 
 def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
@@ -621,7 +601,7 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
     variables : dictionary
         information about the observerd variables
     stations : pandas DataFrame
-        information about the measurement station.
+        information about the measurement station
     """
 
     logger.debug(
@@ -632,7 +612,6 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
     # define variables
     knmi_df = pd.DataFrame()
     variables = {}
-    stations = pd.DataFrame()
 
     # download and read data
     try:
@@ -681,28 +660,34 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                 raise NotImplementedError()
             elif meteo_var == "RD":
                 # daily data from rainfall-stations
-                knmi_df, variables = get_knmi_daily_rainfall_url(stn, stn_name)
+                df, meta = get_knmi_daily_rainfall_url(stn, stn_name)
             else:
                 # daily data from meteorological stations
                 df, meta = get_knmi_daily_meteo_url(stn=stn)
-                knmi_df, variables = interpret_knmi_file(
-                    df=df,
-                    meta=meta,
-                    meteo_var=meteo_var,
-                    start=start,
-                    end=end,
-                    adjust_time=True,
-                )
+            knmi_df, variables = interpret_knmi_file(
+                df=df,
+                meta=meta,
+                meteo_var=meteo_var,
+                start=start,
+                end=end,
+                adjust_time=True,
+            )
     except (ValueError, KeyError) as e:
         logger.error(e)
         if settings["raise_exceptions"]:
-            raise ValueError(e)
+            raise e
 
     if knmi_df.empty:
         logger.debug(
             "no measurements found for station "
             f"{stn}-{stn_name} between {start} and {end}"
         )
+
+    stations = (
+        pd.DataFrame()
+        if knmi_df.emtpy
+        else get_stations(meteo_var=meteo_var).loc[[variables["station"]], :]
+    )
 
     return knmi_df, variables, stations
 
@@ -1078,7 +1063,7 @@ def read_knmi_file(
 
 
 def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=True):
-    """read knmi daily data from a file
+    """interpret data from knmi by selecting meteo_var data and meta and transforming the variables
 
     Parameters
     ----------
@@ -1408,7 +1393,9 @@ def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
     return stns
 
 
-def _add_missing_indices(knmi_df, stn, start, end):
+def _add_missing_indices(
+    knmi_df: pd.DataFrame, stn: int, start: pd.Timestamp, end: pd.Timestamp
+):
     """When downloading KNMI data you don't always get a DataFrame with the
     periods that you provided in your request. Thus the index does not cover
     the complete period that you are interested in. This function adds the
@@ -1557,7 +1544,8 @@ def get_knmi_obslist(
 
     obs_list = []
     for meteo_var, start, end, ObsClass in zip(meteo_vars, starts, ends, ObsClasses):
-        start, end = _start_end_to_datetime(start, end)
+        start = start if start is None else pd.to_datetime(start)
+        end = end if end is None else pd.to_datetime(end)
 
         # get stations
         if stns is None:

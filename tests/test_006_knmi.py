@@ -99,7 +99,7 @@ def test_download_knmi_de_bilt():
 
 def test_xy():
     # empty dataframe because nearest station has no data in time frame
-    knmi.get_knmi_obs(
+    _ = knmi.get_knmi_obs(
         xy=(100000, 330000),
         meteo_var="EV24",
         start=pd.Timestamp("2010-1-1"),
@@ -107,7 +107,7 @@ def test_xy():
     )
 
     # fill missing obs does work
-    knmi.get_knmi_obs(
+    _ = knmi.get_knmi_obs(
         xy=(100000, 330000),
         meteo_var="EV24",
         start=pd.Timestamp("2010-1-1"),
@@ -115,11 +115,11 @@ def test_xy():
         fill_missing_obs=True,
     )
 
-    knmi.get_knmi_obs(
-        xy=(150000, 250000),
+    _ = knmi.get_knmi_obs(
+        xy=(150000, 330000),
         meteo_var="RD",
-        start=pd.Timestamp("2010-1-1"),
-        end=pd.Timestamp("2010-1-10"),
+        start=pd.Timestamp("1953-1-1"),
+        end=pd.Timestamp("1953-1-10"),
     )
 
 
@@ -158,22 +158,26 @@ def test_schiermonnikoog_precipitation_station():
 
 
 def test_download_without_data():
-    df, _ = knmi.get_knmi_obs(
-        324, meteo_var="RD", start=pd.Timestamp("2018"), end=pd.Timestamp("2020")
+    dfrd, _ = knmi.get_knmi_obs(
+        324,
+        meteo_var="RD",
+        start=pd.Timestamp("2018"),
+        end=pd.Timestamp("2020"),
+        raise_exceptions=False,
     )
+    assert dfrd.empty, "expected empty DataFrame"
 
-    assert df.empty, "expected empty DataFrame"
-
-    df, _ = knmi.get_knmi_obs(
+    dfev, _ = knmi.get_knmi_obs(
         265,
         meteo_var="EV24",
         start=pd.Timestamp("1959"),
         end=pd.Timestamp("1963"),
+        raise_exceptions=False,
     )
+    assert dfev.empty, "expected empty DataFrame"
 
-    assert df.empty, "expected empty DataFrame"
 
-
+# %%
 def test_fill_missing_measurements():
     settings = knmi._get_default_settings({"fill_missing_obs": True})
 
@@ -187,7 +191,7 @@ def test_fill_missing_measurements():
     )
 
     # missing all data
-    df, meta = knmi.get_knmi_timeseries_stn(
+    _, meta = knmi.get_knmi_timeseries_stn(
         265,
         meteo_var="EV24",
         settings=settings,
@@ -198,7 +202,7 @@ def test_fill_missing_measurements():
     assert meta["station"] == 260, "expected metadata from different station"
 
     # missing some data
-    df, meta = knmi.get_knmi_timeseries_stn(
+    _, meta = knmi.get_knmi_timeseries_stn(
         273,
         meteo_var="RH",
         settings=settings,
