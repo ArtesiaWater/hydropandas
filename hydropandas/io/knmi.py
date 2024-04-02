@@ -132,12 +132,20 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     # first try to figure out filetype by it's name
     if "neerslaggeg" in fname:
         # neerslagstation
-        ts, meta = read_knmi_daily_rainfall_file(fname_txt=fname, start=start, end=end)
+        ts, meta = read_knmi_file(fname_txt=fname, start=start, end=end)
         meteo_var = "RD"
+        ts, meta = interpret_knmi_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=False,
+        )
     elif "etmgeg" in fname:
         # meteo station
-        df, meta = read_knmi_meteo_file(fname)
-        ts, meta, _ = interpret_knmi_meteo_file(
+        df, meta = read_knmi_file(fname)
+        ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
             meteo_var=meteo_var,
@@ -147,8 +155,8 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         )
     elif "uurgeg" in fname:
         # hourly station
-        df, meta = read_knmi_meteo_file(fname)
-        ts, meta, _ = interpret_knmi_meteo_file(
+        df, meta = read_knmi_file(fname)
+        ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
             meteo_var=meteo_var,
@@ -159,12 +167,20 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
-        ts, meta = read_knmi_daily_rainfall_file(fname_txt=fname, start=start, end=end)
+        ts, meta = read_knmi_file(fname_txt=fname, start=start, end=end)
         meteo_var = "RD"
+        ts, meta = interpret_knmi_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=False,
+        )
     elif settings["interval"] == "daily":
         # meteo station
-        df, meta = read_knmi_meteo_file(fname)
-        ts, meta, _ = interpret_knmi_meteo_file(
+        df, meta = read_knmi_file(fname)
+        ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
             meteo_var=meteo_var,
@@ -174,8 +190,8 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         )
     elif settings["interval"] == "hourly":
         # uurlijks station
-        df, meta = read_knmi_meteo_file(fname)
-        ts, meta, _ = interpret_knmi_meteo_file(
+        df, meta = read_knmi_file(fname)
+        ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
             meteo_var=meteo_var,
@@ -666,32 +682,27 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                     df, meta = get_knmi_hourly_meteo_api(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
-                    knmi_df, variables, _ = interpret_knmi_meteo_file(
-                        df=df,
-                        meta=meta,
-                        meteo_var=meteo_var,
-                        start=start,
-                        end=end,
-                        adjust_time=False,
-                    )
+                    adjust_time = False
                 elif meteo_var == "RD":
                     # daily data from rainfall-stations
-                    knmi_df, variables = get_knmi_daily_rainfall_api(
+                    df, meta = get_knmi_daily_rainfall_api(
                         stn=stn, start=start, end=end
                     )
+                    adjust_time = False
                 else:
                     # daily data from meteorological stations
                     df, meta = get_knmi_daily_meteo_api(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
-                    knmi_df, variables, _ = interpret_knmi_meteo_file(
-                        df=df,
-                        meta=meta,
-                        meteo_var=meteo_var,
-                        start=start,
-                        end=end,
-                        adjust_time=True,
-                    )
+                    adjust_time = True
+                knmi_df, variables = interpret_knmi_file(
+                    df=df,
+                    meta=meta,
+                    meteo_var=meteo_var,
+                    start=start,
+                    end=end,
+                    adjust_time=adjust_time,
+                )
 
         except (RuntimeError, requests.ConnectionError) as e:
             logger.warning(
@@ -709,13 +720,11 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                 raise NotImplementedError()
             elif meteo_var == "RD":
                 # daily data from rainfall-stations
-                knmi_df, variables = get_knmi_daily_rainfall_url(
-                    stn, stn_name, start, end
-                )
+                knmi_df, variables = get_knmi_daily_rainfall_url(stn, stn_name)
             else:
                 # daily data from meteorological stations
                 df, meta = get_knmi_daily_meteo_url(stn=stn)
-                knmi_df, variables, _ = interpret_knmi_meteo_file(
+                knmi_df, variables = interpret_knmi_file(
                     df=df,
                     meta=meta,
                     meteo_var=meteo_var,
@@ -738,7 +747,7 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
 
 
 @lru_cache()
-def get_knmi_daily_rainfall_api(stn, start=None, end=None):
+def get_knmi_daily_rainfall_api(stn: int, start=None, end=None):
     """download and read knmi daily rainfall.
 
     Parameters
@@ -770,16 +779,13 @@ def get_knmi_daily_rainfall_api(stn, start=None, end=None):
         params["start"] = start.strftime("%Y%m%d")
     if end is not None:
         params["end"] = end.strftime("%Y%m%d")
-    f = get_knmi_api(url, params)
-    knmi_df, variables = read_knmi_daily_rainfall(f, meteo_var)
-    if stn not in knmi_df["STN"].unique():
-        return pd.DataFrame(), variables
+    strio = get_knmi_api(url, params)
 
-    return knmi_df[[meteo_var]], variables
+    return read_knmi_file(strio)
 
 
 @lru_cache()
-def get_knmi_daily_rainfall_url(stn, stn_name, start=None, end=None):
+def get_knmi_daily_rainfall_url(stn: int, stn_name: str):
     """download and read knmi daily rainfall.
 
     Parameters
@@ -788,10 +794,6 @@ def get_knmi_daily_rainfall_url(stn, stn_name, start=None, end=None):
         station number.
     stn_name : str
         the name of the station in capital letters, can be tricky
-    start : pd.TimeStamp or None
-        start time of observations.
-    end : pd.TimeStamp or None
-        end time of observations.
 
     Raises
     ------
@@ -805,10 +807,7 @@ def get_knmi_daily_rainfall_url(stn, stn_name, start=None, end=None):
     variables : dictionary
         additional information about the variables
     """
-    if end is not None:
-        end = end + dt.timedelta(days=1)
 
-    stn = str(stn)
     url = (
         "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
         f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
@@ -824,8 +823,10 @@ def get_knmi_daily_rainfall_url(stn, stn_name, start=None, end=None):
 
     # download zip file
     r = requests.get(url, stream=True)
+
     if r.status_code != 200:
         raise ValueError(f"invalid url {url} please check station name {stn_name}")
+
     with open(fname_zip, "wb") as fd:
         for chunk in r.iter_content(chunk_size=128):
             fd.write(chunk)
@@ -833,78 +834,7 @@ def get_knmi_daily_rainfall_url(stn, stn_name, start=None, end=None):
     # unzip file
     util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
 
-    return read_knmi_daily_rainfall_file(fname_txt, start=start, end=end)
-
-
-def read_knmi_daily_rainfall_file(fname_txt, start=None, end=None):
-    """read a knmi file with daily rainfall data.
-
-    Parameters
-    ----------
-    path : str
-        file path of a knmi .txt file.
-    start : pd.TimeStamp or None
-        start time of observations.
-    end : pd.TimeStamp or None
-        end time of observations.
-
-    Returns
-    -------
-    pandas DataFrame
-        measurements.
-    variables : dictionary
-        additional information about the variables
-
-    """
-    meteo_var = "RD"
-
-    with open(fname_txt, "r") as f:
-        line = f.readline()
-        # get meteo var
-        for _ in range(50):
-            if "RD   " in line:  # RD komt te vaak voor vandaar de spaties
-                key, item = line.split("=")
-                variables = {key.strip(): item.strip()}
-                break
-            line = f.readline()
-
-        # get dataframe
-        for _ in range(50):
-            if "STN" in line:
-                columns = line.strip("# ").strip("\n").split(",")
-                columns = [x.strip(" ") for x in columns]
-                values = f.readline()
-                if values == "\n":
-                    values = f.readline()
-            line = f.readline()
-
-        df = pd.read_csv(f, header=None, names=columns, na_values="     ")
-
-        df.set_index(pd.to_datetime(df.YYYYMMDD, format="%Y%m%d"), inplace=True)
-        df = df.drop("YYYYMMDD", axis=1)
-
-        if df.index.duplicated().sum() > 0:
-            df = df.loc[~df.index.duplicated(keep="first")]
-            logger.info("duplicate indices removed from RD measurements")
-
-        # sometimes the last row is empty, check for that and remove it
-        if not df.empty:
-            if df.iloc[-1].isna().any():
-                logger.debug("duplicate indices removed from RD measurements")
-                df = df.drop(index=df.index[-1])
-                df.loc[:, meteo_var] = df[meteo_var].astype(float)
-
-        df, variables = _transform_variables(df, variables)
-        variables["unit"] = "m"
-
-        # add station to variables
-        unique_stn = df["STN"].unique()
-        if len(unique_stn) > 1:
-            raise ValueError(f"multiple stations in single file {unique_stn}")
-        else:
-            variables["station"] = df["STN"].iloc[0]
-
-    return df.loc[start:end, [meteo_var]], variables
+    return read_knmi_file(fname_txt)
 
 
 def _transform_variables(df, variables):
@@ -970,6 +900,7 @@ def _transform_variables(df, variables):
 
             df[key] = df[key] * 0.001
             value = value.replace(" mm", " m")
+            variables["unit"] = "m"
         if " millimeters" in value:
             logger.debug(f"transform {key}, {value} from mm to m")
 
@@ -992,90 +923,21 @@ def _transform_variables(df, variables):
     return df, variables
 
 
-def read_knmi_daily_rainfall(f, meteo_var):
-    """
-    Read daily rainfall data from a KNMI file.
+def get_knmi_api(url: str, params: Dict[str, str]) -> StringIO:
+    """Download KNMI data from the API
 
     Parameters
     ----------
-    f : file-like object
-        The file object containing the KNMI data.
-    meteo_var : str
-        The meteorological variable to extract.
+    url : str
+        URL to parse the request to
+    params : Dict[str, str]
+        Dictionary with parameters that are parsed to the request get
 
     Returns
     -------
-    pandas.DataFrame
-        The DataFrame containing the extracted daily rainfall data.
-    dict
-        A dictionary containing information about the variables in the DataFrame.
-
-    Notes
-    -----
-    This function assumes that the file object `f` is already open and
-    positioned at the start of the data. The file is expected to have a header
-    with variable names and a corresponding data table.
-
-    The DataFrame returned by this function has the following modifications:
-    - The index is set to the datetime values derived from the 'YYYYMMDD' column.
-    - The 'YYYYMMDD' column is dropped.
-    - Duplicate indices are removed, keeping the first occurrence.
-    - If the last row has missing values, it is removed.
-    - The 'meteo_var' column is cast to float data type.
-    - Variables are transformed using an internal function `_transform_variables`.
-    - The unit of measurement for the 'meteo_var' variable is set to 'm'.
+    StringIO
 
     """
-
-    variables = {}
-    line = f.readline()
-    for iline in range(500):
-        if " = " in line or " : " in line:
-            line = line.lstrip(" #").strip("\n")
-            if " = " in line:
-                varDes = line.split(" = ")
-            else:
-                varDes = line.split(" : ")
-            if varDes[0].strip() == meteo_var:
-                variables[varDes[0].strip()] = varDes[1].strip()
-
-        if "STN,YY" in line:
-            header = line.replace("#", "").split(",")
-            header = [item.lstrip().rstrip() for item in header]
-            break
-
-        line = f.readline()
-
-    if iline > 498:
-        raise ValueError("cannot read measurements from file")
-
-    df = pd.read_csv(f, header=None, names=header, na_values="     ")
-    f.close()
-
-    df.set_index(pd.to_datetime(df.YYYYMMDD, format="%Y%m%d"), inplace=True)
-    df = df.drop("YYYYMMDD", axis=1)
-
-    if df.index.duplicated().sum() > 0:
-        df = df.loc[~df.index.duplicated(keep="first")]
-        logger.debug("duplicate indices removed from RD measurements")
-
-    # sometimes the last row is messed up, check for that and remove it
-    if not df.empty:
-        if df.iloc[-1].isna().any():
-            logger.debug("last row contains no data, remove last row")
-
-            df = df.drop(index=df.index[-1])
-            df.loc[:, meteo_var] = df[meteo_var].astype(float)
-
-    df, variables = _transform_variables(df, variables)
-    variables["unit"] = "m"
-
-    return df, variables
-
-
-def get_knmi_api(url: str, params: Dict[str, str]) -> StringIO:
-    """download and read knmi daily meteo data."""
-
     result = requests.get(url, params=params)
 
     if result.status_code != 200:
@@ -1135,7 +997,7 @@ def get_knmi_daily_meteo_api(
 
     strio = get_knmi_api(url, params)
 
-    return read_knmi_meteo_file(strio)
+    return read_knmi_file(strio)
 
 
 @lru_cache()
@@ -1175,10 +1037,10 @@ def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
 
     # unzip file
     util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
-    return read_knmi_meteo_file(fname_txt)
+    return read_knmi_file(fname_txt)
 
 
-def read_knmi_meteo_file(
+def read_knmi_file(
     path: Union[str, Path, StringIO]
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """read knmi daily meteo data from a file
@@ -1197,7 +1059,7 @@ def read_knmi_meteo_file(
     """
     meta_id1 = " = "
     meta_id2 = " : "
-    data_id = "# STN,"
+    data_id = "STN,"
     meta = {}
     df = None
     # with open(path, "r") as f:
@@ -1251,9 +1113,7 @@ def read_knmi_meteo_file(
         raise ValueError(f"No data in file {path}")
 
 
-def interpret_knmi_meteo_file(
-    df, meta, meteo_var, start=None, end=None, adjust_time=True
-):
+def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=True):
     """read knmi daily data from a file
 
     Parameters
@@ -1268,6 +1128,9 @@ def interpret_knmi_meteo_file(
         start time of observations.
     end : pd.TimeStamp or None
         end time of observations.
+    adjust_time : boolean, optional
+        add 1 day and 1 hour to convert from GMT to CET winter time
+        and make observation time over the previous time interval
 
     Raises
     ------
@@ -1293,15 +1156,23 @@ def interpret_knmi_meteo_file(
             df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
         )
 
-    station = df.at[df.index[0], "STN"]
+    if df.index.has_duplicates:
+        df = df.loc[~df.index.duplicated(keep="first")]
+        logger.info("duplicate indices removed from RD measurements")
 
     meteo_df = df.loc[start:end, [meteo_var]].dropna()
     variables = {meteo_var: meta[meteo_var]}
     meteo_df, variables = _transform_variables(meteo_df, variables)
-    variables["unit"] = ""
-    variables["station"] = station
+    if "unit" not in variables:
+        variables["unit"] = ""
 
-    return meteo_df, variables, station
+    unique_stn = df["STN"].unique()
+    if len(unique_stn) > 1:
+        raise ValueError(f"multiple stations in single file {unique_stn}")
+    else:
+        variables["station"] = df.at[df.index[0], "STN"]
+
+    return meteo_df, variables
 
 
 @lru_cache()
@@ -1360,7 +1231,7 @@ def get_knmi_hourly_meteo_api(
 
     strio = get_knmi_api(url=url, params=params)
 
-    return read_knmi_meteo_file(strio)
+    return read_knmi_file(strio)
 
 
 def _check_latest_measurement_date_de_bilt(
@@ -1407,9 +1278,9 @@ def _check_latest_measurement_date_de_bilt(
                 knmi_df, _ = get_knmi_daily_rainfall_api(550, start, end)
             except (RuntimeError, requests.ConnectionError):
                 logger.warning("KNMI API failed, switching to non-API method")
-                knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT", start, end)
+                knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
         else:
-            knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT", start, end)
+            knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
     else:
         if use_api:
             try:
