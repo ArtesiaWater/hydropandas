@@ -135,15 +135,12 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         # neerslagstation
         meteo_var = "RD"
         adjust_time=False
-
     elif "etmgeg" in fname:
         # meteo station
         adjust_time=True
-
     elif "uurgeg" in fname:
         adjust_time=False
         # hourly station
-
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
@@ -396,10 +393,10 @@ def get_stations(meteo_var):
         [
             "lon",
             "lat",
-            "naam",
+            "name",
             "x",
             "y",
-            "hoogte",
+            "altitude",
         ],
     ]
 
@@ -428,7 +425,7 @@ def get_station_name(stn, stations=None):
         logger.warning(f"station {stn} not found")
         return None
 
-    stn_name = stations.at[stn, "naam"]
+    stn_name = stations.at[stn, "name"]
     stn_name = stn_name.upper().replace(" ", "-").replace("(", "").replace(")", "")
     return stn_name
 
