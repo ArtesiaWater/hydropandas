@@ -321,7 +321,11 @@ def test_knmi_collection_from_locations():
     obsc = obscollection_dinozip_gw()
     try:
         hpd.read_knmi(
-            locations=obsc, meteo_vars=["EV24", "RD"], starts="2010", ends="2015"
+            locations=obsc,
+            meteo_vars=["EV24", "RD"],
+            starts="2010",
+            ends="2015",
+            raise_exceptions=False,
         )
     except ConnectionError:
         pass

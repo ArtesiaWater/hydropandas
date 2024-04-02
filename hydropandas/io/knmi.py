@@ -603,11 +603,8 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
     stations : pandas DataFrame
         information about the measurement station
     """
-
-    logger.debug(
-        f"download KNMI {meteo_var} data from station "
-        f"{stn}-{stn_name} between {start} and {end}"
-    )
+    msg = f"{stn}-{stn_name} between {start} and {end}"
+    logger.debug(f"download KNMI {meteo_var} data from station " + msg)
 
     # define variables
     knmi_df = pd.DataFrame()
@@ -673,21 +670,15 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                 adjust_time=True,
             )
     except (ValueError, KeyError) as e:
-        logger.error(e)
+        logger.error(f"{e} {msg}")
         if settings["raise_exceptions"]:
             raise e
 
     if knmi_df.empty:
-        logger.debug(
-            "no measurements found for station "
-            f"{stn}-{stn_name} between {start} and {end}"
-        )
-
-    stations = (
-        pd.DataFrame()
-        if knmi_df.empty
-        else get_stations(meteo_var=meteo_var).loc[[variables["station"]], :]
-    )
+        logger.error(f"no measurements found for station {msg}")
+        stations = pd.DataFrame()
+    else:
+        stations = get_stations(meteo_var=meteo_var).loc[[variables["station"]], :]
 
     return knmi_df, variables, stations
 
