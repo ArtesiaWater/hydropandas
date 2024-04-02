@@ -1,14 +1,5 @@
-"""Module with functions to read or download time series with observations from knmi.
-
-The main function to download time series are:
-
-- get_knmi_timeseries_xy: obtain a knmi station based on the xy location
-- get_knmi_timeseries_stn: obtain a knmi station based on the station number
-
-The main function to read time series txt files is:
-
- - read_knmi_timeseries_file: read a knmi txt file
-
+"""
+Module with functions to read or download time series with observations from knmi.
 """
 
 import datetime as dt
