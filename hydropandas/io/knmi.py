@@ -675,7 +675,7 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
             raise e
 
     if knmi_df.empty:
-        logger.error(f"no measurements found for station {msg}")
+        logger.debug(f"no measurements found for station {msg}")
         stations = pd.DataFrame()
     else:
         stations = get_stations(meteo_var=meteo_var).loc[[variables["station"]], :]
