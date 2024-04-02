@@ -685,7 +685,7 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
 
     stations = (
         pd.DataFrame()
-        if knmi_df.emtpy
+        if knmi_df.empty
         else get_stations(meteo_var=meteo_var).loc[[variables["station"]], :]
     )
 
