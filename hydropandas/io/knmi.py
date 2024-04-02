@@ -134,71 +134,40 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     if "neerslaggeg" in fname:
         # neerslagstation
         meteo_var = "RD"
-        ts, meta = interpret_knmi_file(
-            df=df,
-            meta=meta,
-            meteo_var=meteo_var,
-            start=start,
-            end=end,
-            adjust_time=False,
-        )
+        adjust_time=False
+
     elif "etmgeg" in fname:
         # meteo station
-        ts, meta = interpret_knmi_file(
-            df=df,
-            meta=meta,
-            meteo_var=meteo_var,
-            start=start,
-            end=end,
-            adjust_time=True,
-        )
+        adjust_time=True
+
     elif "uurgeg" in fname:
+        adjust_time=False
         # hourly station
-        ts, meta = interpret_knmi_file(
-            df=df,
-            meta=meta,
-            meteo_var=meteo_var,
-            start=start,
-            end=end,
-            adjust_time=False,
-        )
+
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
         meteo_var = "RD"
-        ts, meta = interpret_knmi_file(
-            df=df,
-            meta=meta,
-            meteo_var=meteo_var,
-            start=start,
-            end=end,
-            adjust_time=False,
-        )
+        adjust_time=False
     elif settings["interval"] == "daily":
         # meteo station
-        ts, meta = interpret_knmi_file(
-            df=df,
-            meta=meta,
-            meteo_var=meteo_var,
-            start=start,
-            end=end,
-            adjust_time=True,
-        )
+        adjust_time=True
     elif settings["interval"] == "hourly":
         # uurlijks station
-        ts, meta = interpret_knmi_file(
-            df=df,
-            meta=meta,
-            meteo_var=meteo_var,
-            start=start,
-            end=end,
-            adjust_time=False,
-        )
+        adjust_time=False
     else:
         raise ValueError(
             "please indicate how to read the file by specifying a meteo_var and"
             " an interval"
         )
+    ts, meta = interpret_knmi_file(
+        df=df,
+        meta=meta,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
+        adjust_time=adjust_time,
+    )
     stn = meta["station"]
     stations = get_stations(meteo_var=meteo_var)
     stn_name = get_station_name(stn=stn, stations=stations)
