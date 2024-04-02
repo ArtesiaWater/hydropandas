@@ -1297,6 +1297,7 @@ def interpret_knmi_meteo_file(
         # step 1: add a full day for meteorological data, so that the
         # timestamp is at the end of the period in the data
         # step 2: from UT to UT+1 (standard-time in the Netherlands)
+        df = df.copy()
         df.index = (
             df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
         )
