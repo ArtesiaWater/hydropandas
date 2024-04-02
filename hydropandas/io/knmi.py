@@ -1063,7 +1063,8 @@ def read_knmi_file(
 
 
 def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=True):
-    """interpret data from knmi by selecting meteo_var data and meta and transforming the variables
+    """interpret data from knmi by selecting meteo_var data and meta
+    and transforming the variables
 
     Parameters
     ----------
