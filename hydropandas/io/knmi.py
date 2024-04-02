@@ -113,7 +113,7 @@ def get_knmi_obs(
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
         ts, meta = get_knmi_timeseries_fname(
             fname=str(fname),
-            eteo_var=meteo_var,
+            meteo_var=meteo_var,
             settings=settings,
             start=start,
             end=end,
