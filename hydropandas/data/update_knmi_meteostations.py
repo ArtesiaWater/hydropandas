@@ -1,6 +1,6 @@
 # %%
 import pandas as pd
-from requests import ConnectionError
+import requests
 
 from hydropandas.io import knmi
 
@@ -24,7 +24,7 @@ for stn in meteo_dft.index:
             vars_available_hourly = ~df_hourly.isna().all().drop(index=["STN"])
             vah = vars_available_hourly[vars_available_hourly]
             meteo_dft.loc[stn, vah.index] = vah.values
-        except ConnectionError:
+        except requests.ConnectionError:
             print(f"Geen data {stn}, {start}, {end}")
         except pd.errors.EmptyDataError:
             print(f"Geen data {stn}, {start}, {end}")
