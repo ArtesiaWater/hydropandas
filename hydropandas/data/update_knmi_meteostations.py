@@ -9,9 +9,7 @@ meteo_dft = meteo_df.copy()
 
 didx = [pd.Timestamp.today().normalize() - pd.Timedelta(days=1)] + list(
     reversed(
-        pd.date_range(
-            pd.Timestamp("1900-01-01"), pd.Timestamp.today(), freq="10YS"
-        )
+        pd.date_range(pd.Timestamp("1900-01-01"), pd.Timestamp.today(), freq="10YS")
     )
 )
 
