@@ -134,24 +134,24 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     if "neerslaggeg" in fname:
         # neerslagstation
         meteo_var = "RD"
-        adjust_time=False
+        adjust_time = False
     elif "etmgeg" in fname:
         # meteo station
-        adjust_time=True
+        adjust_time = True
     elif "uurgeg" in fname:
-        adjust_time=False
+        adjust_time = False
         # hourly station
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
         meteo_var = "RD"
-        adjust_time=False
+        adjust_time = False
     elif settings["interval"] == "daily":
         # meteo station
-        adjust_time=True
+        adjust_time = True
     elif settings["interval"] == "hourly":
         # uurlijks station
-        adjust_time=False
+        adjust_time = False
     else:
         raise ValueError(
             "please indicate how to read the file by specifying a meteo_var and"
@@ -826,7 +826,7 @@ def _transform_variables(df, variables):
     variables : dictionary
         description of variables in time series.
     """
-
+    add_m_unit = False
     for key, value in variables.items():
         # test if key existst in data
         if key not in df.columns:
@@ -861,12 +861,11 @@ def _transform_variables(df, variables):
 
             df[key] = df[key] * 0.001
             value = value.replace(" mm", " m")
-            variables["unit"] = "m"
+            add_m_unit = True
         if " millimeters" in value:
             logger.debug(f"transform {key}, {value} from mm to m")
-
             df[key] = df[key] * 0.001
-            value = value.replace(" millimeters", " m")
+            add_m_unit = True
         if "08.00 UTC" in value:
             logger.debug(f"transform {key}, {value} from UTC to UTC+1")
 
@@ -881,6 +880,10 @@ def _transform_variables(df, variables):
         # Store new variable
         variables[key] = value
 
+    if add_m_unit:
+        variables["unit"] = "m"
+    else:
+        variables["unit"] = ""
     return df, variables
 
 
@@ -1124,8 +1127,6 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
     meteo_df = df.loc[start:end, [meteo_var]].dropna()
     variables = {meteo_var: meta[meteo_var]}
     meteo_df, variables = _transform_variables(meteo_df, variables)
-    if "unit" not in variables:
-        variables["unit"] = ""
 
     unique_stn = df["STN"].unique()
     if len(unique_stn) > 1:
@@ -1668,7 +1669,7 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
             d["UG"],
             d["TG"].index,
             meta["lat"] if "lat" in meta else 52.1,
-            meta["hoogte"] if "hoogte" in meta else 0.0,
+            meta["altitude"] if "altitude" in meta else 0.0,
         ).to_frame(name=meteo_var)
     else:
         raise ValueError(
