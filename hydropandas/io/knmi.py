@@ -129,10 +129,10 @@ def get_knmi_obs(
 
 
 def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
+    df, meta = read_knmi_file(fname)
     # first try to figure out filetype by it's name
     if "neerslaggeg" in fname:
         # neerslagstation
-        ts, meta = read_knmi_file(fname_txt=fname, start=start, end=end)
         meteo_var = "RD"
         ts, meta = interpret_knmi_file(
             df=df,
@@ -144,7 +144,6 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         )
     elif "etmgeg" in fname:
         # meteo station
-        df, meta = read_knmi_file(fname)
         ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
@@ -155,7 +154,6 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         )
     elif "uurgeg" in fname:
         # hourly station
-        df, meta = read_knmi_file(fname)
         ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
@@ -167,7 +165,6 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
-        ts, meta = read_knmi_file(fname_txt=fname, start=start, end=end)
         meteo_var = "RD"
         ts, meta = interpret_knmi_file(
             df=df,
@@ -179,7 +176,6 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         )
     elif settings["interval"] == "daily":
         # meteo station
-        df, meta = read_knmi_file(fname)
         ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
@@ -190,7 +186,6 @@ def get_knmi_timeseries_fname(fname, meteo_var, settings, start, end):
         )
     elif settings["interval"] == "hourly":
         # uurlijks station
-        df, meta = read_knmi_file(fname)
         ts, meta = interpret_knmi_file(
             df=df,
             meta=meta,
