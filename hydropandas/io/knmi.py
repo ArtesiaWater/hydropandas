@@ -141,7 +141,7 @@ def get_knmi_timeseries_fname(
     if "neerslaggeg" in fname:
         # neerslagstation
         meteo_var = "RD"
-        adjust_time = False
+        adjust_time = True
     elif "etmgeg" in fname:
         # meteo station
         adjust_time = True
@@ -152,7 +152,7 @@ def get_knmi_timeseries_fname(
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
         meteo_var = "RD"
-        adjust_time = False
+        adjust_time = True
     elif settings["interval"] == "daily":
         # meteo station
         adjust_time = True
@@ -628,7 +628,7 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                     df, meta = get_knmi_daily_rainfall_api(
                         stn=stn, start=start, end=end
                     )
-                    adjust_time = False
+                    adjust_time = True
                 else:
                     # daily data from meteorological stations
                     df, meta = get_knmi_daily_meteo_api(
