@@ -759,7 +759,8 @@ def get_knmi_daily_rainfall_url(stn: int, stn_name: str):
 
     if r.status_code != 200:
         raise ValueError(
-            f"Could not retrieve data from {url=}. Please check if the station name is correct {stn_name}"
+            f"Could not retrieve data from {url=}."
+            f"Please check if the station name is correct {stn_name}."
         )
 
     with open(fname_zip, "wb") as fd:
@@ -1130,7 +1131,8 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
             return mdf, var
 
     logging.error(
-        f"No data for {meteo_var=} at {stn=} between {start=} and {end=}. Returning empty DataFrame."
+        f"No data for {meteo_var=} at {stn=} between"
+        f"{start=} and {end=}. Returning empty DataFrame."
     )
     return pd.DataFrame(), variables
 
