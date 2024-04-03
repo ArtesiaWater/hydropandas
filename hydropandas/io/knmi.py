@@ -32,7 +32,7 @@ def get_knmi_obs(
     start: Union[pd.Timestamp, str, None] = None,
     end: Union[pd.Timestamp, str, None] = None,
     **kwargs,
-):
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """get knmi observation from stn, fname or nearest xy coordinates.
 
     Parameters
@@ -135,7 +135,7 @@ def get_knmi_timeseries_fname(
     settings: Dict[str, Any],
     start: pd.Timestamp,
     end: pd.Timestamp,
-):
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     df, meta = read_knmi_file(fname)
     # first try to figure out filetype by it's name
     if "neerslaggeg" in fname:
@@ -247,7 +247,13 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
     return settings
 
 
-def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
+def get_knmi_timeseries_stn(
+    stn: int,
+    meteo_var: str,
+    settings: Dict[str, Any],
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Get a knmi time series and metadata.
 
     Parameters
@@ -344,7 +350,7 @@ def get_knmi_timeseries_stn(stn, meteo_var, settings, start=None, end=None):
     return knmi_df, meta
 
 
-def get_stations(meteo_var):
+def get_stations(meteo_var: str) -> pd.DataFrame:
     """get knmi stations from json files according to variable.
 
     Parameters
@@ -381,7 +387,7 @@ def get_stations(meteo_var):
     ]
 
 
-def get_station_name(stn, stations=None):
+def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> str:
     """Returns the station name from a KNMI station.
 
     Modifies the station name in such a way that a valid url can be obtained.
@@ -390,7 +396,7 @@ def get_station_name(stn, stations=None):
     ----------
     stn : int
         station number.
-    stations : pandas DataFrame
+    stations : pandas DataFrame or None
         DataFrame with the station metadata.
 
     Returns
@@ -410,7 +416,14 @@ def get_station_name(stn, stations=None):
     return stn_name
 
 
-def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=None):
+def fill_missing_measurements(
+    stn: int,
+    meteo_var: str,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    settings: Dict[str, Any],
+    stn_name: Union[str, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any], pd.DataFrame]:
     """fill missing measurements in knmi data.
 
     Parameters
@@ -568,7 +581,14 @@ def fill_missing_measurements(stn, meteo_var, start, end, settings, stn_name=Non
     return knmi_df, meta
 
 
-def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
+def download_knmi_data(
+    stn: int,
+    meteo_var: str,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    settings: Dict[str, Any],
+    stn_name: Union[str, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any], pd.DataFrame]:
     """download knmi data of a measurements station for certain observation
     type.
 
@@ -578,9 +598,9 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
         measurement station.
     meteo_var : str
         observation type.
-    start : pd.TimeStamp or None
+    start : pd.TimeStamp
         start date of observations.
-    end : pd.TimeStamp or None
+    end : pd.TimeStamp
         end date of observations.
     settings : dict
         settings for obtaining data
@@ -680,7 +700,11 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
 
 
 @lru_cache()
-def get_knmi_daily_rainfall_api(stn: int, start=None, end=None):
+def get_knmi_daily_rainfall_api(
+    stn: int,
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """download and read knmi daily rainfall.
 
     Parameters
@@ -718,7 +742,9 @@ def get_knmi_daily_rainfall_api(stn: int, start=None, end=None):
 
 
 @lru_cache()
-def get_knmi_daily_rainfall_url(stn: int, stn_name: str):
+def get_knmi_daily_rainfall_url(
+    stn: int, stn_name: str
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """download and read knmi daily rainfall.
 
     Parameters
@@ -773,7 +799,9 @@ def get_knmi_daily_rainfall_url(stn: int, stn_name: str):
     return read_knmi_file(fname_txt)
 
 
-def _transform_variables(df, variables):
+def _transform_variables(
+    df: pd.DataFrame, variables: Dict[str, Any]
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Transforms the timeseries to default units and settings.
 
     Does 3 things:
@@ -893,7 +921,7 @@ def get_knmi_api(url: str, params: Dict[str, str]) -> StringIO:
 @lru_cache()
 def get_knmi_daily_meteo_api(
     stn, start=None, end=None, meteo_var: Union[str, None] = None
-):
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """download and read knmi daily meteo data.
 
     Parameters
@@ -1064,7 +1092,14 @@ def read_knmi_file(
         raise ValueError(f"Could not read: {path}")
 
 
-def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=True):
+def interpret_knmi_file(
+    df: pd.DataFrame,
+    meta: Dict[str, Any],
+    meteo_var: str,
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+    adjust_time: bool = True,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """interpret data from knmi by selecting meteo_var data and meta
     and transforming the variables
 
@@ -1083,11 +1118,6 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
     adjust_time : boolean, optional
         add 1 day and 1 hour to convert from GMT to CET winter time
         and make observation time over the previous time interval
-
-    Raises
-    ------
-    ValueError
-        If the meteo var is not in the file.
 
     Returns
     -------
@@ -1197,8 +1227,11 @@ def get_knmi_hourly_meteo_api(
 
 
 def _check_latest_measurement_date_de_bilt(
-    meteo_var, use_api=True, start=None, end=None
-):
+    meteo_var: str,
+    use_api: bool = True,
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> pd.Timestamp:
     """According to the website of the knmi it can take up to 3 weeks before
     precipitation data is updated. If you use the fill_missing_measurements
     method to fill a time series untill today, it will keep looking at all
@@ -1279,8 +1312,13 @@ def _check_latest_measurement_date_de_bilt(
 
 
 def get_nearest_station_df(
-    locations, xcol="x", ycol="y", stations=None, meteo_var="RH", ignore=None
-):
+    locations: pd.DataFrame,
+    xcol: str = "x",
+    ycol: str = "y",
+    stations: Union[pd.DataFrame, None] = None,
+    meteo_var: str = "RH",
+    ignore: Union[List[str], None] = None,
+) -> list[int]:
     """Find the KNMI stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
 
@@ -1331,7 +1369,12 @@ def get_nearest_station_df(
     return stns
 
 
-def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
+def get_nearest_station_xy(
+    xy: List[List[float]],
+    stations: Union[pd.DataFrame, None] = None,
+    meteo_var: str = "RH",
+    ignore: Union[List[str], None] = None,
+) -> List[int]:
     """find the KNMI stations that measure 'meteo_var' closest to the given
     x and y coordinates.
 
@@ -1371,7 +1414,13 @@ def get_nearest_station_xy(xy, stations=None, meteo_var="RH", ignore=None):
     return stns
 
 
-def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
+def get_n_nearest_stations_xy(
+    xy: List[List[float]],
+    meteo_var: str,
+    n: int = 1,
+    stations: Union[pd.DataFrame, None] = None,
+    ignore: Union[List[str], None] = None,
+) -> List[int]:
     """Find the N nearest KNMI stations that measure variable 'meteo_var' to
     the x, y coordinates.
 
@@ -1410,7 +1459,7 @@ def get_n_nearest_stations_xy(xy, meteo_var, n=1, stations=None, ignore=None):
 
 def _add_missing_indices(
     knmi_df: pd.DataFrame, stn: int, start: pd.Timestamp, end: pd.Timestamp
-):
+) -> pd.DataFrame:
     """When downloading KNMI data you don't always get a DataFrame with the
     periods that you provided in your request. Thus the index does not cover
     the complete period that you are interested in. This function adds the
@@ -1468,15 +1517,15 @@ def _add_missing_indices(
 
 
 def get_knmi_obslist(
-    locations=None,
-    stns=None,
-    xy=None,
-    meteo_vars=("RH",),
-    starts=None,
-    ends=None,
-    ObsClasses=None,
+    locations: Union[pd.DataFrame, None] = None,
+    stns: Union[List[int], None] = None,
+    xy: Union[List[List[float]], None] = None,
+    meteo_vars: Tuple[str] = ("RH",),
+    starts: Union[pd.Timestamp, List[pd.Timestamp], None] = None,
+    ends: Union[pd.Timestamp, List[pd.Timestamp], None] = None,
+    ObsClasses: List[Any] = None,
     **kwargs,
-):
+) -> List[Any]:
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
 
@@ -1484,7 +1533,7 @@ def get_knmi_obslist(
     ----------
     locations : pandas DataFrame or None
         dataframe with x and y coordinates. The default is None
-    stns : list of str or None
+    stns : list of int or None
         list of knmi stations. The default is None
     xy : list or numpy array, optional
         xy coordinates of the locations. e.g. [[10,25], [5,25]]
@@ -1599,7 +1648,13 @@ def get_knmi_obslist(
     return obs_list
 
 
-def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
+def get_evaporation(
+    meteo_var: str,
+    stn: int = 260,
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+    settings: Union[Dict[str, Any], None] = None,
+) -> pd.DataFrame:
     """Collect different types of (reference) evaporation
     from KNMI weather stations
 
@@ -1687,7 +1742,7 @@ def get_evaporation(meteo_var, stn=260, start=None, end=None, settings=None):
     return et, meta
 
 
-def makkink(tmean, K):
+def makkink(tmean: pd.Series, K: pd.Series) -> pd.Series:
     """Estimate of Makkink reference evaporation
     according to KNMI.
 
@@ -1712,8 +1767,19 @@ def makkink(tmean, K):
 
 
 def penman(
-    tmean, tmin, tmax, K, wind, rh, dates, z=1.0, lat=52.1, G=0.0, wh=10.0, tdew=None
-):
+    tmean: pd.Series,
+    tmin: pd.Series,
+    tmax: pd.Series,
+    K: pd.Series,
+    wind: pd.Series,
+    rh: pd.Series,
+    dates: pd.Series,
+    z: float = 1.0,
+    lat: float = 52.1,
+    G: float = 0.0,
+    wh: float = 10.0,
+    tdew: Union[pd.Series, None] = None,
+) -> pd.Series:
     """Estimate of Penman reference evaporation
     according to Allen et al 1990.
 
@@ -1791,7 +1857,14 @@ def penman(
     return et
 
 
-def hargreaves(tmean, tmin, tmax, dates, lat=52.1, x=None):
+def hargreaves(
+    tmean: pd.Series,
+    tmin: pd.Series,
+    tmax: pd.Series,
+    dates: pd.Series,
+    lat: float = 52.1,
+    x: Union[List[float], None] = None,
+) -> pd.Series:
     """Estimate of Hargraves potential evaporation
     according to Allen et al. 1990.
 
