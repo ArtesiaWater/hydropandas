@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Created on Wed Sep 12 12:15:42 2018.
-
-@author: Artesia
-"""
-
 import logging
 import os
 import sys

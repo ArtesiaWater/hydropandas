@@ -22,7 +22,7 @@ def test_bro_gmn():
     hpd.read_bro(bro_id=bro_id, only_metadata=True)
 
 
-def test_bro_extent():
+def test_bro_groundwater_extent():
     # extent = (210260, 213550, 459890, 473920)  # extent more than 1000 observations
     # extent = (213260, 213550, 473890, 473920)  # extent skip duplicates
     extent = (102395, 103121, 434331, 434750)  # 4 observations within extent
@@ -35,6 +35,16 @@ def test_bro_extent_too_big():
 
     with pytest.raises(RuntimeError):
         hpd.read_bro(extent=extent, only_metadata=True)
+
+
+def test_cpt_from_bro_id():
+    bro_id = "CPT000000003688"
+    hpd.CPTObs.from_bro(bro_id)
+
+
+def test_bro_cpt_extent():
+    extent = (119500, 120000, 441000, 442000)  # 2 cpt's within extent
+    hpd.read_bro(extent=extent, ObsClass=hpd.CPTObs)
 
 
 # %% DINO

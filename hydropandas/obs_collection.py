@@ -77,6 +77,7 @@ def read_lizard(
 def read_bro(
     extent=None,
     bro_id=None,
+    ObsClass=obs.GroundwaterObs,
     name="",
     tmin=None,
     tmax=None,
@@ -94,6 +95,9 @@ def read_bro(
         [xmin, xmax, ymin, ymax]
     bro_id : str or None, optional
         starts with 'GMN'.
+    ObsClass : type, optional
+        type of observations you want to use. Can be GroundwaterObs or CPTObs. The
+        default is GroundwaterObs
     name : str, optional
         name of the observation collection
     tmin : str or None, optional
@@ -122,6 +126,7 @@ def read_bro(
     oc = ObsCollection.from_bro(
         extent=extent,
         bro_id=bro_id,
+        ObsClass=ObsClass,
         name=name,
         tmin=tmin,
         tmax=tmax,
@@ -1166,6 +1171,7 @@ class ObsCollection(pd.DataFrame):
         cls,
         extent=None,
         bro_id=None,
+        ObsClass=obs.GroundwaterObs,
         name="",
         tmin=None,
         tmax=None,
@@ -1209,28 +1215,46 @@ class ObsCollection(pd.DataFrame):
             ObsCollection DataFrame with the 'obs' column
         """
 
-        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
+        from .io.bro import (
+            get_groundwater_from_extent,
+            get_cpt_from_extent,
+            get_obs_list_from_gmn,
+        )
 
         if bro_id is None and (extent is not None):
-            obs_list = get_obs_list_from_extent(
-                extent,
-                obs.GroundwaterObs,
-                tmin=tmin,
-                tmax=tmax,
-                only_metadata=only_metadata,
-                keep_all_obs=keep_all_obs,
-                epsg=epsg,
-                ignore_max_obs=ignore_max_obs,
-            )
+            if issubclass(ObsClass, (obs.GroundwaterObs)):
+                obs_list = get_groundwater_from_extent(
+                    extent,
+                    ObsClass,
+                    tmin=tmin,
+                    tmax=tmax,
+                    only_metadata=only_metadata,
+                    keep_all_obs=keep_all_obs,
+                    epsg=epsg,
+                    ignore_max_obs=ignore_max_obs,
+                )
+            elif issubclass(ObsClass, (obs.CPTObs)):
+                obs_list = get_cpt_from_extent(
+                    extent,
+                    ObsClass,
+                    only_metadata=only_metadata,
+                    keep_all_obs=keep_all_obs,
+                    epsg=epsg,
+                    ignore_max_obs=ignore_max_obs,
+                )
             meta = {}
-        elif bro_id is not None:
+        elif bro_id is not None and issubclass(ObsClass, (obs.GroundwaterObs)):
             obs_list, meta = get_obs_list_from_gmn(
                 bro_id,
-                obs.GroundwaterObs,
+                ObsClass,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
             )
             name = meta.pop("name")
+        elif issubclass(ObsClass, (obs.CPTObs)):
+            raise TypeError(
+                "cannot get a collection of CPT observations from a bro id, try hpd.CPTObs.from_bro()"
+            )
         else:
             raise ValueError("specify bro_id or extent")
 

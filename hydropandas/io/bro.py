@@ -92,6 +92,122 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     return obs_list, meta
 
 
+def get_bro_cpt(bro_id, only_metadata=False):
+    """get bro cpt data from a bro id
+
+    Parameters
+    ----------
+    bro_id : str
+        starts with 'CPT' e.g. 'CPT000000003688'.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+
+    Raises
+    ------
+    ValueError
+        for invalid bro_id.
+
+    Returns
+    -------
+    dataframe
+        measurements.
+    dictionary
+        metadata.
+    """
+
+    logger.debug(f"reading bro_id {bro_id}")
+
+    if not bro_id.startswith("CPT"):
+        raise ValueError(
+            f"can only read CPT data from bro_id starting with CPT not {bro_id}"
+        )
+
+    url = f"https://publiek.broservices.nl/sr/cpt/v1/objects/{bro_id}"
+    req = requests.get(url)
+
+    # find namespaces
+    ns = {}
+    for row in req.text.split("<")[2].split()[1:]:
+        ns[row.split("=")[0].split(":")[-1]] = row.split("=")[1][1:-1]
+
+    tree = xml.etree.ElementTree.fromstring(req.text)
+    root = tree.find("xmlns:dispatchDocument//xmlns:CPT_O", ns)
+
+    # get metadata
+    meta = {
+        "name": bro_id,
+        "source": "BRO",
+    }
+
+    # x and y
+    xy_elem = root.find("xmlns:deliveredLocation//cptcommon:location//gml:pos", ns)
+    xy = [float(val) for val in xy_elem.text.split()]
+
+    # convert crs
+    srsname = root.find("xmlns:deliveredLocation//cptcommon:location", ns).attrib[
+        "srsName"
+    ]
+    epsg_cpt = int(srsname.split(":")[-1])
+    if epsg_cpt != 28992:
+        proj_from = Proj(f"EPSG:{epsg_cpt}")
+        proj_to = Proj(EPSG_28992)
+        transformer = Transformer.from_proj(proj_from, proj_to)
+        xy = transformer.transform(xy[0], xy[1])
+
+    meta["x"], meta["y"] = xy
+
+    # ground_level
+    vert_pos = root.find("xmlns:deliveredVerticalPosition", ns)
+    mv = vert_pos.find("cptcommon:offset", ns)
+    datum = vert_pos.find("cptcommon:verticalDatum", ns)
+    if datum.text == "NAP" and mv.attrib["uom"] == "m":
+        meta["unit"] = "m NAP"
+        if mv.text is None:
+            meta["ground_level"] = np.nan
+        else:
+            meta["ground_level"] = float(mv.text)
+    else:
+        raise ValueError("invalid ground_level datum or unit")
+
+    if only_metadata:
+        empty_df = pd.DataFrame()
+        return empty_df, meta
+
+    # get measurement paramaters
+    parameters_tag = root.find(
+        "xmlns:conePenetrometerSurvey//cptcommon:parameters",
+        ns,
+    )
+
+    parnames = [child.tag.split("}")[-1] for child in parameters_tag]
+
+    # get measurement values
+    values_tag = root.find(
+        "xmlns:conePenetrometerSurvey//cptcommon:conePenetrationTest//cptcommon:cptResult//cptcommon:values",
+        ns,
+    )
+    encoding_tag = root.find(
+        "xmlns:conePenetrometerSurvey//cptcommon:conePenetrationTest//cptcommon:cptResult//swe:encoding//swe:TextEncoding",
+        ns,
+    )
+    encoding_dic = encoding_tag.attrib
+    val_list = []
+    for values_par in values_tag.text.split(encoding_dic["blockSeparator"]):
+        if values_par != "":
+            values = [
+                np.nan if val == "-999999" else float(val)
+                for val in values_par.split(encoding_dic["tokenSeparator"])
+            ]
+            val_list.append(values)
+    arr = np.asarray(val_list)
+
+    df = pd.DataFrame(columns=parnames, data=arr)
+    df = df.set_index(meta["ground_level"] - df["depth"])
+
+    return (df, meta)
+
+
 def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
     """get bro groundwater measurement from a GLD id or a GMW id with a
     filter number.
@@ -422,7 +538,7 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
     return meta
 
 
-def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
+def get_metadata_from_gmw(bro_id, tube_nr):
     """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
 
@@ -481,10 +597,11 @@ def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
         "srsName"
     ]
     epsg_gwm = int(srsname.split(":")[-1])
-    proj_from = Proj(f"EPSG:{epsg_gwm}")
-    proj_to = Proj(EPSG_28992)
-    transformer = Transformer.from_proj(proj_from, proj_to)
-    xy = transformer.transform(xy[0], xy[1])
+    if epsg_gwm != 28992:
+        proj_from = Proj(f"EPSG:{epsg_gwm}")
+        proj_to = Proj(EPSG_28992)
+        transformer = Transformer.from_proj(proj_from, proj_to)
+        xy = transformer.transform(xy[0], xy[1])
 
     meta["x"], meta["y"] = xy
 
@@ -527,7 +644,116 @@ def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
     return meta
 
 
-def get_obs_list_from_extent(
+def get_cpt_from_extent(
+    extent,
+    ObsClass,
+    only_metadata=False,
+    keep_all_obs=True,
+    epsg=28992,
+    ignore_max_obs=False,
+):
+    """get a list of gmw observations within an extent.
+
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get groundwater monitoring wells within this extent
+        [xmin, xmax, ymin, ymax]
+    ObsClass : type
+        class of the observations, e.g. GroundwaterObs or WaterlvlObs
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    epsg : int, optional
+        epsg code of the extent. The default is 28992 (RD).
+    ignore_max_obs : bool, optional
+        by default you get a prompt if you want to download over a 1000
+        observations at once. if ignore_max_obs is True you won't get the
+        prompt. The default is False
+
+    Raises
+    ------
+        DESCRIPTION.
+
+    Returns
+    -------
+    obs_list : TYPE
+        DESCRIPTION.
+
+    """
+
+    if only_metadata and not keep_all_obs:
+        logger.error(
+            "you will get an empty ObsCollection with only_metadata is True and"
+            "keep_all_obs is False"
+        )
+
+    url = "https://publiek.broservices.nl/sr/cpt/v1/characteristics/searches?"
+
+    data = {}
+    transformer = Transformer.from_crs(epsg, 4326)
+    data["area"] = {}
+    if extent is not None:
+        lat1, lon1 = transformer.transform(extent[0], extent[2])
+        lat2, lon2 = transformer.transform(extent[1], extent[3])
+        data["area"]["boundingBox"] = {
+            "lowerCorner": {"lat": lat1, "lon": lon1},
+            "upperCorner": {"lat": lat2, "lon": lon2},
+        }
+    req = requests.post(url, json=data)
+    if req.status_code > 200:
+        print(req.json()["errors"][0]["message"])
+
+    # read results
+    tree = xml.etree.ElementTree.fromstring(req.text)
+
+    # find namespaces
+    ns = {}
+    for row in req.text.split("<")[2].split()[1:]:
+        ns[row.split("=")[0].split(":")[-1]] = row.split("=")[1][1:-1]
+
+    tree = xml.etree.ElementTree.fromstring(req.text)
+
+    if tree.find(".//brocom:responseType", ns).text == "rejection":
+        raise RuntimeError(tree.find(".//brocom:rejectionReason", ns).text)
+
+    cpt_ids = [
+        cpt.text
+        for cpt in tree.findall("xmlns:dispatchDocument//xmlns:CPT_C//brocom:broId", ns)
+    ]
+
+    if len(cpt_ids) > 1000 and not ignore_max_obs:
+        ans = input(
+            f"You requested to download {len(cpt_ids)} observations, this can"
+            "take a while. Are you sure you want to continue [Y/n]? "
+        )
+        if ans not in ["Y", "y", "yes", "Yes", "YES"]:
+            return []
+
+    obs_list = []
+    for cpt_id in tqdm(cpt_ids):
+        cpts = tree.findall(f'.//*[brocom:broId="{cpt_id}"]', ns)
+        if len(cpts) < 1:
+            raise RuntimeError("unexpected")
+        else:
+            cpt = cpts[0]
+
+        o = ObsClass.from_bro(
+            cpt_id,
+            only_metadata=only_metadata,
+        )
+        if o.empty:
+            logger.debug(f"no measurements found for cpt_id {cpt_id}")
+            if keep_all_obs:
+                obs_list.append(o)
+        else:
+            obs_list.append(o)
+
+    return obs_list
+
+
+def get_groundwater_from_extent(
     extent,
     ObsClass,
     tmin=None,
@@ -563,13 +789,12 @@ def get_obs_list_from_extent(
 
     Raises
     ------
-
         DESCRIPTION.
 
     Returns
     -------
-    obs_list : TYPE
-        DESCRIPTION.
+    obs_list : list of GroundwaterObs
+        groundwater observations within the extent
 
     """
 
