@@ -669,16 +669,12 @@ def download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
                 end=end,
                 adjust_time=True,
             )
-    except (ValueError, KeyError) as e:
+    except (ValueError, KeyError, pd.errors.EmptyDataError) as e:
         logger.error(f"{e} {msg}")
         if settings["raise_exceptions"]:
             raise e
 
-    if knmi_df.empty:
-        logger.debug(f"no measurements found for station {msg}")
-        stations = pd.DataFrame()
-    else:
-        stations = get_stations(meteo_var=meteo_var).loc[[variables["station"]], :]
+    stations = get_stations(meteo_var=meteo_var).loc[[stn], :]
 
     return knmi_df, variables, stations
 
@@ -1094,8 +1090,15 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
     """
 
     variables = {meteo_var: meta[meteo_var]}
-
+    stn = None
     if not df.empty:
+
+        unique_stn = df["STN"].unique()
+        if len(unique_stn) > 1:
+            raise ValueError(f"Cannot handle multiple stations {unique_stn} in single file")
+        else:
+            stn = df.at[df.index[0], "STN"]
+
         if adjust_time:
             # step 1: add a full day for meteorological data, so that the
             # timestamp is at the end of the period in the data
@@ -1109,18 +1112,15 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
             df = df.loc[~df.index.duplicated(keep="first")]
             logger.info("duplicate indices removed from RD measurements")
 
-        meteo_df, variables = _transform_variables(df.loc[start:end, [meteo_var]].dropna(), variables)
+        meteo_df = df.loc[start:end, [meteo_var]].dropna()
 
-        unique_stn = df["STN"].unique()
-        if len(unique_stn) > 1:
-            raise ValueError(f"multiple stations in single file {unique_stn}")
-        else:
-            variables["station"] = df.at[df.index[0], "STN"]
+        if not meteo_df.empty:
+            mdf, var = _transform_variables(meteo_df, variables)
+            variables["station"] = stn
+            return mdf, var
 
-        return meteo_df, variables
-    else:
-        logging.error(f"DataFrame empty so no interpretation possible for {variables=}")
-        return df, variables
+    logging.error( f"No data for {meteo_var=} at {stn=} between {start=} and {end=}. Returning empty DataFrame.")
+    return pd.DataFrame(), variables
 
 
 @lru_cache()

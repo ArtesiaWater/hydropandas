@@ -325,7 +325,7 @@ def test_knmi_collection_from_locations():
             meteo_vars=["EV24", "RD"],
             starts="2010",
             ends="2015",
-            raise_exceptions=False,
+            raise_exceptions=True,
         )
     except ConnectionError:
         pass
