@@ -1020,29 +1020,34 @@ def read_knmi_file(
             meta[key.strip("# ")] = item.strip()
 
         elif data_id in line:
-            columns = line.strip("# ").strip("\n").split(",")
-            columns = [x.strip(" ") for x in columns]
-            df = pd.read_csv(
-                f, header=None, na_values="     ", delimiter=",", skip_blank_lines=True
-            )
-            if columns[-2:] == ["HH", "YYYYMMDD"]:
-                columns = columns[:-2]
-            df.columns = columns
-            hour_col = "HH" if "HH" in columns else None
-            if hour_col is not None:
-                df.loc[df[hour_col] == 24, hour_col] = 0
-                datetime = pd.to_datetime(
-                    df.YYYYMMDD.astype(str) + df[hour_col].astype(str).str.zfill(2),
-                    format="%Y%m%d%H",
+            try:
+                columns = line.strip("# ").strip("\n").split(",")
+                columns = [x.strip(" ") for x in columns]
+                df = pd.read_csv(
+                    f, header=None, na_values="     ", delimiter=",", skip_blank_lines=True
                 )
-                datetime.loc[datetime.dt.hour == 0] = datetime + dt.timedelta(days=1)
-                df = df.drop(columns=["YYYYMMDD", hour_col]).loc[df.index.notnull(), :]
-            else:
-                datetime = pd.to_datetime(df.YYYYMMDD, format="%Y%m%d")
-                df = df.drop(columns=["YYYYMMDD"]).loc[df.index.notnull(), :]
+                if columns[-2:] == ["HH", "YYYYMMDD"]:
+                    columns = columns[:-2]
+                df.columns = columns
+                hour_col = "HH" if "HH" in columns else None
+                if hour_col is not None:
+                    df.loc[df[hour_col] == 24, hour_col] = 0
+                    datetime = pd.to_datetime(
+                        df.YYYYMMDD.astype(str) + df[hour_col].astype(str).str.zfill(2),
+                        format="%Y%m%d%H",
+                    )
+                    datetime.loc[datetime.dt.hour == 0] = datetime + dt.timedelta(days=1)
+                    df = df.drop(columns=["YYYYMMDD", hour_col]).loc[df.index.notnull(), :]
+                else:
+                    datetime = pd.to_datetime(df.YYYYMMDD, format="%Y%m%d")
+                    df = df.drop(columns=["YYYYMMDD"]).loc[df.index.notnull(), :]
 
-            df = df.set_index(datetime)
+                df = df.set_index(datetime)
+            except pd.errors.EmptyDataError as e:
+                logging.error(f"{str(e)}. Returning empty DataFrame.")
+                df = pd.DataFrame()
             f.close()
+
             return df, meta
 
         line = f.readline()
@@ -1050,7 +1055,7 @@ def read_knmi_file(
     f.close()
 
     if df is None:
-        raise ValueError(f"No data in file {path}")
+        raise ValueError(f"Could not read: {path}")
 
 
 def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=True):
@@ -1088,30 +1093,34 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
         meteostation
     """
 
-    if adjust_time:
-        # step 1: add a full day for meteorological data, so that the
-        # timestamp is at the end of the period in the data
-        # step 2: from UT to UT+1 (standard-time in the Netherlands)
-        df = df.copy()
-        df.index = (
-            df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
-        )
-
-    if df.index.has_duplicates:
-        df = df.loc[~df.index.duplicated(keep="first")]
-        logger.info("duplicate indices removed from RD measurements")
-
-    meteo_df = df.loc[start:end, [meteo_var]].dropna()
     variables = {meteo_var: meta[meteo_var]}
-    meteo_df, variables = _transform_variables(meteo_df, variables)
 
-    unique_stn = df["STN"].unique()
-    if len(unique_stn) > 1:
-        raise ValueError(f"multiple stations in single file {unique_stn}")
+    if not df.empty:
+        if adjust_time:
+            # step 1: add a full day for meteorological data, so that the
+            # timestamp is at the end of the period in the data
+            # step 2: from UT to UT+1 (standard-time in the Netherlands)
+            df = df.copy()
+            df.index = (
+                df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
+            )
+
+        if df.index.has_duplicates:
+            df = df.loc[~df.index.duplicated(keep="first")]
+            logger.info("duplicate indices removed from RD measurements")
+
+        meteo_df, variables = _transform_variables(df.loc[start:end, [meteo_var]].dropna(), variables)
+
+        unique_stn = df["STN"].unique()
+        if len(unique_stn) > 1:
+            raise ValueError(f"multiple stations in single file {unique_stn}")
+        else:
+            variables["station"] = df.at[df.index[0], "STN"]
+
+        return meteo_df, variables
     else:
-        variables["station"] = df.at[df.index[0], "STN"]
-
-    return meteo_df, variables
+        logging.error(f"DataFrame empty so no interpretation possible for {variables=}")
+        return df, variables
 
 
 @lru_cache()
