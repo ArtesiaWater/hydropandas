@@ -762,7 +762,7 @@ def get_knmi_daily_rainfall_url(stn: int, stn_name: str):
     r = requests.get(url, stream=True)
 
     if r.status_code != 200:
-        raise ValueError(f"invalid url {url} please check station name {stn_name}")
+        raise ValueError(f"Could not retrieve data from {url=}. Please check if the station name is correct {stn_name}")
 
     with open(fname_zip, "wb") as fd:
         for chunk in r.iter_content(chunk_size=128):
