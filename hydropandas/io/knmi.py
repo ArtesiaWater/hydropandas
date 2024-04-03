@@ -758,7 +758,9 @@ def get_knmi_daily_rainfall_url(stn: int, stn_name: str):
     r = requests.get(url, stream=True)
 
     if r.status_code != 200:
-        raise ValueError(f"Could not retrieve data from {url=}. Please check if the station name is correct {stn_name}")
+        raise ValueError(
+            f"Could not retrieve data from {url=}. Please check if the station name is correct {stn_name}"
+        )
 
     with open(fname_zip, "wb") as fd:
         for chunk in r.iter_content(chunk_size=128):
@@ -1008,7 +1010,6 @@ def read_knmi_file(
 
     line = f.readline()
     while line:
-
         if meta_id1 in line or meta_id2 in line:
             key, item = (
                 line.split(meta_id1) if meta_id1 in line else line.split(meta_id2)
@@ -1020,7 +1021,11 @@ def read_knmi_file(
                 columns = line.strip("# ").strip("\n").split(",")
                 columns = [x.strip(" ") for x in columns]
                 df = pd.read_csv(
-                    f, header=None, na_values="     ", delimiter=",", skip_blank_lines=True
+                    f,
+                    header=None,
+                    na_values="     ",
+                    delimiter=",",
+                    skip_blank_lines=True,
                 )
                 if columns[-2:] == ["HH", "YYYYMMDD"]:
                     columns = columns[:-2]
@@ -1032,8 +1037,12 @@ def read_knmi_file(
                         df.YYYYMMDD.astype(str) + df[hour_col].astype(str).str.zfill(2),
                         format="%Y%m%d%H",
                     )
-                    datetime.loc[datetime.dt.hour == 0] = datetime + dt.timedelta(days=1)
-                    df = df.drop(columns=["YYYYMMDD", hour_col]).loc[df.index.notnull(), :]
+                    datetime.loc[datetime.dt.hour == 0] = datetime + dt.timedelta(
+                        days=1
+                    )
+                    df = df.drop(columns=["YYYYMMDD", hour_col]).loc[
+                        df.index.notnull(), :
+                    ]
                 else:
                     datetime = pd.to_datetime(df.YYYYMMDD, format="%Y%m%d")
                     df = df.drop(columns=["YYYYMMDD"]).loc[df.index.notnull(), :]
@@ -1092,10 +1101,11 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
     variables = {meteo_var: meta[meteo_var]}
     stn = None
     if not df.empty:
-
         unique_stn = df["STN"].unique()
         if len(unique_stn) > 1:
-            raise ValueError(f"Cannot handle multiple stations {unique_stn} in single file")
+            raise ValueError(
+                f"Cannot handle multiple stations {unique_stn} in single file"
+            )
         else:
             stn = df.at[df.index[0], "STN"]
 
@@ -1119,7 +1129,9 @@ def interpret_knmi_file(df, meta, meteo_var, start=None, end=None, adjust_time=T
             variables["station"] = stn
             return mdf, var
 
-    logging.error( f"No data for {meteo_var=} at {stn=} between {start=} and {end=}. Returning empty DataFrame.")
+    logging.error(
+        f"No data for {meteo_var=} at {stn=} between {start=} and {end=}. Returning empty DataFrame."
+    )
     return pd.DataFrame(), variables
 
 
