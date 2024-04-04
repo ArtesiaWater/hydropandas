@@ -38,7 +38,6 @@ def test_bro_extent_too_big():
 
 
 # %% DINO
-
 dinozip = "./tests/data/2019-Dino-test/dino.zip"
 
 
@@ -53,17 +52,24 @@ def test_observation_wl():
     hpd.WaterlvlObs.from_dino(path)
 
 
-def observation_gw():
+def observation_gw_dino_old():
     path = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
     o = hpd.GroundwaterObs.from_dino(path=path)
     return o
 
 
+def observation_gw_dino_new():
+    path = "./tests/data/2024-Dino-test/DINO_Grondwaterstanden/B02H0090001.csv"
+    o = hpd.GroundwaterObs.from_dino(path=path)
+    return o
+
+
 def test_observation_gw():
-    observation_gw()
+    observation_gw_dino_old()
+    observation_gw_dino_new()
 
 
-def test_obscollection_from_list():
+def test_obscollection_from_directory_old_school():
     dino_gw = hpd.read_dino(
         dirname=dinozip,
         ObsClass=hpd.GroundwaterObs,
@@ -73,6 +79,11 @@ def test_obscollection_from_list():
     )
     obs_list = [o for o in dino_gw.obs.values]
     hpd.ObsCollection(obs_list)
+
+
+def test_obscollection_from_directory_new_school():
+    dinozip = "./tests/data/2024-Dino-test/dino.zip"
+    hpd.read_dino(dirname=dinozip, ObsClass=hpd.GroundwaterObs, keep_all_obs=True)
 
 
 def test_obscollection_from_df():

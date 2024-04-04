@@ -1,0 +1,17 @@
+"Periode aangevraagd:","01-01-1800","tot:","29-03-2024",,,,,,,,,
+"Gegevens beschikbaar:","28-04-1976","tot:","28-01-1977",,,,,,,,,
+"Datum:","29-03-2024",,,,,,,,,,,
+"Referentie:","NAP",,,,,,,,,,,
+,,,,,,,,,,,,
+"NAP:","Normaal Amsterdams Peil",,,,,,,,,,,
+"MV:","Maaiveld",,,,,,,,,,,
+"MP:","Meetpunt",,,,,,,,,,,
+,,,,,,,,,,,,
+"Locatie","Filternummer","Externe aanduiding","X-coordinaat","Y-coordinaat","Maaiveld (cm t.o.v. NAP)","Datum maaiveld gemeten","Startdatum","Einddatum","Meetpunt (cm t.o.v. NAP)","Meetpunt (cm t.o.v. MV)","Bovenkant filter (cm t.o.v. NAP)","Onderkant filter (cm t.o.v. NAP)"
+"B02H0092","001","02HL0002","219890","600030","","","15-07-1974","14-02-1977","","21","",""
+,,,,,,,,,,,,
+"Locatie","Filternummer","Peildatum","Stand (cm t.o.v. MP)","Stand (cm t.o.v. MV)","Stand (cm t.o.v NAP)","Bijzonderheid","Opmerking","","","","",""
+"B02H0092","001","28-04-1976","124","103","","","","","","","",""
+"B02H0092","001","27-08-1976","159","138","","","","","","","",""
+"B02H0092","001","24-11-1976","163","142","","","","","","","",""
+"B02H0092","001","28-01-1977","69","48","","","","","","","",""
