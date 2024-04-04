@@ -1132,7 +1132,7 @@ class MeteoObs(Obs):
             y=meta.pop("y"),
             name=meta.pop("name"),
             source=meta.pop("source"),
-            unit=meta.pop("unit"),
+            unit=meta.pop("unit") if "unit" in meta else "",
             meteo_var=meteo_var,
         )
 
