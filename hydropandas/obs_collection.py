@@ -1253,7 +1253,8 @@ class ObsCollection(pd.DataFrame):
             name = meta.pop("name")
         elif issubclass(ObsClass, (obs.CPTObs)):
             raise TypeError(
-                "cannot get a collection of CPT observations from a bro id, try hpd.CPTObs.from_bro()"
+                "cannot get a collection of CPT observations from a bro id,"
+                "try hpd.CPTObs.from_bro()"
             )
         else:
             raise ValueError("specify bro_id or extent")

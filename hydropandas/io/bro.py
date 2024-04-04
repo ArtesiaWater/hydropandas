@@ -184,11 +184,13 @@ def get_bro_cpt(bro_id, only_metadata=False):
 
     # get measurement values
     values_tag = root.find(
-        "xmlns:conePenetrometerSurvey//cptcommon:conePenetrationTest//cptcommon:cptResult//cptcommon:values",
+        "xmlns:conePenetrometerSurvey//cptcommon:conePenetrationTest//"
+        "cptcommon:cptResult//cptcommon:values",
         ns,
     )
     encoding_tag = root.find(
-        "xmlns:conePenetrometerSurvey//cptcommon:conePenetrationTest//cptcommon:cptResult//swe:encoding//swe:TextEncoding",
+        "xmlns:conePenetrometerSurvey//cptcommon:conePenetrationTest//"
+        "cptcommon:cptResult//swe:encoding//swe:TextEncoding",
         ns,
     )
     encoding_dic = encoding_tag.attrib
@@ -736,8 +738,6 @@ def get_cpt_from_extent(
         cpts = tree.findall(f'.//*[brocom:broId="{cpt_id}"]', ns)
         if len(cpts) < 1:
             raise RuntimeError("unexpected")
-        else:
-            cpt = cpts[0]
 
         o = ObsClass.from_bro(
             cpt_id,
