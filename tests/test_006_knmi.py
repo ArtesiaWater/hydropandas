@@ -163,7 +163,7 @@ def test_download_without_data():
         meteo_var="RD",
         start=pd.Timestamp("2018"),
         end=pd.Timestamp("2020"),
-        raise_exceptions=False,
+        raise_exceptions=True,
     )
     assert dfrd.empty, "expected empty DataFrame"
 
@@ -172,7 +172,7 @@ def test_download_without_data():
         meteo_var="EV24",
         start=pd.Timestamp("1959"),
         end=pd.Timestamp("1963"),
-        raise_exceptions=False,
+        raise_exceptions=True,
     )
     assert dfev.empty, "expected empty DataFrame"
 
