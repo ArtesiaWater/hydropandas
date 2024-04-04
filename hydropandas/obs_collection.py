@@ -1216,8 +1216,8 @@ class ObsCollection(pd.DataFrame):
         """
 
         from .io.bro import (
-            get_groundwater_from_extent,
             get_cpt_from_extent,
+            get_groundwater_from_extent,
             get_obs_list_from_gmn,
         )
 
