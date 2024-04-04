@@ -38,6 +38,7 @@ def test_bro_extent_too_big():
 
 
 # %% DINO
+dinozip = "./tests/data/2019-Dino-test/dino.zip"
 
 
 def test_observation_gwq():
@@ -64,11 +65,11 @@ def observation_gw_dino_new():
 
 
 def test_observation_gw():
-    observation_gw()
+    observation_gw_dino_old()
+    observation_gw_dino_new()
 
 
 def test_obscollection_from_directory_old_school():
-    dinozip = "./tests/data/2019-Dino-test/dino.zip"
     dino_gw = hpd.read_dino(
         dirname=dinozip,
         ObsClass=hpd.GroundwaterObs,
