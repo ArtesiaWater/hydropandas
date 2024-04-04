@@ -4,7 +4,7 @@ plot_dir = "./tests/data/2019-Dino-test/plots"
 
 
 def test_interactive_plot():
-    gw = ttf.observation_gw_old()
+    gw = ttf.observation_gw_dino_old()
     gw.plots.interactive_plot(
         savedir=plot_dir,
         cols=("stand_m_tov_nap",),
