@@ -733,7 +733,7 @@ def get_knmi_daily_rainfall_api(
     params = {"vars": meteo_var, "stns": str(stn)}
 
     if start is not None:
-        params["start"] = start.strftime("%Y%m%d")
+        params["start"] = (start - pd.Timedelta(days=1)).strftime("%Y%m%d")
     if end is not None:
         params["end"] = end.strftime("%Y%m%d")
     strio = get_knmi_api(url, params)
