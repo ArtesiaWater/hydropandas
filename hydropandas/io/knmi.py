@@ -875,9 +875,6 @@ def _transform_variables(
             # over the period 08.00 preceding day - 08.00 UTC present day
             df.index = df.index + pd.to_timedelta(8, unit="h")
 
-            # from UT to UT+1 (standard-time in the Netherlands)
-            df.index = df.index + pd.to_timedelta(1, unit="h")
-
             value = value.replace("08.00", "09.00").replace("UTC", "UTC+1")
 
         # Store new variable
