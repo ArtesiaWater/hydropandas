@@ -532,7 +532,7 @@ def fill_missing_measurements(
 
         n_missing = missing.sum()
         logger.info(
-            f"trying to fill {n_missing} missing measurements with station {stn_comp}"
+            f"Trying to fill {n_missing} missing measurements with station {stn_comp}"
         )
 
         stn_name_comp = get_station_name(stn_comp, stations)
@@ -541,7 +541,7 @@ def fill_missing_measurements(
         )
 
         if knmi_df_comp.empty:
-            logger.warning(f"station {stn_comp} cannot be downloaded")
+            logger.info(f"No data available for station {stn_comp}")
 
         else:
             # dropnans from new data
