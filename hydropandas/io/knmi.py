@@ -164,14 +164,20 @@ def get_knmi_timeseries_fname(
             "please indicate how to read the file by specifying a meteo_var and"
             " an interval"
         )
-    ts, meta = interpret_knmi_file(
-        df=df,
-        meta=meta,
-        meteo_var=meteo_var,
-        start=start,
-        end=end,
-        adjust_time=adjust_time,
-    )
+    if df.emtpy:
+        logger.warning(
+            f"No data for {meteo_var=} at {stn=} between" f"{start=} and {end=}."
+        )
+    else:
+        ts, meta = interpret_knmi_file(
+            df=df,
+            meta=meta,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            adjust_time=adjust_time,
+        )
+
     stn = meta["station"]
     stations = get_stations(meteo_var=meteo_var)
     stn_name = get_station_name(stn=stn, stations=stations)
@@ -652,14 +658,20 @@ def download_knmi_data(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
                     adjust_time = True
-                knmi_df, variables = interpret_knmi_file(
-                    df=df,
-                    meta=meta,
-                    meteo_var=meteo_var,
-                    start=start,
-                    end=end,
-                    adjust_time=adjust_time,
-                )
+                if df.empty:
+                    logger.warning(
+                        f"No data for {meteo_var=} at {stn=} between"
+                        f"{start=} and {end=}. Returning empty DataFrame."
+                    )
+                else:
+                    knmi_df, variables = interpret_knmi_file(
+                        df=df,
+                        meta=meta,
+                        meteo_var=meteo_var,
+                        start=start,
+                        end=end,
+                        adjust_time=adjust_time,
+                    )
 
         except (RuntimeError, requests.ConnectionError) as e:
             logger.warning(
@@ -681,14 +693,20 @@ def download_knmi_data(
             else:
                 # daily data from meteorological stations
                 df, meta = get_knmi_daily_meteo_url(stn=stn)
-            knmi_df, variables = interpret_knmi_file(
-                df=df,
-                meta=meta,
-                meteo_var=meteo_var,
-                start=start,
-                end=end,
-                adjust_time=True,
-            )
+            if df.empty:
+                logger.warning(
+                    f"No data for {meteo_var=} at {stn=} between"
+                    f"{start=} and {end=}. Returning empty DataFrame."
+                )
+            else:
+                knmi_df, variables = interpret_knmi_file(
+                    df=df,
+                    meta=meta,
+                    meteo_var=meteo_var,
+                    start=start,
+                    end=end,
+                    adjust_time=True,
+                )
     except (ValueError, KeyError, pd.errors.EmptyDataError) as e:
         logger.error(f"{e} {msg}")
         if settings["raise_exceptions"]:
@@ -1157,10 +1175,6 @@ def interpret_knmi_file(
             variables["station"] = stn
             return mdf, var
 
-    logger.warning(
-        f"No data for {meteo_var=} at {stn=} between"
-        f"{start=} and {end=}. Returning empty DataFrame."
-    )
     return pd.DataFrame(), variables
 
 
@@ -1276,6 +1290,7 @@ def _check_latest_measurement_date_de_bilt(
     else:
         if use_api:
             try:
+                end = pd.Timestamp(end) + dt.timedelta(days=1)
                 knmi_df, _ = get_knmi_daily_meteo_api(
                     stn=260, meteo_var=meteo_var, start=start, end=end
                 )
