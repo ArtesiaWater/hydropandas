@@ -166,7 +166,7 @@ def get_knmi_timeseries_fname(
         )
     if df.emtpy:
         logger.warning(
-            f"No data for {meteo_var=} at {fname=} between" f"{start=} and {end=}."
+            f"No data for {meteo_var=} in {fname=} between" f"{start=} and {end=}."
         )
     else:
         ts, meta = interpret_knmi_file(
