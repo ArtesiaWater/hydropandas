@@ -1075,7 +1075,7 @@ def read_knmi_file(
 
                 df = df.set_index(datetime)
             except pd.errors.EmptyDataError as e:
-                logging.error(f"{str(e)}. Returning empty DataFrame.")
+                logger.warning(f"{str(e)}. Returning empty DataFrame.")
                 df = pd.DataFrame()
             f.close()
 
@@ -1157,7 +1157,7 @@ def interpret_knmi_file(
             variables["station"] = stn
             return mdf, var
 
-    logging.error(
+    logger.warning(
         f"No data for {meteo_var=} at {stn=} between"
         f"{start=} and {end=}. Returning empty DataFrame."
     )
