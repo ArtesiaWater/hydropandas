@@ -1168,7 +1168,14 @@ def interpret_knmi_file(
             df = df.loc[~df.index.duplicated(keep="first")]
             logger.info("duplicate indices removed from RD measurements")
 
-        istart, iend = df.index.get_indexer([start, end], method="backfill")
+        istart = (
+            df.index.get_indexer([start], method="backfill")[0]
+            if start is not None
+            else 0
+        )
+        iend = (
+            df.index.get_indexer([end], method="backfill")[0] if end is not None else -1
+        )
         iend = len(df) if iend == -1 else iend + 1
         icol = df.columns.get_indexer([meteo_var])
         meteo_df = df.iloc[istart:iend, icol].dropna()
