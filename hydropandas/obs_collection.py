@@ -170,8 +170,8 @@ def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
 def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
-    subdir="Grondwaterstanden_Put",
-    suffix="1.csv",
+    subdir="DINO_Grondwaterstanden",
+    suffix=None,
     keep_all_obs=True,
     name=None,
     **kwargs,
@@ -187,9 +187,13 @@ def read_dino(
     ObsClass : type
         class of the observations, so far only GroundwaterObs is supported
     subdir : str
-        subdirectory of dirname with data files
-    suffix : str
-        suffix of files in subdir that will be read
+        subdirectory of dirname with data files. For old school dino zip files this
+        should be "Grondwaterstanden_Put". For new style the default value
+        DINO_Grondwaterstanden is sufficient. The default is DINO_Grondwaterstanden.
+    suffix : str or None, optional
+        suffix of files in subdir that will be read. For old school dino zip files this
+        should be '1.csv'. For new style the default value None is sufficient. The
+        default is None
     keep_all_obs : boolean, optional
         add all observation points to the collection, even the points
         without measurements or metadata
@@ -1423,8 +1427,8 @@ class ObsCollection(pd.DataFrame):
         cls,
         dirname=None,
         ObsClass=obs.GroundwaterObs,
-        subdir="Grondwaterstanden_Put",
-        suffix="1.csv",
+        subdir="DINO_Grondwaterstanden",
+        suffix=None,
         keep_all_obs=True,
         name=None,
         **kwargs,
@@ -1440,9 +1444,13 @@ class ObsCollection(pd.DataFrame):
         ObsClass : type
             class of the observations, so far only GroundwaterObs is supported
         subdir : str
-            subdirectory of dirname with data files
-        suffix : str
-            suffix of files in subdir that will be read
+            subdirectory of dirname with data files. For old school dino zip files this
+            should be "Grondwaterstanden_Put". For new style the default value
+            DINO_Grondwaterstanden is sufficient. The default is DINO_Grondwaterstanden.
+        suffix : str or None, optional
+            suffix of files in subdir that will be read. For old school dino zip files
+            this should be '1.csv'. For new style the default value None is sufficient.
+            The default is None.
         keep_all_obs : boolean, optional
             add all observation points to the collection, even the points
             without measurements or metadata

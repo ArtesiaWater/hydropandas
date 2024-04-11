@@ -15,13 +15,12 @@ logger = logging.getLogger(__name__)
 
 def _read_dino_groundwater_header(f):
     line = f.readline()
-    header = dict()
-    while line not in ["\n", "", "\r\n"]:
+    header = {}
+    while line.strip() not in ["", ",,,,,,,,,,,,"]:
         if "," in line:  # for csv from dinoloket
-            propval = line.split(",")
+            propval = line.replace('"', "").split(",")
             prop = propval[0]
-            prop = prop.replace(":", "")
-            prop = prop.strip()
+            prop = prop.replace(":", "").strip()
             val = propval[1]
             if propval[2] != "":
                 val = val + " " + propval[2].replace(":", "") + " " + propval[3]
@@ -37,18 +36,17 @@ def _read_dino_groundwater_header(f):
 
 
 def _read_empty(f, line):
-    while (line == "\n") or (line == "\r\n"):
+    while line.strip() in ["", ",,,,,,,,,,,,"] and line != "":
         line = f.readline()
     return line
 
 
 def _read_dino_groundwater_referencelvl(f, line):
     ref = {}
-    while line not in ["\n", "", "\r\n"]:
-        propval = line.split(",")
+    while line.strip() not in ["", ",,,,,,,,,,,,"]:
+        propval = line.replace('"', "").strip().split(",")
         prop = propval[0]
         prop = prop.replace(":", "")
-        prop = prop.strip()
         if len(propval) > 1:
             val = propval[1]
             ref[prop] = val
@@ -70,13 +68,13 @@ def _read_dino_groundwater_metadata(f, line):
     }
     metalist = list()
     line = line.strip()
-    properties = line.split(",")
+    properties = line.replace('"', "").split(",")
+
     line = f.readline()
 
-    while line not in ["\n", "", "\r\n"]:
-        meta = dict()
-        line = line.strip()
-        values = line.split(",")
+    while line.strip() not in ["", ",,,,,,,,,,,,"]:
+        meta = {}
+        values = line.replace('"', "").strip().split(",")
         for i, val in enumerate(values):
             meta[properties[i].lower()] = val
         metalist.append(meta)
@@ -90,23 +88,23 @@ def _read_dino_groundwater_metadata(f, line):
             start_date = pd.to_datetime(meta.pop("startdatum"), dayfirst=True)
             # end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
             meta_tsi["monitoring_well"] = meta["locatie"]
-            for key in _translate_dic_float.keys():
+            for key, item in _translate_dic_float.items():
                 if meta[key] == "":
-                    meta_tsi[_translate_dic_float[key]] = np.nan
+                    meta_tsi[item] = np.nan
                 else:
-                    meta_tsi[_translate_dic_float[key]] = float(meta[key])
+                    meta_tsi[item] = float(meta[key])
 
-            for key in _translate_dic_div_100.keys():
+            for key, item in _translate_dic_div_100.items():
                 if meta[key] == "":
-                    meta_tsi[_translate_dic_div_100[key]] = np.nan
+                    meta_tsi[item] = np.nan
                 else:
-                    meta_tsi[_translate_dic_div_100[key]] = float(meta[key]) / 100.0
+                    meta_tsi[item] = float(meta[key]) / 100.0
             if i == 0:
-                for key in meta_tsi.keys():
-                    meta_ts[key] = pd.Series(name=key, dtype=type(meta_tsi[key]))
+                for key, item in meta_tsi.items():
+                    meta_ts[key] = pd.Series(name=key, dtype=type(item))
 
-            for key in meta_tsi.keys():
-                meta_ts[key].loc[start_date] = meta_tsi[key]
+            for key, item in meta_tsi.items():
+                meta_ts[key].loc[start_date] = item
 
         # remove series with non time variant metadata from meta_ts
         ts_keys = (
@@ -377,8 +375,8 @@ def _read_artdino_groundwater_metadata(f, line):
         meta = dict()
         line = line.strip()
         values = line.split(",")
-        for i in range(0, len(values)):
-            meta[properties[i].lower()] = values[i]
+        for i, val in enumerate(values):
+            meta[properties[i].lower()] = val
         metalist.append(meta)
         line = f.readline()
 
@@ -734,8 +732,8 @@ def read_dino_waterlvl_csv(
 def read_dino_dir(
     path: Union[str, Path],
     ObsClass,
-    subdir: str = "Grondwaterstanden_Put",
-    suffix: str = "1.csv",
+    subdir: str = "DINO_Grondwaterstanden",
+    suffix: str = None,
     keep_all_obs: bool = True,
     **kwargs: dict,
 ):
@@ -754,9 +752,13 @@ def read_dino_dir(
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     subdir : str
-        subdirectory of dirname with data files
-    suffix : str
-        suffix of files in subdir that will be read
+        subdirectory of dirname with data files. For old school dino zip files this
+        should be "Grondwaterstanden_Put". For new style the default value
+        'DINO_Grondwaterstanden' is sufficient. The default is 'DINO_Grondwaterstanden'.
+    suffix : str or None, optional
+        suffix of files in subdir that will be read. For old school dino zip files
+        this should be '1.csv'. For new style the default value None is sufficient.
+        The default is None.
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without data or
         metadata

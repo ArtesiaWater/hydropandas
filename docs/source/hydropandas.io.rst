@@ -1,10 +1,10 @@
 hydropandas.io package
 ======================
 
-hydropandas.io.arctic module
---------------------------------
+hydropandas.io.bro module
+------------------------------
 
-.. automodule:: hydropandas.io.arctic
+.. automodule:: hydropandas.io.bro
    :members:
    :undoc-members:
    :show-inheritance:
@@ -17,10 +17,10 @@ hydropandas.io.dino module
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.fieldlogger module
--------------------------------------
+hydropandas.io.fews module
+------------------------------
 
-.. automodule:: hydropandas.io.fieldlogger
+.. automodule:: hydropandas.io.fews
    :members:
    :undoc-members:
    :show-inheritance:
@@ -29,6 +29,14 @@ hydropandas.io.knmi module
 ------------------------------
 
 .. automodule:: hydropandas.io.knmi
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hydropandas.io.lizard module
+------------------------------
+
+.. automodule:: hydropandas.io.lizard
    :members:
    :undoc-members:
    :show-inheritance:
@@ -57,10 +65,10 @@ hydropandas.io.pastas module
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.pystore module
----------------------------------
+hydropandas.io.solinst module
+--------------------------------
 
-.. automodule:: hydropandas.io.pystore
+.. automodule:: hydropandas.io.solinst
    :members:
    :undoc-members:
    :show-inheritance:
@@ -81,10 +89,10 @@ hydropandas.io.wiski module
    :undoc-members:
    :show-inheritance:
 
-hydropandas.io.fews module
-------------------------------
+hydropandas.io.wow module
+-------------------------------
 
-.. automodule:: hydropandas.io.fews
+.. automodule:: hydropandas.io.wow
    :members:
    :undoc-members:
    :show-inheritance:
