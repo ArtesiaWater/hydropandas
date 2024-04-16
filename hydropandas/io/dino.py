@@ -347,7 +347,7 @@ def read_dino_groundwater_csv(
             meta["unit"] = "m NAP"
         elif not to_mnap:
             meta["unit"] = "cm NAP"
-        if remove_duplicates:
+        if remove_duplicates and measurements is not None:
             measurements = measurements[~measurements.index.duplicated(keep=keep_dup)]
 
         # add time variant metadata to measurements
