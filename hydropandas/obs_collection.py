@@ -2353,7 +2353,7 @@ class ObsCollection(pd.DataFrame):
                 f" found {', '.join([x.__name__ for x in otype])}."
             )
 
-        xy_oc = self.loc[:, ["x", "y"]]
+        xy_oc = pd.concat([self.loc[:, "x"], self.loc[:, "y"]], axis=1)
         obsdf = util.oc_to_df(self, col=col)
 
         fill_df = util.interpolate(
