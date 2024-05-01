@@ -55,6 +55,9 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 
 def _read_dino_groundwater_metadata(f, line):
+    if "Peildatum" in line:
+        return line, {"metadata_available": False}, {}
+
     _translate_dic_float = {
         "x-coordinaat": "x",
         "y-coordinaat": "y",
