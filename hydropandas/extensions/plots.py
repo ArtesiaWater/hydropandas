@@ -2,12 +2,17 @@ import logging
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 from matplotlib.gridspec import GridSpec
 from tqdm.auto import tqdm
 
 from ..observation import GroundwaterObs
 from . import accessor
+
+from pandas import __version__ as pd_version
+from pandas import concat, Timestamp, to_datetime
+
 
 logger = logging.getLogger(__name__)
 
@@ -434,7 +439,7 @@ class CollectionPlots:
             # plot well layout via markers
             ax_section.scatter(
                 plot_x,
-                self._obj.tube_top.values,
+                ctube_top.values,
                 section_markersize,
                 label="tube top",
                 marker="*",
@@ -762,7 +767,8 @@ class CollectionPlots:
 
         if not savefig:
             return axes
-
+        
+    
 
 @accessor.register_obs_accessor("plots")
 class ObsPlots:
@@ -947,3 +953,97 @@ class ObsPlots:
             return self._obj.meta["iplot_fname"]
         else:
             return p
+    
+    def year_to_label(year_start, month_start, day=1, strfstr='%b %Y'):
+        month_stop = month_start - 1
+        year_stop = year_start + 1
+        
+        if month_stop < 1 :
+            year_stop = year_start - 1
+            month_stop = month + 12
+        
+        return pd.Timestamp(year_start, month_start, day).strftime(strfstr) + '-' + pd.Timestamp(year_stop, month_stop, day).strftime(strfstr)
+        
+
+
+    def series_per_hydrological_year(
+        self,
+        plot_column=None,
+        by_month=4,
+        by_day=1,
+        remove_leap_years=True,
+        strfstr="%m-%d %H:%M:%S",
+        savefig=True,
+        outputdir=".",
+    ):
+        # data preparation
+        if remove_leap_years:
+            self._obj = self._obj[~((self._obj.index.month == 2) & (self._obj.index.day == 29))]
+        
+        # select column name
+        # TODO: first numeric column
+        if plot_column is None:
+            plot_column = self._obj.columns[0]
+        
+        # calculate daynumber
+        day0 = Timestamp(1900, by_month, by_day).dayofyear
+        
+        # assign groupby_year and plot_year
+        self._obj['groupby_year'] = self._obj.index.year
+        self._obj['plot_year'] = "1900-"
+        # re-assign for part that is in next year
+        self._obj.loc[self._obj.index.dayofyear < day0, 'groupby_year'] -= 1
+        self._obj.loc[self._obj.index.dayofyear < day0, 'plot_year'] = '1901-'
+        
+        # group data
+        grs = {}
+        freq = "YE" if pd_version >= "2.2.0" else "Y"
+        for groupby_year, gry in self._obj.groupby('groupby_year'):
+            gry.index = to_datetime(
+                gry.plot_year + gry.index.strftime(strfstr), 
+                format="%Y-" + strfstr
+                )
+            # fix readable label
+            month_stop = by_month - 1
+            year_stop = groupby_year + 1
+            
+            if month_stop < 1 :
+                year_stop = groupby_year - 1
+                month_stop = by_month + 12
+            strfstr_lbl = '%b %Y'
+            label = Timestamp(groupby_year, by_month, by_day).strftime(strfstr_lbl) + \
+                '-' + Timestamp(year_stop, month_stop, by_day).strftime(strfstr_lbl)
+            grs[label] = gry[plot_column]
+        
+        #df = concat(grs, axis=1)
+        
+        f, ax = plt.subplots(1, 1, figsize=(10, 3))
+        concat(grs, axis=1).plot(ax=ax)
+        
+        ax.set_xlim([
+            Timestamp(1900, by_month, by_day),  
+            Timestamp(1901, by_month, by_day)])
+        
+        myFmt = mdates.DateFormatter('%d-%b')
+        ax.xaxis.set_major_formatter(myFmt)
+        
+        ax.legend(
+            loc=(0, 1),
+            frameon=False,
+            fontsize="x-small",
+        )
+        ax.grid(True)
+        f.tight_layout()
+
+        if savefig:
+            # TO DO: assign filename
+            filename = 'test.png'
+            f.savefig(
+                os.path.join(outputdir, filename), bbox_inches="tight", dpi=150
+            )
+            plt.close(f)
+        else:
+            axes.append(ax)
+
+        if not savefig:
+            return axes
