@@ -141,24 +141,24 @@ def get_knmi_timeseries_fname(
     if "neerslaggeg" in fname:
         # neerslagstation
         meteo_var = "RD"
-        adjust_time = True
+        add_day = True
     elif "etmgeg" in fname:
         # meteo station
-        adjust_time = True
+        add_day = True
     elif "uurgeg" in fname:
-        adjust_time = False
+        add_day = False
         # hourly station
     # if that doesn't work try to figure out by the meteo_var and settings
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
         meteo_var = "RD"
-        adjust_time = True
+        add_day = True
     elif settings["interval"] == "daily":
         # meteo station
-        adjust_time = True
+        add_day = True
     elif settings["interval"] == "hourly":
         # uurlijks station
-        adjust_time = False
+        add_day = False
     else:
         raise ValueError(
             "please indicate how to read the file by specifying a meteo_var and"
@@ -175,7 +175,7 @@ def get_knmi_timeseries_fname(
             meteo_var=meteo_var,
             start=start,
             end=end,
-            adjust_time=adjust_time,
+            add_day=add_day,
         )
 
     stn = meta["station"]
@@ -644,19 +644,19 @@ def download_knmi_data(
                     df, meta = get_knmi_hourly_meteo_api(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
-                    adjust_time = False
+                    add_day = False
                 elif meteo_var == "RD":
                     # daily data from rainfall-stations
                     df, meta = get_knmi_daily_rainfall_api(
                         stn=stn, start=start, end=end
                     )
-                    adjust_time = True
+                    add_day = True
                 else:
                     # daily data from meteorological stations
                     df, meta = get_knmi_daily_meteo_api(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
-                    adjust_time = True
+                    add_day = True
                 if df.empty:
                     logger.warning(
                         f"No data for {meteo_var=} at {stn=} between"
@@ -669,7 +669,7 @@ def download_knmi_data(
                         meteo_var=meteo_var,
                         start=start,
                         end=end,
-                        adjust_time=adjust_time,
+                        add_day=add_day,
                     )
 
         except (RuntimeError, requests.ConnectionError) as e:
@@ -704,7 +704,7 @@ def download_knmi_data(
                     meteo_var=meteo_var,
                     start=start,
                     end=end,
-                    adjust_time=True,
+                    add_day=True,
                 )
     except (ValueError, KeyError, pd.errors.EmptyDataError) as e:
         logger.error(f"{e} {msg}")
@@ -1112,7 +1112,8 @@ def interpret_knmi_file(
     meteo_var: str,
     start: Union[pd.Timestamp, None] = None,
     end: Union[pd.Timestamp, None] = None,
-    adjust_time: bool = True,
+    add_day: bool = True,
+    add_hour: bool = True,
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """interpret data from knmi by selecting meteo_var data and meta
     and transforming the variables
@@ -1129,9 +1130,11 @@ def interpret_knmi_file(
         start time of observations.
     end : pd.TimeStamp or None
         end time of observations.
-    adjust_time : boolean, optional
-        add 1 day and 1 hour to convert from GMT to CET winter time
-        and make observation time over the previous time interval
+    add_day : boolean, optional
+        add 1 day so that the timestamp is at the end of the period the data describes
+    add_hour : boolean, optional
+        add 1 hour to convert from UT to UT+1 (standard-time in the Netherlands)
+
 
     Returns
     -------
@@ -1154,14 +1157,16 @@ def interpret_knmi_file(
         else:
             stn = df.at[df.index[0], "STN"]
 
-        if adjust_time:
-            # step 1: add a full day for meteorological data, so that the
-            # timestamp is at the end of the period in the data
-            # step 2: from UT to UT+1 (standard-time in the Netherlands)
+        if add_day or add_hour:
+            if add_day and add_hour:
+                timedelta = pd.Timedelta(1, "d") + pd.Timedelta(1, "h")
+            elif add_hour:
+                timedelta = pd.Timedelta(1, "h")
+            else:
+                timedelta = pd.Timedelta(1, "d")
+
             df = df.copy()
-            df.index = (
-                df.index + pd.to_timedelta(1, unit="d") + pd.to_timedelta(1, unit="h")
-            )
+            df.index = df.index + timedelta
 
         if df.index.has_duplicates:
             df = df.loc[~df.index.duplicated(keep="first")]
