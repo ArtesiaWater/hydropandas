@@ -376,7 +376,8 @@ def get_stations(meteo_var: str) -> pd.DataFrame:
         os.path.join(dir_path, "../data/knmi_neerslagstation.json")
     )
 
-    stations = pd.concat([mstations, pstations], axis=0).fillna(False)
+    stations = pd.concat([mstations, pstations], axis=0)
+    stations = stations.where(~stations.isna(), False)
     if meteo_var in ("makkink", "penman", "hargreaves"):
         meteo_var = "EV24"
     return stations.loc[
