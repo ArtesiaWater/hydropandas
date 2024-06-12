@@ -602,7 +602,12 @@ def get_obs_list_from_extent(
         }
     req = requests.post(url, json=data)
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        logger.error(
+            "could not get monitoring wells, your extent is probably too big."
+            "Try a smaller extent"
+        )
+        req.raise_for_status()
+        # print(req.json()["errors"][0]["message"])
 
     # read results
     tree = xml.etree.ElementTree.fromstring(req.text)

@@ -79,7 +79,7 @@ def test_groundwater_quality_obs():
 
 def test_add_meta_to_df():
     oc = _obscollection_from_list()
-    oc.add_meta_to_df(key="all")
+    oc = oc.add_meta_to_df(key="all")
 
     assert "info" in oc.columns, "unexpected result for add_meta_to_df"
 

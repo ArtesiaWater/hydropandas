@@ -1342,9 +1342,7 @@ class ObsCollection(pd.DataFrame):
             full_meta=full_meta,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
-
-        return cls(obs_df)
+        return cls(obs_list)
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -2264,19 +2262,26 @@ class ObsCollection(pd.DataFrame):
         key : str, int, tuple, list, set or None, optional
             key in meta dictionary of observation object. If key is 'all', all
             keys are added. The default is 'all'.
-        """
 
+        Returns
+        -------
+        out : ObsCollection
+            ObsCollection with extra columns with metadata
+        """
+        out = self.copy()
         if isinstance(key, str) and key == "all":
-            keys = set().union(*[o.meta for o in self.obs.values])
+            keys = set().union(*[o.meta for o in out.obs.values])
             for key in keys:
-                self[key] = [
+                out[key] = [
                     o.meta[key] if key in o.meta.keys() else None
-                    for o in self.obs.values
+                    for o in out.obs.values
                 ]
         else:
-            self[key] = [
-                o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+            out[key] = [
+                o.meta[key] if key in o.meta.keys() else None for o in out.obs.values
             ]
+
+        return out
 
     def get_series(self, tmin=None, tmax=None, col=None):
         """
