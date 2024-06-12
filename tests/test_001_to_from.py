@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import pastastore as pst
 import pytest
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, HTTPError
 
 import hydropandas as hpd
 
@@ -33,7 +33,7 @@ def test_bro_extent():
 def test_bro_extent_too_big():
     extent = (102395, 213550, 334331, 473920)  # to many observations in extent
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(HTTPError):
         hpd.read_bro(extent=extent, only_metadata=True)
 
 
