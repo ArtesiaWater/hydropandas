@@ -861,7 +861,7 @@ class ObsCollection(pd.DataFrame):
         elif isinstance(args[0], pd.DataFrame) and (
             "obs_list" in kwargs or "ObsClass" in kwargs
         ):
-            df = self.from_dataframe(*args)
+            df = self.from_dataframe(*args, **kwargs)
             super().__init__(df, **kwargs)
         else:
             super().__init__(*args, **kwargs)
