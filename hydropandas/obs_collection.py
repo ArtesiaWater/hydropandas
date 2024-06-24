@@ -843,7 +843,10 @@ class ObsCollection(pd.DataFrame):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
 
-        if isinstance(args[0], ObsCollection):
+        if len(args) == 0:
+            logger.debug("Create empty ObsCollection")
+            super().__init__(**kwargs)
+        elif isinstance(args[0], ObsCollection):
             super().__init__(*args, **kwargs)
         elif len(args) == 0:
             logger.debug("Create empty ObsCollection")
