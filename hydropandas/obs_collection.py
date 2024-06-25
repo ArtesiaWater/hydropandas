@@ -846,6 +846,11 @@ class ObsCollection(pd.DataFrame):
         if len(args) == 0:
             logger.debug("Create empty ObsCollection")
             super().__init__(**kwargs)
+        elif isinstance(args[0], ObsCollection):
+            super().__init__(*args, **kwargs)
+        elif len(args) == 0:
+            logger.debug("Create empty ObsCollection")
+            super().__init__(**kwargs)
         elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
@@ -856,12 +861,11 @@ class ObsCollection(pd.DataFrame):
             remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
             obs_df = util._obslist_to_frame(obs_list)
             super().__init__(obs_df, *remaining_args, **kwargs)
-        elif isinstance(args[0], pd.DataFrame):
-            if "obs" not in args[0].columns:
-                df = self.from_dataframe(*args)
-                super().__init__(df, **kwargs)
-            else:
-                super().__init__(*args, **kwargs)
+        elif isinstance(args[0], pd.DataFrame) and (
+            "obs_list" in kwargs or "ObsClass" in kwargs
+        ):
+            df = self.from_dataframe(*args, **kwargs)
+            super().__init__(df, **kwargs)
         else:
             super().__init__(*args, **kwargs)
 
