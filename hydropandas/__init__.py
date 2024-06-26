@@ -24,6 +24,7 @@ from .obs_collection import (
     read_wiski,
 )
 from .observation import (
+    CPTObs,
     EvaporationObs,
     GroundwaterObs,
     MeteoObs,
