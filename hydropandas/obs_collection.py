@@ -2247,7 +2247,7 @@ class ObsCollection(pd.DataFrame):
             if isinstance(coltype, GeometryDtype):
                 pass
             # cast boolean columns to int
-            elif coltype == bool:
+            elif pd.api.types.is_bool_dtype(coltype):
                 gdf[colname] = gdf[colname].astype(int)
             # cast datetime columns to str
             elif np.issubdtype(coltype, np.datetime64):
