@@ -846,6 +846,11 @@ class ObsCollection(pd.DataFrame):
         if len(args) == 0:
             logger.debug("Create empty ObsCollection")
             super().__init__(**kwargs)
+        elif isinstance(args[0], ObsCollection):
+            super().__init__(*args, **kwargs)
+        elif len(args) == 0:
+            logger.debug("Create empty ObsCollection")
+            super().__init__(**kwargs)
         elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
@@ -856,12 +861,11 @@ class ObsCollection(pd.DataFrame):
             remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
             obs_df = util._obslist_to_frame(obs_list)
             super().__init__(obs_df, *remaining_args, **kwargs)
-        elif isinstance(args[0], pd.DataFrame):
-            if "obs" not in args[0].columns:
-                df = self.from_dataframe(*args)
-                super().__init__(df, **kwargs)
-            else:
-                super().__init__(*args, **kwargs)
+        elif isinstance(args[0], pd.DataFrame) and (
+            "obs_list" in kwargs or "ObsClass" in kwargs
+        ):
+            df = self.from_dataframe(*args, **kwargs)
+            super().__init__(df, **kwargs)
         else:
             super().__init__(*args, **kwargs)
 
@@ -1342,9 +1346,7 @@ class ObsCollection(pd.DataFrame):
             full_meta=full_meta,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
-
-        return cls(obs_df)
+        return cls(obs_list)
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
@@ -2264,19 +2266,26 @@ class ObsCollection(pd.DataFrame):
         key : str, int, tuple, list, set or None, optional
             key in meta dictionary of observation object. If key is 'all', all
             keys are added. The default is 'all'.
-        """
 
+        Returns
+        -------
+        out : ObsCollection
+            ObsCollection with extra columns with metadata
+        """
+        out = self.copy()
         if isinstance(key, str) and key == "all":
-            keys = set().union(*[o.meta for o in self.obs.values])
+            keys = set().union(*[o.meta for o in out.obs.values])
             for key in keys:
-                self[key] = [
+                out[key] = [
                     o.meta[key] if key in o.meta.keys() else None
-                    for o in self.obs.values
+                    for o in out.obs.values
                 ]
         else:
-            self[key] = [
-                o.meta[key] if key in o.meta.keys() else None for o in self.obs.values
+            out[key] = [
+                o.meta[key] if key in o.meta.keys() else None for o in out.obs.values
             ]
+
+        return out
 
     def get_series(self, tmin=None, tmax=None, col=None):
         """

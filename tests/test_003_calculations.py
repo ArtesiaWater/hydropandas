@@ -104,7 +104,7 @@ def test_get_ground_level_gwobs():
     try:
         from art_tools import hpd_extension  # noqa: F401
 
-        gw = ttf.observation_gw_old()
+        gw = ttf.observation_gw_dino_old()
         gw.art.geo_get_ground_level()
         return
     except ModuleNotFoundError as e:
