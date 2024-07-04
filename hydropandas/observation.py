@@ -492,6 +492,81 @@ class Obs(pd.DataFrame):
         return o
 
 
+class CPTObs(Obs):
+    """Class for cone penetration test observations.
+
+    Subclass of the Obs class. Has the following attributes:
+    - ground_level: surface level in m above date (NAP) (maaiveld in Dutch)
+    """
+
+    _metadata = Obs._metadata + [
+        "ground_level",
+    ]
+
+    def __init__(self, *args, **kwargs):
+        """Constructor for CPT observations.
+
+        Parameters
+        ----------
+        *args must be input for the pandas.DataFrame constructor
+        **kwargs can be one of the attributes listed in _metadata or keyword arguments
+        for the constructor of a pandas.DataFrame.
+        """
+        if len(args) > 0:
+            if isinstance(args[0], Obs):
+                for key in args[0]._metadata:
+                    if (key in CPTObs._metadata) and (key not in kwargs.keys()):
+                        kwargs[key] = getattr(args[0], key)
+
+        self.ground_level = kwargs.pop("ground_level", np.nan)
+
+        super().__init__(*args, **kwargs)
+
+    @property
+    def _constructor(self):
+        return CPTObs
+
+    @classmethod
+    def from_bro(
+        cls,
+        bro_id,
+        only_metadata=False,
+    ):
+        """Download BRO groundwater observations from the server.
+
+        Parameters
+        ----------
+        bro_id : str
+            starts with 'CPT' e.g. 'CPT000000003688'.
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False
+
+        Returns
+        -------
+        CPTObs
+            Cone penetration test observations.
+        """
+
+        from .io import bro
+
+        measurements, meta = bro.get_bro_cpt(
+            bro_id,
+            only_metadata=only_metadata,
+        )
+
+        return cls(
+            measurements,
+            meta=meta,
+            name=meta.pop("name"),
+            x=meta.pop("x"),
+            y=meta.pop("y"),
+            source=meta.pop("source"),
+            unit=meta.pop("unit"),
+            ground_level=meta.pop("ground_level"),
+        )
+
+
 class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.
 
@@ -518,7 +593,7 @@ class GroundwaterObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
-        """Constructor for ObsCollection.
+        """Constructor for GroundwaterObs.
 
         Parameters
         ----------
@@ -650,8 +725,8 @@ class GroundwaterObs(Obs):
 
         Returns
         -------
-        ObsCollection
-            Returns a DataFrame with metadata and timeseries
+        GroundwaterObs
+            Returns object with metadata and measurements
         """
 
         from .io import lizard
@@ -702,8 +777,8 @@ class GroundwaterObs(Obs):
 
         Returns
         -------
-        ObsCollection
-            ObsCollection containing observations from XML file.
+        GroundwaterObs
+            Returns object with metadata and measurements from XML file.
         """
 
         from .io import bronhouderportaal_bro
@@ -983,7 +1058,7 @@ class WaterlvlObs(Obs):
 
         Returns
         -------
-        df : WaterlvlObs
+        WaterlvlObs
             WaterlvlObs object
 
         Raises
