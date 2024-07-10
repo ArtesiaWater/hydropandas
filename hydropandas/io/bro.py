@@ -132,7 +132,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
 
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
-            raise ValueError("if bro_id is GMW a filternumber should be specified")
+            raise ValueError("if bro_id is GMW a tube_nr should be specified")
 
         meta = get_metadata_from_gmw(bro_id, tube_nr)
         gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
