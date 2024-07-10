@@ -132,7 +132,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
 
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
-            raise ValueError("if bro_id is GMW a filternumber should be specified")
+            raise ValueError("if bro_id is GMW a tube_nr should be specified")
 
         meta = get_metadata_from_gmw(bro_id, tube_nr)
         gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
@@ -422,10 +422,53 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
     return meta
 
 
-def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
+def get_tube_nrs_from_gmw(bro_id):
+    """returns all tube numbers from a groundwater monitoring well (gmw)
+
+    Parameters
+    ----------
+    bro_id : str
+        bro id of groundwater monitoring well e.g. 'GMW000000036287'.
+
+    Returns
+    -------
+    list of int
+        tube numbers
+    """
+
+    ns = {
+        "dsgmw": "http://www.broservices.nl/xsd/dsgmw/1.1",
+        "gmwcommon": "http://www.broservices.nl/xsd/gmwcommon/1.1",
+        "gml": "http://www.opengis.net/gml/3.2",
+    }
+
+    if not bro_id.startswith("GMW"):
+        raise ValueError("can only get metadata if bro id starts with GMW")
+
+    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    req = requests.get(url)
+
+    # read results
+    tree = xml.etree.ElementTree.fromstring(req.text)
+
+    # get gmw
+    gmws = tree.findall(".//dsgmw:GMW_PO", ns)
+    if len(gmws) != 1:
+        raise (Exception("Only one gmw supported"))
+    gmw = gmws[0]
+
+    # get tube nrs
+    tube_numbers = [
+        int(tube.text)
+        for tube in gmw.findall("dsgmw:monitoringTube/dsgmw:tubeNumber", ns)
+    ]
+
+    return tube_numbers
+
+
+def get_metadata_from_gmw(bro_id, tube_nr):
     """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
-
 
     Parameters
     ----------
@@ -503,9 +546,13 @@ def get_metadata_from_gmw(bro_id, tube_nr, epsg=28992):
 
     # buis eigenschappen
     tubes = gmw.findall("dsgmw:monitoringTube", ns)
-    for tube in tubes:
-        if int(tube.find("dsgmw:tubeNumber", ns).text) == tube_nr:
-            break
+    tube_nrs = [int(tube.find("dsgmw:tubeNumber", ns).text) for tube in tubes]
+    if tube_nr not in tube_nrs:
+        raise ValueError(
+            f"gmw {bro_id} has no tube_nr {tube_nr} please choose a tube_nr from"
+            f"{tube_nrs}"
+        )
+    tube = tubes[tube_nrs.index(tube_nr)]
 
     # tube_top
     mp = tube.find("dsgmw:tubeTopPosition", ns)
@@ -638,11 +685,9 @@ def get_obs_list_from_extent(
         gmws = tree.findall(f'.//*[brocom:broId="{gmw_id}"]', ns)
         if len(gmws) < 1:
             raise RuntimeError("unexpected")
-        else:
-            gmw = gmws[0]
 
-        ntubes = int(gmw.find("dsgmw:numberOfMonitoringTubes", ns).text)
-        for tube_nr in range(1, ntubes + 1):
+        tube_nrs = get_tube_nrs_from_gmw(gmw_id)
+        for tube_nr in tube_nrs:
             o = ObsClass.from_bro(
                 gmw_id,
                 tube_nr=tube_nr,
