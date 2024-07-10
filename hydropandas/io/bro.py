@@ -549,7 +549,8 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     tube_nrs = [int(tube.find("dsgmw:tubeNumber", ns).text) for tube in tubes]
     if tube_nr not in tube_nrs:
         raise ValueError(
-            f"gmw {bro_id} has no tube_nr {tube_nr} please choose a tube_nr from {tube_nrs}"
+            f"gmw {bro_id} has no tube_nr {tube_nr} please choose a tube_nr from"
+            f"{tube_nrs}"
         )
     tube = tubes[tube_nrs.index(tube_nr)]
 
