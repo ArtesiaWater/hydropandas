@@ -1,4 +1,4 @@
-{   "name": "Hydropnadas",
+{   "name": "Hydropandas",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     "image": "mcr.microsoft.com/devcontainers/python:0-3.11",
     "updateContentCommand": "chmod u+x .devcontainer/setup.sh && .devcontainer/setup.sh && chmod 666 .devcontainer/setup.sh",
@@ -11,8 +11,5 @@
           "ms-toolsai.jupyter"
         ]
       }
-    },
-    
-    
-
+    }
   }
