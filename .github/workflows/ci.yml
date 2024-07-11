@@ -11,34 +11,25 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         include:
           - name: Test suite with py312-ubuntu
             python: "3.12"
-            os: ubuntu-latest
             toxenv: py312
           - name: Test suite with py311-ubuntu
             python: "3.11"
-            os: ubuntu-latest
             toxenv: py311
           - name: Test suite with py310-ubuntu
             python: "3.10"
-            os: ubuntu-latest
             toxenv: py310
-          - name: Formatting with black + isort
-            python: "3.9"
-            os: ubuntu-latest
-            toxenv: format
-          - name: Linting with flake8 + ruff
-            python: "3.9"
-            os: ubuntu-latest
-            toxenv: lint
+          - name: Formatting and linting with ruff
+            python: "3.11"
+            toxenv: ruff
           - name: Test suite for notebooks and coverage
             python: "3.9"
-            os: ubuntu-latest
             toxenv: notebooks
 
     name: ${{ matrix.name }}
