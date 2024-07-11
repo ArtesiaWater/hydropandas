@@ -5,11 +5,11 @@ https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleverancie
 import json
 import logging
 import xml.etree.ElementTree
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
 import requests
-from functools import lru_cache
 from pyproj import Proj, Transformer
 from tqdm import tqdm
 
@@ -461,7 +461,7 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
     gmws = tree.findall(".//dsgmw:GMW_PO", ns)
     if len(gmws) != 1:
         val_ind = req.text.find("valid")
-        valid = req.text[(val_ind + 9):(val_ind + 14)]
+        valid = req.text[(val_ind + 9) : (val_ind + 14)]
         if valid == "false" and retries < 5:
             logger.debug(
                 f"got invalid response for {bro_id}, trying again {retries+1}/4"
