@@ -2,7 +2,7 @@
 
 [![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
 [![PyPi Supported Python Versions](https://img.shields.io/pypi/pyversions/hydropandas)](https://pypi.python.org/pypi/hydropandas)
-[![Open in GitHub Codespaces](<img src="https://github.com/codespaces/badge.svg" height="20">)](https://codespaces.new/ArtesiaWater/hydropandas?quickstart=1)
+[<img src="https://github.com/codespaces/badge.svg" height="20">](https://codespaces.new/ArtesiaWater/hydropandas?quickstart=1)
 
 
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions?query=workflow%3Ahydropandas)
