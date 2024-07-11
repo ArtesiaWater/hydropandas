@@ -147,8 +147,8 @@ def test_calculate_evaporation():
 
 
 def test_download_knmi_xy():
-    df1, meta1 = knmi.get_knmi_obs(meteo_var="RH", stn=344)
-    df2, meta2 = knmi.get_knmi_obs(meteo_var="RH", xy=(90600, 442800))
+    df1, _ = knmi.get_knmi_obs(meteo_var="RH", stn=344)
+    df2, _ = knmi.get_knmi_obs(meteo_var="RH", xy=(90600, 442800))
 
     assert df1.equals(df2), "Dataframes should be identical"
 

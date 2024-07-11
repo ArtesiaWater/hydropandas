@@ -2,7 +2,8 @@
 
 [![PyPi](https://img.shields.io/pypi/v/hydropandas.svg)](https://pypi.python.org/pypi/hydropandas)
 [![PyPi Supported Python Versions](https://img.shields.io/pypi/pyversions/hydropandas)](https://pypi.python.org/pypi/hydropandas)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ArtesiaWater/hydropandas/master)
+[<img src="https://github.com/codespaces/badge.svg" height="20">](https://codespaces.new/ArtesiaWater/hydropandas?quickstart=1)
+
 
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/workflows/hydropandas/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions?query=workflow%3Ahydropandas)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://www.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=github.com&utm_medium=referral&utm_content=ArtesiaWater/hydropandas&utm_campaign=Badge_Grade)
