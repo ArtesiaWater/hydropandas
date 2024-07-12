@@ -461,7 +461,7 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
 
     gmws = tree.findall(".//dsgmw:GMW_PO", ns)
     if len(gmws) != 1:
-        max_retries=rcParams['bro']['max_retries']
+        max_retries = rcParams["bro"]["max_retries"]
         val_ind = req.text.find("valid")
         valid = req.text[(val_ind + 9) : (val_ind + 14)]
         if valid == "false" and retries < max_retries:

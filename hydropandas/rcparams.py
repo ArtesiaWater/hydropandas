@@ -1,5 +1,1 @@
-rcParams = {
-    "bro": {
-        "max_retries": 5
-        }
-}
+rcParams = {"bro": {"max_retries": 5}}
