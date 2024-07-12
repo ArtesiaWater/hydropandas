@@ -13,6 +13,7 @@ import requests
 from pyproj import Proj, Transformer
 from tqdm import tqdm
 
+from ..rcparams import rcParams
 from ..util import EPSG_28992
 
 logger = logging.getLogger(__name__)
@@ -460,16 +461,17 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
 
     gmws = tree.findall(".//dsgmw:GMW_PO", ns)
     if len(gmws) != 1:
+        max_retries=rcParams['bro']['max_retries']
         val_ind = req.text.find("valid")
         valid = req.text[(val_ind + 9) : (val_ind + 14)]
-        if valid == "false" and retries < 5:
+        if valid == "false" and retries < max_retries:
             logger.debug(
-                f"got invalid response for {bro_id}, trying again {retries+1}/4"
+                f"got invalid response for {bro_id}, trying again {retries+1}/{max_retries}"
             )
             return _get_gmw_from_bro_id(bro_id, retries=retries + 1)
         elif valid == "false":
             raise Exception(
-                f"got invalid response for {bro_id} after trying {retries+1} times"
+                f"got invalid response for {bro_id} after trying {retries} times"
             )
         raise (Exception("Only one gmw supported"))
     gmw = gmws[0]
