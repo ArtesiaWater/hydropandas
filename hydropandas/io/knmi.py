@@ -1023,7 +1023,7 @@ def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
 
 
 def read_knmi_file(
-    path: Union[str, Path, StringIO]
+    path: Union[str, Path, StringIO],
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """read knmi daily meteo data from a file
 

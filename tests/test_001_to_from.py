@@ -18,7 +18,7 @@ def test_bro_gld():
 
 def test_bro_gmn():
     # single observation
-    bro_id = "GMN000000000163"
+    bro_id = "GMN000000001084"  # 34 objects as per 2024-7-11
     hpd.read_bro(bro_id=bro_id, only_metadata=True)
 
 
@@ -31,7 +31,7 @@ def test_bro_extent():
 
 
 def test_bro_extent_too_big():
-    extent = (102395, 213550, 334331, 473920)  # to many observations in extent
+    extent = (102395, 213550, 334331, 473920)  # too many observations in extent
 
     with pytest.raises(HTTPError):
         hpd.read_bro(extent=extent, only_metadata=True)

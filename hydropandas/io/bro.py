@@ -5,6 +5,7 @@ https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleverancie
 import json
 import logging
 import xml.etree.ElementTree
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,7 @@ import requests
 from pyproj import Proj, Transformer
 from tqdm import tqdm
 
+from ..rcparams import rcParams
 from ..util import EPSG_28992
 
 logger = logging.getLogger(__name__)
@@ -422,6 +424,61 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
     return meta
 
 
+@lru_cache()
+def _get_gmw_from_bro_id(bro_id, retries=0):
+    """get a gmw object from a bro_id
+
+    Parameters
+    ----------
+    bro_id : str
+        bro id of groundwater monitoring well e.g. 'GMW000000036287'.
+
+    Returns
+    -------
+    Element
+        xml reference to gmw object
+
+    Raises
+    ------
+    ValueError
+        if bro_id is invalid.
+    """
+
+    if not bro_id.startswith("GMW"):
+        raise ValueError("can only get metadata if bro id starts with GMW")
+
+    ns = {
+        "dsgmw": "http://www.broservices.nl/xsd/dsgmw/1.1",
+        "gmwcommon": "http://www.broservices.nl/xsd/gmwcommon/1.1",
+        "gml": "http://www.opengis.net/gml/3.2",
+    }
+
+    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    req = requests.get(url)
+
+    # read results
+    tree = xml.etree.ElementTree.fromstring(req.text)
+
+    gmws = tree.findall(".//dsgmw:GMW_PO", ns)
+    if len(gmws) != 1:
+        max_retries = rcParams["bro"]["max_retries"]
+        val_ind = req.text.find("valid")
+        valid = req.text[(val_ind + 9) : (val_ind + 14)]
+        if valid == "false" and retries < max_retries:
+            logger.debug(
+                f"got invalid response for {bro_id}, trying again {retries+1}/{max_retries}"
+            )
+            return _get_gmw_from_bro_id(bro_id, retries=retries + 1)
+        elif valid == "false":
+            raise Exception(
+                f"got invalid response for {bro_id} after trying {retries} times"
+            )
+        raise (Exception("Only one gmw supported"))
+    gmw = gmws[0]
+
+    return gmw
+
+
 def get_tube_nrs_from_gmw(bro_id):
     """returns all tube numbers from a groundwater monitoring well (gmw)
 
@@ -435,27 +492,13 @@ def get_tube_nrs_from_gmw(bro_id):
     list of int
         tube numbers
     """
-
     ns = {
         "dsgmw": "http://www.broservices.nl/xsd/dsgmw/1.1",
         "gmwcommon": "http://www.broservices.nl/xsd/gmwcommon/1.1",
         "gml": "http://www.opengis.net/gml/3.2",
     }
 
-    if not bro_id.startswith("GMW"):
-        raise ValueError("can only get metadata if bro id starts with GMW")
-
-    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
-    req = requests.get(url)
-
-    # read results
-    tree = xml.etree.ElementTree.fromstring(req.text)
-
-    # get gmw
-    gmws = tree.findall(".//dsgmw:GMW_PO", ns)
-    if len(gmws) != 1:
-        raise (Exception("Only one gmw supported"))
-    gmw = gmws[0]
+    gmw = _get_gmw_from_bro_id(bro_id)
 
     # get tube nrs
     tube_numbers = [
@@ -490,28 +533,16 @@ def get_metadata_from_gmw(bro_id, tube_nr):
         dictionary with metadata.
 
     """
+    if not isinstance(tube_nr, int):
+        raise TypeError(f"expected integer got {type(tube_nr)}")
+
     ns = {
         "dsgmw": "http://www.broservices.nl/xsd/dsgmw/1.1",
         "gmwcommon": "http://www.broservices.nl/xsd/gmwcommon/1.1",
         "gml": "http://www.opengis.net/gml/3.2",
     }
 
-    if not bro_id.startswith("GMW"):
-        raise ValueError("can only get metadata if bro id starts with GMW")
-
-    if not isinstance(tube_nr, int):
-        raise TypeError(f"expected integer got {type(tube_nr)}")
-
-    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
-    req = requests.get(url)
-
-    # read results
-    tree = xml.etree.ElementTree.fromstring(req.text)
-
-    gmws = tree.findall(".//dsgmw:GMW_PO", ns)
-    if len(gmws) != 1:
-        raise (Exception("Only one gmw supported"))
-    gmw = gmws[0]
+    gmw = _get_gmw_from_bro_id(bro_id)
 
     meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
 

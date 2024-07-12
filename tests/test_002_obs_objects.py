@@ -100,6 +100,17 @@ def test_copy_obs():
     assert "answer" in o3.meta.keys(), "copy method failed"
 
 
+def test_returns():
+    # check if a DataFrame is returned when an ObsCollection is sliced without the
+    # 'obs' column
+    oc = _obscollection_from_list()
+
+    assert isinstance(oc.loc[:, ["x", "y"]], pd.DataFrame)
+    assert not isinstance(oc.loc[:, ["x", "y"]], hpd.ObsCollection)
+
+    assert isinstance(oc.loc[:, ["x", "y", "obs"]], hpd.ObsCollection)
+
+
 def test_convert_waterlvl_groundwater_obs():
     # create WaterlvlObs
     df = pd.DataFrame(

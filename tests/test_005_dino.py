@@ -18,12 +18,12 @@ def test_dino_csv_new_style():
 def test_dino_csv_duplicate_index():
     # contains 1 duplicate index 2019-11-19
     fname = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B22D0155001_1.csv"
-    measurements, meta = dino.read_dino_groundwater_csv(fname)
+    measurements, _ = dino.read_dino_groundwater_csv(fname)
 
     # check if measurements contains duplicate indices
     assert measurements.index.duplicated().any()
 
-    measurements, meta = dino.read_dino_groundwater_csv(
+    measurements, _ = dino.read_dino_groundwater_csv(
         fname, remove_duplicates=True, keep_dup="last"
     )
 

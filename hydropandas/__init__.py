@@ -33,6 +33,7 @@ from .observation import (
     WaterlvlObs,
     WaterQualityObs,
 )
+from .rcparams import rcParams
 from .version import __version__, show_versions
 
 logging.getLogger("hydropandas").addHandler(logging.NullHandler())

@@ -65,11 +65,10 @@ rtd = [
     "nbsphinx",
     "nbsphinx_link",
 ]
-linting = ["flake8", "ruff"]
-formatting = ["black[jupyter]", "isort"]
+ruffing = ["ruff"]
 pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
 coveraging = ["coverage"]
-dev = ["hydropandas[linting,formatting,pytesting]", "tox"]
+dev = ["hydropandas[ruffing,pytesting]", "tox"]
 
 [tool.setuptools]
 include-package-data = true
@@ -99,7 +98,7 @@ markers = ["slow: mark test as slow."]
 legacy_tox_ini = """
     [tox]
     requires = tox>=4
-    env_list = format, lint, notebooks, py{39, 310, 311, 312}
+    env_list = ruff, notebooks, py{39, 310, 311, 312}
 
     [testenv]
     description = run unit tests
@@ -114,19 +113,18 @@ legacy_tox_ini = """
             coverage run -m pytest tests
             coverage xml
 
-    [testenv:format]
-    description = run formatters
-    basepython = python3.9
-    extras = formatting
+    [testenv:ruff]
+    description = run ruff checks
+    basepython = python3.11
+    extras = ruffing
     commands =
-            black . --check --diff
-            isort . --check-only --diff
+            ruff check --extend-select I --preview
+            ruff format --check
 
-    [testenv:lint]
-    description = run linters
-    basepython = python3.9
-    extras = linting
+    [testenv:ruff_fix]
+    description = run ruff locally and fix issues
+    extras = ruffing
     commands =
-            flake8 . --max-line-length=88 --ignore=E741,W503
-            ruff check .
+            ruff check --extend-select I --fix
+            ruff format
 """
