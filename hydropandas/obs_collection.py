@@ -812,6 +812,31 @@ def read_pastastore(
     )
 
 
+def _obscollection_constructor_with_fallback(*args, **kwargs):
+    """
+    A flexible constructor for ObsCollection._constructor, which falls back
+    to returning a DataFrame (if a certain operation does not preserve the
+    obs column). Copied from geopandas.
+    """
+    oc = ObsCollection(*args, **kwargs)
+    if 'obs' not in oc.columns:
+        oc = pd.DataFrame(oc)
+
+    return oc
+
+
+def is_observation_type(data):
+    """
+    Check if the data is of geometry dtype.
+
+    Does not include object array of shapely scalars.
+    """
+    if isinstance(getattr(data, "dtype", None), GeometryDtype):
+        # GeometryArray, GeoSeries and Series[GeometryArray]
+        return True
+    else:
+        return False
+
 class ObsCollection(pd.DataFrame):
     """Class for a collection of point observations.
 
@@ -871,7 +896,7 @@ class ObsCollection(pd.DataFrame):
 
     @property
     def _constructor(self):
-        return ObsCollection
+        return _obscollection_constructor_with_fallback
 
     def _infer_otype(self):
         """Infer observation type from the obs column.
