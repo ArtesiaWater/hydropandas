@@ -549,7 +549,8 @@ class GroundwaterObs(Obs):
     @classmethod
     def from_bro(
         cls,
-        bro_id,
+        bro_id=None,
+        fname=None,
         tube_nr=None,
         tmin="1900-01-01",
         tmax="2040-01-01",
@@ -557,13 +558,15 @@ class GroundwaterObs(Obs):
         drop_duplicate_times=True,
         only_metadata=False,
     ):
-        """Download BRO groundwater observations from the server.
+        """Read BRO groundwater observations from a file or using the API.
 
         Parameters
         ----------
-        bro_id : str
+        bro_id : str or None, optional
             can be a GLD id or GMW id. If a GMW id is given a tube number is
             required as well. e.g. 'GLD000000012893'.
+        fname : str or None, optional
+            fname xml file e.g. 'GLD000000012893.xml'
         tube_nr : str or None, optional
             if the bro_id is a GMW object the tube number should be given.
         tmin : str or None, optional
@@ -589,8 +592,9 @@ class GroundwaterObs(Obs):
         from .io import bro
 
         measurements, meta = bro.get_bro_groundwater(
-            bro_id,
-            tube_nr,
+            bro_id=bro_id,
+            fname=fname,
+            tube_nr=tube_nr,
             tmin=tmin,
             tmax=tmax,
             to_wintertime=to_wintertime,
@@ -602,6 +606,7 @@ class GroundwaterObs(Obs):
             measurements,
             meta=meta,
             name=meta.pop("name"),
+            filename=meta.pop("filename"),
             x=meta.pop("x"),
             y=meta.pop("y"),
             source=meta.pop("source"),

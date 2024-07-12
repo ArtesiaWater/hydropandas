@@ -76,7 +76,8 @@ def read_lizard(
 
 def read_bro(
     extent=None,
-    bro_id=None,
+    bro_id_gmn=None,
+    dirname=None,
     name="",
     tmin=None,
     tmax=None,
@@ -92,8 +93,11 @@ def read_bro(
     extent : list, tuple, numpy-array or None, optional
         get groundwater monitoring wells within this extent
         [xmin, xmax, ymin, ymax]
-    bro_id : str or None, optional
+    bro_id_gmn : str or None, optional
         starts with 'GMN'.
+    dirname : str or None, optional
+        directory name with bro xml files, can be a .zip file or the parent
+        directory of BRO_Grondwaterstandonderzoek.
     name : str, optional
         name of the observation collection
     tmin : str or None, optional
@@ -121,7 +125,8 @@ def read_bro(
 
     oc = ObsCollection.from_bro(
         extent=extent,
-        bro_id=bro_id,
+        bro_id_gmn=bro_id_gmn,
+        dirname=dirname,
         name=name,
         tmin=tmin,
         tmax=tmax,
@@ -1186,7 +1191,8 @@ class ObsCollection(pd.DataFrame):
     def from_bro(
         cls,
         extent=None,
-        bro_id=None,
+        bro_id_gmn=None,
+        dirname=None,
         name="",
         tmin=None,
         tmax=None,
@@ -1203,8 +1209,11 @@ class ObsCollection(pd.DataFrame):
         extent : list, tuple, numpy-array or None, optional
             get groundwater monitoring wells within this extent
             [xmin, xmax, ymin, ymax]
-        bro_id : str or None, optional
+        bro_id_gmn : str or None, optional
             starts with 'GMN'.
+        dirname : str or None, optional
+            directory name with bro xml files, can be a .zip file or the parent
+            directory of BRO_Grondwaterstandonderzoek.
         name : str, optional
             name of the observation collection
         tmin : str or None, optional
@@ -1230,9 +1239,22 @@ class ObsCollection(pd.DataFrame):
             ObsCollection DataFrame with the 'obs' column
         """
 
-        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
+        from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn, get_obs_list_from_directory
 
-        if bro_id is None and (extent is not None):
+        if (bro_id_gmn is None) and (extent is None) and (dirname is not None):
+            obs_list = get_obs_list_from_directory(
+                dirname,
+                obs.GroundwaterObs,
+                gmwsdir='BRO_Grondwatermonitoringput',
+                gldsdir='BRO_Grondwaterstandonderzoek',
+                unpackdir=None, force_unpack=False,
+                tmin=tmin,
+                tmax=tmax,
+                only_metadata=only_metadata,
+                keep_all_obs=keep_all_obs
+                )
+            meta = {'dirname': dirname}
+        elif (bro_id_gmn is None) and (extent is not None):
             obs_list = get_obs_list_from_extent(
                 extent,
                 obs.GroundwaterObs,
@@ -1244,16 +1266,16 @@ class ObsCollection(pd.DataFrame):
                 ignore_max_obs=ignore_max_obs,
             )
             meta = {}
-        elif bro_id is not None:
+        elif bro_id_gmn is not None:
             obs_list, meta = get_obs_list_from_gmn(
-                bro_id,
+                bro_id_gmn,
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
             )
             name = meta.pop("name")
         else:
-            raise ValueError("specify bro_id or extent")
+            raise ValueError("specify bro_id_gmn, extent or dirname")
 
         obs_df = util._obslist_to_frame(obs_list)
 

@@ -16,10 +16,27 @@ def test_bro_gld():
     hpd.GroundwaterObs.from_bro(bro_id)
 
 
+def test_bro_gld_file():
+    # single observation
+    fname ="./tests/data/2024-BRO-test/BRO_Grondwaterstandonderzoek/GLD000000012893.xml"
+    hpd.GroundwaterObs.from_bro(fname=fname)
+
+
+def test_bro_gmw():
+    # single observation
+    bro_id = "GMW000000036287"
+    hpd.GroundwaterObs.from_bro(bro_id=bro_id,tube_nr=1)
+
+
+def test_bro_gmw_file():
+    # single observation
+    fname ="./tests/data/2024-BRO-test/BRO_Grondwatermonitoringput/GMW000000036287.xml"
+    hpd.GroundwaterObs.from_bro(fname=fname, tube_nr=1)
+
 def test_bro_gmn():
     # single observation
     bro_id = "GMN000000001084"  # 34 objects as per 2024-7-11
-    hpd.read_bro(bro_id=bro_id, only_metadata=True)
+    hpd.read_bro(bro_id_gmn=bro_id, only_metadata=True)
 
 
 def test_bro_extent():
@@ -28,6 +45,11 @@ def test_bro_extent():
     extent = (102395, 103121, 434331, 434750)  # 4 observations within extent
 
     hpd.read_bro(extent=extent, only_metadata=True)
+
+
+def test_bro_directory():
+    dirname ="./tests/data/2024-BRO-test/bro.zip"
+    hpd.read_bro(dirname=dirname)
 
 
 def test_bro_extent_too_big():
@@ -97,8 +119,6 @@ def test_obscollection_empty():
 
 
 # read dino directories
-
-
 def obscollection_dinozip_gw():
     # groundwater quantity
     oc = hpd.read_dino(
