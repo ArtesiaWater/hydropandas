@@ -735,9 +735,9 @@ class CollectionPlots:
             if savefig:
                 if isinstance(by, list):
                     by_name = "-".join(by)
+                    groupname = "-".join(groupname)
                 else:
                     by_name = by
-                    groupname = "-".join(groupname)
                 if naming_method is None:
                     filename = f"series_by_{by_name}_group_{groupname}.png"
                 elif naming_method == "infer_name_monitoring_well":
