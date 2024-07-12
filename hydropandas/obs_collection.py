@@ -819,7 +819,7 @@ def _obscollection_constructor_with_fallback(*args, **kwargs):
     obs column). Copied from geopandas.
     """
     oc = ObsCollection(*args, **kwargs)
-    if 'obs' not in oc.columns:
+    if "obs" not in oc.columns:
         oc = pd.DataFrame(oc)
 
     return oc
@@ -836,6 +836,7 @@ def is_observation_type(data):
         return True
     else:
         return False
+
 
 class ObsCollection(pd.DataFrame):
     """Class for a collection of point observations.
