@@ -39,7 +39,7 @@ ns_gmn = {"xmlns": "http://www.broservices.nl/xsd/dsgmn/1.0"}
 
 
 def get_obs_list_from_gmn(bro_id_gmn, ObsClass, only_metadata=False, keep_all_obs=True):
-    """get a list of observation from a groundwater monitoring network.
+    """get a list of observation from a groundwater monitoring network (GMN).
 
     Parameters
     ----------
@@ -54,11 +54,6 @@ def get_obs_list_from_gmn(bro_id_gmn, ObsClass, only_metadata=False, keep_all_ob
         add all observation points to the collection, even without
         measurements
 
-    Raises
-    ------
-    ValueError
-        DESCRIPTION.
-
     Returns
     -------
     obs_list : list
@@ -66,6 +61,29 @@ def get_obs_list_from_gmn(bro_id_gmn, ObsClass, only_metadata=False, keep_all_ob
     meta : dict
         metadata of the groundwater monitoring net.
 
+    """
+    gmn = get_gmn_elem_api(bro_id_gmn)
+    return get_obs_list_from_gmn_api(gmn, bro_id_gmn, ObsClass, only_metadata=only_metadata, 
+                                     keep_all_obs=keep_all_obs)
+
+
+def get_gmn_elem_api(bro_id_gmn):
+    """get a list of observation from a groundwater monitoring network.
+
+    Parameters
+    ----------
+    bro_id_gmn : str
+        starts with 'GMN' e.g. 'GMN000000000163'.
+
+    Raises
+    ------
+    ValueError
+        if bro_id_gmn is invalid.
+
+    Returns
+    -------
+    gmn : Element
+        xml reference to gmn object
     """
 
     if not bro_id_gmn.startswith("GMN"):
@@ -79,6 +97,34 @@ def get_obs_list_from_gmn(bro_id_gmn, ObsClass, only_metadata=False, keep_all_ob
 
     tree = xml.etree.ElementTree.fromstring(req.text)
     gmn = tree.find(".//xmlns:GMN_PO", ns_gmn)
+
+    return gmn
+
+def get_obs_list_from_gmn_api(gmn, bro_id_gmn, ObsClass, only_metadata=False, keep_all_obs=True):
+    """get a list of observations from a groundwater monitoring network (GMN) xml.
+
+    Parameters
+    ----------
+    gmn : Element
+        xml reference to gmn object
+    bro_id_gmn : str
+        starts with 'GMN' e.g. 'GMN000000000163'.
+    ObsClass : type
+        class of the observations, so far only GroundwaterObs is supported
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    keep_all_obs : boolean, optional
+        add all observation points to the collection, even without
+        measurements
+
+    Returns
+    -------
+    obs_list : list
+        list with observation objects.
+    meta : dict
+        metadata of the groundwater monitoring net.
+    """
     gmws = gmn.findall("xmlns:measuringPoint", ns_gmn)
 
     logger.info(f"{len(gmws)} groundwater monitoring wells within groundwater meetnet")
@@ -136,15 +182,17 @@ def get_bro_groundwater(bro_id=None, fname=None, tube_nr=None,
 
     Returns
     -------
-    _type_
-        _description_
+    dataframe
+        measurements.
+    dictionary
+        metadata.
 
     Raises
     ------
     ValueError
-        _description_
+        if fname and bro_id are not specified
     ValueError
-        _description_
+        if both fname and bro_id are specified
     """
     if fname is None and bro_id is None:
         raise ValueError('please specify either fname or bro_id')
@@ -166,7 +214,6 @@ def get_bro_groundwater_api(bro_id, tube_nr=None, only_metadata=False,
     """get bro groundwater measurement from a GLD id or a GMW id with a
     filter number.
 
-
     Parameters
     ----------
     bro_id : str, optional
@@ -175,8 +222,8 @@ def get_bro_groundwater_api(bro_id, tube_nr=None, only_metadata=False,
         tube number, required if bro_id starts with 'GMW'. The default is
         None.
     only_metadata : bool, optional
-        if True download only metadata, significantly faster. The default
-        is False.
+        if True download only metadata, significantly faster. Should be False if
+        bro_id is a GLD id. The default is False.
     tmin : str or None, optional
         start date in format YYYY-MM-DD
     tmax : str or None, optional
@@ -187,7 +234,7 @@ def get_bro_groundwater_api(bro_id, tube_nr=None, only_metadata=False,
     Raises
     ------
     ValueError
-        DESCRIPTION.
+        if bro_id is a GLD id and only_metadata is True
 
     Returns
     -------
@@ -312,9 +359,7 @@ def get_gld_ids_from_gmw(bro_id_gmw, tube_nr):
     Raises
     ------
     ValueError
-        DESCRIPTION.
-    RuntimeError
-        DESCRIPTION.
+        if bro_id_gld is invalid.
 
     Returns
     -------
@@ -365,7 +410,7 @@ def get_gld_elem_api(bro_id_gld, tmin=None, tmax=None):
     Returns
     -------
     gld : Element
-        xml reference to gmw object
+        xml reference to gld object
 
     Raises
     ------
@@ -401,22 +446,18 @@ def get_gld_elem_api(bro_id_gld, tmin=None, tmax=None):
 
 
 def get_gld_elem_file(fname):
-    """_summary_
+    """ get a gld element from an xml file
 
     Parameters
     ----------
-    fname : _type_
-        _description_
+    fname : str
+        filename of gld xml file e.g. 'GLD000000012893.xml'.
+
 
     Returns
     -------
-    _type_
-        _description_
-
-    Raises
-    ------
-    ValueError
-        _description_
+    gld : Element
+        xml reference to gld object
     """
 
     tree = xml.etree.ElementTree.parse(fname)
@@ -438,7 +479,7 @@ def measurements_from_gld_elem(
     Parameters
     ----------
     gld : Element
-        xml reference to gmw object
+        xml reference to gld object
     bro_id_gld : str
         e.g. 'GLD000000012893'.
     tmin : str or None, optional
@@ -808,7 +849,6 @@ def get_obs_list_from_extent(
 ):
     """get a list of gmw observations within an extent.
 
-
     Parameters
     ----------
     extent : list, tuple, numpy-array or None, optional
@@ -832,15 +872,10 @@ def get_obs_list_from_extent(
         observations at once. if ignore_max_obs is True you won't get the
         prompt. The default is False
 
-    Raises
-    ------
-
-        DESCRIPTION.
-
     Returns
     -------
-    obs_list : TYPE
-        DESCRIPTION.
+    obs_list : list
+        list of observations.
 
     """
 
