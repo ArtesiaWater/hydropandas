@@ -483,7 +483,7 @@ def fill_missing_measurements(
         logger.info("trying to get measurements from nearest station")
 
         stn_lst = get_nearest_station_df(
-            stations.loc[[stn]], meteo_var=meteo_var, ignore=ignore
+            stations.loc[[ignore[0]]], meteo_var=meteo_var, ignore=ignore
         )
         if stn_lst is None:
             logger.warning(
