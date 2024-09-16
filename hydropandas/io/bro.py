@@ -4,6 +4,7 @@ https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleverancie
 
 import json
 import logging
+import time
 import xml.etree.ElementTree
 from functools import lru_cache
 
@@ -56,7 +57,12 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     req = requests.get(url)
 
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        logger.error(
+            "could not get monitoring wells, this groundwater monitoring net is"
+            "probably too big. Try a smaller extent"
+        )
+        req.raise_for_status()
+
 
     ns = {"xmlns": "http://www.broservices.nl/xsd/dsgmn/1.0"}
 
@@ -191,7 +197,11 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     req = requests.get(url)
 
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        logger.error(
+           f"could not get gld ids {req.text}"
+        )
+        req.raise_for_status()
+
 
     d = json.loads(req.text)
 
@@ -214,7 +224,8 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
 
 
 def measurements_from_gld(
-    bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True
+    bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True,
+    attempt=0
 ):
     """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
@@ -237,6 +248,9 @@ def measurements_from_gld(
     add_registration_history : bool, optional
         if True the registration history is added to the metadata. The defualt
         is True.
+    attempt: int, optional
+        counter for the number of attempts to call the bro api. Used to deal with
+        too many requests errors.
 
     Raises
     ------
@@ -265,7 +279,25 @@ def measurements_from_gld(
     req = requests.get(url.format(bro_id), params=params)
 
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        if req.status_code == 429:
+            logger.warning(
+                "too many requests"
+            )
+            
+            # wait before trying again
+            attempt += 1
+            if attempt <= 3:
+                wait_time = 1*attempt  
+                time.sleep(wait_time)
+                logger.info(f"trying again after {wait_time} seconds {attempt}/3")
+                return measurements_from_gld(bro_id, tmin=tmin, tmax=tmax, 
+            to_wintertime=to_wintertime, drop_duplicate_times=drop_duplicate_times,
+            attempt=attempt)
+        else:
+            logger.error(
+                "could not get monitoring well measurements"
+            )
+        req.raise_for_status()
 
     ns = {
         "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
@@ -685,7 +717,6 @@ def get_obs_list_from_extent(
             "Try a smaller extent"
         )
         req.raise_for_status()
-        # print(req.json()["errors"][0]["message"])
 
     # read results
     tree = xml.etree.ElementTree.fromstring(req.text)
