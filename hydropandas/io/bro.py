@@ -63,7 +63,6 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
         )
         req.raise_for_status()
 
-
     ns = {"xmlns": "http://www.broservices.nl/xsd/dsgmn/1.0"}
 
     tree = xml.etree.ElementTree.fromstring(req.text)
@@ -197,11 +196,8 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     req = requests.get(url)
 
     if req.status_code > 200:
-        logger.error(
-           f"could not get gld ids {req.text}"
-        )
+        logger.error(f"could not get gld ids {req.text}")
         req.raise_for_status()
-
 
     d = json.loads(req.text)
 
@@ -224,8 +220,12 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
 
 
 def measurements_from_gld(
-    bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True,
-    attempt=0
+    bro_id,
+    tmin=None,
+    tmax=None,
+    to_wintertime=True,
+    drop_duplicate_times=True,
+    attempt=0,
 ):
     """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
@@ -280,23 +280,24 @@ def measurements_from_gld(
 
     if req.status_code > 200:
         if req.status_code == 429:
-            logger.warning(
-                "too many requests"
-            )
-            
+            logger.warning("too many requests")
+
             # wait before trying again
             attempt += 1
             if attempt <= 3:
-                wait_time = 1*attempt  
+                wait_time = 1 * attempt
                 time.sleep(wait_time)
                 logger.info(f"trying again after {wait_time} seconds {attempt}/3")
-                return measurements_from_gld(bro_id, tmin=tmin, tmax=tmax, 
-            to_wintertime=to_wintertime, drop_duplicate_times=drop_duplicate_times,
-            attempt=attempt)
+                return measurements_from_gld(
+                    bro_id,
+                    tmin=tmin,
+                    tmax=tmax,
+                    to_wintertime=to_wintertime,
+                    drop_duplicate_times=drop_duplicate_times,
+                    attempt=attempt,
+                )
         else:
-            logger.error(
-                "could not get monitoring well measurements"
-            )
+            logger.error("could not get monitoring well measurements")
         req.raise_for_status()
 
     ns = {
