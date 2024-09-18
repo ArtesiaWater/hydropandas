@@ -411,7 +411,7 @@ class CollectionPlots:
             # use order in ObsCollection
             plot_x = np.arange(len(self._obj))
         else:
-            plot_x = self._obj[section_colname_x]
+            plot_x = self._obj[section_colname_x].to_numpy()
 
         # create figure
         fig = plt.figure(figsize=(15, 5))
