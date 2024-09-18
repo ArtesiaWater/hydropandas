@@ -89,6 +89,10 @@ profile = "black"
 [tool.ruff]
 line-length = 88
 target-version = "py39"
+extend-include = ["*.ipynb"]
+lint.extend-select = ["I"]
+show-fixes = true
+fix = true
 
 [tool.pytest.ini_options]
 addopts = "--durations=0"
