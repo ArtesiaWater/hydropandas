@@ -333,7 +333,10 @@ def get_knmi_timeseries_stn(
             settings=settings,
             stn_name=stn_name,
         )
-
+        if knmi_df.empty:
+            logger.warning(
+                f"No data for {meteo_var=} at {stn=} between" f"{start=} and {end=}."
+            )
         if str(stn) in station_meta.index:
             meta = station_meta.loc[f"{stn}"].to_dict()
         else:
@@ -356,13 +359,21 @@ def get_knmi_timeseries_stn(
     return knmi_df, meta
 
 
-def get_stations(meteo_var: str) -> pd.DataFrame:
+def get_stations(
+    meteo_var: str,
+    start: Union[pd.Timestamp, str, None] = None,
+    end: Union[pd.Timestamp, str, None] = None,
+) -> pd.DataFrame:
     """get knmi stations from json files according to variable.
 
     Parameters
     ----------
     meteo_var : str, optional
         type of meteodata, by default 'RH'
+    start : str, datetime or None, optional
+        start date of observations. The default is None.
+    end : str, datetime or None, optional
+        end date of observations. The default is None.
 
     Returns
     -------
@@ -380,17 +391,61 @@ def get_stations(meteo_var: str) -> pd.DataFrame:
     stations = stations.where(~stations.isna(), False)
     if meteo_var in ("makkink", "penman", "hargreaves"):
         meteo_var = "EV24"
-    return stations.loc[
+
+    # select only stations with meteo_var
+    stations = stations.loc[
         stations.loc[:, meteo_var],
-        [
-            "lon",
-            "lat",
-            "name",
-            "x",
-            "y",
-            "altitude",
-        ],
+        ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"],
     ]
+
+    # select only stations with measurement
+    stations = _get_stations_tmin_tmax(stations, start, end)
+
+    return stations
+
+
+def _get_stations_tmin_tmax(stations_df, start, end):
+    """select stations within period defined by start and end.
+
+    Parameters
+    ----------
+    stations_df : pd.DataFrame
+        stations
+    start : datetime or None, optional
+        start date of observations.
+    end : datetime or None, optional
+        end date of observations.
+
+    Returns
+    -------
+    DataFrame with all station with measurements in selected period.
+
+    Notes
+    -----
+    Does not work on a DataFrames with duplicate indices
+    """
+    if stations_df.index.duplicated().any():
+        raise IndexError("function does not work for dataframe with duplicated index")
+
+    if end is None:
+        tmin_stns = set(stations_df.index)
+    else:
+        # keep stations where tmin is unknonw (=False)
+        stns_unknown_tmin = set(stations_df.loc[stations_df["tmin"] == False].index)
+        tmin_available = stations_df.loc[stations_df["tmin"] != False, "tmin"]
+        tmin_within_range = pd.to_datetime(tmin_available) < end
+        tmin_stns = set(tmin_available.loc[tmin_within_range].index) | stns_unknown_tmin
+
+    if start is None:
+        tmax_stns = set(stations_df.index)
+    else:
+        stns_unknown_tmax = set(stations_df.loc[stations_df["tmax"] == False].index)
+        tmax_available = stations_df.loc[stations_df["tmax"] != False, "tmax"]
+        tmax_available.loc[tmax_available.isnull()] = dt.datetime.now().date()
+        tmax_within_range = pd.to_datetime(tmax_available) > start
+        tmax_stns = set(tmax_available.loc[tmax_within_range].index) | stns_unknown_tmax
+
+    return stations_df.loc[list(tmin_stns & tmax_stns)]
 
 
 def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> str:
@@ -467,7 +522,7 @@ def fill_missing_measurements(
         )
 
     # get the location of the stations
-    stations = get_stations(meteo_var=meteo_var)
+    stations = get_stations(meteo_var=meteo_var, start=start, end=end)
     if stn_name is None:
         stn_name = get_station_name(stn=stn, stations=stations)
 
@@ -479,8 +534,8 @@ def fill_missing_measurements(
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
-        logger.info(f"station {stn} has no measurements between {start} and {end}")
-        logger.info("trying to get measurements from nearest station")
+        logger.debug(f"station {stn} has no measurements between {start} and {end}")
+        logger.debug("trying to get measurements from nearest station")
 
         stn_lst = get_nearest_station_df(
             stations.loc[[ignore[0]]], meteo_var=meteo_var, ignore=ignore
@@ -509,7 +564,7 @@ def fill_missing_measurements(
         )
         if new_end < end:
             end = new_end
-            logger.warning(f'changing end_date to {end.strftime("%Y-%m-%d")}')
+            logger.info(f'changing end_date to {end.strftime("%Y-%m-%d")}')
 
     # find missing values
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
@@ -537,7 +592,7 @@ def fill_missing_measurements(
             stn_comp = stn_comp[0]
 
         n_missing = missing.sum()
-        logger.info(
+        logger.debug(
             f"Trying to fill {n_missing} missing measurements with station {stn_comp}"
         )
 
@@ -547,7 +602,7 @@ def fill_missing_measurements(
         )
 
         if knmi_df_comp.empty:
-            logger.info(f"No data available for station {stn_comp}")
+            logger.debug(f"No data available for station {stn_comp}")
 
         else:
             # dropnans from new data
@@ -658,12 +713,7 @@ def download_knmi_data(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
                     add_day = True
-                if df.empty:
-                    logger.warning(
-                        f"No data for {meteo_var=} at {stn=} between"
-                        f"{start=} and {end=}. Returning empty DataFrame."
-                    )
-                else:
+                if not df.empty:
                     knmi_df, variables = interpret_knmi_file(
                         df=df,
                         meta=meta,
@@ -693,12 +743,7 @@ def download_knmi_data(
             else:
                 # daily data from meteorological stations
                 df, meta = get_knmi_daily_meteo_url(stn=stn)
-            if df.empty:
-                logger.warning(
-                    f"No data for {meteo_var=} at {stn=} between"
-                    f"{start=} and {end=}. Returning empty DataFrame."
-                )
-            else:
+            if not df.empty:
                 knmi_df, variables = interpret_knmi_file(
                     df=df,
                     meta=meta,
@@ -1344,6 +1389,8 @@ def get_nearest_station_df(
     ycol: str = "y",
     stations: Union[pd.DataFrame, None] = None,
     meteo_var: str = "RH",
+    start: Union[pd.Timestamp, str, None] = None,
+    end: Union[pd.Timestamp, str, None] = None,
     ignore: Union[List[str], None] = None,
 ) -> list[int]:
     """Find the KNMI stations that measure 'meteo_var' closest to the
@@ -1362,6 +1409,10 @@ def get_nearest_station_df(
         The default is None.
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
+    start : str, datetime or None, optional
+        start date of observations. The default is None.
+    end : str, datetime or None, optional
+        end date of observations. The default is None.
     ignore : list, optional
         list of stations to ignore. The default is None.
 
@@ -1371,7 +1422,7 @@ def get_nearest_station_df(
         station numbers.
     """
     if stations is None:
-        stations = get_stations(meteo_var=meteo_var)
+        stations = get_stations(meteo_var=meteo_var, start=start, end=end)
     if ignore is not None:
         stations.drop(ignore, inplace=True)
         if stations.empty:
@@ -1640,14 +1691,18 @@ def get_knmi_obslist(
 
         # get stations
         if stns is None:
-            stations = get_stations(meteo_var=meteo_var)
+            stations = get_stations(meteo_var=meteo_var, start=start, end=end)
             if (locations is None) and (xy is not None):
                 _stns = get_nearest_station_xy(
                     xy, stations=stations, meteo_var=meteo_var
                 )
             elif locations is not None:
                 _stns = get_nearest_station_df(
-                    locations, stations=stations, meteo_var=meteo_var
+                    locations,
+                    stations=stations,
+                    meteo_var=meteo_var,
+                    start=start,
+                    end=end,
                 )
             else:
                 raise ValueError(
