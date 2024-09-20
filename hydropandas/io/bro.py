@@ -4,7 +4,6 @@ https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleverancie
 
 import json
 import logging
-import time
 import xml.etree.ElementTree
 from functools import lru_cache
 
@@ -12,6 +11,7 @@ import numpy as np
 import pandas as pd
 import requests
 from pyproj import Proj, Transformer
+from requests.adapters import Retry, HTTPAdapter
 from tqdm import tqdm
 
 from ..rcparams import rcParams
@@ -224,8 +224,7 @@ def measurements_from_gld(
     tmin=None,
     tmax=None,
     to_wintertime=True,
-    drop_duplicate_times=True,
-    attempt=0,
+    drop_duplicate_times=True
 ):
     """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
@@ -248,9 +247,6 @@ def measurements_from_gld(
     add_registration_history : bool, optional
         if True the registration history is added to the metadata. The defualt
         is True.
-    attempt: int, optional
-        counter for the number of attempts to call the bro api. Used to deal with
-        too many requests errors.
 
     Raises
     ------
@@ -276,28 +272,16 @@ def measurements_from_gld(
     if tmax is not None:
         tmax = pd.to_datetime(tmax)
         params["observationPeriodEndDate"] = tmax.strftime("%Y-%m-%d")
-    req = requests.get(url.format(bro_id), params=params)
+    
+    # add some logic to retry in case of a 429 response
+    s = requests.Session()
+    retries = Retry(total=5,
+                    backoff_factor=0.5,
+                    status_forcelist=[429])
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    req = s.get(url.format(bro_id), params=params)
 
     if req.status_code > 200:
-        if req.status_code == 429:
-            logger.warning("too many requests")
-
-            # wait before trying again
-            attempt += 1
-            if attempt <= 3:
-                wait_time = 1 * attempt
-                time.sleep(wait_time)
-                logger.info(f"trying again after {wait_time} seconds {attempt}/3")
-                return measurements_from_gld(
-                    bro_id,
-                    tmin=tmin,
-                    tmax=tmax,
-                    to_wintertime=to_wintertime,
-                    drop_duplicate_times=drop_duplicate_times,
-                    attempt=attempt,
-                )
-        else:
-            logger.error("could not get monitoring well measurements")
         req.raise_for_status()
 
     ns = {
