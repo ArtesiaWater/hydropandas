@@ -83,7 +83,7 @@ def read_waterinfo_file(
     df.drop(columns=index_cols, inplace=True)
 
     # do some conversions
-    df.loc[df[value_col] == 999999999, value_col] = np.NaN
+    df.loc[df[value_col] == 999999999, value_col] = np.nan
     df[value_col] = df[value_col] / 100.0
 
     # parse metadata into dict
