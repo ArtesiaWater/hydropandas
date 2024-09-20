@@ -1,8 +1,8 @@
 # %%
-import requests
 import pandas as pd
+import requests
+
 from hydropandas.io import knmi
-from numpy import nan
 
 
 class EmptyDataFrameError(Exception):
