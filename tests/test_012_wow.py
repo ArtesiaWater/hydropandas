@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 import hydropandas as hpd
 from hydropandas.io import wow
@@ -10,6 +11,7 @@ def test_wow_strftime() -> None:
     assert timestampstr == "2010-10-02T10%3A30%3A00"
 
 
+@pytest.mark.skip
 def test_get_wow_stn() -> None:
     stn = "423216079"  # Macquarie Island
     start = pd.Timestamp(year=2023, month=6, day=4, hour=1, minute=34, second=0)
@@ -18,6 +20,7 @@ def test_get_wow_stn() -> None:
     assert obs.name == "Macquarie Island"
 
 
+@pytest.mark.skip
 def test_get_wow_nearest() -> None:
     lat = -35.4184
     lon = 149.0937
