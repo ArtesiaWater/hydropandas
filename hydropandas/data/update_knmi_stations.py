@@ -1,4 +1,6 @@
 # %%
+# packages
+import numpy as np
 import pandas as pd
 import requests
 
@@ -9,6 +11,8 @@ class EmptyDataFrameError(Exception):
     pass
 
 
+# %%
+# meteo stations
 meteo_df = pd.read_json("knmi_meteostation.json")
 meteo_dft = meteo_df.copy()
 
@@ -66,7 +70,7 @@ meteo_dft.loc[meteo_tminmax.index, "tmax"] = meteo_tminmax["tmax"].values
 
 meteo_dft.to_json("knmi_meteostation.json")
 # %%
-
+# neerslag stations
 prec_df = pd.read_json("knmi_neerslagstation.json")
 prec_dft = prec_df.copy()
 prec_tminmax = (
