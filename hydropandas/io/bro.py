@@ -220,11 +220,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
 
 
 def measurements_from_gld(
-    bro_id,
-    tmin=None,
-    tmax=None,
-    to_wintertime=True,
-    drop_duplicate_times=True
+    bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True
 ):
     """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
@@ -272,13 +268,11 @@ def measurements_from_gld(
     if tmax is not None:
         tmax = pd.to_datetime(tmax)
         params["observationPeriodEndDate"] = tmax.strftime("%Y-%m-%d")
-    
+
     # add some logic to retry in case of a 429 response
     s = requests.Session()
-    retries = Retry(total=5,
-                    backoff_factor=0.5,
-                    status_forcelist=[429])
-    s.mount('https://', HTTPAdapter(max_retries=retries))
+    retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429])
+    s.mount("https://", HTTPAdapter(max_retries=retries))
     req = s.get(url.format(bro_id), params=params)
 
     if req.status_code > 200:
