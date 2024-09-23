@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import requests
 from pyproj import Proj, Transformer
+from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from ..rcparams import rcParams
@@ -56,7 +57,11 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     req = requests.get(url)
 
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        logger.error(
+            "could not get monitoring wells, this groundwater monitoring net is"
+            "probably too big. Try a smaller extent"
+        )
+        req.raise_for_status()
 
     ns = {"xmlns": "http://www.broservices.nl/xsd/dsgmn/1.0"}
 
@@ -191,7 +196,8 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     req = requests.get(url)
 
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        logger.error(f"could not get gld ids {req.text}")
+        req.raise_for_status()
 
     d = json.loads(req.text)
 
@@ -262,10 +268,15 @@ def measurements_from_gld(
     if tmax is not None:
         tmax = pd.to_datetime(tmax)
         params["observationPeriodEndDate"] = tmax.strftime("%Y-%m-%d")
-    req = requests.get(url.format(bro_id), params=params)
+
+    # add some logic to retry in case of a 429 response
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429])
+    s.mount("https://", HTTPAdapter(max_retries=retries))
+    req = s.get(url.format(bro_id), params=params)
 
     if req.status_code > 200:
-        print(req.json()["errors"][0]["message"])
+        req.raise_for_status()
 
     ns = {
         "ns11": "http://www.broservices.nl/xsd/dsgld/1.0",
@@ -685,7 +696,6 @@ def get_obs_list_from_extent(
             "Try a smaller extent"
         )
         req.raise_for_status()
-        # print(req.json()["errors"][0]["message"])
 
     # read results
     tree = xml.etree.ElementTree.fromstring(req.text)

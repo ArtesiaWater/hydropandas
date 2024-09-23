@@ -80,15 +80,16 @@ version = { attr = "hydropandas.version.__version__" }
 "hydropandas.data" = ["*.json"]
 "hydropandas.static" = ["*.html", "*.css"]
 
-[tool.black]
-line-length = 88
-
-[tool.isort]
-profile = "black"
-
 [tool.ruff]
 line-length = 88
 target-version = "py39"
+extend-include = ["*.ipynb"]
+lint.extend-select = ["I"]
+show-fixes = true
+fix = true
+
+[tool.ruff.lint.per-file-ignores]
+"knmi.py" = ["E712"] # see PR 239
 
 [tool.pytest.ini_options]
 addopts = "--durations=0"
