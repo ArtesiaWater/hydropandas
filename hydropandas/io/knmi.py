@@ -116,7 +116,13 @@ def get_knmi_obs(
             f"variable {meteo_var}"
         )
         stns = get_n_nearest_stations_xy(
-            xy=xy, meteo_var=meteo_var, start=start, end=end, n=1, stations=None, ignore=None
+            xy=xy,
+            meteo_var=meteo_var,
+            start=start,
+            end=end,
+            n=1,
+            stations=None,
+            ignore=None,
         )
         ts, meta = get_knmi_timeseries_stn(
             stn=stns[0], meteo_var=meteo_var, settings=settings, start=start, end=end
