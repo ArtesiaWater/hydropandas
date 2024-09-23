@@ -88,6 +88,9 @@ lint.extend-select = ["I"]
 show-fixes = true
 fix = true
 
+[tool.ruff.lint.per-file-ignores]
+"knmi.py" = ["E712"] # see PR 239
+
 [tool.pytest.ini_options]
 addopts = "--durations=0"
 markers = ["slow: mark test as slow."]
