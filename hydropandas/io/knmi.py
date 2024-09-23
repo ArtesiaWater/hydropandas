@@ -116,7 +116,7 @@ def get_knmi_obs(
             f"variable {meteo_var}"
         )
         stns = get_n_nearest_stations_xy(
-            xy=xy, meteo_var=meteo_var, n=1, stations=None, ignore=None
+            xy=xy, meteo_var=meteo_var, start=start, end=end, n=1, stations=None, ignore=None
         )
         ts, meta = get_knmi_timeseries_stn(
             stn=stns[0], meteo_var=meteo_var, settings=settings, start=start, end=end
@@ -1495,6 +1495,8 @@ def get_nearest_station_xy(
 def get_n_nearest_stations_xy(
     xy: List[List[float]],
     meteo_var: str,
+    start: Union[pd.Timestamp, str, None] = None,
+    end: Union[pd.Timestamp, str, None] = None,
     n: int = 1,
     stations: Union[pd.DataFrame, None] = None,
     ignore: Union[List[str], None] = None,
@@ -1508,6 +1510,10 @@ def get_n_nearest_stations_xy(
         sinlge pair of xy coordinates. e.g. (150_000., 400_000.)
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
+    start : str, datetime or None, optional
+        start date of observations. The default is None.
+    end : str, datetime or None, optional
+        end date of observations. The default is None.
     n : int, optional
         number of stations you want to return. The default is 1.
     stations : pandas DataFrame, optional
@@ -1523,7 +1529,7 @@ def get_n_nearest_stations_xy(
     """
 
     if stations is None:
-        stations = get_stations(meteo_var=meteo_var)
+        stations = get_stations(meteo_var=meteo_var, start=start, end=end)
     if ignore is not None:
         stations.drop(ignore, inplace=True)
         if stations.empty:
