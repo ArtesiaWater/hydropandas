@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import requests
 from pyproj import Proj, Transformer
-from requests.adapters import Retry, HTTPAdapter
+from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from ..rcparams import rcParams
