@@ -408,7 +408,8 @@ def get_stations(
     ]
 
     # select only stations with measurement
-    stations = _get_stations_tmin_tmax(stations, start, end)
+    if start is not None or end is not None:
+        stations = _get_stations_tmin_tmax(stations, start, end)
 
     return stations
 
