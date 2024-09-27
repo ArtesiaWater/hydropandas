@@ -1083,7 +1083,10 @@ class MeteoObs(Obs):
             end date of observations. The default is None.
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
-            The default is False.
+            The default is False. Note: if the given stn has no data between start and
+            end the data from nearby stations is used. In this case the metadata of the
+            Observation is the metadata from the nearest station that has any
+            measurement in the given period.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.

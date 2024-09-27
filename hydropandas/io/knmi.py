@@ -54,7 +54,10 @@ def get_knmi_obs(
     **kwargs:
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
-            The default is False.
+            The default is False. Note: if the given stn has no data between start and
+            end the data from nearby stations is used. In this case the metadata of the
+            Observation is the metadata from the nearest station that has any
+            measurement in the given period.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1214,8 +1217,7 @@ def interpret_knmi_file(
             raise ValueError(
                 f"Cannot handle multiple stations {unique_stn} in single file"
             )
-        else:
-            stn = df.at[df.index[0], "STN"]
+        stn = unique_stn[0]
 
         if add_day or add_hour:
             if add_day and add_hour:
@@ -1659,7 +1661,10 @@ def get_knmi_obslist(
     **kwargs:
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
-            The default is False.
+            The default is False. Note: if the given stn has no data between start and
+            end the data from nearby stations is used. In this case the metadata of the
+            Observation is the metadata from the nearest station that has any
+            measurement in the given period.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1674,7 +1679,7 @@ def get_knmi_obslist(
 
     Returns
     -------
-    obs_list : list of obsevation objects
+    obs_list : list of observation objects
         collection of multiple point observations
     """
 
