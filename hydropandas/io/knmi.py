@@ -402,13 +402,17 @@ def get_stations(
         meteo_var = "EV24"
 
     # select only stations with meteo_var
+    if meteo_var == slice(None):
+        meteo_mask = stations.loc[:, meteo_var].any(axis=1)
+    else:
+        meteo_mask = stations.loc[:, meteo_var]
     stations = stations.loc[
-        stations.loc[:, meteo_var],
-        ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"],
+        meteo_mask, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"]
     ]
 
     # select only stations with measurement
-    stations = _get_stations_tmin_tmax(stations, start, end)
+    if start is not None or end is not None:
+        stations = _get_stations_tmin_tmax(stations, start, end)
 
     return stations
 
@@ -482,6 +486,11 @@ def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> st
         return None
 
     stn_name = stations.at[stn, "name"]
+    if isinstance(stn_name, pd.Series):
+        raise ValueError(
+            f'station {stn} is a meteo- and a precipitation station, please indicate which one you want to use using a "meteo_var"'
+        )
+
     stn_name = stn_name.upper().replace(" ", "-").replace("(", "").replace(")", "")
     return stn_name
 
@@ -532,13 +541,20 @@ def fill_missing_measurements(
 
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var, start=start, end=end)
-    if stn_name is None:
-        stn_name = get_station_name(stn=stn, stations=stations)
+    if stn not in stations.index:
+        # no measurements in given period, continue with empty dataframe
+        knmi_df = pd.DataFrame()
 
-    # download data from station
-    knmi_df, variables, station_meta = download_knmi_data(
-        stn, meteo_var, start, end, settings, stn_name
-    )
+        # add location of station without data to dataframe
+        stations = pd.concat([stations, get_stations(meteo_var=meteo_var).loc[[stn]]])
+    else:
+        if stn_name is None:
+            stn_name = get_station_name(stn=stn, stations=stations)
+
+        # download data from station if it has data between start-end
+        knmi_df, variables, station_meta = download_knmi_data(
+            stn, meteo_var, start, end, settings, stn_name
+        )
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
@@ -551,6 +567,7 @@ def fill_missing_measurements(
             meteo_var=meteo_var,
             start=start,
             end=end,
+            stations=stations,
             ignore=ignore,
         )
         if stn_lst is None:
