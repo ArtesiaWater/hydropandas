@@ -399,9 +399,12 @@ def get_stations(
         meteo_var = "EV24"
 
     # select only stations with meteo_var
+    if meteo_var == slice(None):
+        meteo_mask = stations.loc[:, meteo_var].any(axis=1)
+    else:
+        meteo_mask = stations.loc[:, meteo_var]
     stations = stations.loc[
-        stations.loc[:, meteo_var],
-        ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"],
+        meteo_mask, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"]
     ]
 
     # select only stations with measurement
