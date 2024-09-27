@@ -484,7 +484,9 @@ def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> st
 
     stn_name = stations.at[stn, "name"]
     if isinstance(stn_name, pd.Series):
-        raise ValueError(f'station {stn} is a meteo- and a precipitation station, please indicate which one you want to use using a "meteo_var"')
+        raise ValueError(
+            f'station {stn} is a meteo- and a precipitation station, please indicate which one you want to use using a "meteo_var"'
+        )
 
     stn_name = stn_name.upper().replace(" ", "-").replace("(", "").replace(")", "")
     return stn_name
