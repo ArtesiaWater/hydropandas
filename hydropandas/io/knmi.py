@@ -483,6 +483,9 @@ def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> st
         return None
 
     stn_name = stations.at[stn, "name"]
+    if isinstance(stn_name, pd.Series):
+        raise ValueError(f'station {stn} is a meteo- and a precipitation station, please indicate which one you want to use using a "meteo_var"')
+
     stn_name = stn_name.upper().replace(" ", "-").replace("(", "").replace(")", "")
     return stn_name
 
@@ -533,16 +536,20 @@ def fill_missing_measurements(
 
     # get the location of the stations
     stations = get_stations(meteo_var=meteo_var, start=start, end=end)
-    if stn_name is None:
-        stn_name = get_station_name(stn=stn, stations=stations)
-
-    # download data from station if it has data between start-end
-    knmi_df, variables, station_meta = download_knmi_data(
-        stn, meteo_var, start, end, settings, stn_name
-    )
     if stn not in stations.index:
-        # add current station to df to determine which station to fill data with
+        # no measurements in given period, continue with empty dataframe
+        knmi_df = pd.DataFrame()
+
+        # add location of station without data to dataframe
         stations = pd.concat([stations, get_stations(meteo_var=meteo_var).loc[[stn]]])
+    else:
+        if stn_name is None:
+            stn_name = get_station_name(stn=stn, stations=stations)
+
+        # download data from station if it has data between start-end
+        knmi_df, variables, station_meta = download_knmi_data(
+            stn, meteo_var, start, end, settings, stn_name
+        )
 
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
