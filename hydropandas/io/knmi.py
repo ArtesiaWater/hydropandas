@@ -250,7 +250,9 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
     if "fill_missing_obs" in settings.keys():
         if "raise_exceptions" in settings.keys():
             if settings["fill_missing_obs"] and settings["raise_exceptions"]:
-                logger.debug("set raise_exceptions=False because fill_missing_obs is True")
+                logger.debug(
+                    "set raise_exceptions=False because fill_missing_obs is True"
+                )
                 settings["raise_exceptions"] = False
         else:
             settings["raise_exceptions"] = False
