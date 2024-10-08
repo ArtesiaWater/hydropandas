@@ -3,6 +3,7 @@ from sys import version as os_version
 
 __version__ = "0.12.5"
 
+
 def show_versions():
     """Method to print the versions of dependencies."""
     msg = (
