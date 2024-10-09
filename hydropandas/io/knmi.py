@@ -249,8 +249,10 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
 
     if "fill_missing_obs" in settings.keys():
         if "raise_exceptions" in settings.keys():
-            logger.debug("set raise_exceptions=False because fill_missing_obs is True")
             if settings["fill_missing_obs"] and settings["raise_exceptions"]:
+                logger.debug(
+                    "set raise_exceptions=False because fill_missing_obs is True"
+                )
                 settings["raise_exceptions"] = False
         else:
             settings["raise_exceptions"] = False
@@ -611,6 +613,7 @@ def fill_missing_measurements(
             meteo_var=meteo_var,
             start=start,
             end=end,
+            stations=stations,
             ignore=ignore,
         )
 
@@ -1457,7 +1460,7 @@ def get_nearest_station_df(
     if stations is None:
         stations = get_stations(meteo_var=meteo_var, start=start, end=end)
     if ignore is not None:
-        stations.drop(ignore, inplace=True)
+        stations = stations.drop(ignore)
         if stations.empty:
             return None
 
