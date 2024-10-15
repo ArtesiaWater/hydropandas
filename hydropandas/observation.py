@@ -15,6 +15,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 """
 
 import logging
+import numbers
 import os
 import warnings
 from _io import StringIO
@@ -297,6 +298,12 @@ class Obs(pd.DataFrame):
             v2 = right[key]
             try:
                 if v1 != v2:
+                    # check if both are nan
+                    if isinstance(v1, numbers.Number) and isinstance(
+                        v2, numbers.Number
+                    ):
+                        if np.isnan(v1) and np.isnan(v2):
+                            continue
                     same_metadata = False
                     if overlap == "error":
                         raise ValueError(
