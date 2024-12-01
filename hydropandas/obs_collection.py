@@ -2111,7 +2111,7 @@ class ObsCollection(pd.DataFrame):
         meta_sheet_name : str, optional
             sheetname with metadata. The default is "metadata".
         check_consistency : bool, optional
-            If True the consistency of the collection is first checked. The
+            If True the consistency of the collection is checked. If set to False the excel file may be unreadable by hydropandas. The
             default is True.
             
         Raises
