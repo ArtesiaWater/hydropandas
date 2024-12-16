@@ -843,7 +843,8 @@ def get_knmi_daily_rainfall_api(
 
 @lru_cache()
 def get_knmi_daily_rainfall_url(
-    stn: int, stn_name: str
+    stn: int,
+    stn_name: str,
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """download and read knmi daily rainfall.
 
@@ -867,6 +868,7 @@ def get_knmi_daily_rainfall_url(
         additional information about the variables
     """
 
+    stn = f"{stn:03d}"  # make sure there are leading zeros
     url = (
         "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
         f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
