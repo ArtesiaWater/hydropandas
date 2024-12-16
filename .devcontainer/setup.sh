@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Create model environments
-pip install -e .
+pip install -e .[full]
