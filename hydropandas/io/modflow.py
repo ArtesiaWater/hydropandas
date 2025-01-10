@@ -47,7 +47,7 @@ def read_imod_results(
 
     if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
         warnings.warn(
-            "you probably want to set the xll and/or yll " "attributes of ml.modelgrid"
+            "you probably want to set the xll and/or yll attributes of ml.modelgrid"
         )
 
     if nlay is None:
@@ -130,7 +130,7 @@ def read_modflow_results(
     if ml.modelgrid.grid_type == "structured":
         if ml.modelgrid.xoffset == 0 or ml.modelgrid.yoffset == 0:
             warnings.warn(
-                "you probably want to set the xll " "and/or yll attributes in DIS!"
+                "you probably want to set the xll and/or yll attributes in DIS!"
             )
 
     if isinstance(hds_arr, xr.DataArray):

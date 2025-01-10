@@ -175,7 +175,7 @@ def get_knmi_timeseries_fname(
         )
     if df.empty:
         logger.warning(
-            f"No data for {meteo_var=} in {fname=} between" f"{start=} and {end=}."
+            f"No data for {meteo_var=} in {fname=} between{start=} and {end=}."
         )
     else:
         ts, meta = interpret_knmi_file(
@@ -315,8 +315,7 @@ def get_knmi_timeseries_stn(
         and settings["use_api"]
     ):
         message = (
-            "No hourly evaporation data available through the api, "
-            "set use_api=False."
+            "No hourly evaporation data available through the api, set use_api=False."
         )
         raise ValueError(message)
     elif settings["fill_missing_obs"]:
@@ -347,7 +346,7 @@ def get_knmi_timeseries_stn(
         )
         if knmi_df.empty:
             logger.warning(
-                f"No data for {meteo_var=} at {stn=} between" f"{start=} and {end=}."
+                f"No data for {meteo_var=} at {stn=} between{start=} and {end=}."
             )
         if str(stn) in station_meta.index:
             meta = station_meta.loc[f"{stn}"].to_dict()
@@ -597,7 +596,7 @@ def fill_missing_measurements(
         )
         if new_end < end:
             end = new_end
-            logger.info(f'changing end_date to {end.strftime("%Y-%m-%d")}')
+            logger.info(f"changing end_date to {end.strftime('%Y-%m-%d')}")
 
     # find missing values
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
@@ -1418,7 +1417,7 @@ def _check_latest_measurement_date_de_bilt(
 
     logger.debug(
         f"last {meteo_var} measurement available at the Bilt until {end_str} is from"
-        f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}'
+        f" {last_measurement_date_debilt.strftime('%Y-%m-%d')}"
     )
     logger.debug(
         f"assuming no {meteo_var} measurements are available at "

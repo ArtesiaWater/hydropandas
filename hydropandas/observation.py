@@ -472,8 +472,7 @@ class Obs(pd.DataFrame):
 
         if overlap not in ["error", "use_left", "use_right"]:
             raise ValueError(
-                "invalid value for overlap, choose between error, use_left and"
-                "use_right"
+                "invalid value for overlap, choose between error, use_left anduse_right"
             )
 
         # check observation type

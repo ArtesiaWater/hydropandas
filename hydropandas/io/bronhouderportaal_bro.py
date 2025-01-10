@@ -33,7 +33,7 @@ def get_tube_nrs_from_xml(tree, ns):
     # get numbers of individual filters from XML file
     all_tube_nrs = []
     tubes = tree.findall(
-        "isgmw:sourceDocument//" "isgmw:GMW_Construction//" "isgmw:monitoringTube", ns
+        "isgmw:sourceDocument//isgmw:GMW_Construction//isgmw:monitoringTube", ns
     )
     for tube in tubes:
         all_tube_nrs.append(int(tube.find("isgmw:tubeNumber", ns).text))
@@ -200,7 +200,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
             meta["deliveryContext"] = GMW_c.find("isgmw:deliveryContext", ns).text
         if GMW_c.find("isgmw:constructionStandard", ns) is not None:
             meta["constructionStandard"] = GMW_c.find(
-                "isgmw:construction" "Standard", ns
+                "isgmw:constructionStandard", ns
             ).text
         if GMW_c.find("isgmw:initialFunction", ns) is not None:
             meta["initialFunction"] = GMW_c.find("isgmw:initialFunction", ns).text
@@ -220,12 +220,12 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
     if full_meta:
         if (
             GMW_c.find(
-                "isgmw:deliveredLocation//" "gmwcommon:horizontalPositioningMethod", ns
+                "isgmw:deliveredLocation//gmwcommon:horizontalPositioningMethod", ns
             )
             is not None
         ):
             meta["horizontalPositioningMethod"] = GMW_c.find(
-                "isgmw:deliveredLocation//" "gmwcommon:horizontalPositioningMethod", ns
+                "isgmw:deliveredLocation//gmwcommon:horizontalPositioningMethod", ns
             ).text
         if (
             GMW_c.find(
@@ -241,13 +241,11 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
                 ns,
             ).text
         if (
-            GMW_c.find("isgmw:deliveredVerticalPosition//" "gmwcommon:offset", ns)
+            GMW_c.find("isgmw:deliveredVerticalPosition//gmwcommon:offset", ns)
             is not None
         ):
             meta["deliveredVerticalPosition_offset"] = float(
-                GMW_c.find(
-                    "isgmw:deliveredVerticalPosition//" "gmwcommon:offset", ns
-                ).text
+                GMW_c.find("isgmw:deliveredVerticalPosition//gmwcommon:offset", ns).text
             )
         if (
             GMW_c.find(
@@ -265,15 +263,15 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
 
     # ground_level
     glp_xml = GMW_c.find(
-        "isgmw:deliveredVerticalPosition//" "gmwcommon:groundLevelPosition", ns
+        "isgmw:deliveredVerticalPosition//gmwcommon:groundLevelPosition", ns
     )
     vert_datum = GMW_c.find(
-        "isgmw:deliveredVerticalPosition//" "gmwcommon:verticalDatum", ns
+        "isgmw:deliveredVerticalPosition//gmwcommon:verticalDatum", ns
     ).text
     meta["unit"] = glp_xml.attrib["uom"] + " " + vert_datum
     if glp_xml.attrib["uom"].lower() != "m":
         logger.info(
-            f'groundlevel unit is unexpected {glp_xml.attrib["uom"]}, ' "m is expected"
+            f"groundlevel unit is unexpected {glp_xml.attrib['uom']}, m is expected"
         )
     if vert_datum.lower() != "nap":
         logger.info(f"datum has unexpected value {vert_datum}, NAP is expected")
@@ -315,7 +313,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
                 "isgmw:tubeTopPositioningMethod", ns
             ).text
         if (
-            tube.find("isgmw:materialUsed//" "gmwcommon:tubePackingMaterial", ns)
+            tube.find("isgmw:materialUsed//gmwcommon:tubePackingMaterial", ns)
             is not None
         ):
             meta["tubePackingMaterial"] = tube.find(
@@ -347,8 +345,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
     screenLength_unit = screenLength_xml.attrib["uom"]
     if screenLength_unit != "m":
         logger.info(
-            f'screenLength unit is unexpected {screenLength.attrib["uom"]},'
-            "m expected"
+            f"screenLength unit is unexpected {screenLength.attrib['uom']},m expected"
         )
 
     plainTubePartLength_xml = tube.find(
@@ -366,7 +363,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
 
     if tube.find("isgmw:sedimentSumpPresent", ns).text.lower() in ["ja", "yes"]:
         sedimentSumpLength_xml = tube.find(
-            "isgmw:sedimentSump//" "gmwcommon:sedimentSumpLength", ns
+            "isgmw:sedimentSump//gmwcommon:sedimentSumpLength", ns
         )
         sedimentSumpLength = float(sedimentSumpLength_xml.text)
         sedimentSumpLength_unit = sedimentSumpLength_xml.attrib["uom"]

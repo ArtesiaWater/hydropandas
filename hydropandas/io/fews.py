@@ -674,7 +674,7 @@ def read_xml_filelist(
     nfiles = len(fnames)
     for j, ixml in enumerate(fnames):
         # print message
-        logger.info(f"{j+1}/{nfiles} read {ixml}")
+        logger.info(f"{j + 1}/{nfiles} read {ixml}")
 
         # join directory to filename if provided
         if directory is None:

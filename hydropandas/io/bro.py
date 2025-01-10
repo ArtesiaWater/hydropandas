@@ -477,7 +477,7 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
         valid = req.text[(val_ind + 9) : (val_ind + 14)]
         if valid == "false" and retries < max_retries:
             logger.debug(
-                f"got invalid response for {bro_id}, trying again {retries+1}/{max_retries}"
+                f"got invalid response for {bro_id}, trying again {retries + 1}/{max_retries}"
             )
             return _get_gmw_from_bro_id(bro_id, retries=retries + 1)
         elif valid == "false":
