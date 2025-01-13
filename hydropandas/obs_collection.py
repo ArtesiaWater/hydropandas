@@ -2098,7 +2098,7 @@ class ObsCollection(pd.DataFrame):
                 f"multiple observations for given conditions {selected_obs.index}"
             )
 
-    def to_excel(self, path, meta_sheet_name="metadata"):
+    def to_excel(self, path, meta_sheet_name="metadata", check_consistency=True):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
         metadata, the other tabs are the timeseries of each observation.
 
@@ -2110,6 +2110,9 @@ class ObsCollection(pd.DataFrame):
             full path of xlsx file.
         meta_sheet_name : str, optional
             sheetname with metadata. The default is "metadata".
+        check_consistency : bool, optional
+            If True the consistency of the collection is checked. If set to False the excel file may be unreadable by hydropandas. The
+            default is True.
 
         Raises
         ------
@@ -2129,8 +2132,9 @@ class ObsCollection(pd.DataFrame):
         If you don't want this consider using the `to_pickle` method.
         """
 
-        if not self._is_consistent():
-            raise RuntimeError("inconsistent observation collection")
+        if check_consistency:
+            if not self._is_consistent():
+                raise RuntimeError("inconsistent observation collection")
 
         oc = self.copy(deep=True)
 

@@ -165,7 +165,7 @@ def get_files(
         unzip_fnames = [os.path.basename(file_or_dir)]  # get file name
         dirname = os.path.dirname(file_or_dir)  # get directory path
     else:
-        raise NotImplementedError("Cannot parse 'file_or_dir': " f"{file_or_dir}!")
+        raise NotImplementedError(f"Cannot parse 'file_or_dir': {file_or_dir}!")
 
     return dirname, unzip_fnames
 
