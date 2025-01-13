@@ -179,28 +179,26 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
 
     else:
         if lay_fbot == left and lay_ftop == right:
-            logger.debug("- tube screen spans all layers. " "return nan")
+            logger.debug("- tube screen spans all layers. return nan")
             return np.nan
         elif lay_ftop == right:
             logger.debug(
-                "- tube screen top higher than top layer. " f"selected layer {lay_fbot}"
+                f"- tube screen top higher than top layer. selected layer {lay_fbot}"
             )
             return lay_fbot
 
         elif lay_fbot == left:
             logger.debug(
-                "- tube screen bot lower than bottom layer. "
-                f"selected layer {lay_ftop}"
+                f"- tube screen bot lower than bottom layer. selected layer {lay_ftop}"
             )
             return lay_ftop
 
         logger.debug(
-            "- tube screen crosses layer boundary:\n"
-            f"  - layers: {lay_ftop}, {lay_fbot}"
+            f"- tube screen crosses layer boundary:\n  - layers: {lay_ftop}, {lay_fbot}"
         )
 
         logger.debug(
-            f"- tube screen spans {lay_fbot - lay_ftop +1} layers."
+            f"- tube screen spans {lay_fbot - lay_ftop + 1} layers."
             " checking length per layer\n"
             "  - length per layer:"
         )
@@ -215,7 +213,7 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
             else:
                 length_layers[i] = zvec[lay_ftop + i] - zvec[lay_ftop + 1 + i]
 
-            logger.debug(f"    - lay {lay_ftop+i}: {length_layers[i]:.2f}")
+            logger.debug(f"    - lay {lay_ftop + i}: {length_layers[i]:.2f}")
 
         # choose layer with biggest length
         rel_layer = np.argmax(length_layers)

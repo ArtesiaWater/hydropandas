@@ -73,9 +73,7 @@ def read_waterinfo_file(
         elif "WAARNEMINGTIJD" in df.columns:
             index_cols += ["WAARNEMINGTIJD"]
         else:
-            raise KeyError(
-                "expected column with WAARNEMINGSTIJD but could not find one"
-            )
+            raise KeyError("expected column with WAARNEMINGTIJD but could not find one")
 
     df.index = pd.to_datetime(
         df[index_cols[0]] + " " + df[index_cols[1]], dayfirst=True

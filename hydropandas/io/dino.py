@@ -121,7 +121,7 @@ def _read_dino_groundwater_metadata(f, line):
                 meta_ts.pop(key)
 
         obs_att = meta_tsi.copy()
-        obs_att["name"] = f'{obs_att["monitoring_well"]}-{int(obs_att["tube_nr"]):03d}'
+        obs_att["name"] = f"{obs_att['monitoring_well']}-{int(obs_att['tube_nr']):03d}"
         obs_att["metadata_available"] = True
     else:
         # no metadata

@@ -161,7 +161,7 @@ def get_knmi_timeseries_fname(
     elif meteo_var is None or meteo_var == "RD":
         # neerslagstation
         meteo_var = "RD"
-        add_day = True
+        add_day = False
     elif settings["interval"] == "daily":
         # meteo station
         add_day = True
@@ -175,7 +175,7 @@ def get_knmi_timeseries_fname(
         )
     if df.empty:
         logger.warning(
-            f"No data for {meteo_var=} in {fname=} between" f"{start=} and {end=}."
+            f"No data for {meteo_var=} in {fname=} between{start=} and {end=}."
         )
     else:
         ts, meta = interpret_knmi_file(
@@ -185,6 +185,7 @@ def get_knmi_timeseries_fname(
             start=start,
             end=end,
             add_day=add_day,
+            add_hour=True,
         )
 
     stn = meta["station"]
@@ -314,8 +315,7 @@ def get_knmi_timeseries_stn(
         and settings["use_api"]
     ):
         message = (
-            "No hourly evaporation data available through the api, "
-            "set use_api=False."
+            "No hourly evaporation data available through the api, set use_api=False."
         )
         raise ValueError(message)
     elif settings["fill_missing_obs"]:
@@ -346,7 +346,7 @@ def get_knmi_timeseries_stn(
         )
         if knmi_df.empty:
             logger.warning(
-                f"No data for {meteo_var=} at {stn=} between" f"{start=} and {end=}."
+                f"No data for {meteo_var=} at {stn=} between{start=} and {end=}."
             )
         if str(stn) in station_meta.index:
             meta = station_meta.loc[f"{stn}"].to_dict()
@@ -596,7 +596,7 @@ def fill_missing_measurements(
         )
         if new_end < end:
             end = new_end
-            logger.info(f'changing end_date to {end.strftime("%Y-%m-%d")}')
+            logger.info(f"changing end_date to {end.strftime('%Y-%m-%d')}")
 
     # find missing values
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
@@ -743,7 +743,7 @@ def download_knmi_data(
                     df, meta = get_knmi_daily_rainfall_api(
                         stn=stn, start=start, end=end
                     )
-                    add_day = True
+                    add_day = False
                 else:
                     # daily data from meteorological stations
                     df, meta = get_knmi_daily_meteo_api(
@@ -758,6 +758,7 @@ def download_knmi_data(
                         start=start,
                         end=end,
                         add_day=add_day,
+                        add_hour=True,
                     )
 
         except (RuntimeError, requests.ConnectionError) as e:
@@ -777,9 +778,11 @@ def download_knmi_data(
             elif meteo_var == "RD":
                 # daily data from rainfall-stations
                 df, meta = get_knmi_daily_rainfall_url(stn, stn_name)
+                add_day = True
             else:
                 # daily data from meteorological stations
                 df, meta = get_knmi_daily_meteo_url(stn=stn)
+                add_day = True
             if not df.empty:
                 knmi_df, variables = interpret_knmi_file(
                     df=df,
@@ -787,7 +790,8 @@ def download_knmi_data(
                     meteo_var=meteo_var,
                     start=start,
                     end=end,
-                    add_day=True,
+                    add_day=add_day,
+                    add_hour=True,
                 )
     except (ValueError, KeyError, pd.errors.EmptyDataError) as e:
         logger.error(f"{e} {msg}")
@@ -1197,7 +1201,7 @@ def interpret_knmi_file(
     meteo_var: str,
     start: Union[pd.Timestamp, None] = None,
     end: Union[pd.Timestamp, None] = None,
-    add_day: bool = True,
+    add_day: bool = False,
     add_hour: bool = True,
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """interpret data from knmi by selecting meteo_var data and meta
@@ -1216,9 +1220,11 @@ def interpret_knmi_file(
     end : pd.TimeStamp or None
         end time of observations.
     add_day : boolean, optional
-        add 1 day so that the timestamp is at the end of the period the data describes
+        add 1 day so that the timestamp is at the end of the period the data describes,
+        default is False, and has to be set per type of file.
     add_hour : boolean, optional
-        add 1 hour to convert from UT to UT+1 (standard-time in the Netherlands)
+        add 1 hour to convert from UT to UT+1 (standard-time in the Netherlands),
+        default is True as this is usually the case.
 
 
     Returns
@@ -1411,7 +1417,7 @@ def _check_latest_measurement_date_de_bilt(
 
     logger.debug(
         f"last {meteo_var} measurement available at the Bilt until {end_str} is from"
-        f' {last_measurement_date_debilt.strftime("%Y-%m-%d")}'
+        f" {last_measurement_date_debilt.strftime('%Y-%m-%d')}"
     )
     logger.debug(
         f"assuming no {meteo_var} measurements are available at "
