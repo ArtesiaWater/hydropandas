@@ -16,6 +16,9 @@ jobs:
       fail-fast: true
       matrix:
         include:
+          - name: Test suite with py313-ubuntu
+            python: "3.13"
+            toxenv: py313
           - name: Test suite with py312-ubuntu
             python: "3.12"
             toxenv: py312
@@ -29,7 +32,7 @@ jobs:
             python: "3.11"
             toxenv: ruff
           - name: Test suite for notebooks and coverage
-            python: "3.9"
+            python: "3.11"
             toxenv: notebooks
 
     name: ${{ matrix.name }}
