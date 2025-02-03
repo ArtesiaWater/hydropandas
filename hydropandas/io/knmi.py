@@ -618,9 +618,9 @@ def fill_missing_measurements(
         )
 
         if stn_comp is None:
-            logger.info(
-                "could not fill all missing measurements as there are "
-                "no stations left to check"
+            logger.warning(
+                "Could not fill all missing measurements as there are "
+                "no stations left to check!"
             )
 
             missing[:] = False
@@ -654,6 +654,10 @@ def fill_missing_measurements(
                 knmi_df.loc[ix_idx, meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
                 # add source station number
                 knmi_df.loc[ix_idx, "station"] = str(stn_comp)
+                logger.info(
+                    f"Filled {ix_idx.size} observations from station {stn_comp} "
+                    f"{stn_name_comp} -> {stn} {stn_name}"
+                )
 
         missing = knmi_df[meteo_var].isna()
         ignore.append(stn_comp)
