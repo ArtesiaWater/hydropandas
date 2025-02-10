@@ -402,7 +402,7 @@ def _merge_timeseries(hand_measurements, diver_measurements):
 
     elif diver_measurements.first_valid_index() is None:
         measurements = hand_measurements
-        logger.debug("no diver measuremets available")
+        logger.debug("no diver measurements available")
 
     else:
         hand_measurements_sel = hand_measurements.loc[
@@ -620,7 +620,7 @@ def get_obs_list_from_codes(
             for metadata_tube in groundwaterstation_metadata["filters"]:
                 tnr = _split_mw_tube_nr(metadata_tube["code"])[-1]
                 if tnr not in tubes:
-                    logger.info(f"get {code}{tnr}")
+                    logger.debug(f"get {code}-{tnr}")
                     o = ObsClass.from_lizard(
                         code,
                         tnr,
