@@ -573,7 +573,7 @@ def fill_missing_measurements(
             ignore=ignore,
         )
         if stn_lst is None:
-            logger.warning(
+            logger.error(
                 f"there is no station with measurements of {meteo_var} between "
                 f"{start} and {end}"
             )
@@ -629,11 +629,12 @@ def fill_missing_measurements(
             stn_comp = stn_comp[0]
 
         n_missing = missing.sum()
+        stn_name_comp = get_station_name(stn_comp, stations)
         logger.debug(
-            f"Trying to fill {n_missing} missing measurements with station {stn_comp}"
+            f"Trying to fill {n_missing} missing measurements with "
+            f"station {stn_comp} {stn_name_comp}"
         )
 
-        stn_name_comp = get_station_name(stn_comp, stations)
         knmi_df_comp, _, __ = download_knmi_data(
             stn_comp, meteo_var, start, end, settings, stn_name_comp
         )
@@ -658,7 +659,11 @@ def fill_missing_measurements(
                     f"Filled {ix_idx.size} observations from station {stn_comp} "
                     f"{stn_name_comp} -> {stn} {stn_name}"
                 )
-
+            else:
+                logger.debug(
+                    f"No new data available from {stn_comp} {stn_name_comp} "
+                    f"for filling missing measurements"
+                )
         missing = knmi_df[meteo_var].isna()
         ignore.append(stn_comp)
 
