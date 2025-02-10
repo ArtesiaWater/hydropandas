@@ -402,11 +402,7 @@ def _merge_timeseries(hand_measurements, diver_measurements):
 
     elif diver_measurements.first_valid_index() is None:
         measurements = hand_measurements
-        print(
-            "no diver measuremets available for {}".format(
-                hand_measurements.iloc[0]["name"]
-            )
-        )
+        logger.debug("no diver measuremets available")
 
     else:
         hand_measurements_sel = hand_measurements.loc[
@@ -711,8 +707,8 @@ def get_obs_list_from_extent(
     nr_results = groundwaterstation_data["count"]
     nr_pages = math.ceil(nr_results / page_size)
 
-    print("Number of monitoring wells: {}".format(nr_results))
-    print("Number of pages: {}".format(nr_pages))
+    logger.info("Number of monitoring wells: {}".format(nr_results))
+    logger.info("Number of pages: {}".format(nr_pages))
 
     if nr_threads > nr_pages:
         nr_threads = nr_pages
