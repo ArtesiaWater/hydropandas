@@ -138,7 +138,7 @@ def read_wiski_file(
         metadata = {"source": "wiski", "unit": unit}
         for key, val in header.items():
             if key == "Station Site":
-                metadata["monitoring_well"] = val
+                metadata["location"] = val
             elif key == "x":
                 metadata["x"] = val
             elif key == "y":

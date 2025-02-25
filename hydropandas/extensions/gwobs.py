@@ -329,16 +329,14 @@ class GwObsAccessor:
     def set_tube_nr(
         self, radius=1, xcol="x", ycol="y", if_exists="error", add_to_meta=False
     ):
-        """This method computes the tube numbers based on the location of the
-        observations.
+        """Set the tube numbers based on the location of the observations.
 
-        Then it sets the value of the tube number:
+        The value of the tube number is set:
 
-        - in the ObsCollection dataframe
-        - as the attribute of an Obs object
-        - in the meta dictionary of the Obs object (only if add_to_meta is
+        - In the ObsCollection dataframe
+        - As the attribute of an Obs object
+        - optionally: In the meta dictionary of the Obs object (only if add_to_meta is
           True)
-
 
         This method is useful for groundwater observations. If two or more
         observation points are close to each other they will be seen as one
@@ -408,7 +406,7 @@ class GwObsAccessor:
                             pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
 
-    def set_tube_nr_monitoring_well(
+    def set_tube_nr_location(
         self,
         loc_col,
         radius=1,
@@ -417,32 +415,26 @@ class GwObsAccessor:
         if_exists="error",
         add_to_meta=False,
     ):
-        """This method sets the tube_nr and monitoring_well name of an observation
-        point based on the location of the observations.
+        """This method sets the tube_nr and location attributes of a GroundwaterObs
+        based on the location and screen depth of the observations.
 
-        When two or more tubes are close to another, as defined by radius,
-        they are set to the same `monitoring_well` and an increasing `tube_nr` based
-        on depth.
-
-        The value of the tube_nr and the monitoring_well are set:
-
+        The value of the tube_nr and the location are set:
         - in the ObsCollection dataframe
         - as the attribute of an Obs object
-        - in the meta dictionary of the Obs object (only if add_to_meta is
+        - optional: in the meta dictionary of the Obs object (only if add_to_meta is
           True)
 
-        This method is useful for groundwater observations. If two or more
-        observation points are close to each other they will be seen as one
-        monitoring_well with multiple tubes. The tube_nr is based on the
+        If two or more observations are close to each other they will be seen 
+        as one location with multiple tubes. The tube_nr is based on the
         'screen_bottom' attribute of the observations in such a way that
-        the deepest tube has the highest tube number. The monitoring_well is
-        based on the named of the loc_col of the screen with the lowest
+        the deepest tube has the highest tube number. The location name is
+        based on the name in the loc_col of the screen with the lowest
         tube_nr.
 
         Parameters
         ----------
         loc_col : str
-            the column name with the names to use for the monitoring_well
+            the column name with the names to use for the location
         radius : int, optional
             max distance between two observations to be seen as one location,
             by default 1
@@ -465,18 +457,18 @@ class GwObsAccessor:
         """
 
         # check if columns exists in obscollection
-        if "tube_nr" in self._obj.columns or "monitoring_well" in self._obj.columns:
+        if "tube_nr" in self._obj.columns or "location" in self._obj.columns:
             if if_exists == "error":
                 raise RuntimeError(
-                    "the column 'tube_nr or monitoring_well' already exist, set"
+                    "the column 'tube_nr or location' already exist, set"
                     "if_exists='replace' to replace the current values"
                 )
             elif if_exists == "replace":
                 self._obj["tube_nr"] = np.nan
-                self._obj["monitoring_well"] = np.nan
+                self._obj["location"] = np.nan
         else:
             self._obj["tube_nr"] = np.nan
-            self._obj["monitoring_well"] = np.nan
+            self._obj["location"] = np.nan
 
         # apply tube numbers to tubes that are close to eachother
         for name in self._obj.index:
@@ -491,25 +483,25 @@ class GwObsAccessor:
                     self._obj._set_metadata_value(
                         name, "tube_nr", 1, add_to_meta=add_to_meta
                     )
-                    monitoring_well = self._obj.loc[name, loc_col]
+                    location = self._obj.loc[name, loc_col]
                     self._obj._set_metadata_value(
                         name,
-                        "monitoring_well",
-                        monitoring_well,
+                        "location",
+                        location,
                         add_to_meta=add_to_meta,
                     )
                 else:
                     dup_x2 = dup_x.sort_values("screen_bottom", ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
                         if i == 0:
-                            monitoring_well = self._obj.loc[pb_dub, loc_col]
+                            location = self._obj.loc[pb_dub, loc_col]
                         self._obj._set_metadata_value(
                             pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
                         self._obj._set_metadata_value(
                             pb_dub,
-                            "monitoring_well",
-                            monitoring_well,
+                            "location",
+                            location,
                             add_to_meta=add_to_meta,
                         )
 

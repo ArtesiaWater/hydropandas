@@ -44,6 +44,9 @@ class Obs(pd.DataFrame):
         x coordinate of observation point
     y : int or float
         y coordinate of observation point
+    location : str
+        label for the location of the observation. Observations on the same location
+        but with a different ObsType or tube number should have the same label.
     meta : dictionary
         metadata
     filename : str
@@ -59,7 +62,7 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ["name", "x", "y", "meta", "filename", "source", "unit"]
+    _metadata = ["name", "x", "y", "location", "meta", "filename", "source", "unit"]
 
     def __init__(self, *args, **kwargs):
         """Constructor of Obs class.
@@ -70,12 +73,13 @@ class Obs(pd.DataFrame):
         """
         if (len(args) > 0) and isinstance(args[0], Obs):
             for key in args[0]._metadata:
-                if (key in Obs._metadata) and (key not in kwargs):
+                if (key in Obs._get_meta_attr()) and (key not in kwargs):
                     kwargs[key] = getattr(args[0], key)
 
+        self.name = kwargs.pop("name", "")
         self.x = kwargs.pop("x", np.nan)
         self.y = kwargs.pop("y", np.nan)
-        self.name = kwargs.pop("name", "")
+        self.location = kwargs.pop("location", "")
         self.meta = kwargs.pop("meta", {})
         self.filename = kwargs.pop("filename", "")
         self.source = kwargs.pop("source", "")
@@ -91,7 +95,7 @@ class Obs(pd.DataFrame):
 
         # write metadata properties
         buf.write("-----metadata------\n")
-        for att in self._metadata:
+        for att in self._get_meta_attr():
             if not att == "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
         buf.write("\n")
@@ -126,7 +130,7 @@ class Obs(pd.DataFrame):
         """Uses the pandas DataFrame html representation with the metadata prepended."""
         obs_type = f'<p style="color:#808080";>hydropandas.{type(self).__name__}</p>\n'
 
-        metadata_dic = {key: getattr(self, key) for key in self._metadata}
+        metadata_dic = {key: getattr(self, key) for key in self._get_meta_attr()}
         metadata_dic.pop("meta")
         metadata_df = pd.DataFrame(
             columns=[metadata_dic.pop("name")],
@@ -181,22 +185,39 @@ class Obs(pd.DataFrame):
     def _constructor(self):
         return Obs
 
+    def _get_meta_attr(self, ignore_list =['monitoring_well']):
+        """Get metadata attributes excluding the ones in the ignore_list.
+
+        Parameters
+        ----------
+        ignore_list : list, optional
+            list of attributes to ignore, by default ['monitoring_well']
+        
+        Returns
+        -------
+        list
+            list of metadata attributes
+        """
+
+        return [a for a in self._metadata if not a in ignore_list]
+
     def _get_first_numeric_col_name(self):
         """Get the first numeric column name of the observations.
 
         Returns
         -------
-        col : str or int
-            column name.
+        col : str, int or None
+            Column name. None if there are no numeric columns.
         """
         if self.empty:
             return None
 
         for col in self.columns:
             if is_numeric_dtype(self[col]):
-                break
+                return col
+        
+        return None
 
-        return col
 
     def copy(self, deep=True):
         """Create a copy of the observation.
@@ -219,8 +240,8 @@ class Obs(pd.DataFrame):
 
         Returns
         -------
-        o : TYPE
-            DESCRIPTION.
+        o : hydropandas.Obs
+            copy of the observation.
         """
 
         if not deep:
@@ -229,7 +250,7 @@ class Obs(pd.DataFrame):
         o = super().copy(deep=deep)
 
         # creat a copy of all mutable attributes
-        for att in self._metadata:
+        for att in self._get_meta_attr():
             val = getattr(self, att)
             if isinstance(val, (list, dict)):
                 setattr(o, att, val.copy())
@@ -254,7 +275,7 @@ class Obs(pd.DataFrame):
             dictionary with Obs information
         """
 
-        attrs = self._metadata.copy()
+        attrs = self._get_meta_attr()
         if not include_meta:
             attrs.remove("meta")
 
@@ -293,7 +314,7 @@ class Obs(pd.DataFrame):
         """
         new_metadata = {}
         same_metadata = True
-        for key in self._metadata:
+        for key in self._get_meta_attr():
             v1 = getattr(self, key)
             v2 = right[key]
             try:
@@ -487,10 +508,10 @@ class Obs(pd.DataFrame):
 
         # merge metadata
         if merge_metadata:
-            metadata = {key: getattr(right, key) for key in right._metadata}
+            metadata = {key: getattr(right, key) for key in right._get_meta_attr()}
             new_metadata = self.merge_metadata(metadata, overlap=overlap)
         else:
-            new_metadata = {key: getattr(self, key) for key in self._metadata}
+            new_metadata = {key: getattr(self, key) for key in self._get_meta_attr()}
 
         for key, item in new_metadata.items():
             setattr(o, key, item)
@@ -502,8 +523,6 @@ class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.
 
     Subclass of the Obs class. Has the following attributes:
-
-    - monitoring_well: 2 tubes at one piezometer should have the same 'monitoring_well'
     - tube_nr: 2 tubes at one piezometer should have a different 'tube_nr'.
     - screen_top: top op the filter in m above date (NAP)
     - screen_bottom: bottom of the filter in m above date (NAP)
@@ -511,16 +530,22 @@ class GroundwaterObs(Obs):
     - tube_top: top of the tube in m above date (NAP)
     - metadata_available: boolean indicating if metadata is available for
       the measurement point.
+    
+    Note
+    ----
+    In hydropandas version 0.13.0 the 'monitoring_well' attribute was removed and
+    replaced by the 'location' attribute
+
     """
 
     _metadata = Obs._metadata + [
-        "monitoring_well",
         "tube_nr",
         "screen_top",
         "screen_bottom",
         "ground_level",
         "tube_top",
         "metadata_available",
+        "monitoring_well"
     ]
 
     def __init__(self, *args, **kwargs):
@@ -535,10 +560,11 @@ class GroundwaterObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
+                    if (key in GroundwaterObs._get_meta_attr()) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
-        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        if 'monitoring_well' in kwargs:
+            self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
         self.tube_top = kwargs.pop("tube_top", np.nan)
@@ -551,6 +577,16 @@ class GroundwaterObs(Obs):
     @property
     def _constructor(self):
         return GroundwaterObs
+
+    @property
+    def monitoring_well(self):
+        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
+        warnings.warn(msg, FutureWarning)
+        return self.location
+
+    @monitoring_well.setter
+    def monitoring_well(self, value):
+        self.location = value
 
     @classmethod
     def from_bro(
@@ -610,13 +646,13 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            location=meta.pop("location"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
             screen_bottom=meta.pop("screen_bottom"),
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
             metadata_available=meta.pop("metadata_available"),
-            monitoring_well=meta.pop("monitoring_well"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
         )
@@ -675,13 +711,13 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            location=meta.pop('location'),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
             screen_bottom=meta.pop("screen_bottom"),
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
             metadata_available=meta.pop("metadata_available"),
-            monitoring_well=meta.pop("monitoring_well"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
             meta=meta,
@@ -725,6 +761,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            location=meta.pop('location'),
             filename=meta.pop("filename"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
@@ -732,7 +769,6 @@ class GroundwaterObs(Obs):
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
             metadata_available=meta.pop("metadata_available"),
-            monitoring_well=meta.pop("monitoring_well"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
             meta=meta,
@@ -872,6 +908,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            location=meta.pop('location'),
             filename=meta.pop("filename"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
@@ -879,7 +916,6 @@ class GroundwaterObs(Obs):
             screen_top=screen_top,
             ground_level=ground_level,
             metadata_available=meta.pop("metadata_available"),
-            monitoring_well=meta.pop("monitoring_well"),
             tube_nr=tube_nr,
             tube_top=tube_top,
         )
@@ -892,22 +928,23 @@ class WaterQualityObs(Obs):
     """
 
     _metadata = Obs._metadata + [
-        "monitoring_well",
         "tube_nr",
         "ground_level",
         "metadata_available",
+        "monitoring_well"
     ]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in WaterQualityObs._metadata) and (
+                    if (key in WaterQualityObs._get_meta_attr()) and (
                         key not in kwargs.keys()
                     ):
                         kwargs[key] = getattr(args[0], key)
 
-        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        if 'monitoring_well' in kwargs:
+            self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
@@ -917,6 +954,16 @@ class WaterQualityObs(Obs):
     @property
     def _constructor(self):
         return WaterQualityObs
+
+    @property
+    def monitoring_well(self):
+        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
+        warnings.warn(msg, FutureWarning)
+        return self.location
+
+    @monitoring_well.setter
+    def monitoring_well(self, value):
+        self.location = value
 
     @classmethod
     def from_dino(cls, path, **kwargs):
@@ -943,16 +990,17 @@ class WaterlvlObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ["monitoring_well", "metadata_available"]
+    _metadata = Obs._metadata + ["metadata_available", "monitoring_well"]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in WaterlvlObs._metadata) and (key not in kwargs.keys()):
+                    if (key in WaterlvlObs._get_meta_attr()) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
-        self.monitoring_well = kwargs.pop("monitoring_well", "")
+        if 'monitoring_well' in kwargs:
+            self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super().__init__(*args, **kwargs)
@@ -960,6 +1008,16 @@ class WaterlvlObs(Obs):
     @property
     def _constructor(self):
         return WaterlvlObs
+
+    @property
+    def monitoring_well(self):
+        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
+        warnings.warn(msg, FutureWarning)
+        return self.location
+
+    @monitoring_well.setter
+    def monitoring_well(self, value):
+        self.location = value
 
     @classmethod
     def from_dino(cls, path, **kwargs):
@@ -1017,7 +1075,7 @@ class ModelObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in ModelObs._metadata) and (key not in kwargs.keys()):
+                    if (key in ModelObs._get_meta_attr()) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
@@ -1041,7 +1099,7 @@ class MeteoObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in MeteoObs._metadata) and (key not in kwargs.keys()):
+                    if (key in MeteoObs._get_meta_attr()) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
@@ -1202,7 +1260,7 @@ class EvaporationObs(MeteoObs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
+                    if (key in EvaporationObs._get_meta_attr()) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
@@ -1293,7 +1351,7 @@ class PrecipitationObs(MeteoObs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in PrecipitationObs._metadata) and (
+                    if (key in PrecipitationObs._get_meta_attr()) and (
                         key not in kwargs.keys()
                     ):
                         kwargs[key] = getattr(args[0], key)

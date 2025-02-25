@@ -941,7 +941,7 @@ class ObsCollection(pd.DataFrame):
             raise ValueError(f"{iname}  not in index")
 
         o = self.loc[iname, "obs"]
-        if att_name in o._metadata:
+        if att_name in o._get_meta_attr():
             setattr(o, att_name, value)
             logger.debug(f"set attribute {att_name} of {iname} to {value}")
 
@@ -996,7 +996,7 @@ class ObsCollection(pd.DataFrame):
         # check oc data with individual object attributes
         if check_individual_obs:
             for o in self.obs.values:
-                for att in o._metadata:
+                for att in o._get_meta_attr():
                     if att not in ["name", "meta"]:
                         v1 = self.loc[o.name, att]
                         v2 = getattr(o, att)
@@ -1428,7 +1428,7 @@ class ObsCollection(pd.DataFrame):
             obsclass = getattr(obs, row["obs"])
             # get observation specific metadata
             metadata = {
-                k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
+                k: v for (k, v) in all_metadata.items() if k in obsclass._get_meta_attr()
             }
             metadata["name"] = oname
 
@@ -1645,7 +1645,7 @@ class ObsCollection(pd.DataFrame):
         from .io.fews import read_xml_filelist, read_xmlstring
 
         if translate_dic is None:
-            translate_dic = {"locationId": "monitoring_well"}
+            translate_dic = {"locationId": "location"}
 
         meta = {"type": ObsClass}
 
@@ -2388,7 +2388,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otype._metadata) - set(["x", "y", "name", "source", "meta"])
+        meta_att = set(otype._get_meta_attr()) - set(["x", "y", "name", "source", "meta"])
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]

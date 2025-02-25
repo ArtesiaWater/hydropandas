@@ -7,10 +7,10 @@ def test_set_tube_nr():
     dino_gw.gwobs.set_tube_nr(if_exists="replace")
 
 
-def test_set_tube_nr_monitoring_well():
+def test_set_tube_nr_location():
     fews_gw_prod = ttf.obscollection_fews_lowmemory()
-    fews_gw_prod.gwobs.set_tube_nr_monitoring_well(
-        "monitoring_well", if_exists="replace"
+    fews_gw_prod.gwobs.set_tube_nr_location(
+        "location", if_exists="replace"
     )
 
 

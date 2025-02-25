@@ -236,7 +236,7 @@ def get_metadata_tube(metadata_mw, tube_nr):
         tube_nr = 1
 
     metadata = {
-        "monitoring_well": metadata_mw["name"],
+        "location": metadata_mw["name"],
         "ground_level": metadata_mw["surface_level"],
         "source": "lizard",
         "unit": "m NAP",

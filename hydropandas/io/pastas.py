@@ -30,7 +30,7 @@ def _get_metadata_from_obs(o):
         meta dictionary.
     """
     meta = dict()
-    for attr_key in o._metadata:
+    for attr_key in o._get_meta_attr():
         val = getattr(o, attr_key)
         if isinstance(val, (int, float, str, bool)):
             meta[attr_key] = val

@@ -174,7 +174,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
     else:
         name = path_xml.stem  # filname without extention
     meta["name"] = f"{name}-{tube_nr}"
-    meta["monitoring_well"] = name
+    meta["location"] = name
 
     if full_meta:
         if tree.find("brocommon:deliveryAccountableParty", ns) is not None:
