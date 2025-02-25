@@ -186,7 +186,7 @@ class Obs(pd.DataFrame):
         return Obs
 
     def _get_meta_attr(self, ignore=("monitoring_well",)):
-        """Get metadata attributes excluding the ones in the ignore_list.
+        """Get metadata attributes excluding the ones in ignore.
 
         Parameters
         ----------
@@ -199,7 +199,7 @@ class Obs(pd.DataFrame):
             list of metadata attributes
         """
 
-        return [a for a in self._metadata if a not in ignore_list]
+        return [a for a in self._metadata if a not in ignore]
 
     def _get_first_numeric_col_name(self):
         """Get the first numeric column name of the observations.
