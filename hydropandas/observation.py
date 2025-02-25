@@ -73,7 +73,7 @@ class Obs(pd.DataFrame):
         """
         if (len(args) > 0) and isinstance(args[0], Obs):
             for key in args[0]._metadata:
-                if (key in _metadata) and (key not in kwargs):
+                if (key in self._metadata) and (key not in kwargs):
                     kwargs[key] = getattr(args[0], key)
 
         self.name = kwargs.pop("name", "")
