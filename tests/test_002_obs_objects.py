@@ -16,7 +16,7 @@ def _get_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
     o = hpd.GroundwaterObs(
         df,
         name=name,
-        monitoring_well=name.split("_")[0],
+        location=name.split("_")[0],
         x=x,
         y=y,
         source="generated",
@@ -43,7 +43,7 @@ def _get_waterlvl_obs():
     o = hpd.WaterlvlObs(
         df,
         name="waterlvl_obs1",
-        monitoring_well="obs1",
+        location="obs1",
         x=x,
         y=y,
         filename="",
@@ -69,7 +69,7 @@ def test_groundwater_quality_obs():
     hpd.WaterlvlObs(
         df,
         name="waterquality_obs1",
-        monitoring_well="waterquality",
+        location="waterquality",
         x=3,
         y=4,
         filename="",
@@ -123,14 +123,14 @@ def test_convert_waterlvl_groundwater_obs():
         x=54.37326,
         y=-5.57900,
         source="my fantasy",
-        monitoring_well="Weirwood tree",
+        location="Weirwood tree",
         meta={"place": "Winterfell"},
     )
 
     # This is what I want to do, but now I will lose all metadata
     o_gw = hpd.GroundwaterObs(o_wl, ground_level=200)
 
-    assert o_wl.monitoring_well == o_gw.monitoring_well, "conversion failed"
+    assert o_wl.location == o_gw.location, "conversion failed"
     assert o_gw.ground_level == 200, "conversion failed"
 
 
@@ -218,14 +218,14 @@ def test_get_obs():
     assert o.name == "groundwaterobs_001"
 
     # by attributes
-    o = oc.get_obs(monitoring_well="groundwaterobs", tube_nr=2)
+    o = oc.get_obs(location="groundwaterobs", tube_nr=2)
     assert isinstance(o, hpd.GroundwaterObs)
     assert o.tube_nr == 2
 
     # multiple observations
     with pytest.raises(ValueError):
-        oc.get_obs(monitoring_well="groundwaterobs")
+        oc.get_obs(location="groundwaterobs")
 
     # no observations
     with pytest.raises(ValueError):
-        oc.get_obs(monitoring_well="I do not exist")
+        oc.get_obs(location="I do not exist")

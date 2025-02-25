@@ -90,7 +90,7 @@ def _read_dino_groundwater_metadata(f, line):
             meta_tsi = {}
             start_date = pd.to_datetime(meta.pop("startdatum"), dayfirst=True)
             # end_date = pd.to_datetime(meta.pop('einddatum'), dayfirst=True)
-            meta_tsi["monitoring_well"] = meta["locatie"]
+            meta_tsi["location"] = meta["locatie"]
             for key, item in _translate_dic_float.items():
                 if meta[key] == "":
                     meta_tsi[item] = np.nan
@@ -111,7 +111,7 @@ def _read_dino_groundwater_metadata(f, line):
 
         # remove series with non time variant metadata from meta_ts
         ts_keys = (
-            ["monitoring_well"]
+            ["location"]
             + list(_translate_dic_float.values())
             + list(_translate_dic_div_100.values())
         )
@@ -121,12 +121,12 @@ def _read_dino_groundwater_metadata(f, line):
                 meta_ts.pop(key)
 
         obs_att = meta_tsi.copy()
-        obs_att["name"] = f"{obs_att['monitoring_well']}-{int(obs_att['tube_nr']):03d}"
+        obs_att["name"] = f"{obs_att['location']}-{int(obs_att['tube_nr']):03d}"
         obs_att["metadata_available"] = True
     else:
         # no metadata
         obs_att = {}
-        obs_att["monitoring_well"] = ""
+        obs_att["location"] = ""
         obs_att["tube_nr"] = np.nan
         obs_att["name"] = "unknown"
         obs_att["x"] = np.nan
@@ -261,7 +261,7 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
     meta = {
         "filename": fname,
         "source": "dino",
-        "monitoring_well": locatie["NITG-nr"],
+        "location": locatie["NITG-nr"],
         "name": locatie["NITG-nr"],
         "x": locatie["X-coord"],
         "y": locatie["Y-coord"],
@@ -385,9 +385,9 @@ def _read_artdino_groundwater_metadata(f, line):
 
     meta = {}
     if metalist:
-        meta["monitoring_well"] = metalist[-1]["locatie"]
+        meta["location"] = metalist[-1]["locatie"]
         meta["tube_nr"] = int(float(metalist[-1]["filternummer"]))
-        meta["name"] = "-".join([meta["monitoring_well"], metalist[-1]["filternummer"]])
+        meta["name"] = "-".join([meta["location"], metalist[-1]["filternummer"]])
         meta["x"] = float(metalist[-1]["x-coordinaat"])
         meta["y"] = float(metalist[-1]["y-coordinaat"])
         meetpunt = metalist[-1]["meetpunt nap"]
@@ -413,7 +413,7 @@ def _read_artdino_groundwater_metadata(f, line):
         meta["metadata_available"] = True
     else:
         # no metadata
-        meta["monitoring_well"] = ""
+        meta["location"] = ""
         meta["tube_nr"] = np.nan
         meta["name"] = "unknown"
         meta["x"] = np.nan
@@ -629,7 +629,7 @@ def _read_dino_waterlvl_metadata(f, line):
             elif key == "Y-coordinaat":
                 meta["y"] = float(value)
         elif key == "Locatie":
-            meta["monitoring_well"] = value
+            meta["location"] = value
             meta["name"] = value
 
     return meta

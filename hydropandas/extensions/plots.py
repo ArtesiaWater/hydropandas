@@ -29,7 +29,7 @@ class CollectionPlots:
         savedir="figures",
         tmin=None,
         tmax=None,
-        per_monitoring_well=True,
+        per_location=True,
         **kwargs,
     ):
         """Create interactive plots of the observations using bokeh.
@@ -42,8 +42,8 @@ class CollectionPlots:
             start date for timeseries plot
         tmax : dt.datetime, optional
             end date for timeseries plot
-        per_monitoring_well : bool, optional
-            if True plot multiple tubes at the same monitoring_well in one
+        per_location : bool, optional
+            if True plot multiple observations at the same location in one
             figure
         **kwargs :
             will be passed to the Obs.interactive_plot method, options
@@ -73,26 +73,14 @@ class CollectionPlots:
             "tan",
         )
 
-        # check if observations consist of monitoring wells
-        if per_monitoring_well:
-            otype = self._obj._infer_otype()
-            if isinstance(otype, (list, np.ndarray)):
-                per_monitoring_well = False
-            elif otype.__name__ == "GroundwaterObs":
-                pass
-            else:
-                per_monitoring_well = False
-
-        if per_monitoring_well:
-            plot_names = self._obj.groupby("monitoring_well").count().index
+        if per_location:
+            plot_names = self._obj.groupby("location").count().index
         else:
             plot_names = self._obj.index
 
         for name in plot_names:
-            if per_monitoring_well:
-                oc = self._obj.loc[
-                    self._obj.monitoring_well == name, "obs"
-                ].sort_index()
+            if per_location:
+                oc = self._obj.loc[self._obj.location == name, "obs"].sort_index()
             else:
                 oc = self._obj.loc[[name], "obs"]
 
@@ -123,7 +111,7 @@ class CollectionPlots:
         m=None,
         tiles="OpenStreetMap",
         fname=None,
-        per_monitoring_well=True,
+        per_location=True,
         color="blue",
         legend_name=None,
         add_legend=True,
@@ -146,7 +134,7 @@ class CollectionPlots:
           the last one should have add_legend = True to create a correct legend
         - the color of the observation point on the map is now the same color
           as the line of the observation measurements. Also a built-in color
-          cycle is used for different measurements at the same monitoring_well.
+          cycle is used for different measurements at the same location.
 
         Parameters
         ----------
@@ -158,8 +146,8 @@ class CollectionPlots:
             background tiles, default is openstreetmap
         fname : str, optional
             name of the folium map
-        per_monitoring_well : bool, optional
-            if True plot multiple tubes at the same monitoring well in one
+        per_location : bool, optional
+            if True plot multiple observations at the same location in one
             figure
         color : str, optional
             color of the observation points on the map
@@ -168,7 +156,7 @@ class CollectionPlots:
         add_legend : boolean, optional
             add a legend to a plot
         map_label : str, optional
-            add a label to the monitoring wells on the map, the label should be
+            add a label to the observations on the map, the label should be
             1. the attribute of an observation
             2. the key in the meta attribute of the observation
             3. a generic label for each observation in this collection.
@@ -224,7 +212,7 @@ class CollectionPlots:
         # create interactive bokeh plots
         if create_interactive_plots and not empty_obs:
             self._obj.plots.interactive_plots(
-                savedir=plot_dir, per_monitoring_well=per_monitoring_well, **kwargs
+                savedir=plot_dir, per_location=per_location, **kwargs
             )
 
         # check if observation collection has lat and lon values
@@ -253,26 +241,14 @@ class CollectionPlots:
         group_name = '<span style=\\"color: {};\\">{}</span>'.format(color, legend_name)
         group = folium.FeatureGroup(name=group_name)
 
-        # check if observations consist of monitoring wells
-        if per_monitoring_well:
-            otype = self._obj._infer_otype()
-            if isinstance(otype, (list, np.ndarray)):
-                per_monitoring_well = False
-            elif otype.__name__ == "GroundwaterObs":
-                pass
-            else:
-                per_monitoring_well = False
-
-        if per_monitoring_well:
-            plot_names = self._obj.groupby("monitoring_well").count().index
+        if per_location:
+            plot_names = self._obj.groupby("location").count().index
         else:
             plot_names = self._obj.index
 
         for name in plot_names:
-            if per_monitoring_well:
-                oc = self._obj.loc[
-                    self._obj.monitoring_well == name, "obs"
-                ].sort_index()
+            if per_location:
+                oc = self._obj.loc[self._obj.location == name, "obs"].sort_index()
                 o = oc.iloc[-1]
                 name = o.name
             else:
@@ -297,7 +273,7 @@ class CollectionPlots:
                 ).add_to(group)
 
                 if map_label != "":
-                    if map_label in o._metadata:
+                    if map_label in o._get_meta_attr():
                         map_label_val = getattr(o, map_label)
                     elif map_label in o.meta.keys():
                         map_label_val = o.meta[map_label]
