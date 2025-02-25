@@ -561,9 +561,7 @@ class GroundwaterObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._get_meta_attr():
-                    if (key in GroundwaterObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
+                    if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
@@ -999,9 +997,7 @@ class WaterlvlObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._get_meta_attr():
-                    if (key in WaterlvlObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
+                    if (key in WaterlvlObs._metadata) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
@@ -1080,9 +1076,7 @@ class ModelObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._get_meta_attr():
-                    if (key in ModelObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
+                    if (key in ModelObs._metadata) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
@@ -1106,9 +1100,7 @@ class MeteoObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._get_meta_attr():
-                    if (key in MeteoObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
+                    if (key in MeteoObs._metadata) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
@@ -1269,9 +1261,7 @@ class EvaporationObs(MeteoObs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._get_meta_attr():
-                    if (key in EvaporationObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
+                    if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
                         kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
