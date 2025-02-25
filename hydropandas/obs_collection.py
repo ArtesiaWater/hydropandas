@@ -1428,9 +1428,7 @@ class ObsCollection(pd.DataFrame):
             obsclass = getattr(obs, row["obs"])
             # get observation specific metadata
             metadata = {
-                k: v
-                for (k, v) in all_metadata.items()
-                if k in obsclass._metadata
+                k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
             }
             metadata["name"] = oname
 
