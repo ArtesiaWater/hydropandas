@@ -64,9 +64,7 @@ def test_obscollection_to_imap():
     fews_gw_prod["lat"] = fews_gw_prod["lat"].astype(float)
     fews_gw_prod["lon"] = fews_gw_prod["lon"].astype(float)
 
-    fews_gw_prod.gwobs.set_tube_nr_location(
-        "location", if_exists="replace"
-    )
+    fews_gw_prod.gwobs.set_tube_nr_location("location", if_exists="replace")
 
     fews_gw_prod.plots.interactive_map(
         plot_dir,

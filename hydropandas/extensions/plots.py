@@ -80,9 +80,7 @@ class CollectionPlots:
 
         for name in plot_names:
             if per_location:
-                oc = self._obj.loc[
-                    self._obj.location == name, "obs"
-                ].sort_index()
+                oc = self._obj.loc[self._obj.location == name, "obs"].sort_index()
             else:
                 oc = self._obj.loc[[name], "obs"]
 
@@ -250,9 +248,7 @@ class CollectionPlots:
 
         for name in plot_names:
             if per_location:
-                oc = self._obj.loc[
-                    self._obj.location == name, "obs"
-                ].sort_index()
+                oc = self._obj.loc[self._obj.location == name, "obs"].sort_index()
                 o = oc.iloc[-1]
                 name = o.name
             else:

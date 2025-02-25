@@ -424,7 +424,7 @@ class GwObsAccessor:
         - optional: in the meta dictionary of the Obs object (only if add_to_meta is
           True)
 
-        If two or more observations are close to each other they will be seen 
+        If two or more observations are close to each other they will be seen
         as one location with multiple tubes. The tube_nr is based on the
         'screen_bottom' attribute of the observations in such a way that
         the deepest tube has the highest tube number. The location name is

@@ -185,21 +185,21 @@ class Obs(pd.DataFrame):
     def _constructor(self):
         return Obs
 
-    def _get_meta_attr(self, ignore_list =['monitoring_well']):
+    def _get_meta_attr(self, ignore=("monitoring_well",)):
         """Get metadata attributes excluding the ones in the ignore_list.
 
         Parameters
         ----------
-        ignore_list : list, optional
-            list of attributes to ignore, by default ['monitoring_well']
-        
+        ignore : tuple, optional
+            attributes to ignore, by default ('monitoring_well',)
+
         Returns
         -------
         list
             list of metadata attributes
         """
 
-        return [a for a in self._metadata if not a in ignore_list]
+        return [a for a in self._metadata if a not in ignore_list]
 
     def _get_first_numeric_col_name(self):
         """Get the first numeric column name of the observations.
@@ -215,9 +215,8 @@ class Obs(pd.DataFrame):
         for col in self.columns:
             if is_numeric_dtype(self[col]):
                 return col
-        
-        return None
 
+        return None
 
     def copy(self, deep=True):
         """Create a copy of the observation.
@@ -530,7 +529,7 @@ class GroundwaterObs(Obs):
     - tube_top: top of the tube in m above date (NAP)
     - metadata_available: boolean indicating if metadata is available for
       the measurement point.
-    
+
     Note
     ----
     In hydropandas version 0.13.0 the 'monitoring_well' attribute was removed and
@@ -545,7 +544,7 @@ class GroundwaterObs(Obs):
         "ground_level",
         "tube_top",
         "metadata_available",
-        "monitoring_well"
+        "monitoring_well",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -560,10 +559,12 @@ class GroundwaterObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in GroundwaterObs._get_meta_attr()) and (key not in kwargs.keys()):
+                    if (key in GroundwaterObs._get_meta_attr()) and (
+                        key not in kwargs.keys()
+                    ):
                         kwargs[key] = getattr(args[0], key)
 
-        if 'monitoring_well' in kwargs:
+        if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
@@ -711,7 +712,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
-            location=meta.pop('location'),
+            location=meta.pop("location"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
             screen_bottom=meta.pop("screen_bottom"),
@@ -761,7 +762,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
-            location=meta.pop('location'),
+            location=meta.pop("location"),
             filename=meta.pop("filename"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
@@ -908,7 +909,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
-            location=meta.pop('location'),
+            location=meta.pop("location"),
             filename=meta.pop("filename"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
@@ -931,7 +932,7 @@ class WaterQualityObs(Obs):
         "tube_nr",
         "ground_level",
         "metadata_available",
-        "monitoring_well"
+        "monitoring_well",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -943,7 +944,7 @@ class WaterQualityObs(Obs):
                     ):
                         kwargs[key] = getattr(args[0], key)
 
-        if 'monitoring_well' in kwargs:
+        if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
@@ -996,10 +997,12 @@ class WaterlvlObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in WaterlvlObs._get_meta_attr()) and (key not in kwargs.keys()):
+                    if (key in WaterlvlObs._get_meta_attr()) and (
+                        key not in kwargs.keys()
+                    ):
                         kwargs[key] = getattr(args[0], key)
 
-        if 'monitoring_well' in kwargs:
+        if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
@@ -1075,7 +1078,9 @@ class ModelObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in ModelObs._get_meta_attr()) and (key not in kwargs.keys()):
+                    if (key in ModelObs._get_meta_attr()) and (
+                        key not in kwargs.keys()
+                    ):
                         kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
@@ -1099,7 +1104,9 @@ class MeteoObs(Obs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in MeteoObs._get_meta_attr()) and (key not in kwargs.keys()):
+                    if (key in MeteoObs._get_meta_attr()) and (
+                        key not in kwargs.keys()
+                    ):
                         kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
@@ -1260,7 +1267,9 @@ class EvaporationObs(MeteoObs):
         if len(args) > 0:
             if isinstance(args[0], Obs):
                 for key in args[0]._metadata:
-                    if (key in EvaporationObs._get_meta_attr()) and (key not in kwargs.keys()):
+                    if (key in EvaporationObs._get_meta_attr()) and (
+                        key not in kwargs.keys()
+                    ):
                         kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
