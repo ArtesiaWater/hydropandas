@@ -402,7 +402,7 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
 
     for filenm in tqdm(files) if progressbar else files:
         # read file or zip
-        df = read_waterinfo_file(filenm, location_col=location_col, **kwargs)
+        df = read_waterinfo_file(filenm, location_col=location_col, return_metadata=False, **kwargs)
 
         # get location and convert to m RD
         for stn in df[location_col].unique():
