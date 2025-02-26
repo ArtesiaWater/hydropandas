@@ -71,7 +71,6 @@ class Obs(pd.DataFrame):
         the attributes listed in _metadata or keyword arguments for the constructor of a
         pandas.DataFrame.
         """
-        # print(self._metadata)
         if (len(args) > 0) and isinstance(args[0], Obs):
             for key in args[0]._get_meta_attr():
                 if (key in Obs._metadata) and (key not in kwargs):
@@ -86,7 +85,6 @@ class Obs(pd.DataFrame):
         self.source = kwargs.pop("source", "")
         self.unit = kwargs.pop("unit", "")
 
-        print(kwargs)
         super(Obs, self).__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
@@ -546,7 +544,6 @@ class GroundwaterObs(Obs):
         "ground_level",
         "tube_top",
         "metadata_available",
-        "monitoring_well",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -572,7 +569,7 @@ class GroundwaterObs(Obs):
         self.screen_top = kwargs.pop("screen_top", np.nan)
         self.screen_bottom = kwargs.pop("screen_bottom", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
-        print(kwargs)
+
         super().__init__(*args, **kwargs)
 
     @property
@@ -583,6 +580,7 @@ class GroundwaterObs(Obs):
     def monitoring_well(self):
         msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
         warnings.warn(msg, FutureWarning)
+        raise ValueError("why?")
         return self.location
 
     @monitoring_well.setter
@@ -932,7 +930,6 @@ class WaterQualityObs(Obs):
         "tube_nr",
         "ground_level",
         "metadata_available",
-        "monitoring_well",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -991,7 +988,7 @@ class WaterlvlObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ["metadata_available", "monitoring_well"]
+    _metadata = Obs._metadata + ["metadata_available"]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0:
@@ -1038,13 +1035,32 @@ class WaterlvlObs(Obs):
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
-    def from_waterinfo(cls, path, **kwargs):
+    def from_waterinfo(
+        cls,
+        path=None,
+        location_gdf=None,
+        grootheid_code=None,
+        locatie=None,
+        tmin=None,
+        tmax=None,
+        **kwargs,
+    ):
         """Read data from waterinfo csv-file or zip.
 
         Parameters
         ----------
-        path : str
+        path : str, optional
             path to file (file can zip or csv)
+        location_gdf : geopandas.GeoDataFrame, optional
+            geodataframe with locations, only used if path is None, default is None
+        grootheid_code : str, optional
+            code of the grootheid, only used if path is None, e.g. 'WATHTE', default is None
+        locatie : str, optional
+            name of the location, only used if path is None, e.g. 'SCHOONHVN', default is None
+        tmin : datetime, optional
+            start date of the measurements, only used if path is None, default is None
+        tmax : datetime, optional
+            end date of the measurements, only used if path is None, default is None
 
         Returns
         -------
@@ -1058,10 +1074,17 @@ class WaterlvlObs(Obs):
         """
         from .io import waterinfo
 
-        df, metadata = waterinfo.read_waterinfo_file(
-            path, return_metadata=True, **kwargs
+        df, metadata = waterinfo.get_waterinfo_obs(
+            path=path,
+            location_gdf=location_gdf,
+            grootheid_code=grootheid_code,
+            locatie=locatie,
+            tmin=tmin,
+            tmax=tmax,
+            **kwargs,
         )
-        return cls(df, meta=metadata, **metadata)
+
+        return cls(df, **metadata)
 
 
 class ModelObs(Obs):

@@ -1,15 +1,268 @@
+import datetime as dt
+import logging
 import os
 import zipfile
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
+from shapely.geometry import box
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
+
+
+def get_obs_list_from_extent(
+    extent,
+    ObsClass,
+    grootheid_code=None,
+    locatie=None,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=False,
+    epsg=28992,
+):
+    """Get observations within a specific extent and optionally for a specific location
+    and grootheid_code.
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get waterinfo measurements within this extent
+        [xmin, xmax, ymin, ymax]
+    ObsClass : type
+        class of the observations, e.g. WaterlvlObs
+    grootheid_code : str, optional
+        select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+    locatie : str, optional
+        select only measurement with this location, e.g. 'SCHOONHVN', default is None
+    tmin : str or None, optional
+        start time of observations. The default is None.
+    tmax : str or None, optional
+        end time of observations. The default is None.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept. The default
+        is True.
+    epsg : int, optional
+        epsg code of the extent. The default is 28992 (RD).
+
+    Returns
+    -------
+    obs_list : list
+        list with Obs objects
+
+    """
+
+    gdf = get_locations_gdf(extent=extent, epsg=epsg)
+    if gdf.empty:
+        msg = f"No waterinfo measurements found within extent {extent}"
+        logger.warning(msg)
+        return []
+
+    if locatie is not None:
+        gdf = gdf.loc[locatie]
+    if grootheid_code is not None:
+        gdf = gdf.loc[gdf["Grootheid.Code"] == grootheid_code]
+    if gdf.empty:
+        msg = f"No waterinfo measurements found for locatie {locatie} and grootheid_code {grootheid_code}"
+        logger.warning(msg)
+        return []
+
+    if only_metadata:
+        obs_list = []
+        for _, row in gdf.iterrows():
+            meta = _get_metadata_from_series(row)
+            o = ObsClass(meta=meta, **meta)
+            obs_list.append(o)
+        return obs_list
+
+    obs_list = []
+    for _, row in gdf.iterrows():
+        o = ObsClass.from_waterinfo(location_gdf=row, tmin=tmin, tmax=tmax)
+        if not keep_all_obs and o.empty:
+            continue
+        obs_list.append(o)
+
+    return obs_list
+
+
+def get_waterinfo_obs(
+    path=None,
+    location_gdf=None,
+    grootheid_code=None,
+    locatie=None,
+    tmin=None,
+    tmax=None,
+    **kwargs,
+):
+    """Get waterinfo observations from a file or ddlpy
+
+    Parameters
+    ----------
+    path : str, optional
+        path to waterinfo file (.zip or .csv), default is None
+    location_gdf : geopandas.GeoDataFrame, optional
+        geodataframe with locations, default is None
+    grootheid_code : str, optional
+        code of the grootheid, e.g. 'WATHTE', default is None
+    locatie : str, optional
+        name of the location, e.g. 'SCHOONHVN', default is None
+    tmin : datetime, optional
+        start date of the measurements, default is None
+    tmax : datetime, optional
+        end date of the measurements, default is None
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        DataFrame with measurements
+    meta : dict
+        dict with metadata
+    """
+
+    if path is not None:
+        df, meta = read_waterinfo_file(path, **kwargs)
+    elif location_gdf is not None or (
+        grootheid_code is not None and locatie is not None
+    ):
+        df, meta = get_measurements_ddlpy(
+            location_gdf, grootheid_code, locatie, tmin, tmax
+        )
+    else:
+        raise ValueError("Provide path or grootheid_code and locatie!")
+
+    return df, meta
+
+
+def _get_metadata_from_series(selected):
+    """Get metadata from a series with location information
+
+    Parameters
+    ----------
+    selected : pandas.Series
+        series with location information
+
+    Returns
+    -------
+    meta : dict
+        dict with metadata
+    """
+    d = selected.to_dict()
+    p = d.pop("geometry")
+    meta = {
+        "name": d["Naam"] + " " + d.pop("Grootheid.Omschrijving"),
+        "unit": d.pop("Eenheid.Code") + " " + d.pop("Hoedanigheid.Code"),
+        "x": p.x,
+        "y": p.y,
+        "source": "waterinfo (ddlpy)",
+        "location": d.pop("Naam"),
+        "meta": d,
+    }
+    return meta
+
+
+def get_measurements_ddlpy(
+    location_gdf=None, grootheid_code=None, locatie=None, tmin=None, tmax=None
+):
+    """Get measurements from ddlpy for a specific location and grootheid_code
+
+    Parameters
+    ----------
+    location_gdf : geopandas.GeoDataFrame, optional
+        geodataframe with one or more locations, default is None
+    grootheid_code : str
+        code of the grootheid
+    locatie : str
+        name of the location
+    tmin : datetime, optional
+        start date of the measurements, default is 2025-01-01
+    tmax : datetime, optional
+        end date of the measurements, default is now
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        DataFrame with measurements
+    meta : dict
+        dict with metadata
+    """
+
+    import ddlpy
+
+    if tmin is None:
+        tmin = dt.datetime(2024, 1, 1)
+    if tmax is None:
+        tmax = dt.datetime.now()
+
+    if location_gdf is None:
+        location_gdf = get_locations_gdf()
+
+    if isinstance(location_gdf, pd.Series):
+        selected = location_gdf
+        locatie = selected.name
+        grootheid_code = selected["Grootheid.Code"]
+    else:
+        selected = location_gdf.loc[
+            location_gdf["Grootheid.Code"] == grootheid_code
+        ].loc[locatie]
+        if selected.empty:
+            raise ValueError(f"No location found for {locatie} and {grootheid_code}")
+        elif isinstance(selected, pd.DataFrame):
+            if len(selected) == 1:
+                selected = selected.iloc[0]
+            else:
+                logger.warning("Multiple locations found, selecting last one")
+                selected = selected.iloc[-1]
+
+    df = ddlpy.measurements(selected, start_date=tmin, end_date=tmax)
+
+    if df.empty:
+        msg = f"no measurements for {locatie} en {grootheid_code} between {tmin} and {tmax}"
+        logger.info(msg)
+    else:
+        if "Meetwaarde.Waarde_Numeriek" in df.columns:
+            df = df[["Meetwaarde.Waarde_Numeriek"]]
+            df.columns = ["value"]
+
+    meta = _get_metadata_from_series(selected)
+    return df, meta
+
+
+def get_locations_gdf(extent=(482.06, 306602.42, 284182.97, 637049.52), epsg=28992):
+    """Get locations from ddlpy and return as geodataframe
+
+    Parameters
+    ----------
+    extent : tuple, optional
+        extent of the locations. The default is the extent of the Netherlands (RD).
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+        geodataframe with locations. This dataframe is needed to obtain measurements
+        using ddlpy
+    """
+
+    import ddlpy
+
+    locations = ddlpy.locations()
+    geometries = gpd.points_from_xy(locations["X"], locations["Y"])
+    gdf = gpd.GeoDataFrame(locations, geometry=geometries, crs=25831)
+    gdf.to_crs(epsg, inplace=True)
+    polygon_ext = box(*tuple(np.array(extent)[[0, 2, 1, 3]]))
+    gdf = gdf.loc[gdf.within(polygon_ext)]
+
+    return gdf
 
 
 def read_waterinfo_file(
     path,
     index_cols=None,
-    return_metadata=False,
+    return_metadata=True,
     value_col=None,
     location_col=None,
     xcol=None,

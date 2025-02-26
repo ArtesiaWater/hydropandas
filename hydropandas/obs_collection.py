@@ -696,18 +696,49 @@ def read_pickle(
 
 
 def read_waterinfo(
-    file_or_dir, name="", ObsClass=obs.WaterlvlObs, progressbar=True, **kwargs
+    extent=None,
+    file_or_dir=None,
+    name="",
+    ObsClass=obs.WaterlvlObs,
+    grootheid_code=None,
+    locatie=None,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=False,
+    epsg=28992,
+    progressbar=True,
+    **kwargs,
 ):
-    """Read waterinfo file or directory.
+    """Read waterinfo measurement within an extent or from a file or directory
 
     Parameters
     ----------
-    file_or_dir : str
+    file_or_dir : str or None, optional
         path to file or directory. Files can be .csv or .zip
+    extent : list, tuple, numpy-array or None, optional
+        get waterinfo measurements within this extent
+        [xmin, xmax, ymin, ymax]
     name : str, optional
         name of the collection, by default ""
     ObsClass : Obs, optional
         type of Obs to read data as, by default obs.WaterlvlObs
+    grootheid_code : str, optional
+        select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+    locatie : str, optional
+        select only measurement with this location, e.g. 'SCHOONHVN', default is None
+    tmin : str or None, optional
+        start time of observations. The default is None.
+    tmax : str or None, optional
+        end time of observations. The default is None.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept. The default
+        is True.
+    epsg : int, optional
+        epsg code of the extent. The default is 28992 (RD).
     progressbar : bool, optional
         show progressbar, by default True
 
@@ -716,10 +747,19 @@ def read_waterinfo(
     ObsCollection
         ObsCollection containing data
     """
+
     oc = ObsCollection.from_waterinfo(
+        extent=extent,
         file_or_dir=file_or_dir,
         name=name,
         ObsClass=ObsClass,
+        grootheid_code=grootheid_code,
+        locatie=locatie,
+        tmin=tmin,
+        tmax=tmax,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
         progressbar=progressbar,
         **kwargs,
     )
@@ -1947,18 +1987,50 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_waterinfo(
-        cls, file_or_dir, name="", ObsClass=obs.WaterlvlObs, progressbar=True, **kwargs
+        cls,
+        extent=None,
+        file_or_dir=None,
+        name="",
+        ObsClass=obs.WaterlvlObs,
+        grootheid_code=None,
+        locatie=None,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        keep_all_obs=False,
+        epsg=28992,
+        progressbar=True,
+        **kwargs,
     ):
-        """Read waterinfo file or directory.
+        """Read waterinfo measurement within an extent or from a file or directory.
 
         Parameters
         ----------
         file_or_dir : str
             path to file or directory. Files can be .csv or .zip
+        extent : list, tuple, numpy-array or None, optional
+            get waterinfo measurements within this extent
+            [xmin, xmax, ymin, ymax]
         name : str, optional
             name of the collection, by default ""
         ObsClass : Obs, optional
             type of Obs to read data as, by default obs.WaterlvlObs
+        grootheid_code : str, optional
+            select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+        locatie : str, optional
+            select only measurement with this location, e.g. 'SCHOONHVN', default is None
+        tmin : str or None, optional
+            start time of observations. The default is None.
+        tmax : str or None, optional
+            end time of observations. The default is None.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster. The default
+            is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept. The default
+            is True.
+        epsg : int, optional
+            epsg code of the extent. The default is 28992 (RD).
         progressbar : bool, optional
             show progressbar, by default True
 
@@ -1969,14 +2041,29 @@ class ObsCollection(pd.DataFrame):
         """
         from .io import waterinfo
 
-        meta = {"name": name, "type": ObsClass, "filename": file_or_dir}
+        meta = {"name": name, "type": ObsClass}
 
-        obs_list = waterinfo.read_waterinfo_obs(
-            file_or_dir, ObsClass, progressbar=progressbar, **kwargs
-        )
-        obs_df = util._obslist_to_frame(obs_list)
+        if extent is not None:
+            obs_list = waterinfo.get_obs_list_from_extent(
+                extent,
+                ObsClass,
+                grootheid_code=grootheid_code,
+                locatie=locatie,
+                tmin=tmin,
+                tmax=tmax,
+                only_metadata=only_metadata,
+                keep_all_obs=keep_all_obs,
+                epsg=epsg,
+            )
+        elif file_or_dir is not None:
+            obs_list = waterinfo.read_waterinfo_obs(
+                file_or_dir, ObsClass, progressbar=progressbar, **kwargs
+            )
+            meta["filename"] = file_or_dir
+        else:
+            raise ValueError("specify extent or file_or_dir")
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_wiski(
