@@ -580,7 +580,6 @@ class GroundwaterObs(Obs):
     def monitoring_well(self):
         msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
         warnings.warn(msg, FutureWarning)
-        raise ValueError("why?")
         return self.location
 
     @monitoring_well.setter
