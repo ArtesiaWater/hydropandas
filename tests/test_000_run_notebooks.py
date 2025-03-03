@@ -50,6 +50,7 @@ def test_run_notebook_03_hydropandas_and_pastas():
 def test_run_notebook_05_bronhouderportaal_bro():
     _run_notebook(nbdir, "05_bronhouderportaal_bro.ipynb")
 
+
 @pytest.mark.notebooks
 def test_run_notebook_06_lizard():
     _run_notebook(nbdir, "06_lizard.ipynb")
