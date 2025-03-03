@@ -700,8 +700,9 @@ def read_waterinfo(
     file_or_dir=None,
     name="",
     ObsClass=obs.WaterlvlObs,
-    grootheid_code=None,
     locatie=None,
+    grootheid_code=None,
+    groepering_code=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
@@ -723,10 +724,12 @@ def read_waterinfo(
         name of the collection, by default ""
     ObsClass : Obs, optional
         type of Obs to read data as, by default obs.WaterlvlObs
-    grootheid_code : str, optional
-        select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
     locatie : str, optional
         select only measurement with this location, e.g. 'SCHOONHVN', default is None
+    grootheid_code : str, optional
+        select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+    groepering_code : str, optional
+        select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
     tmin : str or None, optional
         start time of observations. The default is None.
     tmax : str or None, optional
@@ -753,8 +756,9 @@ def read_waterinfo(
         file_or_dir=file_or_dir,
         name=name,
         ObsClass=ObsClass,
-        grootheid_code=grootheid_code,
         locatie=locatie,
+        grootheid_code=grootheid_code,
+        groepering_code=groepering_code,
         tmin=tmin,
         tmax=tmax,
         only_metadata=only_metadata,
@@ -1992,8 +1996,9 @@ class ObsCollection(pd.DataFrame):
         file_or_dir=None,
         name="",
         ObsClass=obs.WaterlvlObs,
-        grootheid_code=None,
         locatie=None,
+        grootheid_code=None,
+        groepering_code=None,
         tmin=None,
         tmax=None,
         only_metadata=False,
@@ -2015,10 +2020,12 @@ class ObsCollection(pd.DataFrame):
             name of the collection, by default ""
         ObsClass : Obs, optional
             type of Obs to read data as, by default obs.WaterlvlObs
-        grootheid_code : str, optional
-            select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         locatie : str, optional
             select only measurement with this location, e.g. 'SCHOONHVN', default is None
+        grootheid_code : str, optional
+            select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+        groepering_code : str, optional
+            select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         tmin : str or None, optional
             start time of observations. The default is None.
         tmax : str or None, optional
@@ -2047,8 +2054,9 @@ class ObsCollection(pd.DataFrame):
             obs_list = waterinfo.get_obs_list_from_extent(
                 extent,
                 ObsClass,
-                grootheid_code=grootheid_code,
                 locatie=locatie,
+                grootheid_code=grootheid_code,
+                groepering_code=groepering_code,
                 tmin=tmin,
                 tmax=tmax,
                 only_metadata=only_metadata,

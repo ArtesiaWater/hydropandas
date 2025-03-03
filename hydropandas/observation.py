@@ -1038,8 +1038,9 @@ class WaterlvlObs(Obs):
         cls,
         path=None,
         location_gdf=None,
-        grootheid_code=None,
         locatie=None,
+        grootheid_code=None,
+        groepering_code=None,
         tmin=None,
         tmax=None,
         **kwargs,
@@ -1052,10 +1053,12 @@ class WaterlvlObs(Obs):
             path to file (file can zip or csv)
         location_gdf : geopandas.GeoDataFrame, optional
             geodataframe with locations, only used if path is None, default is None
-        grootheid_code : str, optional
-            code of the grootheid, only used if path is None, e.g. 'WATHTE', default is None
         locatie : str, optional
             name of the location, only used if path is None, e.g. 'SCHOONHVN', default is None
+        grootheid_code : str, optional
+            code of the grootheid, only used if path is None, e.g. 'WATHTE', default is None
+        groepering_code : str, optional
+            select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         tmin : datetime, optional
             start date of the measurements, only used if path is None, default is None
         tmax : datetime, optional
@@ -1076,8 +1079,9 @@ class WaterlvlObs(Obs):
         df, metadata = waterinfo.get_waterinfo_obs(
             path=path,
             location_gdf=location_gdf,
-            grootheid_code=grootheid_code,
             locatie=locatie,
+            grootheid_code=grootheid_code,
+            groepering_code=groepering_code,
             tmin=tmin,
             tmax=tmax,
             **kwargs,
