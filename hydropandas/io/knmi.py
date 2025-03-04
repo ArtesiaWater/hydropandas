@@ -100,7 +100,7 @@ def get_knmi_obs(
         if (stn in (913, 967)) and (meteo_var == "RD") and settings["use_api"]:
             msg = (
                 f"precipitation data not available for station {stn} via the API. "
-                 "Please set `use_api` to `False`"
+                "Please set `use_api` to `False`"
             )
             logger.error(msg)
 
