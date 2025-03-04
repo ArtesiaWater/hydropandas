@@ -91,6 +91,15 @@ def get_knmi_obs(
     start = start if start is None else pd.to_datetime(start)
     end = end if end is None else pd.to_datetime(end)
 
+    if (stn in (913, 967)) and (meteo_var == "RD") and settings["use_api"]:
+        msg = (
+            f"precipitation data not available for station {stn} via the API. "
+            "setting use_api to False, more info here: "
+            "https://github.com/ArtesiaWater/hydropandas/issues/245"
+        )
+        logger.warning(msg)
+        settings["use_api"] = False
+
     if stn is not None:
         stn = int(stn)
 
@@ -1400,9 +1409,11 @@ def _check_latest_measurement_date_de_bilt(
                 knmi_df, _ = get_knmi_daily_rainfall_api(550, start, end)
             except (RuntimeError, requests.ConnectionError):
                 logger.warning("KNMI API failed, switching to non-API method")
-                knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
+                df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
+                knmi_df = df[[meteo_var]]
         else:
-            knmi_df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
+            df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
+            knmi_df = df[[meteo_var]]
     else:
         if use_api:
             try:
