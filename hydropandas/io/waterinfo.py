@@ -294,7 +294,9 @@ def get_measurements_ddlpy(
             df.columns = ["value"]
 
         # remove time zone information by transforming to dutch winter time
-        df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(1, unit="h")
+        df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(
+            1, unit="h"
+        )
 
     meta = _get_metadata_from_series(selected)
     return df, meta
