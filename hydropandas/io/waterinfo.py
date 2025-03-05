@@ -247,7 +247,7 @@ def get_measurements_ddlpy(
     import ddlpy
 
     if tmin is None:
-        tmin = pd.Timestamp('2024')
+        tmin = pd.Timestamp("2024")
     else:
         tmin = pd.to_datetime(tmin)
     if tmax is None:
