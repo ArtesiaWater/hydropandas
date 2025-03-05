@@ -1059,9 +1059,9 @@ class WaterlvlObs(Obs):
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
-        tmin : datetime, optional
+        tmin : pd.Timestamp or str, optional
             start date of the measurements, only used if path is None, default is None
-        tmax : datetime, optional
+        tmax : pd.Timestamp or str, optional
             end date of the measurements, only used if path is None, default is None
 
         Returns

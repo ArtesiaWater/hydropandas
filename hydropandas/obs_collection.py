@@ -730,9 +730,9 @@ def read_waterinfo(
         select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
-    tmin : str or None, optional
+    tmin : pd.Timestamp, str or None, optional
         start time of observations. The default is None.
-    tmax : str or None, optional
+    tmax : pd.Timestamp, str or None, optional
         end time of observations. The default is None.
     only_metadata : bool, optional
         if True download only metadata, significantly faster. The default
@@ -2026,9 +2026,9 @@ class ObsCollection(pd.DataFrame):
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
-        tmin : str or None, optional
+        tmin : pd.Timestamp, str or None, optional
             start time of observations. The default is None.
-        tmax : str or None, optional
+        tmax : pd.Timestamp, str or None, optional
             end time of observations. The default is None.
         only_metadata : bool, optional
             if True download only metadata, significantly faster. The default

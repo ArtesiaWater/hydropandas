@@ -1,4 +1,3 @@
-import datetime as dt
 import logging
 import os
 import zipfile
@@ -119,9 +118,9 @@ def get_waterinfo_obs(
         code(s) of the grootheid, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         code(s) of the groepering, e.g. 'GETETBRKD2', default is None
-    tmin : datetime, optional
+    tmin : pd.Timestamp, optional
         start date of the measurements, default is None
-    tmax : datetime, optional
+    tmax : pd.Timestamp, optional
         end date of the measurements, default is None
 
     Returns
@@ -232,9 +231,9 @@ def get_measurements_ddlpy(
         code(s) of the grootheid
     groepering_code : str or list of str, optional
         code(s) of the groepering
-    tmin : datetime, optional
+    tmin : pd.Timestamp, optional
         start date of the measurements, default is 2025-01-01
-    tmax : datetime, optional
+    tmax : pd.Timestamp, optional
         end date of the measurements, default is now
 
     Returns
@@ -248,9 +247,13 @@ def get_measurements_ddlpy(
     import ddlpy
 
     if tmin is None:
-        tmin = dt.datetime(2024, 1, 1)
+        tmin = pd.Timestamp('2024')
+    else:
+        tmin = pd.to_datetime(tmin)
     if tmax is None:
-        tmax = dt.datetime.now()
+        tmax = pd.Timestamp.now()
+    else:
+        tmax = pd.to_datetime(tmax)
 
     if location_gdf is None:
         location_gdf = get_locations_gdf()
