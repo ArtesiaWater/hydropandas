@@ -1053,11 +1053,11 @@ class WaterlvlObs(Obs):
             path to file (file can zip or csv)
         location_gdf : geopandas.GeoDataFrame, optional
             geodataframe with locations, only used if path is None, default is None
-        locatie : str, optional
-            name of the location, only used if path is None, e.g. 'SCHOONHVN', default is None
-        grootheid_code : str, optional
-            code of the grootheid, only used if path is None, e.g. 'WATHTE', default is None
-        groepering_code : str, optional
+        locatie : str or list of str, optional
+            select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+        grootheid_code : str or list of str, optional
+            select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+        groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         tmin : datetime, optional
             start date of the measurements, only used if path is None, default is None

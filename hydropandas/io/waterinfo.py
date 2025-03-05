@@ -34,11 +34,11 @@ def get_obs_list_from_extent(
         [xmin, xmax, ymin, ymax]
     ObsClass : type
         class of the observations, e.g. WaterlvlObs
-    locatie : str, optional
-        select only measurement with this location, e.g. 'SCHOONHVN', default is None
-    grootheid_code : str, optional
+    locatie : str or list of str, optional
+        select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+    grootheid_code : str or list of str, optional
         select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
-    groepering_code : str, optional
+    groepering_code : str or list of str, optional
         select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
     tmin : str or None, optional
         start time of observations. The default is None.
@@ -113,12 +113,12 @@ def get_waterinfo_obs(
         path to waterinfo file (.zip or .csv), default is None
     location_gdf : geopandas.GeoDataFrame, optional
         geodataframe with locations, default is None
-    locatie : str, optional
+    locatie : str or list of str, optional
         name of the location, e.g. 'SCHOONHVN', default is None
-    grootheid_code : str, optional
-        code of the grootheid, e.g. 'WATHTE', default is None
-    groepering_code : str, optional
-        code of the groepering, e.g. 'GETETBRKD2', default is None
+    grootheid_code : str or list of str, optional
+        code(s) of the grootheid, e.g. 'WATHTE', default is None
+    groepering_code : str or list of str, optional
+        code(s) of the groepering, e.g. 'GETETBRKD2', default is None
     tmin : datetime, optional
         start date of the measurements, default is None
     tmax : datetime, optional
@@ -176,12 +176,12 @@ def _select_location(location_gdf, locatie, grootheid_code, groepering_code):
     ----------
     location_gdf : geopandas.GeoDataFrame
         geodataframe with locations
-    locatie : str
-        name of the location
-    grootheid_code : str
-        code of the grootheid
-    groepering_code : str
-        code of the groepering, e.g. 'GETETBRKD2', default is None
+    locatie : str or list of str
+        name(s) of the location
+    grootheid_code : str or list of str
+        code(s) of the grootheid
+    groepering_code : str or list of str
+        code(s) of the groepering, e.g. 'GETETBRKD2', default is None
 
     Returns
     -------
@@ -192,12 +192,16 @@ def _select_location(location_gdf, locatie, grootheid_code, groepering_code):
     if locatie is not None:
         location_gdf = location_gdf.loc[locatie]
     if grootheid_code is not None:
+        if isinstance(grootheid_code, str):
+            grootheid_code = [grootheid_code]
         location_gdf = location_gdf.loc[
-            location_gdf["Grootheid.Code"] == grootheid_code
+            location_gdf["Grootheid.Code"].isin(grootheid_code)
         ]
     if groepering_code is not None:
+        if isinstance(groepering_code, str):
+            groepering_code = [groepering_code]
         location_gdf = location_gdf.loc[
-            location_gdf["Groepering.Code"] == groepering_code
+            location_gdf["Groepering.Code"].isin(groepering_code)
         ]
 
     if location_gdf.empty:
@@ -222,12 +226,12 @@ def get_measurements_ddlpy(
     ----------
     location_gdf : geopandas.GeoDataFrame, optional
         geodataframe with one or more locations, default is None
-    locatie : str
-        name of the location
-    grootheid_code : str
-        code of the grootheid
-    groepering_code : str
-        code of the groepering
+    locatie : str or list of str, optional
+        name(s) of the location
+    grootheid_code : str or list of str, optional
+        code(s) of the grootheid
+    groepering_code : str or list of str, optional
+        code(s) of the groepering
     tmin : datetime, optional
         start date of the measurements, default is 2025-01-01
     tmax : datetime, optional
@@ -288,6 +292,9 @@ def get_measurements_ddlpy(
         if "Meetwaarde.Waarde_Numeriek" in df.columns:
             df = df[["Meetwaarde.Waarde_Numeriek"]]
             df.columns = ["value"]
+
+        # remove time zone information by transforming to dutch winter time
+        df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(1, unit="h")
 
     meta = _get_metadata_from_series(selected)
     return df, meta
