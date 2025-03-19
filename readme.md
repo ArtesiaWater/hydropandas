@@ -58,9 +58,9 @@ For installing all the optional packages use `pip install -e .[full]`.
 ## Online data sources
 
 
-| source    | API available |
-|-----------|---------------|
-| KNMI      |[![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html)|
+| Examples    | API available |
+|-------------|---------------|
+| [KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) |
 | BRO       |               |
 | Waterinfo |               |
 
