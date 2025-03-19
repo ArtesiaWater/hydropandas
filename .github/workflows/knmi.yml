@@ -16,15 +16,9 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: Test suite with py311-ubuntu
+          - name: Test knmi api
             python: "3.11"
-            toxenv: py311
-          - name: Formatting and linting with ruff
-            python: "3.11"
-            toxenv: ruff
-          - name: Test suite for notebooks and coverage
-            python: "3.11"
-            toxenv: notebooks
+            toxenv: knmi
 
     name: ${{ matrix.name }}
     env:
