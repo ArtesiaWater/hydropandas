@@ -2,6 +2,8 @@ name: knmi
 
 on:
   push:
+    paths:
+      - ".github/workflows/Tests_KNMI.yml"
     branches:
       - master
   pull_request:
