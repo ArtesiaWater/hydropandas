@@ -60,7 +60,7 @@ For installing all the optional packages use `pip install -e .[full]`.
 
 | Examples    | API available |
 |-------------|---------------|
-| [KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) |
+| [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) |
 | BRO       |               |
 | Waterinfo |               |
 
