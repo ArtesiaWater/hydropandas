@@ -55,6 +55,15 @@ For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
 For installing all the optional packages use `pip install -e .[full]`.
 
+## Online data sources
+
+
+| source    | API available |
+|-----------|---------------|
+| KNMI      |[![KNMI](https://github.com/Artesia/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html)|
+| BRO       |               |
+| Waterinfo |               |
+
 ## Get in touch
 
 - Questions on HydroPandas ("How can I?") can be asked and answered on [Github Discussions](https://github.com/ArtesiaWater/hydropandas/discussions).
