@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 import os
 from functools import lru_cache
-from io import StringIO, BytesIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 from zipfile import ZipFile
@@ -796,9 +796,7 @@ def download_knmi_data(
                     add_day = False
                 elif meteo_var == "RD":
                     # daily data from rainfall-stations
-                    df, meta = get_daily_rainfall_api(
-                        stn=stn, start=start, end=end
-                    )
+                    df, meta = get_daily_rainfall_api(stn=stn, start=start, end=end)
                     add_day = False
                 else:
                     # daily data from meteorological stations
@@ -915,7 +913,6 @@ def request_url(url: str, fname=None) -> StringIO:
     -------
     StringIO
     """
-    
 
     # request zipfile
     r = requests.get(url, stream=True, timeout=60)
@@ -924,7 +921,7 @@ def request_url(url: str, fname=None) -> StringIO:
     # unpack data
     with ZipFile(BytesIO(r.content), mode="r") as zf:
         zipfile = zf.read(zf.namelist()[0])
-        result_str = zipfile.decode().replace('\r\n','\n')
+        result_str = zipfile.decode().replace("\r\n", "\n")
 
     if fname is not None:
         with open(fname, "w") as f:

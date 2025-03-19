@@ -14,7 +14,7 @@ def test_knmi_meteo_station_hourly_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    df, meta = knmi.get_hourly_meteo_api(
+    df, meta = knmi.get_knmi_hourly_meteo_api(
         stn=stn, meteo_var="RH", start=start, end=end
     )
     df2, _ = knmi.interpret_knmi_file(
@@ -26,7 +26,7 @@ def test_knmi_meteo_station_hourly_api_values():
         add_day=False,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data(
+    truth, _ = knmi.read_knmi_file(
         "./tests/data/2023-KNMI-test/uurgeg_260_1991-2000.txt"
     )
 
@@ -46,7 +46,7 @@ def test_knmi_meteo_station_daily_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    df, meta = knmi.get_daily_meteo_api(
+    df, meta = knmi.get_knmi_daily_meteo_api(
         stn=stn, meteo_var="RH", start=start, end=end
     )
     df3, _ = knmi.interpret_knmi_file(
@@ -58,7 +58,7 @@ def test_knmi_meteo_station_daily_api_values():
         add_day=True,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/etmgeg_260.txt")
+    truth, _ = knmi.read_knmi_file("./tests/data/2023-KNMI-test/etmgeg_260.txt")
     # check raw data
     pd.testing.assert_series_equal(
         df["RH"].loc["2000"], truth["RH"].loc["2000"], check_dtype=False
@@ -67,67 +67,110 @@ def test_knmi_meteo_station_daily_api_values():
     assert df3.loc["2000-01-02 01:00:00", "RH"] * 1e4 == truth.loc["2000-01-01", "RH"]
 
 
-def test_knmi_meteo_station_daily_api_values():
-    stn = 260
-    start = pd.Timestamp("2000-01-01")
-    end = pd.Timestamp("2001-01-01")
-    prec_url = hpd.PrecipitationObs.from_knmi(meteo_var="RH", stn=stn, start=start, end=end, use_api=False)
-
-    # daily neerslag station from file
-    prec_file = hpd.PrecipitationObs.from_knmi(
-        fname='./tests/data/2023-KNMI-test/etmgeg_260.txt',
-        start=start, 
-        end=end)
-
-    # check data
-    pd.testing.assert_series_equal(prec_url['RH'], prec_file['RH'])
-
 def test_knmi_meteo_station_daily_url_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    prec_url = hpd.PrecipitationObs.from_knmi(meteo_var="RH", stn=stn, start=start, end=end, use_api=False)
+    # daily data from meteorological stations
+    df, meta = knmi.get_knmi_daily_meteo_url(stn=stn)
+    df2, _ = knmi.interpret_knmi_file(
+        df,
+        meta,
+        meteo_var="RH",
+        start=start,
+        end=end,
+        add_day=True,
+        add_hour=True,
+    )
+    truth, _ = knmi.read_knmi_file("./tests/data/2023-KNMI-test/etmgeg_260.txt")
+    # check raw data
+    pd.testing.assert_series_equal(
+        df["RH"].loc["2000"], truth["RH"].loc["2000"], check_dtype=False
+    )
+    # check after interpretation, registration moved to end of day
+    assert df2.loc["2000-01-02 01:00:00", "RH"] * 1e4 == truth.loc["2000-01-01", "RH"]
 
-    # daily neerslag station from file
-    prec_file = hpd.PrecipitationObs.from_knmi(
-        fname='./tests/data/2023-KNMI-test/etmgeg_260.txt',
-        start=start, 
-        end=end)
-
-    # check data
-    pd.testing.assert_series_equal(prec_url['RH'], prec_file['RH'])
+    # also check if equal to api result
+    df_api, meta_api = knmi.get_knmi_daily_meteo_api(
+        stn=stn, meteo_var="RH", start=start, end=end
+    )
+    df_api, _ = knmi.interpret_knmi_file(
+        df_api,
+        meta_api,
+        meteo_var="RH",
+        start=start,
+        end=end,
+        add_day=True,
+        add_hour=True,
+    )
+    pd.testing.assert_frame_equal(df2, df_api)
 
 
 def test_knmi_daily_rainfall_api_values():
     stn = 550
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
-    prec_api = hpd.PrecipitationObs.from_knmi(meteo_var="RD", stn=stn, start=start, end=end)
+    df, meta = knmi.get_knmi_daily_rainfall_api(stn=stn, start=start, end=end)
+    df2, _ = knmi.interpret_knmi_file(
+        df,
+        meta,
+        meteo_var="RD",
+        start=start,
+        end=end,
+        add_day=False,
+        add_hour=True,
+    )
+    truth, _ = knmi.read_knmi_file(
+        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
+    )
+    # check raw data
+    pd.testing.assert_series_equal(df.loc[start:end, "RD"], truth["RD"])
+    # check after interpretation
+    pd.testing.assert_series_equal(
+        df2["RD"] * 1e4,
+        truth["RD"],
+        check_index=False,
+        check_dtype=False,
+        atol=1e-8,
+        rtol=1e-8,
+    )
 
-    # daily neerslag station from file
-    prec_file = hpd.PrecipitationObs.from_knmi(
-        fname='./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt',
-        start=start, 
-        end=end)
-
-    # check data
-    pd.testing.assert_series_equal(prec_api['RD'], prec_file['RD'])
-   
 
 def test_knmi_daily_rainfall_url_values():
     stn = 550
+    stn_name = knmi.get_station_name(stn=stn)
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
-    prec_url = hpd.PrecipitationObs.from_knmi(meteo_var="RD", stn=stn, start=start, end=end, use_api=False)
+    # daily data from rainfall-stations
+    df, meta = knmi.get_knmi_daily_rainfall_url(stn, stn_name)
 
-    # daily neerslag station from file
-    prec_file = hpd.PrecipitationObs.from_knmi(
-        fname='./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt',
-        start=start, 
-        end=end)
+    df2, _ = knmi.interpret_knmi_file(
+        df,
+        meta,
+        meteo_var="RD",
+        start=start,
+        end=end,
+        add_day=False,
+        add_hour=True,
+    )
 
-    # check data
-    pd.testing.assert_series_equal(prec_url['RD'], prec_file['RD'])
+    truth, _ = knmi.read_knmi_file(
+        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
+    )
+    # check raw data
+    pd.testing.assert_series_equal(
+        df.loc[start:end, "RD"], truth["RD"], check_dtype=False
+    )
+    # check after interpretation
+    pd.testing.assert_series_equal(
+        df2["RD"] * 1e4,
+        truth["RD"],
+        check_index=False,
+        check_dtype=False,
+        atol=1e-8,
+        rtol=1e-8,
+    )
+
 
 # test reading other files
 def test_read_daily_rainfall():
@@ -137,6 +180,7 @@ def test_read_daily_rainfall():
         start="2010-1-1",
         end="2010-1-10",
     )
+
 
 def test_read_daily_rainfall2():
     # neerslagstation
@@ -163,10 +207,10 @@ def test_xy():
         xy=(150000, 330000),
         meteo_var="RD",
         start=pd.Timestamp("1951-1-1"),
-        end=pd.Timestamp("1952-1-1")
+        end=pd.Timestamp("1952-1-1"),
     )
 
-    assert meta1['station'] == 976
+    assert meta1["station"] == 976
 
     # fill results before 1951-7-1 with nearest station
     _ = knmi.get_knmi_obs(
@@ -174,8 +218,9 @@ def test_xy():
         meteo_var="RD",
         start=pd.Timestamp("1951-1-1"),
         end=pd.Timestamp("1952-1-1"),
-        fill_missing_obs=True
+        fill_missing_obs=True,
     )
+
 
 def test_calculate_evaporation():
     knmi.get_knmi_obs(
@@ -199,20 +244,15 @@ def test_calculate_evaporation():
         end=pd.Timestamp("2010-1-10"),
     )
 
+
 def test_download_without_data():
     dfrd, _ = knmi.get_knmi_obs(
-        324,
-        meteo_var="RD",
-        start=pd.Timestamp("2018"),
-        end=pd.Timestamp("2020")
+        324, meteo_var="RD", start=pd.Timestamp("2018"), end=pd.Timestamp("2020")
     )
     assert dfrd.empty, "expected empty DataFrame"
 
     dfev, _ = knmi.get_knmi_obs(
-        265,
-        meteo_var="EV24",
-        start=pd.Timestamp("1959"),
-        end=pd.Timestamp("1963")
+        265, meteo_var="EV24", start=pd.Timestamp("1959"), end=pd.Timestamp("1963")
     )
     assert dfev.empty, "expected empty DataFrame"
 
@@ -302,4 +342,3 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
-
