@@ -14,9 +14,7 @@ def test_knmi_meteo_station_hourly_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    df, meta = knmi.get_hourly_meteo_api(
-        stn=stn, meteo_var="RH", start=start, end=end
-    )
+    df, meta = knmi.get_hourly_meteo_api(stn=stn, meteo_var="RH", start=start, end=end)
     df2, _ = knmi.interpret_knmi_file(
         df,
         meta=meta,
@@ -26,9 +24,7 @@ def test_knmi_meteo_station_hourly_api_values():
         add_day=False,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data(
-        "./tests/data/2023-KNMI-test/uurgeg_260_1991-2000.txt"
-    )
+    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/uurgeg_260_1991-2000.txt")
 
     # check raw data
     pd.testing.assert_series_equal(
@@ -46,9 +42,7 @@ def test_knmi_meteo_station_daily_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    df, meta = knmi.get_daily_meteo_api(
-        stn=stn, meteo_var="RH", start=start, end=end
-    )
+    df, meta = knmi.get_daily_meteo_api(stn=stn, meteo_var="RH", start=start, end=end)
     df3, _ = knmi.interpret_knmi_file(
         df,
         meta,
