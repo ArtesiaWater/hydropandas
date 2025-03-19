@@ -14,7 +14,7 @@ def test_knmi_meteo_station_hourly_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    df, meta = knmi.get_knmi_hourly_meteo_api(
+    df, meta = knmi.get_hourly_meteo_api(
         stn=stn, meteo_var="RH", start=start, end=end
     )
     df2, _ = knmi.interpret_knmi_file(
@@ -26,7 +26,7 @@ def test_knmi_meteo_station_hourly_api_values():
         add_day=False,
         add_hour=True,
     )
-    truth, _ = knmi.read_knmi_file(
+    truth, _ = knmi.parse_data(
         "./tests/data/2023-KNMI-test/uurgeg_260_1991-2000.txt"
     )
 
@@ -46,7 +46,7 @@ def test_knmi_meteo_station_daily_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
-    df, meta = knmi.get_knmi_daily_meteo_api(
+    df, meta = knmi.get_daily_meteo_api(
         stn=stn, meteo_var="RH", start=start, end=end
     )
     df3, _ = knmi.interpret_knmi_file(
@@ -58,7 +58,7 @@ def test_knmi_meteo_station_daily_api_values():
         add_day=True,
         add_hour=True,
     )
-    truth, _ = knmi.read_knmi_file("./tests/data/2023-KNMI-test/etmgeg_260.txt")
+    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/etmgeg_260.txt")
     # check raw data
     pd.testing.assert_series_equal(
         df["RH"].loc["2000"], truth["RH"].loc["2000"], check_dtype=False
@@ -72,7 +72,7 @@ def test_knmi_meteo_station_daily_url_values():
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
     # daily data from meteorological stations
-    df, meta = knmi.get_knmi_daily_meteo_url(stn=stn)
+    df, meta = knmi.get_daily_meteo_url(stn=stn)
     df2, _ = knmi.interpret_knmi_file(
         df,
         meta,
@@ -82,7 +82,7 @@ def test_knmi_meteo_station_daily_url_values():
         add_day=True,
         add_hour=True,
     )
-    truth, _ = knmi.read_knmi_file("./tests/data/2023-KNMI-test/etmgeg_260.txt")
+    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/etmgeg_260.txt")
     # check raw data
     pd.testing.assert_series_equal(
         df["RH"].loc["2000"], truth["RH"].loc["2000"], check_dtype=False
@@ -91,7 +91,7 @@ def test_knmi_meteo_station_daily_url_values():
     assert df2.loc["2000-01-02 01:00:00", "RH"] * 1e4 == truth.loc["2000-01-01", "RH"]
 
     # also check if equal to api result
-    df_api, meta_api = knmi.get_knmi_daily_meteo_api(
+    df_api, meta_api = knmi.get_daily_meteo_api(
         stn=stn, meteo_var="RH", start=start, end=end
     )
     df_api, _ = knmi.interpret_knmi_file(
@@ -110,7 +110,7 @@ def test_knmi_daily_rainfall_api_values():
     stn = 550
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
-    df, meta = knmi.get_knmi_daily_rainfall_api(stn=stn, start=start, end=end)
+    df, meta = knmi.get_daily_rainfall_api(stn=stn, start=start, end=end)
     df2, _ = knmi.interpret_knmi_file(
         df,
         meta,
@@ -120,7 +120,7 @@ def test_knmi_daily_rainfall_api_values():
         add_day=False,
         add_hour=True,
     )
-    truth, _ = knmi.read_knmi_file(
+    truth, _ = knmi.parse_data(
         "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
     )
     # check raw data
@@ -142,7 +142,7 @@ def test_knmi_daily_rainfall_url_values():
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
     # daily data from rainfall-stations
-    df, meta = knmi.get_knmi_daily_rainfall_url(stn, stn_name)
+    df, meta = knmi.get_daily_rainfall_url(stn, stn_name)
 
     df2, _ = knmi.interpret_knmi_file(
         df,
@@ -154,7 +154,7 @@ def test_knmi_daily_rainfall_url_values():
         add_hour=True,
     )
 
-    truth, _ = knmi.read_knmi_file(
+    truth, _ = knmi.parse_data(
         "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
     )
     # check raw data
