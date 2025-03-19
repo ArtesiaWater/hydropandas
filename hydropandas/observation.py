@@ -71,7 +71,6 @@ class Obs(pd.DataFrame):
         the attributes listed in _metadata or keyword arguments for the constructor of a
         pandas.DataFrame.
         """
-        # print(self._metadata)
         if (len(args) > 0) and isinstance(args[0], Obs):
             for key in args[0]._get_meta_attr():
                 if (key in Obs._metadata) and (key not in kwargs):
@@ -86,7 +85,6 @@ class Obs(pd.DataFrame):
         self.source = kwargs.pop("source", "")
         self.unit = kwargs.pop("unit", "")
 
-        print(kwargs)
         super(Obs, self).__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
@@ -572,7 +570,7 @@ class GroundwaterObs(Obs):
         self.screen_top = kwargs.pop("screen_top", np.nan)
         self.screen_bottom = kwargs.pop("screen_bottom", np.nan)
         self.metadata_available = kwargs.pop("metadata_available", np.nan)
-        print(kwargs)
+
         super().__init__(*args, **kwargs)
 
     @property

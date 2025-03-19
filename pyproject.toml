@@ -107,6 +107,12 @@ legacy_tox_ini = """
     commands =
             pytest tests --ignore=tests/test_000_run_notebooks.py
 
+    [testenv:knmi]
+    description = run knmi tests
+    extras = pytesting
+    commands =
+            pytest tests/test_015_knmi_api.py
+
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
     extras = pytesting,coveraging
