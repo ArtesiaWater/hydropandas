@@ -1,4 +1,4 @@
-name: hydropandas
+name: knmi
 
 on:
   push:
