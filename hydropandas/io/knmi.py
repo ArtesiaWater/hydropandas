@@ -159,7 +159,7 @@ def get_knmi_timeseries_fname(
     if "neerslaggeg" in fname:
         # neerslagstation
         meteo_var = "RD"
-        add_day = True
+        add_day = False
     elif "etmgeg" in fname:
         # meteo station
         add_day = True
