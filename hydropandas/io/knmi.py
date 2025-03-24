@@ -4,7 +4,7 @@ Module with functions to read or download time series with observations from knm
 function levels:
 1. get_knmi_obs_list: list of observations
     2. get_knmi_obs: single observation
-        3. get_timeseries_stn, get_timeseries_fname: get time series from station or file
+        3. get_timeseries_stn, get_timeseries_from_file: get time series from station or file
             4. fill_missing_measurements, get_evaporation: aggregate time series data
                 5. download_knmi_data: download a single timeseries
                     6a. get_hourly_meteo_api, get_daily_meteo_api, get_daily_rainfall_api,
@@ -125,7 +125,7 @@ def get_knmi_obs(
         )
     elif fname is not None:
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
-        ts, meta = get_timeseries_fname(
+        ts, meta = get_timeseries_from_file(
             fname=str(fname),
             meteo_var=meteo_var,
             settings=settings,
@@ -157,7 +157,7 @@ def get_knmi_obs(
     return ts, meta
 
 
-def get_timeseries_fname(
+def get_timeseries_from_file(
     fname: str,
     meteo_var: str,
     settings: Dict[str, Any],
