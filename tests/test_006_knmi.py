@@ -178,13 +178,6 @@ def test_download_without_data():
 
 
 # %%
-
-# %%
-
-# %%
-
-
-# %%
 def test_fill_missing_measurements():
     settings = knmi._get_default_settings({"fill_missing_obs": True})
 
@@ -229,9 +222,6 @@ def test_fill_missing_measurements():
     # assert df.empty, "expected empty dataframe"
 
 
-# %% obs collections
-
-
 def test_obslist_from_grid():
     xy = [[x, y] for x in [104150.0, 104550.0] for y in [510150.0, 510550.0]]
 
@@ -270,9 +260,6 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
-
-
-# %%
 
 
 def test_knmi_meteo_station_hourly_api_values():
