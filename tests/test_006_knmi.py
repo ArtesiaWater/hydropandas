@@ -458,7 +458,7 @@ def test_meteo_station_methods():
 
     # daily meteo station from file
     precip3 = hpd.PrecipitationObs.from_knmi(
-        fname=r".\tests\data\2023-KNMI-test\etmgeg_260.txt",
+        fname=r"./tests/data/2023-KNMI-test/etmgeg_260.txt",
         start=start,
         end=end,
     )
@@ -490,7 +490,7 @@ def test_rainfall_station_methods():
 
     # daily rainfall station from file
     precip3 = hpd.PrecipitationObs.from_knmi(
-        fname=r".\tests\data\2023-KNMI-test\neerslaggeg_DE-BILT_550.txt",
+        fname=r"./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt",
         start=start,
         end=end,
     )
