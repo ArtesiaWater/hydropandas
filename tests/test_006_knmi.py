@@ -222,9 +222,6 @@ def test_fill_missing_measurements():
     # assert df.empty, "expected empty dataframe"
 
 
-# %% obs collections
-
-
 def test_obslist_from_grid():
     xy = [[x, y] for x in [104150.0, 104550.0] for y in [510150.0, 510550.0]]
 
@@ -263,9 +260,6 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
-
-
-# %%
 
 
 def test_knmi_meteo_station_hourly_api_values():
@@ -394,11 +388,12 @@ def test_knmi_daily_rainfall_api_values():
     )
 
 
-def test_knmi_daily_rainfall_url_values():
+def test_knmi_daily_rainfall():
     stn = 550
     stn_name = knmi.get_station_name(stn=stn)
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
+
     # daily data from rainfall-stations
     df, meta = knmi.get_knmi_daily_rainfall_url(stn, stn_name)
 
@@ -428,3 +423,64 @@ def test_knmi_daily_rainfall_url_values():
         atol=1e-8,
         rtol=1e-8,
     )
+
+
+def test_meteo_station_methods():
+    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a meteo
+    station yield the same results"""
+
+    start = pd.Timestamp("2000-1-1")
+    end = pd.Timestamp("2000-1-10")
+
+    # daily meteo station (default)
+    precip1 = hpd.PrecipitationObs.from_knmi(stn=260, start=start, end=end)
+
+    # daily meteo station without api
+    precip2 = hpd.PrecipitationObs.from_knmi(
+        stn=260,
+        start=start,
+        end=end,
+        use_api=False,
+    )
+
+    # daily meteo station from file
+    precip3 = hpd.PrecipitationObs.from_knmi(
+        fname=r"./tests/data/2023-KNMI-test/etmgeg_260.txt",
+        start=start,
+        end=end,
+    )
+
+    assert precip1.equals(precip2)
+    assert precip1.equals(precip3)
+
+
+def test_rainfall_station_methods():
+    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a rainfall
+    station yield the same results"""
+
+    start = pd.Timestamp("2000-1-1")
+    end = pd.Timestamp("2000-1-10")
+
+    # daily rainfall station
+    precip1 = hpd.PrecipitationObs.from_knmi(
+        stn=550, meteo_var="RD", start=start, end=end
+    )
+
+    # daily rainfall station without api
+    precip2 = hpd.PrecipitationObs.from_knmi(
+        meteo_var="RD",
+        stn=550,
+        start=start,
+        end=end,
+        use_api=False,
+    )
+
+    # daily rainfall station from file
+    precip3 = hpd.PrecipitationObs.from_knmi(
+        fname=r"./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt",
+        start=start,
+        end=end,
+    )
+
+    assert precip1.equals(precip2)
+    assert precip1.equals(precip3)
