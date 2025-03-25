@@ -183,6 +183,7 @@ def test_download_without_data():
 
 # %%
 
+
 # %%
 def test_fill_missing_measurements():
     settings = knmi._get_default_settings({"fill_missing_obs": True})
@@ -436,8 +437,9 @@ def test_knmi_daily_rainfall():
         rtol=1e-8,
     )
 
+
 def test_meteo_station_methods():
-    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a meteo 
+    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a meteo
     station yield the same results"""
 
     start = pd.Timestamp("2000-1-1")
@@ -466,14 +468,16 @@ def test_meteo_station_methods():
 
 
 def test_rainfall_station_methods():
-    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a rainfall 
+    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a rainfall
     station yield the same results"""
 
     start = pd.Timestamp("2000-1-1")
     end = pd.Timestamp("2000-1-10")
 
-    # daily rainfall station 
-    precip1 = hpd.PrecipitationObs.from_knmi(stn=550, meteo_var="RD", start=start, end=end)
+    # daily rainfall station
+    precip1 = hpd.PrecipitationObs.from_knmi(
+        stn=550, meteo_var="RD", start=start, end=end
+    )
 
     # daily rainfall station without api
     precip2 = hpd.PrecipitationObs.from_knmi(
