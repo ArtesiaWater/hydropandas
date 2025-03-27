@@ -696,8 +696,8 @@ def read_pickle(
 
 
 def read_waterinfo(
-    extent=None,
     file_or_dir=None,
+    extent=None,
     name="",
     ObsClass=obs.WaterlvlObs,
     locatie=None,
@@ -1992,8 +1992,8 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_waterinfo(
         cls,
-        extent=None,
         file_or_dir=None,
+        extent=None,
         name="",
         ObsClass=obs.WaterlvlObs,
         locatie=None,
