@@ -209,9 +209,9 @@ def test_fill_missing_measurements():
         start=pd.Timestamp("1998-9-1"),
         end=pd.Timestamp("1998-9-10"),
     )
-    assert (
-        df["station"].astype(int).isin([273, 269]).all()
-    ), "expected data from these two stations"
+    assert df["station"].astype(int).isin([273, 269]).all(), (
+        "expected data from these two stations"
+    )
 
     # no data at all
     df, meta = knmi.get_knmi_timeseries_stn(
