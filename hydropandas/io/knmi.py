@@ -586,7 +586,7 @@ def fill_missing_measurements(
             msg = (
                 f"knmi station De Bilt has no measurements between {start} and {end} "
                 f"for variable {meteo_var}. It is assumed no data is available for"
-                f" station '{stn_name}' ({stn}). Returning empty Dataframe."
+                f" station '{stn_name}' ({stn}). Returning empty DataFrame."
             )
             logger.error(msg)
             meta = {
