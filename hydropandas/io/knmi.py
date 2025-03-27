@@ -569,6 +569,39 @@ def fill_missing_measurements(
             stn, meteo_var, start, end, settings, stn_name
         )
 
+    # check if De Bilt has data
+    # NOTE: doing this first to avoid recursively checking all stations for
+    # data that probably(!) does not exist. This assumption breaks down if De Bilt
+    # is not the station with the latest data.
+    if knmi_df.empty or (end > knmi_df.index[-1]):
+        # check latest date at which measurements are available at De Bilt
+        try:
+            new_end = _check_latest_measurement_date_de_bilt(
+                meteo_var,
+                use_api=settings["use_api"],
+                start=start if knmi_df.empty else knmi_df.index[-1],
+                end=end,
+            )
+        except ValueError:
+            msg = (
+                f"knmi station De Bilt has no measurements between {start} and {end} "
+                f"for variable {meteo_var}. It is assumed no data is available for"
+                f" station '{stn_name}' ({stn}). Returning empty Dataframe."
+            )
+            logger.error(msg)
+            meta = {
+                "x": stations.loc[stn, "x"],
+                "y": stations.loc[stn, "y"],
+                "station": stn,
+                "name": f"{meteo_var}_{stn_name}",
+                "location": stn_name,
+                "source": "KNMI",
+            }
+            return pd.DataFrame(), meta
+        if new_end < end:
+            end = new_end
+            logger.info(f"changing end_date to {end.strftime('%Y-%m-%d')}")
+
     # if the first station cannot be read, read another station as the first
     ignore = [stn]
     while knmi_df.empty:
