@@ -202,24 +202,26 @@ def test_fill_missing_measurements():
     assert meta["station"] == 260, "expected metadata from different station"
 
     # missing some data
-    _, meta = knmi.get_knmi_timeseries_stn(
+    df, meta = knmi.get_knmi_timeseries_stn(
         273,
         meteo_var="RH",
         settings=settings,
         start=pd.Timestamp("1998-9-1"),
         end=pd.Timestamp("1998-9-10"),
     )
+    assert (
+        df["station"].astype(int).isin([273, 269]).all()
+    ), "expected data from these two stations"
 
-    # no data at all (test is disabled because of too many requests)
-    # df, meta = knmi.get_knmi_timeseries_stn(
-    #     260,
-    #     meteo_var="EV24",
-    #     settings=settings,
-    #     start=pd.Timestamp("1951-1-1"),
-    #     end=pd.Timestamp("1951-1-10"),
-    # )
-
-    # assert df.empty, "expected empty dataframe"
+    # no data at all
+    df, meta = knmi.get_knmi_timeseries_stn(
+        260,
+        meteo_var="EV24",
+        settings=settings,
+        start=pd.Timestamp("1951-1-1"),
+        end=pd.Timestamp("1951-1-10"),
+    )
+    assert df.empty, "expected empty dataframe"
 
 
 def test_obslist_from_grid():
