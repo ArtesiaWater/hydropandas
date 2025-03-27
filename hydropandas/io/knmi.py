@@ -456,7 +456,7 @@ def _get_stations_tmin_tmax(stations_df, start, end):
     if end is None:
         tmin_stns = set(stations_df.index)
     else:
-        # keep stations where tmin is unknonw (=False)
+        # keep stations where tmin is unknown (=False)
         stns_unknown_tmin = set(stations_df.loc[stations_df["tmin"] == False].index)
         tmin_available = stations_df.loc[stations_df["tmin"] != False, "tmin"]
         tmin_within_range = pd.to_datetime(tmin_available) < end
