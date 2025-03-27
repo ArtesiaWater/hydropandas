@@ -654,7 +654,6 @@ def fill_missing_measurements(
                 "Could not fill all missing measurements as there are "
                 "no stations left to check!"
             )
-
             missing[:] = False
             break
         else:
@@ -1368,7 +1367,7 @@ def get_knmi_hourly_meteo_api(
     if end is None:
         raise ValueError("An end date is required when using hourly interval")
 
-    if (end - start).days > 4150:
+    if (end - start).days > 365 * 10:
         raise ValueError("time span for hourly data cannot be greater than 10 years")
     if (end - start).days < 1:
         raise ValueError("time span should be more than 1 day")
