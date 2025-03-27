@@ -194,7 +194,7 @@ def get_timeseries_from_file(
     if "neerslaggeg" in fname:
         # neerslagstation
         meteo_var = "RD"
-        add_day = True
+        add_day = False
     elif "etmgeg" in fname:
         # meteo station
         add_day = True
@@ -831,8 +831,8 @@ def download_knmi_data(
                 raise NotImplementedError()
             elif meteo_var == "RD":
                 # daily data from rainfall-stations
-                df, meta = get_daily_rainfall_url(stn, stn_name)
-                add_day = True
+                df, meta = get_knmi_daily_rainfall_url(stn, stn_name)
+                add_day = False
             else:
                 # daily data from meteorological stations
                 df, meta = get_daily_meteo_url(stn=stn)

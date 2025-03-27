@@ -50,6 +50,7 @@ full = [
     "pyproj",
     "contextily",
     "lxml",
+    "rws-ddlpy",
 ]
 rtd = [
     "hydropandas[full]",
