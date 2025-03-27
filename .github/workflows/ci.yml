@@ -32,7 +32,7 @@ jobs:
             python: "3.11"
             toxenv: ruff
           - name: Test suite for notebooks and coverage
-            python: "3.11"
+            python: "3.12"
             toxenv: notebooks
 
     name: ${{ matrix.name }}
