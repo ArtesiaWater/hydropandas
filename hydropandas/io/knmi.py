@@ -630,18 +630,6 @@ def fill_missing_measurements(
         )
         ignore.append(stn)
 
-    if end > knmi_df.index[-1]:
-        # check latest date at which measurements are available at De Bilt
-        new_end = _check_latest_measurement_date_de_bilt(
-            meteo_var,
-            use_api=settings["use_api"],
-            start=start if knmi_df.empty else knmi_df.index[-1],
-            end=end,
-        )
-        if new_end < end:
-            end = new_end
-            logger.info(f"changing end_date to {end.strftime('%Y-%m-%d')}")
-
     # find missing values
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
 
