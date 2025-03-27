@@ -100,7 +100,7 @@ markers = ["slow: mark test as slow."]
 legacy_tox_ini = """
     [tox]
     requires = tox>=4
-    env_list = ruff, notebooks, py{310, 311, 312, 313}
+    env_list = ruff, notebooks, py311}
 
     [testenv]
     description = run unit tests
@@ -113,6 +113,12 @@ legacy_tox_ini = """
     extras = pytesting
     commands =
             pytest tests/test_015_knmi_api.py
+
+    [testenv:waterinfo]
+    description = run waterinfo tests
+    extras = pytesting
+    commands =
+            pytest tests/test_016_waterinfo_api.py
 
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
