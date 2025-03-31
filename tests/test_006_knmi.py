@@ -207,9 +207,9 @@ def test_fill_missing_measurements_meteo():
         start=pd.Timestamp("1998-9-8"),
         end=pd.Timestamp("1998-9-10"),
     )
-    assert df["station"].astype(int).isin([273, 269]).all(), (
-        "expected data from these two stations"
-    )
+    assert (
+        df["station"].astype(int).isin([273, 269]).all()
+    ), "expected data from these two stations"
 
     # missing some data at the end RH meteostation 273
     df, meta = knmi.get_knmi_timeseries_stn(
@@ -219,9 +219,9 @@ def test_fill_missing_measurements_meteo():
         start=pd.Timestamp("1998-9-3"),
         end=pd.Timestamp("1998-9-5"),
     )
-    assert df["station"].astype(int).isin([273, 269]).all(), (
-        "expected data from these two stations"
-    )
+    assert (
+        df["station"].astype(int).isin([273, 269]).all()
+    ), "expected data from these two stations"
 
     # missing some data in between RH meteostation 273
     df, meta = knmi.get_knmi_timeseries_stn(
@@ -231,16 +231,12 @@ def test_fill_missing_measurements_meteo():
         start=pd.Timestamp("1998-9-3"),
         end=pd.Timestamp("1998-9-10"),
     )
-    assert df["station"].astype(int).isin([273, 269]).all(), (
-        "expected data from these two stations"
-    )
-    assert df.index[0].strftime('%Y%m%d') == '19980903', (
-        "expected start date 19980903"
-    )
+    assert (
+        df["station"].astype(int).isin([273, 269]).all()
+    ), "expected data from these two stations"
+    assert df.index[0].strftime("%Y%m%d") == "19980903", "expected start date 19980903"
 
-    assert df.index[-1].strftime('%Y%m%d') == '19980910', (
-        "expected end date 19980910"
-    )
+    assert df.index[-1].strftime("%Y%m%d") == "19980910", "expected end date 19980910"
 
     # no historical data at any meteo station for this time period
     df, meta = knmi.get_knmi_timeseries_stn(
@@ -258,7 +254,7 @@ def test_fill_missing_measurements_meteo():
         meteo_var="EV24",
         settings=settings,
         start=pd.Timestamp.now(),
-        end=pd.Timestamp.now()+pd.Timedelta(days=2),
+        end=pd.Timestamp.now() + pd.Timedelta(days=2),
     )
     assert df.empty, "expected empty dataframe"
 
@@ -314,9 +310,9 @@ def test_fill_missing_measurements_neerslag():
         start=pd.Timestamp("1986-03-25"),
         end=pd.Timestamp("1986-03-29"),
     )
-    assert df["station"].astype(int).isin([72, 78]).all(), (
-        "expected data from these two stations"
-    )
+    assert (
+        df["station"].astype(int).isin([72, 78]).all()
+    ), "expected data from these two stations"
 
     # missing some data at the end RD meteostation 57
     df, meta = knmi.get_knmi_timeseries_stn(
@@ -326,9 +322,9 @@ def test_fill_missing_measurements_neerslag():
         start=pd.Timestamp("1942-11-29"),
         end=pd.Timestamp("1942-12-3"),
     )
-    assert df["station"].astype(int).isin([57, 79]).all(), (
-        "expected data from these two stations"
-    )
+    assert (
+        df["station"].astype(int).isin([57, 79]).all()
+    ), "expected data from these two stations"
 
     # no historical data at any neerslagstation for this time period
     df, meta = knmi.get_knmi_timeseries_stn(
@@ -346,7 +342,7 @@ def test_fill_missing_measurements_neerslag():
         meteo_var="RD",
         settings=settings,
         start=pd.Timestamp.now(),
-        end=pd.Timestamp.now()+pd.Timedelta(days=2),
+        end=pd.Timestamp.now() + pd.Timedelta(days=2),
     )
     assert df.empty, "expected empty dataframe"
 
@@ -359,7 +355,6 @@ def test_fill_missing_measurements_neerslag():
         end=pd.Timestamp("1896-1-10"),
     )
     assert not df.empty, "expected filled df"
-
 
     # # maximum fill neerslagstation den Bosch
     # # loops through all neerslagstations because there is not measurement at 29-10-1885
