@@ -17,11 +17,13 @@ def get_obs_list_from_extent(
     locatie=None,
     grootheid_code=None,
     groepering_code=None,
+    parameter_code=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
     keep_all_obs=False,
     epsg=28992,
+    location_gdf=None
 ):
     """Get observations within a specific extent and optionally for a specific location
     and grootheid_code.
@@ -39,6 +41,8 @@ def get_obs_list_from_extent(
         select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
+    parameter_code :  str or list of str, optional
+        select only measurement with this parameter_code, e.g. 'Cl', default is None
     tmin : str or None, optional
         start time of observations. The default is None.
     tmax : str or None, optional
@@ -51,6 +55,9 @@ def get_obs_list_from_extent(
         is True.
     epsg : int, optional
         epsg code of the extent. The default is 28992 (RD).
+    location_gdf : GeoDataFrame, optional
+        geodataframe with the locations of the measurements you want to include. If
+        location_gdf is provided the provided extent and epgs will be ignored.
 
     Returns
     -------
@@ -58,14 +65,16 @@ def get_obs_list_from_extent(
         list with Obs objects
 
     """
+    if location_gdf is None:
+        gdf = get_locations_gdf(extent=extent, epsg=epsg)
+    else:
+        gdf = location_gdf
+        if gdf.empty:
+            msg = f"No waterinfo measurements found within extent {extent}"
+            logger.warning(msg)
+            return []
 
-    gdf = get_locations_gdf(extent=extent, epsg=epsg)
-    if gdf.empty:
-        msg = f"No waterinfo measurements found within extent {extent}"
-        logger.warning(msg)
-        return []
-
-    gdf = _select_location(gdf, locatie, grootheid_code, groepering_code)
+    gdf = _select_location(gdf, locatie, grootheid_code, groepering_code, parameter_code)
 
     if gdf.empty:
         return []
@@ -100,6 +109,7 @@ def get_waterinfo_obs(
     locatie=None,
     grootheid_code=None,
     groepering_code=None,
+    parameter_code=None,
     tmin=None,
     tmax=None,
     **kwargs,
@@ -118,6 +128,8 @@ def get_waterinfo_obs(
         code(s) of the grootheid, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         code(s) of the groepering, e.g. 'GETETBRKD2', default is None
+    parameter_code : str or list of str, optional
+        code(s) of the parameter, e.g. 'Cl', default is None
     tmin : pd.Timestamp, optional
         start date of the measurements, default is None
     tmax : pd.Timestamp, optional
@@ -135,7 +147,8 @@ def get_waterinfo_obs(
         df, meta = read_waterinfo_file(path, **kwargs)
     else:
         df, meta = get_measurements_ddlpy(
-            location_gdf, locatie, grootheid_code, groepering_code, tmin, tmax
+            location_gdf, locatie, grootheid_code, groepering_code, parameter_code, 
+            tmin, tmax
         )
 
     return df, meta
@@ -156,9 +169,12 @@ def _get_metadata_from_series(selected):
     """
     d = selected.to_dict()
     p = d.pop("geometry")
+    unit = d.pop("Eenheid.Code")
+    if d['Hoedanigheid.Code'] not in ['', 'NVT']:
+        unit += " " + d.pop("Hoedanigheid.Code")
     meta = {
         "name": d["Naam"] + " " + d.pop("Grootheid.Omschrijving"),
-        "unit": d.pop("Eenheid.Code") + " " + d.pop("Hoedanigheid.Code"),
+        "unit": unit,
         "x": p.x,
         "y": p.y,
         "source": "waterinfo (ddlpy)",
@@ -168,7 +184,7 @@ def _get_metadata_from_series(selected):
     return meta
 
 
-def _select_location(location_gdf, locatie, grootheid_code, groepering_code):
+def _select_location(location_gdf, locatie, grootheid_code, groepering_code, parameter_code):
     """Select location from a geodataframe with locations
 
     Parameters
@@ -181,6 +197,8 @@ def _select_location(location_gdf, locatie, grootheid_code, groepering_code):
         code(s) of the grootheid
     groepering_code : str or list of str
         code(s) of the groepering, e.g. 'GETETBRKD2', default is None
+    parameter_code : str or list of str
+        code(s) of the parameter, e.g. 'Cl', default is None
 
     Returns
     -------
@@ -189,6 +207,8 @@ def _select_location(location_gdf, locatie, grootheid_code, groepering_code):
     """
 
     if locatie is not None:
+        if isinstance(locatie, str):
+            locatie = [locatie]
         location_gdf = location_gdf.loc[locatie]
     if grootheid_code is not None:
         if isinstance(grootheid_code, str):
@@ -201,6 +221,13 @@ def _select_location(location_gdf, locatie, grootheid_code, groepering_code):
             groepering_code = [groepering_code]
         location_gdf = location_gdf.loc[
             location_gdf["Groepering.Code"].isin(groepering_code)
+        ]
+
+    if parameter_code is not None:
+        if isinstance(parameter_code, str):
+            parameter_code = [parameter_code]
+        location_gdf = location_gdf.loc[
+            location_gdf["Parameter.Code"].isin(parameter_code)
         ]
 
     if location_gdf.empty:
@@ -216,6 +243,7 @@ def get_measurements_ddlpy(
     locatie=None,
     grootheid_code=None,
     groepering_code=None,
+    parameter_code=None,
     tmin=None,
     tmax=None,
 ):
@@ -231,6 +259,8 @@ def get_measurements_ddlpy(
         code(s) of the grootheid
     groepering_code : str or list of str, optional
         code(s) of the groepering
+    parameter_code : str or list of str, optional
+        code(s) of the parameter
     tmin : pd.Timestamp, optional
         start date of the measurements, default is 2025-01-01
     tmax : pd.Timestamp, optional
@@ -263,15 +293,18 @@ def get_measurements_ddlpy(
         locatie = selected.name
         grootheid_code = selected["Grootheid.Code"]
         groepering_code = selected["Groepering.Code"]
+        parameter_code = selected["Parameter.Code"]
         df = ddlpy.measurements(selected, start_date=tmin, end_date=tmax)
     else:
         selected = _select_location(
-            location_gdf, locatie, grootheid_code, groepering_code
+            location_gdf, locatie, grootheid_code, groepering_code, parameter_code
         )
         if selected.empty:
-            raise ValueError(
-                f"No location found for {locatie=}, {grootheid_code=} and {groepering_code=}"
+            msg = (
+                f"No location found for {locatie=}, {grootheid_code=}, "
+                f"{groepering_code=} and {parameter_code=}"
             )
+            raise ValueError(msg)
         elif isinstance(selected, pd.DataFrame):
             if len(selected) == 1:
                 selected = selected.iloc[0]
@@ -289,7 +322,10 @@ def get_measurements_ddlpy(
             df = ddlpy.measurements(selected, start_date=tmin, end_date=tmax)
 
     if df.empty:
-        msg = f"no measurements for {locatie=}, {grootheid_code=} and {groepering_code=} between {tmin} and {tmax}"
+        msg = (
+                f"No measurements for {locatie=}, {grootheid_code=}, "
+                f"{groepering_code=} and {parameter_code=} between {tmin} and {tmax}"
+            )
         logger.info(msg)
     else:
         if "Meetwaarde.Waarde_Numeriek" in df.columns:
