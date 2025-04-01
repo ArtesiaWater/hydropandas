@@ -23,7 +23,7 @@ def get_obs_list_from_extent(
     only_metadata=False,
     keep_all_obs=False,
     epsg=28992,
-    location_gdf=None
+    location_gdf=None,
 ):
     """Get observations within a specific extent and optionally for a specific location
     and grootheid_code.
@@ -74,7 +74,9 @@ def get_obs_list_from_extent(
             logger.warning(msg)
             return []
 
-    gdf = _select_location(gdf, locatie, grootheid_code, groepering_code, parameter_code)
+    gdf = _select_location(
+        gdf, locatie, grootheid_code, groepering_code, parameter_code
+    )
 
     if gdf.empty:
         return []
@@ -147,8 +149,13 @@ def get_waterinfo_obs(
         df, meta = read_waterinfo_file(path, **kwargs)
     else:
         df, meta = get_measurements_ddlpy(
-            location_gdf, locatie, grootheid_code, groepering_code, parameter_code, 
-            tmin, tmax
+            location_gdf,
+            locatie,
+            grootheid_code,
+            groepering_code,
+            parameter_code,
+            tmin,
+            tmax,
         )
 
     return df, meta
@@ -170,7 +177,7 @@ def _get_metadata_from_series(selected):
     d = selected.to_dict()
     p = d.pop("geometry")
     unit = d.pop("Eenheid.Code")
-    if d['Hoedanigheid.Code'] not in ['', 'NVT']:
+    if d["Hoedanigheid.Code"] not in ["", "NVT"]:
         unit += " " + d.pop("Hoedanigheid.Code")
     meta = {
         "name": d["Naam"] + " " + d.pop("Grootheid.Omschrijving"),
@@ -184,7 +191,9 @@ def _get_metadata_from_series(selected):
     return meta
 
 
-def _select_location(location_gdf, locatie, grootheid_code, groepering_code, parameter_code):
+def _select_location(
+    location_gdf, locatie, grootheid_code, groepering_code, parameter_code
+):
     """Select location from a geodataframe with locations
 
     Parameters
@@ -323,9 +332,9 @@ def get_measurements_ddlpy(
 
     if df.empty:
         msg = (
-                f"No measurements for {locatie=}, {grootheid_code=}, "
-                f"{groepering_code=} and {parameter_code=} between {tmin} and {tmax}"
-            )
+            f"No measurements for {locatie=}, {grootheid_code=}, "
+            f"{groepering_code=} and {parameter_code=} between {tmin} and {tmax}"
+        )
         logger.info(msg)
     else:
         if "Meetwaarde.Waarde_Numeriek" in df.columns:

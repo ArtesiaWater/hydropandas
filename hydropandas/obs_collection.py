@@ -2079,7 +2079,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
-                location_gdf=location_gdf
+                location_gdf=location_gdf,
             )
         elif file_or_dir is not None:
             obs_list = waterinfo.read_waterinfo_obs(
