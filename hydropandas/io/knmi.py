@@ -612,7 +612,8 @@ def fill_missing_measurements(
 
     # only change end if dataframe does not have measurements at the end date
     if end < first_meas_de_bilt:
-        msg = f"knmi station De Bilt has no measurements before {first_meas_de_bilt}"
+        msg = (f"knmi station De Bilt has no measurements before {first_meas_de_bilt}"
+                "no need to change the end date")
         logger.debug(msg)
     elif knmi_df.empty or (end > knmi_df.index[-1]):
         # get measurements at de Bilt
@@ -1406,87 +1407,6 @@ def get_knmi_hourly_meteo_api(
     strio = get_knmi_api(url=url, params=params)
 
     return read_knmi_file(strio)
-
-
-# def _check_measurement_de_bilt(
-#     meteo_var: str,
-#     use_api: bool = True,
-#     start: Union[pd.Timestamp, None] = None,
-#     end: Union[pd.Timestamp, None] = None,
-# ) -> pd.Timestamp:
-#     """According to the website of the knmi it can take up to 3 weeks before
-#     precipitation data is updated. If you use the fill_missing_measurements
-#     method to fill a time series untill today, it will keep looking at all
-#     stations to find the data of these last days that probably does not exist.
-
-#     To prevent this, this function will find the last day there are measure-
-#     ments at knmi station de Bilt. It is assumed that if de Bilt doesn't have
-#     recent measurements, no station will have measurements for these dates.
-
-#     website knmi: https://www.knmi.nl/nederland-nu/klimatologie/monv/reeksen
-
-#     Parameters
-#     ----------
-#     meteo_var : str
-#         meteo variable.
-#     use_api : bool, optional
-#         if True the api is used to obtain the data, API documentation is here:
-#             https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-#         Default is True.
-#     start : pd.TimeStamp or None, optional
-#         start date of observations. Set to 365 days before today when None. The default
-#         is None.
-#     end : pd.TimeStamp or None, optional
-#         end date of observations. Set to 10 days after today when None. The default is
-#         None.
-
-#     Returns
-#     -------
-#     last_measurement_date_debilt : pd.TimeStamp
-#         last date with measurements at station de Bilt
-#     """
-#     stn = 550 if meteo_var=="RD" else 260
-#     knmi_df = download_knmi_data(stn, meteo_var, start=start, end=end, settings, "De Bilt")
-#     if meteo_var == "RD":
-
-#         if use_api:
-#             try:
-#                 knmi_df, _ = get_knmi_daily_rainfall_api(550, start, end)
-#             except (RuntimeError, requests.ConnectionError):
-#                 logger.warning("KNMI API failed, switching to non-API method")
-#                 df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
-#                 knmi_df = df[[meteo_var]]
-#         else:
-#             df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
-#             knmi_df = df[[meteo_var]]
-#     else:
-#         if use_api:
-#             try:
-#                 end = pd.Timestamp(end) + dt.timedelta(days=1)
-#                 knmi_df, _ = get_knmi_daily_meteo_api(
-#                     stn=260, meteo_var=meteo_var, start=start, end=end
-#                 )
-#             except (RuntimeError, requests.ConnectionError):
-#                 logger.warning("KNMI API failed, switching to non-API method")
-#                 knmi_df, _ = get_knmi_daily_meteo_url(stn=260)
-#         else:
-#             knmi_df, _ = get_knmi_daily_meteo_url(stn=260)
-
-#     knmi_df = knmi_df.dropna()
-#     end_str = end.strftime("%Y-%m-%d")
-#     if knmi_df.empty:
-#         start_str = start.strftime("%Y-%m-%d")
-
-#         msg = (
-#             "knmi station de Bilt has no measurements between "
-#             f"{start_str} and {end_str} for variable {meteo_var}."
-#         )
-#         logger.info(msg)
-
-#     return knmi_df
-
-
-#     return last_measurement_date_debilt
 
 
 def get_nearest_station_df(
