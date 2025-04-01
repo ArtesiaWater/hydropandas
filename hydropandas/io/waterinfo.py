@@ -81,6 +81,10 @@ def get_obs_list_from_extent(
     if gdf.empty:
         return []
 
+    logger.info(
+        f"downloading waterinfo measurements from {len(gdf)} observation points"
+    )
+
     obs_list = []
     onames = []
     for _, row in gdf.iterrows():
