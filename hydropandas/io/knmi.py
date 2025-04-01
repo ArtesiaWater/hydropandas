@@ -456,7 +456,7 @@ def _get_stations_tmin_tmax(stations_df, start, end):
     if end is None:
         tmin_stns = set(stations_df.index)
     else:
-        # keep stations where tmin is unknonw (=False)
+        # keep stations where tmin is unknown (=False)
         stns_unknown_tmin = set(stations_df.loc[stations_df["tmin"] == False].index)
         tmin_available = stations_df.loc[stations_df["tmin"] != False, "tmin"]
         tmin_within_range = pd.to_datetime(tmin_available) < end
@@ -552,35 +552,113 @@ def fill_missing_measurements(
             "a start and end date have to be specified if fill_missing_obs is True"
         )
 
-    # get the location of the stations
-    stations = get_stations(meteo_var=meteo_var, start=start, end=end)
+    # 1. get stations
+    stations = get_stations(meteo_var=meteo_var)
     if stn not in stations.index:
+        logger.error(f"station {stn} does not exists or does not measure {meteo_var}")
+
+    stations_period = get_stations(meteo_var=meteo_var, start=start, end=end)
+    if stn_name is None:
+        stn_name = get_station_name(stn=stn, stations=stations)
+
+    meta = stations.loc[stn].to_dict()
+    meta.update(
+        {
+            "station": stn,
+            "name": f"{meteo_var}_{stn_name}",
+            "location": stn_name,
+            "source": "KNMI",
+        }
+    )
+
+    # 2. Download the data from the given station
+    if stn not in stations_period.index:
         # no measurements in given period, continue with empty dataframe
         knmi_df = pd.DataFrame()
 
         # add location of station without data to dataframe
-        stations = pd.concat([stations, get_stations(meteo_var=meteo_var).loc[[stn]]])
+        stations_period = pd.concat([stations_period, stations.loc[[stn]]])
     else:
-        if stn_name is None:
-            stn_name = get_station_name(stn=stn, stations=stations)
-
         # download data from station if it has data between start-end
         knmi_df, variables, station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
 
-    # if the first station cannot be read, read another station as the first
+    # 3. Change start date
+    # NOTE: Assuming there is no data before the 'tmin' dates in the json files.
+    tmin_first_meas = pd.Timestamp(stations["tmin"].min())
+    if end < tmin_first_meas:
+        msg = (
+            f"There are no measurements available between {start} and {end} "
+            f"for variable {meteo_var}."
+        )
+        logger.warning(msg)
+
+        return knmi_df, meta
+
+    elif start < tmin_first_meas:
+        msg = (
+            f"There are no measurements available for {meteo_var} before "
+            f"{tmin_first_meas} and a start of {start} was requested. Changing "
+            f"start to {tmin_first_meas}"
+        )
+        logger.info(msg)
+        start = tmin_first_meas
+
+    # 4. Change end date
+    # NOTE: Assuming there is no data after the last measurement available in de Bilt.
+    stn_de_bilt = 550 if meteo_var == "RD" else 260
+    first_meas_de_bilt = pd.Timestamp(stations.loc[stn_de_bilt, "tmin"])
+
+    # only change end if dataframe does not have measurements at the end date
+    if end < first_meas_de_bilt:
+        msg = (
+            f"knmi station De Bilt has no measurements before {first_meas_de_bilt}"
+            "no need to change the end date"
+        )
+        logger.debug(msg)
+    elif knmi_df.empty or (end > knmi_df.index[-1]):
+        # get measurements at de Bilt
+        start_de_bilt = start if knmi_df.empty else knmi_df.index[-1]
+        ts_de_bilt, _, _ = download_knmi_data(
+            stn_de_bilt,
+            meteo_var,
+            start=start_de_bilt,
+            end=end,
+            settings=settings,
+            stn_name="De Bilt",
+        )
+
+        if ts_de_bilt.empty:
+            msg = (
+                f"knmi station De Bilt has no measurements between {start_de_bilt} and"
+                f" {end} for variable {meteo_var}. It is assumed no data is available"
+                f" for this period"
+            )
+            logger.warning(msg)
+            return knmi_df, meta
+
+        new_end = ts_de_bilt.index[-1]
+        if new_end < end:
+            msg = (
+                f"knmi station De Bilt has no measurements for {meteo_var} after "
+                f"{new_end} and an end date of {end} was requested. Changing end to "
+                f"{new_end}"
+            )
+            logger.info(msg)
+            end = new_end
+
+    # 5. get starting dataframe with measurements
+    # if there are no measurements that fit the requirements at the given stn
+    # read the nearby station
     ignore = [stn]
     while knmi_df.empty:
-        logger.debug(f"station {stn} has no measurements between {start} and {end}")
-        logger.debug("trying to get measurements from nearest station")
-
         stn_lst = get_nearest_station_df(
-            stations.loc[[ignore[0]]],
+            stations_period.loc[[ignore[0]]],
             meteo_var=meteo_var,
             start=start,
             end=end,
-            stations=stations,
+            stations=stations_period,
             ignore=ignore,
         )
         if stn_lst is None:
@@ -588,43 +666,34 @@ def fill_missing_measurements(
                 f"there is no station with measurements of {meteo_var} between "
                 f"{start} and {end}"
             )
-            return pd.DataFrame(), dict()
+            return pd.DataFrame(), meta
+
+        msg = (
+            f"station {stn} has no measurements between {start} and {end} "
+            f"trying to get measurements from nearest station -> {stn_lst[0]}"
+        )
+        logger.info(msg)
 
         stn = stn_lst[0]
-        stn_name = get_station_name(stn=stn, stations=stations)
+        stn_name = get_station_name(stn=stn, stations=stations_period)
         knmi_df, variables, station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
         ignore.append(stn)
 
-    if end > knmi_df.index[-1]:
-        # check latest date at which measurements are available at De Bilt
-        new_end = _check_latest_measurement_date_de_bilt(
-            meteo_var,
-            use_api=settings["use_api"],
-            start=start if knmi_df.empty else knmi_df.index[-1],
-            end=end,
-        )
-        if new_end < end:
-            end = new_end
-            logger.info(f"changing end_date to {end.strftime('%Y-%m-%d')}")
-
-    # find missing values
+    # 6. find and fill missing values
     knmi_df = _add_missing_indices(knmi_df, stn, start, end)
-
     missing = knmi_df[meteo_var].isna()
     logger.debug(f"station {stn} has {missing.sum()} missing measurements")
-
     knmi_df.loc[~missing, "station"] = str(stn)
 
-    # fill missing values
     while np.any(missing) and not np.all(missing):
         stn_comp = get_nearest_station_df(
-            stations.loc[[stn]],
+            stations_period.loc[[stn]],
             meteo_var=meteo_var,
             start=start,
             end=end,
-            stations=stations,
+            stations=stations_period,
             ignore=ignore,
         )
 
@@ -633,16 +702,14 @@ def fill_missing_measurements(
                 "Could not fill all missing measurements as there are "
                 "no stations left to check!"
             )
-
             missing[:] = False
             break
         else:
             stn_comp = stn_comp[0]
 
-        n_missing = missing.sum()
-        stn_name_comp = get_station_name(stn_comp, stations)
+        stn_name_comp = get_station_name(stn_comp, stations_period)
         logger.debug(
-            f"Trying to fill {n_missing} missing measurements with "
+            f"Trying to fill {missing.sum()} missing measurements with "
             f"station {stn_comp} {stn_name_comp}"
         )
 
@@ -652,7 +719,6 @@ def fill_missing_measurements(
 
         if knmi_df_comp.empty:
             logger.debug(f"No data available for station {stn_comp}")
-
         else:
             # dropnans from new data
             knmi_df_comp = knmi_df_comp.loc[~knmi_df_comp[meteo_var].isna(), :]
@@ -677,23 +743,6 @@ def fill_missing_measurements(
                 )
         missing = knmi_df[meteo_var].isna()
         ignore.append(stn_comp)
-
-    if str(stn) in station_meta.index:
-        meta = station_meta.loc[f"{stn}"].to_dict()
-    else:
-        meta = {}
-
-    # set metadata
-    meta.update(
-        {
-            "x": stations.loc[stn, "x"],
-            "y": stations.loc[stn, "y"],
-            "station": stn,
-            "name": f"{meteo_var}_{stn_name}",
-            "location": stn_name,
-            "source": "KNMI",
-        }
-    )
 
     meta.update(variables)
 
@@ -1347,7 +1396,7 @@ def get_knmi_hourly_meteo_api(
     if end is None:
         raise ValueError("An end date is required when using hourly interval")
 
-    if (end - start).days > 4150:
+    if (end - start).days > 365 * 10:
         raise ValueError("time span for hourly data cannot be greater than 10 years")
     if (end - start).days < 1:
         raise ValueError("time span should be more than 1 day")
@@ -1360,94 +1409,6 @@ def get_knmi_hourly_meteo_api(
     strio = get_knmi_api(url=url, params=params)
 
     return read_knmi_file(strio)
-
-
-def _check_latest_measurement_date_de_bilt(
-    meteo_var: str,
-    use_api: bool = True,
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
-) -> pd.Timestamp:
-    """According to the website of the knmi it can take up to 3 weeks before
-    precipitation data is updated. If you use the fill_missing_measurements
-    method to fill a time series untill today, it will keep looking at all
-    stations to find the data of these last days that probably does not exist.
-
-    To prevent this, this function will find the last day there are measure-
-    ments at knmi station de Bilt. It is assumed that if de Bilt doesn't have
-    recent measurements, no station will have measurements for these dates.
-
-    website knmi: https://www.knmi.nl/nederland-nu/klimatologie/monv/reeksen
-
-    Parameters
-    ----------
-    meteo_var : str
-        meteo variable.
-    use_api : bool, optional
-        if True the api is used to obtain the data, API documentation is here:
-            https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script
-        Default is True.
-    start : pd.TimeStamp or None, optional
-        start date of observations. Set to 365 days before today when None. The default
-        is None.
-    end : pd.TimeStamp or None, optional
-        end date of observations. Set to 10 days after today when None. The default is
-        None.
-
-    Returns
-    -------
-    last_measurement_date_debilt : pd.TimeStamp
-        last date with measurements at station de Bilt
-    """
-    if start is None:
-        start = dt.datetime.now() - pd.Timedelta(365, unit="D")
-    if end is None:
-        end = dt.datetime.now() + pd.Timedelta(10, unit="D")
-    if meteo_var == "RD":
-        if use_api:
-            try:
-                knmi_df, _ = get_knmi_daily_rainfall_api(550, start, end)
-            except (RuntimeError, requests.ConnectionError):
-                logger.warning("KNMI API failed, switching to non-API method")
-                df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
-                knmi_df = df[[meteo_var]]
-        else:
-            df, _ = get_knmi_daily_rainfall_url(550, "DE-BILT")
-            knmi_df = df[[meteo_var]]
-    else:
-        if use_api:
-            try:
-                end = pd.Timestamp(end) + dt.timedelta(days=1)
-                knmi_df, _ = get_knmi_daily_meteo_api(
-                    stn=260, meteo_var=meteo_var, start=start, end=end
-                )
-            except (RuntimeError, requests.ConnectionError):
-                logger.warning("KNMI API failed, switching to non-API method")
-                knmi_df, _ = get_knmi_daily_meteo_url(stn=260)
-        else:
-            knmi_df, _ = get_knmi_daily_meteo_url(stn=260)
-
-    knmi_df = knmi_df.dropna()
-    end_str = end.strftime("%Y-%m-%d")
-    if knmi_df.empty:
-        start_str = start.strftime("%Y-%m-%d")
-        raise ValueError(
-            "knmi station de Bilt has no measurements between "
-            f"{start_str} and {end_str} for variable {meteo_var}."
-        )
-
-    last_measurement_date_debilt = knmi_df.index[-1]
-
-    logger.debug(
-        f"last {meteo_var} measurement available at the Bilt until {end_str} is from"
-        f" {last_measurement_date_debilt.strftime('%Y-%m-%d')}"
-    )
-    logger.debug(
-        f"assuming no {meteo_var} measurements are available at "
-        "other stations after this date"
-    )
-
-    return last_measurement_date_debilt
 
 
 def get_nearest_station_df(
@@ -1634,7 +1595,7 @@ def _add_missing_indices(
         data from one station from one type of observation
     """
     # check if given dates are more or less similar than measurement dates
-    if (knmi_df.index[0] - start).days < 2:
+    if (knmi_df.index[0] - start).days < 1:
         new_start = knmi_df.index[0]
     else:
         new_start = pd.Timestamp(
@@ -1647,7 +1608,7 @@ def _add_missing_indices(
         )
         logger.info(f"station {stn} has no measurements before {knmi_df.index[0]}")
 
-    if (end - knmi_df.index[-1]).days < 2:
+    if (end - knmi_df.index[-1]).days < 0:
         new_end = knmi_df.index[-1]
     else:
         new_end = pd.Timestamp(
