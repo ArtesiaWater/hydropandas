@@ -95,6 +95,11 @@ tmax = [
 ]
 prec_dft.loc[prec_tminmax.index, "tmin"] = tmin
 prec_dft.loc[prec_tminmax.index, "tmax"] = tmax
+
+# Sometimes there are no measurements for a period after tmin, this is not a problem
+# for all station but De Bilt. This is why we manually correct De Bilt.
+prec_dft.loc[550, 'tmin'] = '1898-01-01'
+
 prec_dft.sort_index().loc[
     :, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax", "RD"]
 ].to_json("knmi_neerslagstation.json")
