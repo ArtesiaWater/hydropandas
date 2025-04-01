@@ -612,8 +612,10 @@ def fill_missing_measurements(
 
     # only change end if dataframe does not have measurements at the end date
     if end < first_meas_de_bilt:
-        msg = (f"knmi station De Bilt has no measurements before {first_meas_de_bilt}"
-                "no need to change the end date")
+        msg = (
+            f"knmi station De Bilt has no measurements before {first_meas_de_bilt}"
+            "no need to change the end date"
+        )
         logger.debug(msg)
     elif knmi_df.empty or (end > knmi_df.index[-1]):
         # get measurements at de Bilt
