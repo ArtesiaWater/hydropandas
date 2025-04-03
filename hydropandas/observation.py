@@ -980,6 +980,66 @@ class WaterQualityObs(Obs):
 
         return cls(measurements, meta=meta, **meta)
 
+    @classmethod
+    def from_waterinfo(
+        cls,
+        path=None,
+        location_gdf=None,
+        locatie=None,
+        grootheid_code=None,
+        groepering_code=None,
+        parameter_code=None,
+        tmin=None,
+        tmax=None,
+        **kwargs,
+    ):
+        """Read data from waterinfo csv-file or zip.
+
+        Parameters
+        ----------
+        path : str, optional
+            path to file (file can zip or csv)
+        location_gdf : geopandas.GeoDataFrame, optional
+            geodataframe with locations, only used if path is None, default is None
+        locatie : str or list of str, optional
+            select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+        grootheid_code : str or list of str, optional
+            select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
+        groepering_code : str or list of str, optional
+            select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
+        parameter_code :  str or list of str, optional
+            select only measurement with this parameter_code, e.g. 'Cl', default is None
+        tmin : pd.Timestamp or str, optional
+            start date of the measurements, only used if path is None, default is None
+        tmax : pd.Timestamp or str, optional
+            end date of the measurements, only used if path is None, default is None
+
+        Returns
+        -------
+        df : WaterlvlObs
+            WaterlvlObs object
+
+        Raises
+        ------
+        ValueError
+            if file contains data for more than one location
+        """
+        from .io import waterinfo
+
+        df, metadata = waterinfo.get_waterinfo_obs(
+            path=path,
+            location_gdf=location_gdf,
+            locatie=locatie,
+            grootheid_code=grootheid_code,
+            groepering_code=groepering_code,
+            parameter_code=parameter_code,
+            tmin=tmin,
+            tmax=tmax,
+            **kwargs,
+        )
+
+        return cls(df, **metadata)
+
 
 class WaterlvlObs(Obs):
     """Class for water level point observations.
@@ -1041,6 +1101,7 @@ class WaterlvlObs(Obs):
         locatie=None,
         grootheid_code=None,
         groepering_code=None,
+        parameter_code=None,
         tmin=None,
         tmax=None,
         **kwargs,
@@ -1059,6 +1120,8 @@ class WaterlvlObs(Obs):
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
+        parameter_code :  str or list of str, optional
+            select only measurement with this parameter_code, e.g. 'Cl', default is None
         tmin : pd.Timestamp or str, optional
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
@@ -1082,6 +1145,7 @@ class WaterlvlObs(Obs):
             locatie=locatie,
             grootheid_code=grootheid_code,
             groepering_code=groepering_code,
+            parameter_code=parameter_code,
             tmin=tmin,
             tmax=tmax,
             **kwargs,
