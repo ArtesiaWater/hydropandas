@@ -915,7 +915,7 @@ class ObsPlots:
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
             self._obj.meta["iplot_fname"] = os.path.join(
-                savedir, self._obj.name + ".html"
+                savedir, str(self._obj.name) + ".html"
             )
             save(p, self._obj.meta["iplot_fname"], resources=CDN, title=self._obj.name)
 

@@ -813,6 +813,63 @@ class GroundwaterObs(Obs):
 
         return cls(measurements, meta=meta, **meta)
 
+
+    @classmethod
+    def from_waterconnect(
+        cls,
+        dh_no,
+        meta_series=None,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        verify=True,
+        pumping=True,
+        anomalous=True
+        ):
+        """Read data from waterinfo csv-file or zip.
+
+        Parameters
+        ----------
+        dh_no : int or str
+            drill hole number
+        meta_series : pd.Series, optional
+            series with metadata. Typically a row of the locations gdf.
+        tmin : str or None, optional
+            start time of observations. The default is None.
+        tmax : str or None, optional
+            end time of observations. The default is None.
+        only_metadata : bool, optional
+            if True only metadata and no measurements are returned. BY default False
+        verify : bool, optional
+            use verification to get a secure connection
+        pumping : bool, optional
+            return observations from pumping wells
+        anomalous : bool, optional
+            return anomalous observations
+
+        Returns
+        -------
+        GroundwaterObs
+            GroundwaterObs object
+
+        Raises
+        ------
+        ValueError
+            if file contains data for more than one location
+        """
+        from .io import water_connect
+
+        df, metadata = water_connect.get_waterconnect_obs(dh_no,
+                                                          meta_series=meta_series,
+                                                          tmin=tmin,
+                                                          tmax=tmax,
+                                                          only_metadata=only_metadata,
+                                                          verify=verify,
+                                                          pumping=pumping,
+                                                          anomalous=anomalous)
+
+        return cls(df, **metadata)
+
     @classmethod
     def from_wiski(cls, path, **kwargs):
         """Read data from a WISKI file.
@@ -980,6 +1037,7 @@ class WaterQualityObs(Obs):
 
         return cls(measurements, meta=meta, **meta)
 
+
     @classmethod
     def from_waterinfo(
         cls,
@@ -1016,7 +1074,7 @@ class WaterQualityObs(Obs):
 
         Returns
         -------
-        df : WaterlvlObs
+        WaterlvlObs
             WaterlvlObs object
 
         Raises
