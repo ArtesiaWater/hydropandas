@@ -833,11 +833,13 @@ class ObsPlots:
                 "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
             )
         elif len(plot_df) == 1:
-            markers = ['circle'] * len(cols)
+            markers = ["circle"] * len(cols)
             # set xlim because there is only one measurement
             obsdate = plot_df.index[0]
-            xlim = Range1d(start =obsdate - pd.Timedelta(days=365),
-                           end=obsdate + pd.Timedelta(days=365)) 
+            xlim = Range1d(
+                start=obsdate - pd.Timedelta(days=365),
+                end=obsdate + pd.Timedelta(days=365),
+            )
 
         # create plot
         if p is None:

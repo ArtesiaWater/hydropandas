@@ -711,7 +711,7 @@ def read_waterconnect(
     Parameters
     ----------
     extent : list, tuple, numpy-array or None, optional
-        get water connect measurements within this extent 
+        get water connect measurements within this extent
         [xmin, xmax, ymin, ymax], coordinates are in lat (y) lon (x).
     name : str, optional
         name of the collection, by default ""
@@ -2115,7 +2115,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
                 location_gdf=location_gdf,
-                **kwargs
+                **kwargs,
             )
         else:
             raise ValueError("specify extent for water connect data")

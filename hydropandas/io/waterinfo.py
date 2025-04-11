@@ -1,12 +1,11 @@
 import logging
 import os
 import zipfile
+from functools import lru_cache
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-
-from functools import lru_cache
 from shapely.geometry import box
 from tqdm import tqdm
 
@@ -360,7 +359,7 @@ def get_measurements_ddlpy(
 @lru_cache()
 def get_locations_gdf(epsg=28992):
     """Get locations from ddlpy and return as geodataframe
-    
+
     Returns
     -------
     gdf : geopandas.GeoDataFrame
@@ -395,7 +394,7 @@ def get_locations_within_extent(gdf, extent=(482.06, 306602.42, 284182.97, 63704
         geodataframe with locations. This dataframe is needed to obtain measurements
         using ddlpy
     """
-    
+
     polygon_ext = box(*tuple(np.array(extent)[[0, 2, 1, 3]]))
     gdf = gdf.loc[gdf.within(polygon_ext)]
 

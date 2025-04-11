@@ -1,24 +1,22 @@
-import requests
-from platformdirs import user_data_dir
-from pathlib import Path
-from io import StringIO, BytesIO
 import json
-from tqdm import tqdm
+import logging
+import zipfile
+from io import BytesIO, StringIO
+from pathlib import Path
+
+import geopandas as gpd
 import numpy as np
 import pandas as pd
-import geopandas as gpd
+import requests
+from platformdirs import user_data_dir
 from shapely.geometry import box
-import zipfile
-import logging
-
-from .. import util
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
 DH_zip_url = (
     "https://www.waterconnect.sa.gov.au/Content/Downloads/DEW/WATER_Drillholes_shp.zip"
 )
-
 
 
 def get_obs_list_from_extent(
@@ -29,8 +27,7 @@ def get_obs_list_from_extent(
     only_metadata=False,
     keep_all_obs=False,
     location_gdf=None,
-    **kwargs
-
+    **kwargs,
 ):
     """Get observations within a specific extent and optionally for a specific location
     and grootheid_code.
@@ -83,14 +80,20 @@ def get_obs_list_from_extent(
         return []
 
     nr_obs_wells = len(location_gdf)
-    logger.info(
-        f"downloading waterconnect data from {nr_obs_wells} observation points"
-    )
+    logger.info(f"downloading waterconnect data from {nr_obs_wells} observation points")
 
     obs_list = []
-    for dh_no, meta_series in tqdm(location_gdf.iterrows(), total=nr_obs_wells, desc="obs well"):
-        o = ObsClass.from_waterconnect(dh_no, meta_series, tmin=tmin, tmax=tmax, 
-                                       only_metadata=only_metadata, **kwargs)
+    for dh_no, meta_series in tqdm(
+        location_gdf.iterrows(), total=nr_obs_wells, desc="obs well"
+    ):
+        o = ObsClass.from_waterconnect(
+            dh_no,
+            meta_series,
+            tmin=tmin,
+            tmax=tmax,
+            only_metadata=only_metadata,
+            **kwargs,
+        )
         if o.empty and not keep_all_obs:
             continue
 
@@ -99,8 +102,7 @@ def get_obs_list_from_extent(
     return obs_list
 
 
-
-def get_locations_gdf(keep_cols = 'all', update=False):
+def get_locations_gdf(keep_cols="all", update=False):
     """get locations of water drillholes in Southern Australia from water connect.
 
     Parameters
@@ -109,7 +111,7 @@ def get_locations_gdf(keep_cols = 'all', update=False):
         if provided only these columns of the geodataframe are stored. If 'all' all the
         columns are returned, by default 'all'.
     update : bool, optional
-        if True new locations are downloaded and stored locally even if the locations 
+        if True new locations are downloaded and stored locally even if the locations
         were already downloaded before. By default False
 
     Returns
@@ -118,21 +120,21 @@ def get_locations_gdf(keep_cols = 'all', update=False):
         locations of water drillholes in Southern Australia
     """
 
-    
-
     # set directories
-    fdir = Path(user_data_dir('waterconnect','hydropandas'))
+    fdir = Path(user_data_dir("waterconnect", "hydropandas"))
     fdir.mkdir(parents=True, exist_ok=True)
-    fname_feather = fdir / 'WATER_Drillholes_GDA2020.feather'
+    fname_feather = fdir / "WATER_Drillholes_GDA2020.feather"
 
     # read files from feather
     if fname_feather.exists() and not update:
-        logger.debug(f'Reading Water Connect locations from {fname_feather}')
+        logger.debug(f"Reading Water Connect locations from {fname_feather}")
         gdf_sel = gpd.read_feather(fname_feather)
         return gdf_sel
-    
-    msg = ('Initializing Water Connect, this may take several minutes. This only has to '
-           'be done the first time you use Water Connect via hydropandas.')
+
+    msg = (
+        "Initializing Water Connect, this may take several minutes. This only has to "
+        "be done the first time you use Water Connect via hydropandas."
+    )
     logger.info(msg)
 
     # download data
@@ -141,40 +143,60 @@ def get_locations_gdf(keep_cols = 'all', update=False):
 
     # extract files from zip and write to disk
     zip_buffer = BytesIO(r.content)
-    with zipfile.ZipFile(zip_buffer, 'r') as z:
-        target_files = [name for name in z.namelist() if name.startswith('WATER_Drillholes_GDA2020')]
+    with zipfile.ZipFile(zip_buffer, "r") as z:
+        target_files = [
+            name for name in z.namelist() if name.startswith("WATER_Drillholes_GDA2020")
+        ]
         # Extract only those files
-        logger.debug(f'Writing Water Connect locations shape to {fdir}')
+        logger.debug(f"Writing Water Connect locations shape to {fdir}")
         for file in target_files:
             z.extract(file, fdir)
 
     # read shapefiles to geodataframe
-    logger.debug(f'Reading Water Connect locations from {fdir}')
-    gdf_gda2020 = gpd.read_file(fdir / 'WATER_Drillholes_GDA2020.shp')
+    logger.debug(f"Reading Water Connect locations from {fdir}")
+    gdf_gda2020 = gpd.read_file(fdir / "WATER_Drillholes_GDA2020.shp")
 
     # select columns
     if keep_cols is None:
-        keep_cols = ['UNIT_NO','DHNO','NAME', 'LAT', 'LON', 'REF_ELEV', 'GRND_ELEV', 'STATE', 'STATUS',  'STAT_DESC', 'PURPOSE', 'PURP_DESC','DRILL_DATE', 'ORIG_DEPTH', 'MAX_DEPTH','CASE_TO', 'geometry']
-    elif isinstance(keep_cols, str) and keep_cols == 'all':
+        keep_cols = [
+            "UNIT_NO",
+            "DHNO",
+            "NAME",
+            "LAT",
+            "LON",
+            "REF_ELEV",
+            "GRND_ELEV",
+            "STATE",
+            "STATUS",
+            "STAT_DESC",
+            "PURPOSE",
+            "PURP_DESC",
+            "DRILL_DATE",
+            "ORIG_DEPTH",
+            "MAX_DEPTH",
+            "CASE_TO",
+            "geometry",
+        ]
+    elif isinstance(keep_cols, str) and keep_cols == "all":
         keep_cols = gdf_gda2020.columns
 
-    if 'geometry' not in keep_cols:
+    if "geometry" not in keep_cols:
         keep_cols = list(keep_cols)
-        keep_cols.append('geometry')
+        keep_cols.append("geometry")
 
     gdf_sel = gdf_gda2020[keep_cols]
 
     # set index column
-    gdf_sel.set_index('DHNO', inplace=True)
+    gdf_sel.set_index("DHNO", inplace=True)
 
     # write to feather
-    logger.debug(f'Write Water Connect locations to feather {fname_feather}')
+    logger.debug(f"Write Water Connect locations to feather {fname_feather}")
     gdf_sel.to_feather(fname_feather)
 
     return gdf_sel
 
 
-def get_locations_within_extent(gdf, extent = None):
+def get_locations_within_extent(gdf, extent=None):
     """get drillhole locations within an extent
 
     Parameters
@@ -193,9 +215,10 @@ def get_locations_within_extent(gdf, extent = None):
     if extent is None:
         return gdf
 
-    pol_extent = box(*tuple(np.asarray(extent)[[0,2,1,3]]))
+    pol_extent = box(*tuple(np.asarray(extent)[[0, 2, 1, 3]]))
     gdf_extent = gdf.loc[gdf.within(pol_extent)]
     return gdf_extent
+
 
 def get_waterconnect_obs(
     dh_no,
@@ -205,10 +228,10 @@ def get_waterconnect_obs(
     only_metadata=False,
     verify=True,
     pumping=True,
-    anomalous=True
+    anomalous=True,
 ):
     """get waterconnect observations using the API
-    
+
     Parameters
     ----------
     dh_no : int or str
@@ -227,11 +250,11 @@ def get_waterconnect_obs(
         return observations from pumping wells
     anomalous : bool, optional
         return anomalous observations
-    
+
     Returns
     -------
     pd.DataFrame: measurements
-    
+
     dict: metadata
 
     """
@@ -240,39 +263,52 @@ def get_waterconnect_obs(
         meta_series = gdf.loc[dh_no]
     elif isinstance(meta_series, pd.DataFrame):
         meta_series = gdf.loc[dh_no]
-    
+
     if only_metadata:
         measurements = pd.DataFrame()
-        source = 'water connect'
-        unit=''
+        source = "water connect"
+        unit = ""
     else:
-        logger.debug(f'reading measurements for {dh_no}')
-        measurements = get_measurements(dh_no, tmin=tmin, tmax=tmax, verify=verify, pumping=pumping, anomalous=anomalous)
-    
-        if measurements.empty:
-            logger.debug(f'no measurements for {dh_no}')
-            source = 'water connect'
-            unit=''
-        else:
-            if 'data_source' in measurements.columns:
-                source = ', '.join(measurements['data_source'].unique()) + ' (water connect)'
-            else:
-                source = 'water connect'
-            unit = 'm AHD'
+        logger.debug(f"reading measurements for {dh_no}")
+        measurements = get_measurements(
+            dh_no,
+            tmin=tmin,
+            tmax=tmax,
+            verify=verify,
+            pumping=pumping,
+            anomalous=anomalous,
+        )
 
-    meta = {'name': dh_no,
-            'x':meta_series.pop('LON'),
-            'y':meta_series.pop('LAT'),
-            'unit':unit,
-            'location': meta_series.pop('UNIT_NO'),
-            'ground_level':meta_series.pop('GRND_ELEV'),
-            'source':source,
-            'meta':meta_series.to_dict()}
+        if measurements.empty:
+            logger.debug(f"no measurements for {dh_no}")
+            source = "water connect"
+            unit = ""
+        else:
+            if "data_source" in measurements.columns:
+                source = (
+                    ", ".join(measurements["data_source"].unique()) + " (water connect)"
+                )
+            else:
+                source = "water connect"
+            unit = "m AHD"
+
+    meta = {
+        "name": dh_no,
+        "x": meta_series.pop("LON"),
+        "y": meta_series.pop("LAT"),
+        "unit": unit,
+        "location": meta_series.pop("UNIT_NO"),
+        "ground_level": meta_series.pop("GRND_ELEV"),
+        "source": source,
+        "meta": meta_series.to_dict(),
+    }
 
     return measurements, meta
 
 
-def get_measurements(dh_no, tmin=None, tmax=None, verify=True, pumping=True, anomalous=True):
+def get_measurements(
+    dh_no, tmin=None, tmax=None, verify=True, pumping=True, anomalous=True
+):
     """get measurement from a dh_no using the water connect api.
 
     Parameters
@@ -289,7 +325,7 @@ def get_measurements(dh_no, tmin=None, tmax=None, verify=True, pumping=True, ano
         return observations from pumping wells
     anomalous : bool, optional
         return anomalous observations
-    
+
     Returns
     -------
     pd.DataFrame with measurements, an empty DataFrame is returned if there are no
@@ -301,16 +337,18 @@ def get_measurements(dh_no, tmin=None, tmax=None, verify=True, pumping=True, ano
     if df.empty:
         return df
 
-    df.index = pd.to_datetime(df.pop('obs_date'), format="%d/%m/%Y")
-    df = df.loc[tmin: tmax]
+    df.index = pd.to_datetime(df.pop("obs_date"), format="%d/%m/%Y")
+    df = df.loc[tmin:tmax]
 
-    if 'rswl' in df.columns:
-        df.insert(0, 'rswl', df.pop('rswl'))
+    if "rswl" in df.columns:
+        df.insert(0, "rswl", df.pop("rswl"))
 
     return df
 
 
-def request_api(dh_no, verify=True, pumping=True, anomalous=True, fname=None) -> StringIO:
+def request_api(
+    dh_no, verify=True, pumping=True, anomalous=True, fname=None
+) -> StringIO:
     """Download water connect data from the API
 
     Parameters
@@ -333,7 +371,9 @@ def request_api(dh_no, verify=True, pumping=True, anomalous=True, fname=None) ->
     """
     url = "https://www.waterconnect.sa.gov.au/_layouts/15/dfw.sharepoint.wdd/WDDDMS.ashx/GetWaterLevelDownload?bulkOutput=CSV"
     json_data = {"DHNOs": [dh_no], "Pumping": pumping, "Anomalous": anomalous}
-    r = requests.post(url, verify=verify, data={"exportdata": json.dumps(json_data)}, timeout=60)
+    r = requests.post(
+        url, verify=verify, data={"exportdata": json.dumps(json_data)}, timeout=60
+    )
     r.raise_for_status()
 
     result_str = r.text
@@ -346,5 +386,3 @@ def request_api(dh_no, verify=True, pumping=True, anomalous=True, fname=None) ->
             f.write(result_str)
 
     return StringIO(result_str)
-
-

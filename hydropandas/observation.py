@@ -813,7 +813,6 @@ class GroundwaterObs(Obs):
 
         return cls(measurements, meta=meta, **meta)
 
-
     @classmethod
     def from_waterconnect(
         cls,
@@ -824,8 +823,8 @@ class GroundwaterObs(Obs):
         only_metadata=False,
         verify=True,
         pumping=True,
-        anomalous=True
-        ):
+        anomalous=True,
+    ):
         """Read data from waterinfo csv-file or zip.
 
         Parameters
@@ -859,14 +858,16 @@ class GroundwaterObs(Obs):
         """
         from .io import water_connect
 
-        df, metadata = water_connect.get_waterconnect_obs(dh_no,
-                                                          meta_series=meta_series,
-                                                          tmin=tmin,
-                                                          tmax=tmax,
-                                                          only_metadata=only_metadata,
-                                                          verify=verify,
-                                                          pumping=pumping,
-                                                          anomalous=anomalous)
+        df, metadata = water_connect.get_waterconnect_obs(
+            dh_no,
+            meta_series=meta_series,
+            tmin=tmin,
+            tmax=tmax,
+            only_metadata=only_metadata,
+            verify=verify,
+            pumping=pumping,
+            anomalous=anomalous,
+        )
 
         return cls(df, **metadata)
 
@@ -1036,7 +1037,6 @@ class WaterQualityObs(Obs):
         measurements, meta = dino.read_dino_groundwater_quality_txt(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
-
 
     @classmethod
     def from_waterinfo(
