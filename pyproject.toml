@@ -51,6 +51,7 @@ full = [
     "contextily",
     "lxml",
     "rws-ddlpy",
+    "pyarrow"
 ]
 rtd = [
     "hydropandas[full]",
@@ -64,7 +65,7 @@ rtd = [
     "sphinx_rtd_theme",
     "Ipython",
     "nbsphinx",
-    "nbsphinx_link",
+    "nbsphinx_link"
 ]
 ruffing = ["ruff"]
 pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
