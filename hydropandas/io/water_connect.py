@@ -123,8 +123,6 @@ def get_locations_gdf(keep_cols = 'all', update=False):
     # set directories
     fdir = Path(user_data_dir('waterconnect','hydropandas'))
     fdir.mkdir(parents=True, exist_ok=True)
-    # fname_zip = fdir / 'water_drillholes.zip'
-    # fname_wd = fdir / 'water_drillholes'
     fname_feather = fdir / 'WATER_Drillholes_GDA2020.feather'
 
     # read files from feather
