@@ -3,6 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.gridspec import GridSpec
 from tqdm.auto import tqdm
 
@@ -755,7 +756,7 @@ class ObsPlots:
         plot_freq=(None,),
         tmin=None,
         tmax=None,
-        hoover_names=("Peil",),
+        hoover_names=(None,),
         hoover_date_format="%Y-%m-%d",
         ylabel=None,
         plot_colors=("blue",),
@@ -810,14 +811,19 @@ class ObsPlots:
             filename of the bokeh plot or reference to bokeh plot
         """
 
-        from bokeh.models import ColumnDataSource, HoverTool
+        from bokeh.models import ColumnDataSource, HoverTool, Range1d
         from bokeh.plotting import figure, save
         from bokeh.resources import CDN
 
+        xlim = None
+
+        hoover_names = list(hoover_names)
         cols = list(cols)
         for i, col in enumerate(cols):
             if col is None:
                 cols[i] = self._obj._get_first_numeric_col_name()
+            if hoover_names[i] is None:
+                hoover_names[i] = cols[i]
 
         # create plot dataframe
         plot_df = self._obj[tmin:tmax].copy()
@@ -826,6 +832,12 @@ class ObsPlots:
             raise ValueError(
                 "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
             )
+        elif len(plot_df) == 1:
+            markers = ['circle'] * len(cols)
+            # set xlim because there is only one measurement
+            obsdate = plot_df.index[0]
+            xlim = Range1d(start =obsdate - pd.Timedelta(days=365),
+                           end=obsdate + pd.Timedelta(days=365)) 
 
         # create plot
         if p is None:
@@ -870,7 +882,6 @@ class ObsPlots:
                 )
 
             # plot data
-
             if markers[i] in ["line", "l"]:
                 plots.append(
                     p.line(
@@ -906,6 +917,10 @@ class ObsPlots:
             tooltips_p.append((hoover_names[i], "@{}".format(column)))
             hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode="vline")
             p.add_tools(hover)
+
+        # set xlim
+        if xlim is not None:
+            p.x_range = xlim
 
         p.legend.location = "top_left"
         p.legend.click_policy = "mute"

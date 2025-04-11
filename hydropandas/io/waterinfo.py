@@ -5,6 +5,8 @@ import zipfile
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+
+from functools import lru_cache
 from shapely.geometry import box
 from tqdm import tqdm
 
@@ -66,7 +68,8 @@ def get_obs_list_from_extent(
 
     """
     if location_gdf is None:
-        gdf = get_locations_gdf(extent=extent, epsg=epsg)
+        gdf = get_locations_gdf(epsg=epsg)
+        gdf = get_locations_within_extent(gdf, extent=extent)
     else:
         gdf = location_gdf
         if gdf.empty:
@@ -354,14 +357,10 @@ def get_measurements_ddlpy(
     return df, meta
 
 
-def get_locations_gdf(extent=(482.06, 306602.42, 284182.97, 637049.52), epsg=28992):
+@lru_cache()
+def get_locations_gdf(epsg=28992):
     """Get locations from ddlpy and return as geodataframe
-
-    Parameters
-    ----------
-    extent : tuple, optional
-        extent of the locations. The default is the extent of the Netherlands (RD).
-
+    
     Returns
     -------
     gdf : geopandas.GeoDataFrame
@@ -375,6 +374,28 @@ def get_locations_gdf(extent=(482.06, 306602.42, 284182.97, 637049.52), epsg=289
     geometries = gpd.points_from_xy(locations["X"], locations["Y"])
     gdf = gpd.GeoDataFrame(locations, geometry=geometries, crs=25831)
     gdf.to_crs(epsg, inplace=True)
+
+    return gdf
+
+
+def get_locations_within_extent(gdf, extent=(482.06, 306602.42, 284182.97, 637049.52)):
+    """Get locations from ddlpy and return as geodataframe
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        geodataframe with locations. This dataframe is needed to obtain measurements
+        using ddlpy
+    extent : tuple, optional
+        extent of the locations. The default is the extent of the Netherlands (RD).
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+        geodataframe with locations. This dataframe is needed to obtain measurements
+        using ddlpy
+    """
+    
     polygon_ext = box(*tuple(np.array(extent)[[0, 2, 1, 3]]))
     gdf = gdf.loc[gdf.within(polygon_ext)]
 

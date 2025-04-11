@@ -1,7 +1,7 @@
 import requests
 from platformdirs import user_data_dir
 from pathlib import Path
-from io import StringIO
+from io import StringIO, BytesIO
 import json
 from tqdm import tqdm
 import numpy as np
@@ -100,13 +100,14 @@ def get_obs_list_from_extent(
 
 
 
-def get_locations_gdf(keep_cols = None, update=False):
+def get_locations_gdf(keep_cols = 'all', update=False):
     """get locations of water drillholes in Southern Australia from water connect.
 
     Parameters
     ----------
-    keep_cols : list or None, optional
-        if provided only these columns of the geodataframe are stored, by default None
+    keep_cols : list or str, optional
+        if provided only these columns of the geodataframe are stored. If 'all' all the
+        columns are returned, by default 'all'.
     update : bool, optional
         if True new locations are downloaded and stored locally even if the locations 
         were already downloaded before. By default False
@@ -122,35 +123,41 @@ def get_locations_gdf(keep_cols = None, update=False):
     # set directories
     fdir = Path(user_data_dir('waterconnect','hydropandas'))
     fdir.mkdir(parents=True, exist_ok=True)
-    fname_zip = fdir / 'water_drillholes.zip'
-    fname_wd = fdir / 'water_drillholes'
-    fname_feather = fname_wd / 'WATER_Drillholes_GDA2020.feather'
+    # fname_zip = fdir / 'water_drillholes.zip'
+    # fname_wd = fdir / 'water_drillholes'
+    fname_feather = fdir / 'WATER_Drillholes_GDA2020.feather'
 
     # read files from feather
     if fname_feather.exists() and not update:
         logger.debug(f'Reading Water Connect locations from {fname_feather}')
         gdf_sel = gpd.read_feather(fname_feather)
         return gdf_sel
+    
+    msg = ('Initializing Water Connect, this may take several minutes. This only has to '
+           'be done the first time you use Water Connect via hydropandas.')
+    logger.info(msg)
 
-    # download zip files
-    if not fname_zip.exists() or update:
-        logger.info(f'Downloading Water Connect location to {fdir}')
-        r = requests.get(DH_zip_url, timeout=3600)
-        with open(fname_zip, "wb") as f:
-            f.write(r.content)
+    # download data
+    r = requests.get(DH_zip_url, timeout=3600)
+    r.raise_for_status()
 
-    # unzip files    
-    if not fname_wd.exists() or update:
-        util.unzip_file(fname_zip, fname_wd)
+    # extract files from zip and write to disk
+    zip_buffer = BytesIO(r.content)
+    with zipfile.ZipFile(zip_buffer, 'r') as z:
+        target_files = [name for name in z.namelist() if name.startswith('WATER_Drillholes_GDA2020')]
+        # Extract only those files
+        logger.debug(f'Writing Water Connect locations shape to {fdir}')
+        for file in target_files:
+            z.extract(file, fdir)
 
     # read shapefiles to geodataframe
-    logger.debug(f'Reading Water Connect locations from {fname_wd}')
-    gdf_gda2020 = gpd.read_file(fname_wd / 'WATER_Drillholes_GDA2020.shp')
+    logger.debug(f'Reading Water Connect locations from {fdir}')
+    gdf_gda2020 = gpd.read_file(fdir / 'WATER_Drillholes_GDA2020.shp')
 
     # select columns
     if keep_cols is None:
         keep_cols = ['UNIT_NO','DHNO','NAME', 'LAT', 'LON', 'REF_ELEV', 'GRND_ELEV', 'STATE', 'STATUS',  'STAT_DESC', 'PURPOSE', 'PURP_DESC','DRILL_DATE', 'ORIG_DEPTH', 'MAX_DEPTH','CASE_TO', 'geometry']
-    elif keep_cols == 'all':
+    elif isinstance(keep_cols, str) and keep_cols == 'all':
         keep_cols = gdf_gda2020.columns
 
     if 'geometry' not in keep_cols:
