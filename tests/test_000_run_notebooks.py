@@ -54,3 +54,18 @@ def test_run_notebook_05_bronhouderportaal_bro():
 @pytest.mark.notebooks
 def test_run_notebook_06_lizard():
     _run_notebook(nbdir, "06_lizard.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_07_fews():
+    _run_notebook(nbdir, "07_fews.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_08_waterinfo():
+    _run_notebook(nbdir, "08_waterinfo.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_09_water_connect():
+    _run_notebook(nbdir, "09_water_connect.ipynb")
