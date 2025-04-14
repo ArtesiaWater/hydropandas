@@ -695,6 +695,65 @@ def read_pickle(
     return pd.read_pickle(filepath_or_buffer, compression, storage_options)
 
 
+def read_waterconnect(
+    extent=None,
+    name="",
+    ObsClass=obs.GroundwaterObs,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=False,
+    location_gdf=None,
+    **kwargs,
+):
+    """Read waterconnect measurement within an extent
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get water connect measurements within this extent
+        [xmin, xmax, ymin, ymax], coordinates are in lat (y) lon (x).
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type
+        class of the observations, e.g. GroundwaterObs
+    tmin : str or None, optional
+        start time of observations. The default is None.
+    tmax : str or None, optional
+        end time of observations. The default is None.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept. The default
+        is True.
+    location_gdf : GeoDataFrame, optional
+        geodataframe with the locations of the water drill holes you want to include.
+    **kwargs
+        additional keyword arguments are passed to the ObsClass.from_waterinfo()
+        method
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection containing data
+    """
+
+    oc = ObsCollection.from_waterconnect(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        tmin=tmin,
+        tmax=tmax,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        location_gdf=location_gdf,
+        **kwargs,
+    )
+
+    return oc
+
+
 def read_waterinfo(
     file_or_dir=None,
     extent=None,
@@ -1997,6 +2056,71 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(mo_list)
 
         return cls(obs_df)
+
+    @classmethod
+    def from_waterconnect(
+        cls,
+        extent=None,
+        name="",
+        ObsClass=obs.GroundwaterObs,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        keep_all_obs=False,
+        location_gdf=None,
+        **kwargs,
+    ):
+        """Read waterinfo measurement within an extent or from a file or directory.
+
+        Parameters
+        ----------
+        extent : list, tuple, numpy-array or None, optional
+            get water connect measurements within this extent
+            [xmin, xmax, ymin, ymax]
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type
+            class of the observations, e.g. GroundwaterObs
+        tmin : str or None, optional
+            start time of observations. The default is None.
+        tmax : str or None, optional
+            end time of observations. The default is None.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster. The default
+            is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept. The default
+            is True.
+        location_gdf : GeoDataFrame, optional
+            geodataframe with the locations of the water drill holes you want to include.
+        **kwargs
+            additional keyword arguments are passed to the ObsClass.from_waterinfo()
+            method
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io import water_connect
+
+        meta = {"name": name, "type": ObsClass}
+
+        if (extent is not None) or (location_gdf is not None):
+            obs_list = water_connect.get_obs_list_from_extent(
+                extent,
+                ObsClass,
+                tmin=tmin,
+                tmax=tmax,
+                only_metadata=only_metadata,
+                keep_all_obs=keep_all_obs,
+                location_gdf=location_gdf,
+                **kwargs,
+            )
+        else:
+            raise ValueError("specify extent for water connect data")
+
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_waterinfo(
