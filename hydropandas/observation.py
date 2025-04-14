@@ -824,8 +824,9 @@ class GroundwaterObs(Obs):
         verify=True,
         pumping=True,
         anomalous=True,
+        **kwargs,
     ):
-        """Read data from waterinfo csv-file or zip.
+        """Read data from water connect api.
 
         Parameters
         ----------
@@ -845,6 +846,8 @@ class GroundwaterObs(Obs):
             return observations from pumping wells
         anomalous : bool, optional
             return anomalous observations
+        **kwargs
+            kwargs are passed to 'get_waterconnect_obs'
 
         Returns
         -------
@@ -867,6 +870,7 @@ class GroundwaterObs(Obs):
             verify=verify,
             pumping=pumping,
             anomalous=anomalous,
+            **kwargs,
         )
 
         return cls(df, **metadata)

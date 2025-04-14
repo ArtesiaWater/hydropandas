@@ -29,8 +29,8 @@ def get_obs_list_from_extent(
     location_gdf=None,
     **kwargs,
 ):
-    """Get observations within a specific extent and optionally for a specific location
-    and grootheid_code.
+    """Get observations within a specific extent and optionally for a specific set of
+    locations.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ def get_obs_list_from_extent(
     location_gdf : GeoDataFrame, optional
         geodataframe with the locations of the water drill holes you want to include.
     **kwargs
-        additional keyword arguments are passed to the ObsClass.from_waterinfo()
+        additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
 
     Returns
@@ -63,13 +63,14 @@ def get_obs_list_from_extent(
     """
 
     if only_metadata and not keep_all_obs:
-        logger.error(
-            "you will get an empty ObsCollection with only_metadata is True and"
-            "keep_all_obs is False"
+        logger.warning(
+            "Option with only_metadata is True and keep_all_obs is False not supported"
+            "setting keep_all_obs=True"
         )
+        keep_all_obs = True
 
     if location_gdf is None:
-        location_gdf = get_locations_gdf()
+        location_gdf = get_locations_gdf(**kwargs)
 
     if extent is not None:
         location_gdf = get_locations_within_extent(location_gdf, extent)
@@ -102,11 +103,14 @@ def get_obs_list_from_extent(
     return obs_list
 
 
-def get_locations_gdf(keep_cols="all", update=False):
+def get_locations_gdf(fdir=None, keep_cols="all", update=False):
     """get locations of water drillholes in Southern Australia from water connect.
 
     Parameters
     ----------
+    fdir : Path or str
+        directory to store geodataframe with locations. If None a directory is created.
+        The default is None.
     keep_cols : list or str, optional
         if provided only these columns of the geodataframe are stored. If 'all' all the
         columns are returned, by default 'all'.
@@ -121,7 +125,10 @@ def get_locations_gdf(keep_cols="all", update=False):
     """
 
     # set directories
-    fdir = Path(user_data_dir("waterconnect", "hydropandas"))
+    if fdir is None:
+        fdir = Path(user_data_dir("waterconnect", "hydropandas"))
+    elif isinstance(str, fdir):
+        fdir = Path(fdir)
     fdir.mkdir(parents=True, exist_ok=True)
     fname_feather = fdir / "WATER_Drillholes_GDA2020.feather"
 
@@ -229,6 +236,7 @@ def get_waterconnect_obs(
     verify=True,
     pumping=True,
     anomalous=True,
+    **kwargs,
 ):
     """get waterconnect observations using the API
 
@@ -250,6 +258,8 @@ def get_waterconnect_obs(
         return observations from pumping wells
     anomalous : bool, optional
         return anomalous observations
+    **kwargs
+        kwargs are passed to 'get_location_gdf'
 
     Returns
     -------
@@ -259,7 +269,7 @@ def get_waterconnect_obs(
 
     """
     if meta_series is None:
-        gdf = get_locations_gdf()
+        gdf = get_locations_gdf(**kwargs)
         meta_series = gdf.loc[dh_no]
     elif isinstance(meta_series, pd.DataFrame):
         meta_series = gdf.loc[dh_no]
