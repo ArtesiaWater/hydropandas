@@ -683,9 +683,9 @@ def get_obs_list_from_extent(
     data["area"] = {}
     if epsg == 4326:
         data["area"]["boundingBox"] = {
-                "lowerCorner": {"lat": extent[2], "lon": extent[0]},
-                "upperCorner": {"lat": extent[3], "lon": extent[1]},
-            }
+            "lowerCorner": {"lat": extent[2], "lon": extent[0]},
+            "upperCorner": {"lat": extent[3], "lon": extent[1]},
+        }
     else:
         transformer = Transformer.from_crs(epsg, 4326)
         if extent is not None:
