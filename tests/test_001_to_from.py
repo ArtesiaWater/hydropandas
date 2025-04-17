@@ -19,7 +19,7 @@ def test_bro_gld():
 
 def test_bro_gmn():
     # single observation
-    bro_id = "GMN000000001084"  # 34 objects as per 2024-7-11
+    bro_id = "GMN000000000001"  # 6 objects as per 2025-4-17
     hpd.read_bro(bro_id=bro_id, only_metadata=True)
 
 
