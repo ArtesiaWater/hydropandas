@@ -521,6 +521,10 @@ class GwObsAccessor:
         -------
         pd.Series with the modellayers of each observation
         """
+        msg = ("the get_modellayers method is deprecated, please use the nlmod "
+                "function: nlmod.layer.get_modellayers_screens")
+        logger.warning(msg)
+
         modellayers = []
         for o in self._obj.obs.values:
             logger.debug("-" * 10 + f"\n {o.name}:")
