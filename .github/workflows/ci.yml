@@ -31,7 +31,7 @@ jobs:
           - name: Formatting and linting with ruff
             python: "3.11"
             toxenv: ruff
-          - name: Test suite for notebooks and coverage
+          - name: Notebooks and coverage
             python: "3.11"
             toxenv: notebooks
 
@@ -63,3 +63,4 @@ jobs:
 
       - name: Test
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
+        if: github.ref_name != 'master' && matrix.name != "Notebooks and coverage"

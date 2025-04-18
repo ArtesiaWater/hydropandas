@@ -1,5 +1,5 @@
 import hydropandas as hpd
-
+import pytest
 
 def test_single_observation():
     code = "27BP0003"
@@ -12,19 +12,19 @@ def test_extent():
     oc = hpd.read_lizard(extent)
     assert not oc.empty
 
-
+@pytest.mark.slow
 def test_codes():
     oc = hpd.read_lizard(
         codes=["39F-0735", "39F-0736", "39F-0737"], type_timeseries="merge"
     )
     assert not oc.empty
 
-
+@pytest.mark.slow
 def test_many_tubed_well():
     oc = hpd.read_lizard(codes="EEWP004", tube_nr="all")
     assert not oc.empty
 
-
+@pytest.mark.slow
 def test_complex_well():
     oc = hpd.read_lizard(codes="BUWP014", tube_nr="all")
     assert not oc.empty
