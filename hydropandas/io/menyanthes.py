@@ -85,7 +85,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
             "y",
             "source",
             "unit",
-            "monitoring_well",
+            "location",
             "tube_nr",
             "metadata_available",
             "ground_level",
@@ -96,7 +96,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
         unit = "m NAP"
     elif ObsClass == WaterlvlObs:
         _rename_dic = {"xcoord": "x", "ycoord": "y", "measpointlev": "tube_top"}
-        _keys_o = ["name", "x", "y", "source", "unit", "monitoring_well"]
+        _keys_o = ["name", "x", "y", "source", "unit", "location"]
         unit = "m NAP"
     else:
         _rename_dic = {

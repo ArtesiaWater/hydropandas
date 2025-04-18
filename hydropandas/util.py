@@ -225,9 +225,25 @@ class ColoredFormatter(logging.Formatter):
         return super().format(record)
 
 
-def get_color_logger(level="INFO"):
+def get_color_logger(level="INFO", logger_name=None):
+    """Get a logger with colored output.
+
+    Parameters
+    ----------
+    level : str, optional
+        The logging level to set for the logger. Default is "INFO".
+
+    Returns
+    -------
+    logger : logging.Logger
+        The configured logger object.
+    """
+    if level == "DEBUG":
+        FORMAT = "{color}{levelname}:{name}.{funcName}:{lineno}:{message}{reset}"
+    else:
+        FORMAT = "{color}{levelname}:{name}.{funcName}:{message}{reset}"
     formatter = ColoredFormatter(
-        "{color}{levelname}:{name}:{message}{reset}",
+        FORMAT,
         style="{",
         datefmt="%Y-%m-%d %H:%M:%S",
         colors={
@@ -242,7 +258,7 @@ def get_color_logger(level="INFO"):
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)
 
-    clogger = logging.getLogger()
+    clogger = logging.getLogger(logger_name)
     clogger.handlers[:] = []
     clogger.addHandler(handler)
     clogger.setLevel(getattr(logging, level))

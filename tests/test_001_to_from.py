@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 
 import pandas as pd
@@ -18,7 +19,7 @@ def test_bro_gld():
 
 def test_bro_gmn():
     # single observation
-    bro_id = "GMN000000001084"  # 34 objects as per 2024-7-11
+    bro_id = "GMN000000000001"  # 6 objects as per 2025-4-17
     hpd.read_bro(bro_id=bro_id, only_metadata=True)
 
 
@@ -368,7 +369,28 @@ def test_knmi_collection_from_grid():
 
 def test_waterinfo_from_dir():
     path = "./tests/data/2023-waterinfo-test"
-    hpd.read_waterinfo(path)
+    hpd.read_waterinfo(file_or_dir=path)
+
+
+def test_waterinfo_ddlpy():
+    grootheid_code = "WATHTE"
+    locatie = "SCHOONHVN"
+    tmin = dt.datetime(2024, 1, 1)
+    tmax = dt.datetime(2024, 1, 2)
+    hpd.WaterlvlObs.from_waterinfo(
+        grootheid_code=grootheid_code, locatie=locatie, tmin=tmin, tmax=tmax
+    )
+
+
+def test_waterinfo_ddlpy_extent():
+    grootheid_code = "WATHTE"
+    tmin = dt.datetime(2024, 1, 1)
+    tmax = dt.datetime(2024, 1, 2)
+    extent = (110000, 125000, 429550, 449900)
+    oc = hpd.read_waterinfo(
+        extent=extent, grootheid_code=grootheid_code, tmin=tmin, tmax=tmax
+    )
+    assert not oc.empty
 
 
 # %% MENYANTHES

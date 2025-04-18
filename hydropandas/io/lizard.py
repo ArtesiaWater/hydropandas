@@ -236,7 +236,7 @@ def get_metadata_tube(metadata_mw, tube_nr):
         tube_nr = 1
 
     metadata = {
-        "monitoring_well": metadata_mw["name"],
+        "location": metadata_mw["name"],
         "ground_level": metadata_mw["surface_level"],
         "source": "lizard",
         "unit": "m NAP",
@@ -402,11 +402,7 @@ def _merge_timeseries(hand_measurements, diver_measurements):
 
     elif diver_measurements.first_valid_index() is None:
         measurements = hand_measurements
-        print(
-            "no diver measuremets available for {}".format(
-                hand_measurements.iloc[0]["name"]
-            )
-        )
+        logger.debug("no diver measurements available")
 
     else:
         hand_measurements_sel = hand_measurements.loc[
@@ -624,7 +620,7 @@ def get_obs_list_from_codes(
             for metadata_tube in groundwaterstation_metadata["filters"]:
                 tnr = _split_mw_tube_nr(metadata_tube["code"])[-1]
                 if tnr not in tubes:
-                    logger.info(f"get {code}{tnr}")
+                    logger.debug(f"get {code}-{tnr}")
                     o = ObsClass.from_lizard(
                         code,
                         tnr,
@@ -711,8 +707,8 @@ def get_obs_list_from_extent(
     nr_results = groundwaterstation_data["count"]
     nr_pages = math.ceil(nr_results / page_size)
 
-    print("Number of monitoring wells: {}".format(nr_results))
-    print("Number of pages: {}".format(nr_pages))
+    logger.info("Number of monitoring wells: {}".format(nr_results))
+    logger.info("Number of pages: {}".format(nr_pages))
 
     if nr_threads > nr_pages:
         nr_threads = nr_pages

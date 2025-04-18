@@ -21,6 +21,11 @@ def _run_notebook(nbdir, fname):
 
 
 @pytest.mark.notebooks
+def test_run_notebook_00_hydropandas_objects():
+    _run_notebook(nbdir, "00_hydropandas_objects.ipynb")
+
+
+@pytest.mark.notebooks
 def test_run_notebook_01_groundwater_observations():
     _run_notebook(nbdir, "01_groundwater_observations.ipynb")
 
@@ -44,3 +49,24 @@ def test_run_notebook_03_hydropandas_and_pastas():
 @pytest.mark.notebooks
 def test_run_notebook_05_bronhouderportaal_bro():
     _run_notebook(nbdir, "05_bronhouderportaal_bro.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_06_lizard():
+    _run_notebook(nbdir, "06_lizard.ipynb")
+
+
+# not tested because notebook has intentional errors
+# @pytest.mark.notebooks
+# def test_run_notebook_07_fews():
+#     _run_notebook(nbdir, "07_fews.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_08_waterinfo():
+    _run_notebook(nbdir, "08_waterinfo.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_09_water_connect():
+    _run_notebook(nbdir, "09_water_connect.ipynb")

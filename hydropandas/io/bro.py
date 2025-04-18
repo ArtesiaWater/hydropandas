@@ -294,11 +294,11 @@ def measurements_from_gld(
     gld = glds[0]
 
     meta = {"source": "BRO"}
-    meta["monitoring_well"] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
+    meta["location"] = gld.find("ns11:monitoringPoint//gldcommon:broId", ns).text
     meta["tube_nr"] = int(
         gld.find("ns11:monitoringPoint//gldcommon:tubeNumber", ns).text
     )
-    meta["name"] = f"{meta['monitoring_well']}_{meta['tube_nr']}"
+    meta["name"] = f"{meta['location']}_{meta['tube_nr']}"
     gmn = gld.find("ns11:groundwaterMonitoringNet//gldcommon:broId", ns)
     if gmn is None:
         meta["monitoringsnet"] = None
@@ -340,7 +340,7 @@ def measurements_from_gld(
     df = df.loc[tmin:tmax]
 
     # add metadata from gmw
-    meta.update(get_metadata_from_gmw(meta["monitoring_well"], meta["tube_nr"]))
+    meta.update(get_metadata_from_gmw(meta["location"], meta["tube_nr"]))
 
     return df, meta
 
@@ -382,7 +382,7 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
     if len(gmws) != 1:
         raise (Exception("Only one gmw supported"))
     gmw = gmws[0]
-    meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
+    meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO"}
     for child in gmw:
         key = child.tag.split("}", 1)[1]
         if len(child) == 0:
@@ -555,7 +555,7 @@ def get_metadata_from_gmw(bro_id, tube_nr):
 
     gmw = _get_gmw_from_bro_id(bro_id)
 
-    meta = {"monitoring_well": bro_id, "tube_nr": tube_nr, "source": "BRO"}
+    meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO"}
 
     # x and y
     xy_elem = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
@@ -680,15 +680,21 @@ def get_obs_list_from_extent(
             endDate = pd.to_datetime(tmax).strftime("%Y-%m-%d")
             data["registrationPeriod"]["endDate"] = endDate
 
-    transformer = Transformer.from_crs(epsg, 4326)
     data["area"] = {}
-    if extent is not None:
-        lat1, lon1 = transformer.transform(extent[0], extent[2])
-        lat2, lon2 = transformer.transform(extent[1], extent[3])
+    if epsg == 4326:
         data["area"]["boundingBox"] = {
-            "lowerCorner": {"lat": lat1, "lon": lon1},
-            "upperCorner": {"lat": lat2, "lon": lon2},
+            "lowerCorner": {"lat": extent[2], "lon": extent[0]},
+            "upperCorner": {"lat": extent[3], "lon": extent[1]},
         }
+    else:
+        transformer = Transformer.from_crs(epsg, 4326)
+        if extent is not None:
+            lat1, lon1 = transformer.transform(extent[0], extent[2])
+            lat2, lon2 = transformer.transform(extent[1], extent[3])
+            data["area"]["boundingBox"] = {
+                "lowerCorner": {"lat": lat1, "lon": lon1},
+                "upperCorner": {"lat": lat2, "lon": lon2},
+            }
     req = requests.post(url, json=data)
     if req.status_code > 200:
         logger.error(

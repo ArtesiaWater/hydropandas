@@ -112,3 +112,5 @@ ENV/
 .examples/figure*
 examples/test*
 tests/data/excel/
+*.pklz
+examples/my_obs_collection.xlsx

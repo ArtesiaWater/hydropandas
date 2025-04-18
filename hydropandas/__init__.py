@@ -20,6 +20,7 @@ from .obs_collection import (
     read_modflow,
     read_pastastore,
     read_pickle,
+    read_waterconnect,
     read_waterinfo,
     read_wiski,
 )

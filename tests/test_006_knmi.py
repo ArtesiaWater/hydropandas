@@ -178,10 +178,10 @@ def test_download_without_data():
 
 
 # %%
-def test_fill_missing_measurements():
+def test_fill_missing_measurements_meteo():
     settings = knmi._get_default_settings({"fill_missing_obs": True})
 
-    # nothing is missing
+    # nothing is missing RH meteostation De Bilt
     knmi.get_knmi_timeseries_stn(
         260,
         "RH",
@@ -190,8 +190,8 @@ def test_fill_missing_measurements():
         end=pd.Timestamp("2010-1-10"),
     )
 
-    # missing all data
-    _, meta = knmi.get_knmi_timeseries_stn(
+    # missing all data EV24 meteostation 265
+    knmi.get_knmi_timeseries_stn(
         265,
         meteo_var="EV24",
         settings=settings,
@@ -199,18 +199,67 @@ def test_fill_missing_measurements():
         end=pd.Timestamp("1959-1-10"),
     )
 
-    assert meta["station"] == 260, "expected metadata from different station"
-
-    # missing some data
-    _, meta = knmi.get_knmi_timeseries_stn(
+    # missing some data at the start RH meteostation 273
+    df, meta = knmi.get_knmi_timeseries_stn(
         273,
         meteo_var="RH",
         settings=settings,
-        start=pd.Timestamp("1998-9-1"),
+        start=pd.Timestamp("1998-9-8"),
         end=pd.Timestamp("1998-9-10"),
     )
+    assert df["station"].astype(int).isin([273, 269]).all(), (
+        "expected data from these two stations"
+    )
 
-    # no data at all (test is disabled because of too many requests)
+    # missing some data at the end RH meteostation 273
+    df, meta = knmi.get_knmi_timeseries_stn(
+        273,
+        meteo_var="RH",
+        settings=settings,
+        start=pd.Timestamp("1998-9-3"),
+        end=pd.Timestamp("1998-9-5"),
+    )
+    assert df["station"].astype(int).isin([273, 269]).all(), (
+        "expected data from these two stations"
+    )
+
+    # missing some data in between RH meteostation 273
+    df, meta = knmi.get_knmi_timeseries_stn(
+        273,
+        meteo_var="RH",
+        settings=settings,
+        start=pd.Timestamp("1998-9-3"),
+        end=pd.Timestamp("1998-9-10"),
+    )
+    assert df["station"].astype(int).isin([273, 269]).all(), (
+        "expected data from these two stations"
+    )
+    assert df.index[0].strftime("%Y%m%d") == "19980903", "expected start date 19980903"
+
+    assert df.index[-1].strftime("%Y%m%d") == "19980910", "expected end date 19980910"
+
+    # no historical data at any meteo station for this time period
+    df, meta = knmi.get_knmi_timeseries_stn(
+        260,
+        meteo_var="EV24",
+        settings=settings,
+        start=pd.Timestamp("1899-1-1"),
+        end=pd.Timestamp("1899-1-10"),
+    )
+    assert df.empty, "expected empty dataframe"
+
+    # no recent data at any meteo station for this time period
+    df, meta = knmi.get_knmi_timeseries_stn(
+        260,
+        meteo_var="EV24",
+        settings=settings,
+        start=pd.Timestamp.now(),
+        end=pd.Timestamp.now() + pd.Timedelta(days=2),
+    )
+    assert df.empty, "expected empty dataframe"
+
+    # # no data for this meteovar at any meteo station for time period
+    # # loops through almost all meteo stations
     # df, meta = knmi.get_knmi_timeseries_stn(
     #     260,
     #     meteo_var="EV24",
@@ -218,11 +267,105 @@ def test_fill_missing_measurements():
     #     start=pd.Timestamp("1951-1-1"),
     #     end=pd.Timestamp("1951-1-10"),
     # )
-
     # assert df.empty, "expected empty dataframe"
 
+    # # maximum fill meteostation den Bosch
+    # # loops through almost all meteo stations because there is no data in part of 1945
+    # df, meta = knmi.get_knmi_timeseries_stn(
+    #     265,
+    #     meteo_var="RH",
+    #     settings=settings,
+    #     start=pd.Timestamp("1895-1-1"),
+    #     end=pd.Timestamp.now(),
+    # )
+    # assert not df.empty, "expected filled df"
 
-# %% obs collections
+
+def test_fill_missing_measurements_neerslag():
+    settings = knmi._get_default_settings({"fill_missing_obs": True})
+
+    # nothing is missing RD neerslagstation De Bilt
+    knmi.get_knmi_timeseries_stn(
+        550,
+        "RD",
+        settings=settings,
+        start=pd.Timestamp("2010-1-1"),
+        end=pd.Timestamp("2010-1-10"),
+    )
+
+    # missing all data RD neerslagstation De Bilt
+    knmi.get_knmi_timeseries_stn(
+        550,
+        meteo_var="RD",
+        settings=settings,
+        start=pd.Timestamp("1853-1-1"),
+        end=pd.Timestamp("1853-1-10"),
+    )
+
+    # missing some data at the start RD meteostation 72
+    df, meta = knmi.get_knmi_timeseries_stn(
+        72,
+        meteo_var="RD",
+        settings=settings,
+        start=pd.Timestamp("1986-03-25"),
+        end=pd.Timestamp("1986-03-29"),
+    )
+    assert df["station"].astype(int).isin([72, 78]).all(), (
+        "expected data from these two stations"
+    )
+
+    # missing some data at the end RD meteostation 57
+    df, meta = knmi.get_knmi_timeseries_stn(
+        57,
+        meteo_var="RD",
+        settings=settings,
+        start=pd.Timestamp("1942-11-29"),
+        end=pd.Timestamp("1942-12-3"),
+    )
+    assert df["station"].astype(int).isin([57, 79]).all(), (
+        "expected data from these two stations"
+    )
+
+    # no historical data at any neerslagstation for this time period
+    df, meta = knmi.get_knmi_timeseries_stn(
+        550,
+        meteo_var="RD",
+        settings=settings,
+        start=pd.Timestamp("1800-1-1"),
+        end=pd.Timestamp("1800-1-10"),
+    )
+    assert df.empty, "expected empty dataframe"
+
+    # no recent data at any neerslagstation for this time period
+    df, meta = knmi.get_knmi_timeseries_stn(
+        550,
+        meteo_var="RD",
+        settings=settings,
+        start=pd.Timestamp.now(),
+        end=pd.Timestamp.now() + pd.Timedelta(days=2),
+    )
+    assert df.empty, "expected empty dataframe"
+
+    # no data for neerslagstation de Bilt for this time period
+    df, meta = knmi.get_knmi_timeseries_stn(
+        550,
+        meteo_var="RD",
+        settings=settings,
+        start=pd.Timestamp("1896-1-1"),
+        end=pd.Timestamp("1896-1-10"),
+    )
+    assert not df.empty, "expected filled df"
+
+    # # maximum fill neerslagstation den Bosch
+    # # loops through all neerslagstations because there is not measurement at 29-10-1885
+    # df, meta = knmi.get_knmi_timeseries_stn(
+    #     872,
+    #     meteo_var="RD",
+    #     settings=settings,
+    #     start=pd.Timestamp("1800-1-1"),
+    #     end=pd.Timestamp.now(),
+    # )
+    # assert not df.empty, "expected filled df"
 
 
 def test_obslist_from_grid():
@@ -263,9 +406,6 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
-
-
-# %%
 
 
 def test_knmi_meteo_station_hourly_api_values():
@@ -394,11 +534,12 @@ def test_knmi_daily_rainfall_api_values():
     )
 
 
-def test_knmi_daily_rainfall_url_values():
+def test_knmi_daily_rainfall():
     stn = 550
     stn_name = knmi.get_station_name(stn=stn)
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
+
     # daily data from rainfall-stations
     df, meta = knmi.get_knmi_daily_rainfall_url(stn, stn_name)
 
@@ -428,3 +569,64 @@ def test_knmi_daily_rainfall_url_values():
         atol=1e-8,
         rtol=1e-8,
     )
+
+
+def test_meteo_station_methods():
+    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a meteo
+    station yield the same results"""
+
+    start = pd.Timestamp("2000-1-1")
+    end = pd.Timestamp("2000-1-10")
+
+    # daily meteo station (default)
+    precip1 = hpd.PrecipitationObs.from_knmi(stn=260, start=start, end=end)
+
+    # daily meteo station without api
+    precip2 = hpd.PrecipitationObs.from_knmi(
+        stn=260,
+        start=start,
+        end=end,
+        use_api=False,
+    )
+
+    # daily meteo station from file
+    precip3 = hpd.PrecipitationObs.from_knmi(
+        fname=r"./tests/data/2023-KNMI-test/etmgeg_260.txt",
+        start=start,
+        end=end,
+    )
+
+    assert precip1.equals(precip2)
+    assert precip1.equals(precip3)
+
+
+def test_rainfall_station_methods():
+    """Test if 3 different ways (api, non-api and .txt file) of obtaining data from a rainfall
+    station yield the same results"""
+
+    start = pd.Timestamp("2000-1-1")
+    end = pd.Timestamp("2000-1-10")
+
+    # daily rainfall station
+    precip1 = hpd.PrecipitationObs.from_knmi(
+        stn=550, meteo_var="RD", start=start, end=end
+    )
+
+    # daily rainfall station without api
+    precip2 = hpd.PrecipitationObs.from_knmi(
+        meteo_var="RD",
+        stn=550,
+        start=start,
+        end=end,
+        use_api=False,
+    )
+
+    # daily rainfall station from file
+    precip3 = hpd.PrecipitationObs.from_knmi(
+        fname=r"./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt",
+        start=start,
+        end=end,
+    )
+
+    assert precip1.equals(precip2)
+    assert precip1.equals(precip3)
