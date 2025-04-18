@@ -106,7 +106,7 @@ legacy_tox_ini = """
     description = run unit tests
     extras = pytesting
     commands =
-            pytest tests "not slow" --ignore=tests/test_000_run_notebooks.py
+            pytest tests -m "not slow" --ignore=tests/test_000_run_notebooks.py
 
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
