@@ -63,4 +63,4 @@ jobs:
 
       - name: Test
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
-        if: github.ref_name != 'master' && matrix.name != "Notebooks and coverage"
+        if: github.ref_name != 'master' && matrix.name != 'Notebooks and coverage'
