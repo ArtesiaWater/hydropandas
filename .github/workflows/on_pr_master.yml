@@ -18,9 +18,6 @@ jobs:
           - name: Test suite with py312-ubuntu
             python: "3.12"
             toxenv: py312
-          - name: Test suite with py311-ubuntu
-            python: "3.11"
-            toxenv: py311
           - name: Test suite with py310-ubuntu
             python: "3.10"
             toxenv: py310
