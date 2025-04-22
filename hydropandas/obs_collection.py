@@ -704,6 +704,7 @@ def read_waterconnect(
     only_metadata=False,
     keep_all_obs=False,
     location_gdf=None,
+    update=False,
     **kwargs,
 ):
     """Read waterconnect measurement within an extent
