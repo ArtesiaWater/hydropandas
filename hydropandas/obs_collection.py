@@ -729,6 +729,9 @@ def read_waterconnect(
         is True.
     location_gdf : GeoDataFrame, optional
         geodataframe with the locations of the water drill holes you want to include.
+    update : bool, optional
+        if True new locations are downloaded and stored locally (slow) otherwise a
+        cached version of the locations is used. By default False
     **kwargs
         additional keyword arguments are passed to the ObsClass.from_waterinfo()
         method
@@ -748,6 +751,7 @@ def read_waterconnect(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         location_gdf=location_gdf,
+        update=update,
         **kwargs,
     )
 
@@ -2068,6 +2072,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=False,
         location_gdf=None,
+        update=False,
         **kwargs,
     ):
         """Read waterinfo measurement within an extent or from a file or directory.
@@ -2093,6 +2098,9 @@ class ObsCollection(pd.DataFrame):
             is True.
         location_gdf : GeoDataFrame, optional
             geodataframe with the locations of the water drill holes you want to include.
+        update : bool, optional
+            if True new locations are downloaded and stored locally (slow) otherwise a
+            cached version of the locations is used. By default False
         **kwargs
             additional keyword arguments are passed to the ObsClass.from_waterinfo()
             method
@@ -2115,6 +2123,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
                 location_gdf=location_gdf,
+                update=update,
                 **kwargs,
             )
         else:
