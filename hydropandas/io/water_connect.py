@@ -27,6 +27,7 @@ def get_obs_list_from_extent(
     only_metadata=False,
     keep_all_obs=False,
     location_gdf=None,
+    update=False,
     **kwargs,
 ):
     """Get observations within a specific extent and optionally for a specific set of
@@ -51,6 +52,9 @@ def get_obs_list_from_extent(
         is True.
     location_gdf : GeoDataFrame, optional
         geodataframe with the locations of the water drill holes you want to include.
+    update : bool, optional
+        if True new locations are downloaded and stored locally (slow) otherwise a
+        cached version of the locations is used. By default False
     **kwargs
         additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
@@ -70,7 +74,7 @@ def get_obs_list_from_extent(
         keep_all_obs = True
 
     if location_gdf is None:
-        location_gdf = get_locations_gdf(**kwargs)
+        location_gdf = get_locations_gdf(update=update)
 
     if extent is not None:
         location_gdf = get_locations_within_extent(location_gdf, extent)
@@ -115,8 +119,8 @@ def get_locations_gdf(fdir=None, keep_cols="all", update=False):
         if provided only these columns of the geodataframe are stored. If 'all' all the
         columns are returned, by default 'all'.
     update : bool, optional
-        if True new locations are downloaded and stored locally even if the locations
-        were already downloaded before. By default False
+        if True new locations are downloaded and stored locally (slow) otherwise a
+        cached version of the locations is used. By default False
 
     Returns
     -------
