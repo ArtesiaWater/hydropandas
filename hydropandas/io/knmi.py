@@ -680,7 +680,8 @@ def fill_missing_measurements(
             stn, meteo_var, start, end, settings, stn_name
         )
         # do not use station number for metadata
-        variables.pop("station")
+        if "station" in variables:
+            variables.pop("station")
 
         # ignore this station
         ignore.append(stn)
