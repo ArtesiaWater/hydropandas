@@ -206,7 +206,7 @@ def get_knmi_timeseries_fname(
         {
             "x": stations.loc[stn, "x"],
             "y": stations.loc[stn, "y"],
-            "name": f"{meteo_var}_{stn_name}",
+            "name": f"{meteo_var}_{stn_name}_{stn}",
             "location": stn_name,
             "source": "KNMI",
             "filename": fname,
@@ -371,7 +371,7 @@ def get_knmi_timeseries_stn(
                 "x": x,
                 "y": y,
                 "station": stn,
-                "name": f"{meteo_var}_{stn_name}",
+                "name": f"{meteo_var}_{stn_name}_{stn}",
                 "location": stn_name,
                 "source": "KNMI",
             }
@@ -565,7 +565,7 @@ def fill_missing_measurements(
     meta.update(
         {
             "station": stn,
-            "name": f"{meteo_var}_{stn_name}",
+            "name": f"{meteo_var}_{stn_name}_{stn}",
             "location": stn_name,
             "source": "KNMI",
         }
@@ -679,6 +679,10 @@ def fill_missing_measurements(
         knmi_df, variables, station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
+        # do not use station number for metadata
+        variables.pop("station")
+
+        # ignore this station
         ignore.append(stn)
 
     # 6. find and fill missing values
@@ -787,7 +791,7 @@ def download_knmi_data(
     knmi_df : pandas DataFrame
         data from one station from one type of observation
     variables : dictionary
-        information about the observerd variables
+        information about the observed variables
     stations : pandas DataFrame
         information about the measurement station
     """
@@ -1855,7 +1859,7 @@ def get_evaporation(
         )
 
     stn_name = get_station_name(meta["station"], stations=get_stations(meteo_var))
-    meta["name"] = f"{meteo_var}_{stn_name}"
+    meta["name"] = f"{meteo_var}_{stn_name}_{stn}"
     meta["location"] = stn_name
     meta["unit"] = "m"
 
