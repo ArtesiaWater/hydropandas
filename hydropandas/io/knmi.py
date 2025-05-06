@@ -371,7 +371,7 @@ def get_knmi_timeseries_stn(
                 "x": x,
                 "y": y,
                 "station": stn,
-                "name": f"{meteo_var}_{stn_name}",
+                "name": f"{meteo_var}_{stn_name}_{stn}",
                 "location": stn_name,
                 "source": "KNMI",
             }
@@ -565,7 +565,7 @@ def fill_missing_measurements(
     meta.update(
         {
             "station": stn,
-            "name": f"{meteo_var}_{stn_name}",
+            "name": f"{meteo_var}_{stn_name}_{stn}",
             "location": stn_name,
             "source": "KNMI",
         }
@@ -1859,7 +1859,7 @@ def get_evaporation(
         )
 
     stn_name = get_station_name(meta["station"], stations=get_stations(meteo_var))
-    meta["name"] = f"{meteo_var}_{stn_name}"
+    meta["name"] = f"{meteo_var}_{stn_name}_{stn}"
     meta["location"] = stn_name
     meta["unit"] = "m"
 
