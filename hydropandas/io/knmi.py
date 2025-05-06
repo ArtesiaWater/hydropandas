@@ -679,6 +679,10 @@ def fill_missing_measurements(
         knmi_df, variables, station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
+        # do not use station number for metadata
+        variables.pop('station')
+
+        # ignore this station
         ignore.append(stn)
 
     # 6. find and fill missing values
@@ -787,7 +791,7 @@ def download_knmi_data(
     knmi_df : pandas DataFrame
         data from one station from one type of observation
     variables : dictionary
-        information about the observerd variables
+        information about the observed variables
     stations : pandas DataFrame
         information about the measurement station
     """
