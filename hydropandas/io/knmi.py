@@ -206,7 +206,7 @@ def get_knmi_timeseries_fname(
         {
             "x": stations.loc[stn, "x"],
             "y": stations.loc[stn, "y"],
-            "name": f"{meteo_var}_{stn_name}",
+            "name": f"{meteo_var}_{stn_name}_{stn}",
             "location": stn_name,
             "source": "KNMI",
             "filename": fname,
