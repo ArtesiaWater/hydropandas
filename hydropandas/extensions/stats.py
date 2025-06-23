@@ -32,6 +32,11 @@ class StatsAccessor:
         df = pd.DataFrame.from_dict(pblist)
         return df
 
+    def obs_per_month(self, col=None):
+        pblist = {o.name: o.stats.obs_per_month(col=col) for o in self._obj.obs}
+        df = pd.DataFrame.from_dict(pblist)
+        return df
+
     def consecutive_obs_years(self, min_obs=12, col=None):
         """get the number of consecutive years with more than a minimum of
         observations.
@@ -366,36 +371,40 @@ class StatsAccessorObs:
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        pd.Series
+            series with the number of observations per year. The index is the
+            year.
 
         """
         if self._obj.empty:
             return pd.Series(dtype=float)
-
         if col is None:
             col = self._obj._get_first_numeric_col_name()
-
         return self._obj.groupby(self._obj.index.year).count()[col]
 
-    def consecutive_obs_years(self, col=None, min_obs=12):
-        if col is None:
-            col = self._obj._get_first_numeric_col_name()
-
+    def consecutive_obs_years(self, min_obs=12, col=None):
         obs_per_year = self._obj.stats.obs_per_year(col=col)
-
         return consecutive_obs_years(obs_per_year, min_obs=min_obs)
 
-    def consecutive_obs_months(self, col=None, min_obs=1):
+    def obs_per_month(self, col=None):
+        if self._obj.empty:
+            return pd.Series(dtype=float)
+        if col is None:
+            col = self._obj._get_first_numeric_col_name()
+        return self._obj.groupby([self._obj.index.year, self._obj.index.month]).count()[
+            col
+        ]
+
+    def consecutive_obs_months(self, min_obs=1, col=None):
         """Get the number of consecutive months with a minimum no. of observations.
 
         Parameters
         ----------
+        min_obs : int, optional
+            minimum number of observations per month. The default is 1.
         col : str or None, optional
             the column of the obs dataframe to get measurements from. The
             first numeric column is used if col is None, by default None.
-        min_obs : int, optional
-            minimum number of observations per month. The default is 1.
 
         Returns
         -------
@@ -403,13 +412,7 @@ class StatsAccessorObs:
             series with the number of consecutive months with more than min_obs
             observations.
         """
-        if self._obj.empty:
-            return pd.Series(dtype=float)
-        if col is None:
-            col = self._obj._get_first_numeric_col_name()
-        obs_per_month = self._obj.groupby(
-            [self._obj.index.year, self._obj.index.month]
-        ).count()[col]
+        obs_per_month = self._obj.stats.obs_per_month(col=col)
         return consecutive_obs_months(obs_per_month, min_obs=min_obs)
 
 
@@ -437,7 +440,7 @@ def consecutive_obs_months(obs_per_month, min_obs=1):
     obs_per_month : pd.Series
         series with the number of observations per month.
     min_obs : int, optional
-        minimum number of observations per month. The default is 12.
+        minimum number of observations per month. The default is 1.
 
     Returns
     -------
