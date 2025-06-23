@@ -53,7 +53,6 @@ class StatsAccessor:
             dataframe with the observations as column, the years as rows,
             and the values are the number of consecutive years.
         """
-
         if isinstance(min_obs, str):
             pblist = {
                 o.name: o.stats.consecutive_obs_years(
@@ -64,6 +63,41 @@ class StatsAccessor:
         else:
             pblist = {
                 o.name: o.stats.consecutive_obs_years(min_obs=min_obs, col=col)
+                for o in self._obj.obs
+            }
+        df = pd.DataFrame.from_dict(pblist)
+        return df
+
+    def consecutive_obs_months(self, min_obs=1, col=None):
+        """Get the number of consecutive months with a minimum no. of observations.
+
+        Parameters
+        ----------
+        min_obs : int or str, optional
+            if min_obs is an integer it is the minimum number of observations
+            per month. If min_obs is a string it is the column name of the
+            obs_collection with minimum number of observation per month per
+            observation.
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            dataframe with the observations as column, the months as rows,
+            and the values are the number of consecutive months.
+        """
+        if isinstance(min_obs, str):
+            pblist = {
+                o.name: o.stats.consecutive_obs_months(
+                    min_obs=self._obj.loc[o.name, min_obs], col=col
+                )
+                for o in self._obj.obs
+            }
+        else:
+            pblist = {
+                o.name: o.stats.consecutive_obs_months(min_obs=min_obs, col=col)
                 for o in self._obj.obs
             }
         df = pd.DataFrame.from_dict(pblist)
@@ -352,6 +386,32 @@ class StatsAccessorObs:
 
         return consecutive_obs_years(obs_per_year, min_obs=min_obs)
 
+    def consecutive_obs_months(self, col=None, min_obs=1):
+        """Get the number of consecutive months with a minimum no. of observations.
+
+        Parameters
+        ----------
+        col : str or None, optional
+            the column of the obs dataframe to get measurements from. The
+            first numeric column is used if col is None, by default None.
+        min_obs : int, optional
+            minimum number of observations per month. The default is 1.
+
+        Returns
+        -------
+        pd.Series
+            series with the number of consecutive months with more than min_obs
+            observations.
+        """
+        if self._obj.empty:
+            return pd.Series(dtype=float)
+        if col is None:
+            col = self._obj._get_first_numeric_col_name()
+        obs_per_month = self._obj.groupby(
+            [self._obj.index.year, self._obj.index.month]
+        ).count()[col]
+        return consecutive_obs_months(obs_per_month, min_obs=min_obs)
+
 
 def consecutive_obs_years(obs_per_year, min_obs=12):
     # Add missing years
@@ -365,11 +425,59 @@ def consecutive_obs_years(obs_per_year, min_obs=12):
         )
         obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 
-    mask_obs_per_year = obs_per_year_all >= min_obs
+    mask_obs_per_year = (obs_per_year_all >= min_obs).astype(float)
     mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
     mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
-    cumsum = mask_obs_per_year.cumsum().fillna(method="pad")
+    cumsum = mask_obs_per_year.cumsum().ffill()
     reset = -cumsum.loc[mask_obs_per_year.isnull()].diff().fillna(cumsum)
     result = mask_obs_per_year.where(mask_obs_per_year.notnull(), reset).cumsum()
 
     return result
+
+
+def consecutive_obs_months(obs_per_month, min_obs=1):
+    """get the number of consecutive months with more than a minimum of
+    observations.
+
+    Parameters
+    ----------
+    obs_per_month : pd.Series
+        series with the number of observations per month.
+    min_obs : int, optional
+        minimum number of observations per month. The default is 12.
+
+    Returns
+    -------
+    pd.Series
+        series with the number of consecutive months with more than min_obs
+        observations.
+    """
+    # add missing months
+    if obs_per_month.empty:
+        # no obs, set series to current month with 0 obs
+        idx = pd.MultiIndex.from_product(
+            [[pd.Timestamp.today().year], [pd.Timestamp.today().month]]
+        )
+        obs_per_month_all = pd.Series(index=idx, data=0)
+    else:
+        year_start, month_start = obs_per_month.index[0]
+        year_end, month_end = obs_per_month.index[-1]
+
+        idx = pd.MultiIndex.from_product(
+            [range(year_start, year_end + 1), range(1, 13)]
+        )
+        obs_per_month_all = pd.Series(dtype=float, index=idx)
+        obs_per_month_all = obs_per_month_all.loc[
+            (year_start, month_start) : (year_end, month_end)
+        ]
+        obs_per_month_all.loc[obs_per_month.index] = obs_per_month
+
+    mask_obs_per_month = (obs_per_month_all >= min_obs).astype(float)
+    mask_obs_per_month.loc[obs_per_month_all.isna()] = np.nan
+    mask_obs_per_month.loc[mask_obs_per_month == 0] = np.nan
+
+    cumsum = mask_obs_per_month.cumsum().ffill()
+    reset = -cumsum.loc[mask_obs_per_month.isnull()].diff().fillna(cumsum)
+    result = mask_obs_per_month.where(mask_obs_per_month.notnull(), reset).cumsum()
+
+    return result.fillna(0)
