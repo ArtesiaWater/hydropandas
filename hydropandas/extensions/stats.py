@@ -425,14 +425,7 @@ def consecutive_obs_years(obs_per_year, min_obs=12):
         )
         obs_per_year_all.loc[obs_per_year.index] = obs_per_year
 
-    mask_obs_per_year = (obs_per_year_all >= min_obs).astype(float)
-    mask_obs_per_year.loc[obs_per_year_all.isna()] = np.nan
-    mask_obs_per_year.loc[mask_obs_per_year == 0] = np.nan
-    cumsum = mask_obs_per_year.cumsum().ffill()
-    reset = -cumsum.loc[mask_obs_per_year.isnull()].diff().fillna(cumsum)
-    result = mask_obs_per_year.where(mask_obs_per_year.notnull(), reset).cumsum()
-
-    return result
+    return consecutive_obs_per_period(obs_per_year_all, min_obs=min_obs)
 
 
 def consecutive_obs_months(obs_per_month, min_obs=1):
@@ -472,12 +465,36 @@ def consecutive_obs_months(obs_per_month, min_obs=1):
         ]
         obs_per_month_all.loc[obs_per_month.index] = obs_per_month
 
-    mask_obs_per_month = (obs_per_month_all >= min_obs).astype(float)
-    mask_obs_per_month.loc[obs_per_month_all.isna()] = np.nan
-    mask_obs_per_month.loc[mask_obs_per_month == 0] = np.nan
+    return consecutive_obs_per_period(obs_per_month_all, min_obs=min_obs)
 
-    cumsum = mask_obs_per_month.cumsum().ffill()
-    reset = -cumsum.loc[mask_obs_per_month.isnull()].diff().fillna(cumsum)
-    result = mask_obs_per_month.where(mask_obs_per_month.notnull(), reset).cumsum()
+
+def consecutive_obs_per_period(obs_per_period, min_obs):
+    """Get the number of consecutive periods with more than a minimum no. of obs.
+
+    Note: this function only makes sense if the obs_per_period series covers
+    the entire period of interest, e.g. all years or all months between the first and
+    last observation.
+
+    Parameters
+    ----------
+    obs_per_period : pd.Series
+        series with the number of observations per period (e.g. year or month).
+    min_obs : int
+        minimum number of observations per period.
+
+    Returns
+    -------
+    pd.Series
+        series with the number of consecutive periods with more than min_obs
+        observations.
+    """
+
+    mask_obs_per_period = (obs_per_period >= min_obs).astype(float)
+    mask_obs_per_period.loc[obs_per_period.isna()] = np.nan
+    mask_obs_per_period.loc[mask_obs_per_period == 0] = np.nan
+
+    cumsum = mask_obs_per_period.cumsum().ffill()
+    reset = -cumsum.loc[mask_obs_per_period.isnull()].diff().fillna(cumsum)
+    result = mask_obs_per_period.where(mask_obs_per_period.notnull(), reset).cumsum()
 
     return result.fillna(0)
