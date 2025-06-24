@@ -120,6 +120,12 @@ legacy_tox_ini = """
     commands =
             pytest tests/test_017_waterinfo_api.py
 
+    [testenv:lizard]
+    description = run lizard tests
+    extras = pytesting
+    commands =
+            pytest tests/test_016_lizard_api.py
+
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
     extras = pytesting,coveraging
