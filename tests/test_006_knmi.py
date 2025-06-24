@@ -453,7 +453,6 @@ def test_knmi_daily_rainfall():
         add_hour=True,
     )
 
-    settings = knmi._get_default_settings()
     truth, _ = knmi.parse_data(
         "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt")
 
