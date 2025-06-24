@@ -100,7 +100,7 @@ markers = ["slow: mark test as slow."]
 legacy_tox_ini = """
     [tox]
     requires = tox>=4
-    env_list = ruff, notebooks, py311}
+    env_list = ruff, notebooks, py311
 
     [testenv]
     description = run unit tests
