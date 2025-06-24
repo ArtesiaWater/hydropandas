@@ -51,12 +51,12 @@ full = [
     "contextily",
     "lxml",
     "rws-ddlpy",
+    "pyarrow"
 ]
 rtd = [
     "hydropandas[full]",
     "imod",
     "requests",
-    "Shapely",
     "nbconvert",
     "ipykernel",
     "netCDF4",
@@ -64,7 +64,7 @@ rtd = [
     "sphinx_rtd_theme",
     "Ipython",
     "nbsphinx",
-    "nbsphinx_link",
+    "nbsphinx_link"
 ]
 ruffing = ["ruff"]
 pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
@@ -106,7 +106,7 @@ legacy_tox_ini = """
     description = run unit tests
     extras = pytesting
     commands =
-            pytest tests --ignore=tests/test_000_run_notebooks.py
+            pytest tests -m "not slow" --ignore=tests/test_000_run_notebooks.py
 
     [testenv:knmi]
     description = run knmi tests

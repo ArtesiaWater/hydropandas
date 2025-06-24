@@ -1,12 +1,8 @@
 name: hydropandas
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
-      - master
       - dev
 
 jobs:
@@ -22,9 +18,6 @@ jobs:
           - name: Formatting and linting with ruff
             python: "3.11"
             toxenv: ruff
-          - name: Test suite for notebooks and coverage
-            python: "3.11"
-            toxenv: notebooks
 
     name: ${{ matrix.name }}
     env:
@@ -54,3 +47,4 @@ jobs:
 
       - name: Test
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
+        

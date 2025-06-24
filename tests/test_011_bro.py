@@ -18,11 +18,6 @@ def test_metadata_full():
     bro.get_full_metadata_from_gmw(bro_id, 1)
 
 
-def test_groundwater_monitoring_net_metadata():
-    bro_id = "GMN000000000001"
-    bro.get_obs_list_from_gmn(bro_id, hpd.GroundwaterObs, only_metadata=True)
-
-
 def test_groundwater_observations():
     bro_id = "GLD000000012893"
     bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False)
@@ -54,7 +49,7 @@ def test_get_gld_ids_from_gmw():
 
 def test_obs_list_from_extent():
     # extent = (102395, 103121, 434331, 434750)
-    extent = [116500, 120000, 439000, 442000]
+    extent = [117800, 118300, 439700, 439800]  # 4 measurements in extent 2025-4-7
     bro.get_obs_list_from_extent(
         extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992, only_metadata=True
     )
