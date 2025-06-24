@@ -578,6 +578,9 @@ class GeoAccessorObs:
         int
             modellayer
         """
+        if np.isnan(self._obj.x) or np.isnan(self._obj.y):
+            logger.warning("x or y coordinate is NaN, returning NaN")
+            return np.nan
 
         zvec = get_zvec(self._obj.x, self._obj.y, gwf=gwf, ds=ds)
 
