@@ -273,7 +273,7 @@ def test_fill_missing_measurements():
     )
 
     assert meta["station"] == 265, "expected metadata from different station"
-    assert (df["station"] == '260').all(), "expected metadata from different station"
+    assert (df["station"] == "260").all(), "expected metadata from different station"
 
     # missing some data
     _, meta = knmi.get_timeseries_stn(
@@ -454,7 +454,8 @@ def test_knmi_daily_rainfall():
     )
 
     truth, _ = knmi.parse_data(
-        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt")
+        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
+    )
 
     # check raw data
     pd.testing.assert_series_equal(
