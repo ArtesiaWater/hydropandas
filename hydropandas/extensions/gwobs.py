@@ -251,7 +251,7 @@ def get_zvec(x, y, gwf=None, ds=None):
     from shapely.geometry import Point
 
     if gwf and not ds:
-        ix = flopy.utils.GridIntersect(gwf.modelgrid)
+        ix = flopy.utils.GridIntersect(gwf.modelgrid, method="vertex")
         if gwf.modelgrid.grid_type == "structured":
             res = ix.intersect(Point(x, y))
             if len(res) > 0:
