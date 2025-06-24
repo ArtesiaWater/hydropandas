@@ -574,10 +574,9 @@ def fill_missing_measurements(
     knmi_df : pandas DataFrame
         data from one station from one type of observation, with additional
         column to see which station is used to fill the value
-    variables : dictionary
-        information about the observerd variables
-    stations : pandas DataFrame
-        information about the measurement station.
+    meta : dictionary
+        metadata from the originally requested station even if this station
+        has no data
     """
     if settings["interval"] == "hourly":
         raise NotImplementedError("cannot yet fill missing values in hourly data")

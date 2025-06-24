@@ -264,7 +264,7 @@ def test_fill_missing_measurements():
     )
 
     # missing all data
-    _, meta = knmi.get_timeseries_stn(
+    df, meta = knmi.get_timeseries_stn(
         265,
         meteo_var="EV24",
         settings=settings,
@@ -272,7 +272,8 @@ def test_fill_missing_measurements():
         end=pd.Timestamp("1959-1-10"),
     )
 
-    assert meta["station"] == 260, "expected metadata from different station"
+    assert meta["station"] == 265, "expected metadata from different station"
+    assert (df["station"] == '260').all(), "expected metadata from different station"
 
     # missing some data
     _, meta = knmi.get_timeseries_stn(
@@ -295,7 +296,7 @@ def test_fill_missing_measurements():
 
     # # maximum fill meteostation den Bosch
     # # loops through almost all meteo stations because there is no data in part of 1945
-    # df, meta = knmi.get_knmi_timeseries_stn(
+    # df, meta = knmi.get_timeseries_stn(
     #     265,
     #     meteo_var="RH",
     #     settings=settings,
@@ -309,7 +310,7 @@ def test_fill_missing_measurements_neerslag():
     settings = knmi._get_default_settings({"fill_missing_obs": True})
 
     # nothing is missing RD neerslagstation De Bilt
-    knmi.get_knmi_timeseries_stn(
+    knmi.get_timeseries_stn(
         550,
         "RD",
         settings=settings,
@@ -318,7 +319,7 @@ def test_fill_missing_measurements_neerslag():
     )
 
     # missing all data RD neerslagstation De Bilt
-    knmi.get_knmi_timeseries_stn(
+    knmi.get_timeseries_stn(
         550,
         meteo_var="RD",
         settings=settings,
@@ -327,7 +328,7 @@ def test_fill_missing_measurements_neerslag():
     )
 
     # missing some data at the start RD meteostation 72
-    df, meta = knmi.get_knmi_timeseries_stn(
+    df, meta = knmi.get_timeseries_stn(
         72,
         meteo_var="RD",
         settings=settings,
@@ -339,7 +340,7 @@ def test_fill_missing_measurements_neerslag():
     )
 
     # missing some data at the end RD meteostation 57
-    df, meta = knmi.get_knmi_timeseries_stn(
+    df, meta = knmi.get_timeseries_stn(
         57,
         meteo_var="RD",
         settings=settings,
@@ -351,7 +352,7 @@ def test_fill_missing_measurements_neerslag():
     )
 
     # no historical data at any neerslagstation for this time period
-    df, meta = knmi.get_knmi_timeseries_stn(
+    df, meta = knmi.get_timeseries_stn(
         550,
         meteo_var="RD",
         settings=settings,
@@ -361,7 +362,7 @@ def test_fill_missing_measurements_neerslag():
     assert df.empty, "expected empty dataframe"
 
     # no recent data at any neerslagstation for this time period
-    df, meta = knmi.get_knmi_timeseries_stn(
+    df, meta = knmi.get_timeseries_stn(
         550,
         meteo_var="RD",
         settings=settings,
@@ -371,7 +372,7 @@ def test_fill_missing_measurements_neerslag():
     assert df.empty, "expected empty dataframe"
 
     # no data for neerslagstation de Bilt for this time period
-    df, meta = knmi.get_knmi_timeseries_stn(
+    df, meta = knmi.get_timeseries_stn(
         550,
         meteo_var="RD",
         settings=settings,
@@ -382,7 +383,7 @@ def test_fill_missing_measurements_neerslag():
 
     # # maximum fill neerslagstation den Bosch
     # # loops through all neerslagstations because there is not measurement at 29-10-1885
-    # df, meta = knmi.get_knmi_timeseries_stn(
+    # df, meta = knmi.get_timeseries_stn(
     #     872,
     #     meteo_var="RD",
     #     settings=settings,
@@ -434,6 +435,7 @@ def test_obslist_from_stns_single_startdate():
 
 def test_knmi_daily_rainfall():
     stn = 550
+    meteo_var = "RD"
     stn_name = knmi.get_station_name(stn=stn)
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2000-12-31")
@@ -444,16 +446,17 @@ def test_knmi_daily_rainfall():
     df2, _ = knmi.interpret_knmi_file(
         df,
         meta,
-        meteo_var="RD",
+        meteo_var=meteo_var,
         start=start,
         end=end,
         add_day=False,
         add_hour=True,
     )
 
-    truth, _ = knmi.read_knmi_file(
-        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
-    )
+    settings = knmi._get_default_settings()
+    truth, _ = knmi.parse_data(
+        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt")
+
     # check raw data
     pd.testing.assert_series_equal(
         df.loc[start:end, "RD"], truth["RD"], check_dtype=False

@@ -112,13 +112,13 @@ legacy_tox_ini = """
     description = run knmi tests
     extras = pytesting
     commands =
-            pytest tests/test_015_knmi_api.py
+            pytest tests/test_016_knmi_api.py
 
     [testenv:waterinfo]
     description = run waterinfo tests
     extras = pytesting
     commands =
-            pytest tests/test_016_waterinfo_api.py
+            pytest tests/test_017_waterinfo_api.py
 
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
