@@ -1,4 +1,4 @@
-name: knmi
+name: waterinfo
 
 on:
   push:
