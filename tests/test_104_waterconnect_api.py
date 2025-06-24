@@ -3,6 +3,7 @@
 import requests
 import json
 
+
 def test_get_measurements():
     url = "https://www.waterconnect.sa.gov.au/_layouts/15/dfw.sharepoint.wdd/WDDDMS.ashx/GetWaterLevelDownload?bulkOutput=CSV"
     json_data = {"DHNOs": [119988], "Pumping": True, "Anomalous": True}
