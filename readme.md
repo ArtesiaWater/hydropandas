@@ -22,13 +22,21 @@ single object. This object inherits from a pandas DataFrame, with all its
 wonderful features, and is extended with custom methods and attributes related
 to hydrological timeseries.
 
-The HydroPandas package also provides convenient read functions for Dutch hydrological data from:
+The HydroPandas package also provides convenient read functions using an API:
 
+| Source      | API available |
+|-------------|---------------|
+| [BRO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | [![BRO](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml)  |     
+| [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) |          |
+| [Lizard](https://hydropandas.readthedocs.io/en/stable/examples/06_lizard.html) | [![Lizard](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml)  |               |
+| [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_waterconnect.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) |
+| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml)  |               |
+
+Some data sources do not offer an API but do offer a specific file type that can also be read using hydropandas:
 - [BRO](https://www.broloket.nl)
 - [DINO](https://www.dinoloket.nl)
 - FEWS PI-XML
 - [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script)
-- [Lizard](https://vitens.lizard.net/)
 - MODFLOW groundwater models
 - IMOD groundwater models
 - [Pastastore](https://github.com/pastas/pastastore)
@@ -54,18 +62,6 @@ For some functionality additional packages are required:
 For installing in development mode, clone the repository and install by
 typing `pip install -e .` from the module root directory.
 For installing all the optional packages use `pip install -e .[full]`.
-
-## Online data sources
-
-
-| Source      | API available |
-|-------------|---------------|
-| [BRO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | [![BRO](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml)  |     
-| [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) |          |
-| [Lizard](https://hydropandas.readthedocs.io/en/stable/examples/06_lizard.html) | [![Lizard](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml)  |               |
-| [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_waterconnect.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) |
-| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml)  |               |
-
 
 ## Get in touch
 
