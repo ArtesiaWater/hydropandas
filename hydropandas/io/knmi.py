@@ -710,7 +710,7 @@ def fill_missing_measurements(
 
         stn = stn_lst[0]
         stn_name = get_station_name(stn=stn, stations=stations_period)
-        ts_df, variables, station_meta = download_knmi_data(
+        ts_df, variables, _station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
         # do not use station number for metadata
