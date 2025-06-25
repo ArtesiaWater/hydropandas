@@ -112,31 +112,31 @@ legacy_tox_ini = """
     description = run bro tests
     extras = pytesting
     commands =
-            pytest tests/test_101_bro_api.py
+            pytest tests/api/test_101_bro_api.py
 
     [testenv:knmi]
     description = run knmi tests
     extras = pytesting
     commands =
-            pytest tests/test_102_knmi_api.py
+            pytest tests/api/test_102_knmi_api.py
 
     [testenv:lizard]
     description = run lizard tests
     extras = pytesting
     commands =
-            pytest tests/test_103_lizard_api.py
+            pytest tests/api/test_103_lizard_api.py
 
     [testenv:waterconnect]
     description = run waterconnect tests
     extras = pytesting
     commands =
-            pytest tests/test_104_waterconnect_api.py
+            pytest tests/api/test_104_waterconnect_api.py
 
     [testenv:waterinfo]
     description = run waterinfo tests
     extras = pytesting
     commands =
-            pytest tests/test_105_waterinfo_api.py
+            pytest tests/api/test_105_waterinfo_api.py
 
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
