@@ -17,6 +17,7 @@ function levels:
 import datetime as dt
 import logging
 import os
+import warnings
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -155,6 +156,50 @@ def get_knmi_obs(
         )
 
     return ts, meta
+
+
+def get_knmi_timeseries_fname(
+    fname: str,
+    meteo_var: str,
+    settings: Dict[str, Any],
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Get a knmi time series and metadata from a file.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_timeseries_fname` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_timeseries_from_file`.
+
+    Parameters
+    ----------
+    fname : str
+        filename of the knmi file.
+    meteo_var : str
+        observation type e.g. "RH" or "EV24". See list with all options in the
+        hpd.read_knmi function.
+    settings : dict
+        settings for obtaining the right time series, see _get_default_settings
+        for more information
+    start : pd.Timestamp
+        start date of observations.
+    end : pd.Timestamp
+        end date of observations.
+
+    Returns
+    -------
+    ts_df : pandas DataFrame
+        time series with measurements.
+    meta : dictionary
+        metadata from the measurement station.
+    """
+    warnings.warn(
+        "the function 'get_knmi_timeseries_fname' is deprecated and will eventually be "
+        "removed, please use 'get_timeseries_from_file'.",
+        DeprecationWarning,
+    )
+
+    return get_timeseries_from_file(fname, meteo_var, settings, start, end)
 
 
 def get_timeseries_from_file(
@@ -308,6 +353,50 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
             settings[key] = value
 
     return settings
+
+
+def get_knmi_timeseries_stn(
+    stn: int,
+    meteo_var: str,
+    settings: Dict[str, Any],
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Get a knmi time series and metadata.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_timeseries_stn` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_timeseries_stn`.
+
+    Parameters
+    ----------
+    stn : int
+        measurement station e.g. 829.
+    meteo_var : str
+        observation type e.g. "RH" or "EV24". See list with all options in the
+        hpd.read_knmi function.
+    settings : dict
+        settings for obtaining the right time series, see _get_default_settings
+        for more information
+    start : pd.TimeStamp or None, optional
+        start date of observations. The default is None.
+    end : pd.TimeStamp or None, optional
+        end date of observations. The default is None.
+
+    Returns
+    -------
+    ts_df : pandas DataFrame
+        time series with measurements.
+    meta : dictionary
+        metadata from the measurement station.
+    """
+    warnings.warn(
+        "the function 'get_knmi_timeseries_stn' is deprecated and will eventually be "
+        "removed, please use 'get_timeseries_stn'.",
+        DeprecationWarning,
+    )
+
+    return get_timeseries_stn(stn, meteo_var, settings, start, end)
 
 
 def get_timeseries_stn(
@@ -910,6 +999,47 @@ def download_knmi_data(
     return ts_df, variables, stations
 
 
+def get_knmi_daily_rainfall_api(
+    stn: int,
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily rainfall.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_daily_rainfall_api` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_daily_rainfall_api`.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    start : pd.TimeStamp or None
+        start time of observations.
+    end : pd.TimeStamp or None
+        end time of observations.
+
+    Raises
+    ------
+    ValueError
+        if there is no data for the provided stn an error is raised.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    variables : dictionary
+        additional information about the variables
+    """
+    warnings.warn(
+        "the function 'get_knmi_daily_rainfall_api' is deprecated and will eventually be "
+        "removed, please use 'get_daily_rainfall_api'.",
+        DeprecationWarning,
+    )
+
+    return get_daily_rainfall_api(stn, start, end)
+
+
 @lru_cache()
 def get_daily_rainfall_api(
     stn: int,
@@ -981,6 +1111,44 @@ def request_url(url: str, fname=None) -> StringIO:
             f.write(result_str)
 
     return StringIO(result_str)
+
+
+def get_knmi_daily_rainfall_url(
+    stn: int,
+    stn_name: str,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily rainfall.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_daily_rainfall_url` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_daily_rainfall_url`.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    stn_name : str
+        the name of the station in capital letters, can be tricky
+
+    Raises
+    ------
+    ValueError
+        if there is no data for the provided stn an error is raised.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    variables : dictionary
+        additional information about the variables
+    """
+    warnings.warn(
+        "the function 'get_knmi_daily_rainfall_url' is deprecated and will eventually be "
+        "removed, please use 'get_daily_rainfall_url'.",
+        DeprecationWarning,
+    )
+
+    get_daily_rainfall_url(stn, stn_name)
 
 
 @lru_cache()
@@ -1139,6 +1307,41 @@ def request_api(url: str, params: Dict[str, str], fname=None) -> StringIO:
     return StringIO(result_str)
 
 
+def get_knmi_daily_meteo_api(
+    stn, start=None, end=None, meteo_var: Union[str, None] = None
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily meteo data.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    meteo_var : str
+        e.g. 'EV24'.
+    start : pd.TimeStamp or None
+        start time of observations.
+    end : pd.TimeStamp or None
+        end time of observations.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    variables : dictionary
+        additional information about the variables
+    stations : pandas DataFrame
+        additional data about the measurement station
+    """
+
+    warnings.warn(
+        "the function 'get_knmi_daily_meteo_api' is deprecated and will eventually be "
+        "removed, please use 'get_daily_meteo_api'.",
+        DeprecationWarning,
+    )
+
+    return get_daily_meteo_api(stn, start, end, meteo_var)
+
+
 @lru_cache()
 def get_daily_meteo_api(
     stn, start=None, end=None, meteo_var: Union[str, None] = None
@@ -1186,6 +1389,34 @@ def get_daily_meteo_api(
     strio = request_api(url, params)
 
     return parse_data(strio)
+
+
+def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily meteo data.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_daily_meteo_url` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_daily_meteo_url`.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    meta : dictionary
+        additional information about the variables
+    """
+    warnings.warn(
+        "the function 'get_knmi_daily_meteo_url' is deprecated and will eventually be "
+        "removed, please use 'get_daily_meteo_url'.",
+        DeprecationWarning,
+    )
+
+    return get_daily_meteo_url(stn)
 
 
 @lru_cache()
@@ -1383,6 +1614,47 @@ def interpret_knmi_file(
             return mdf, var
 
     return pd.DataFrame(), variables
+
+
+def get_knmi_hourly_meteo_api(
+    stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: Union[str, None] = None
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Retrieve hourly meteorological data from the KNMI API.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_hourly_meteo_api` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_hourly_meteo_api`.
+
+    Parameters
+    ----------
+    stn : int
+        The station number.
+    start : pd.Timestamp or None
+        The start date and time of the data.
+    end : pd.Timestamp or None
+        The end date and time of the data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame containing the requested meteorological variable data.
+    dict
+        A dictionary containing information about the variables in the DataFrame.
+
+    Raises
+    ------
+    requests.ConnectionError
+        If there is a connection error while accessing the KNMI API.
+    RuntimeError
+        If the KNMI API is down or returns unexpected data.
+    """
+    warnings.warn(
+        "the function 'get_knmi_hourly_meteo_api' is deprecated and will eventually be "
+        "removed, please use 'get_hourly_meteo_api'.",
+        DeprecationWarning,
+    )
+
+    return get_hourly_meteo_api(stn, start, end, meteo_var)
 
 
 @lru_cache()
