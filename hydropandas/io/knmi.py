@@ -614,7 +614,7 @@ def fill_missing_measurements(
         stations_period = pd.concat([stations_period, stations.loc[[stn]]])
     else:
         # download data from station if it has data between start-end
-        ts_df, variables, station_meta = download_knmi_data(
+        ts_df, variables, _station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
 
