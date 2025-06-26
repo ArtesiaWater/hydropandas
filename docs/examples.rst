@@ -7,7 +7,7 @@ Jupyter Notebooks with more detailed examples.
 Example snippets
 ----------------
 
-Importing a single CSV-file downloaded from DINOLoket::
+Reading a single CSV-file downloaded from DINOLoket::
 
    import hydropandas as hpd
    fname = './tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv'
@@ -24,14 +24,20 @@ Or for a zipfile::
                                          ObsClass=hpd.GroundwaterObs,
                                          keep_all_obs=False)
 
-Example notebooks
------------------
+Example gallery
+---------------
 
-The links below link to Jupyter Notebooks with explanation and examples of the
-usage of the `hydropandas` module:
+.. nbgallery::
+    :name: examples
 
-.. toctree::
-   :maxdepth: 2
-   :glob:
+    ../examples/00_hydropandas_objects.ipynb
+    ../examples/01_groundwater_observations.ipynb
+    ../examples/02_knmi_observations.ipynb
+    ../examples/03_hydropandas_and_pastas.ipynb
+    ../examples/04_merging_observations.ipynb
+    ../examples/05_bronhouderportaal_bro.ipynb
+    ../examples/06_lizard.ipynb
+    ../examples/07_fews.ipynb
+    ../examples/08_waterinfo.ipynb
+    ../examples/09_water_connect.ipynb
 
-   examples/*
