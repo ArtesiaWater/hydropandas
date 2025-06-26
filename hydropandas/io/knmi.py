@@ -1,21 +1,32 @@
 """
 Module with functions to read or download time series with observations from knmi.
+
+function levels:
+1. get_knmi_obs_list: list of observations
+    2. get_knmi_obs: single observation
+        3. get_timeseries_stn, get_timeseries_from_file: get time series from station or file
+            4. fill_missing_measurements, get_evaporation: aggregate time series data
+                5. download_knmi_data: download a single timeseries
+                    6a. get_hourly_meteo_api, get_daily_meteo_api, get_daily_rainfall_api,
+                        get_daily_meteo_url, get_daily_rainfall_url
+                        7a. request_api, request_url
+                        7b. parse_data
+                    6b. interpret_knmi_file
 """
 
 import datetime as dt
 import logging
 import os
-import tempfile
+import warnings
 from functools import lru_cache
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
+from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
 import requests
-
-from .. import util
 
 logger = logging.getLogger(__name__)
 
@@ -110,12 +121,12 @@ def get_knmi_obs(
             f"get data from station {stn} and variable {meteo_var} "
             f"from {start_str} to {end_str}"
         )
-        ts, meta = get_knmi_timeseries_stn(
+        ts, meta = get_timeseries_stn(
             stn=stn, meteo_var=meteo_var, settings=settings, start=start, end=end
         )
     elif fname is not None:
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
-        ts, meta = get_knmi_timeseries_fname(
+        ts, meta = get_timeseries_from_file(
             fname=str(fname),
             meteo_var=meteo_var,
             settings=settings,
@@ -136,7 +147,7 @@ def get_knmi_obs(
             stations=None,
             ignore=None,
         )
-        ts, meta = get_knmi_timeseries_stn(
+        ts, meta = get_timeseries_stn(
             stn=stns[0], meteo_var=meteo_var, settings=settings, start=start, end=end
         )
     else:
@@ -154,7 +165,76 @@ def get_knmi_timeseries_fname(
     start: pd.Timestamp,
     end: pd.Timestamp,
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-    df, meta = read_knmi_file(fname)
+    """Get a knmi time series and metadata from a file.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_timeseries_fname` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_timeseries_from_file`.
+
+    Parameters
+    ----------
+    fname : str
+        filename of the knmi file.
+    meteo_var : str
+        observation type e.g. "RH" or "EV24". See list with all options in the
+        hpd.read_knmi function.
+    settings : dict
+        settings for obtaining the right time series, see _get_default_settings
+        for more information
+    start : pd.Timestamp
+        start date of observations.
+    end : pd.Timestamp
+        end date of observations.
+
+    Returns
+    -------
+    ts_df : pandas DataFrame
+        time series with measurements.
+    meta : dictionary
+        metadata from the measurement station.
+    """
+    warnings.warn(
+        "the function 'get_knmi_timeseries_fname' is deprecated and will eventually be "
+        "removed, please use 'get_timeseries_from_file'.",
+        DeprecationWarning,
+    )
+
+    return get_timeseries_from_file(fname, meteo_var, settings, start, end)
+
+
+def get_timeseries_from_file(
+    fname: str,
+    meteo_var: str,
+    settings: Dict[str, Any],
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Get a knmi time series and metadata from a file.
+
+    Parameters
+    ----------
+    fname : str
+        filename of the knmi file.
+    meteo_var : str
+        observation type e.g. "RH" or "EV24". See list with all options in the
+        hpd.read_knmi function.
+    settings : dict
+        settings for obtaining the right time series, see _get_default_settings
+        for more information
+    start : pd.Timestamp
+        start date of observations.
+    end : pd.Timestamp
+        end date of observations.
+
+    Returns
+    -------
+    ts_df : pandas DataFrame
+        time series with measurements.
+    meta : dictionary
+        metadata from the measurement station.
+    """
+
+    df, meta = parse_data(fname)
     # first try to figure out filetype by it's name
     if "neerslaggeg" in fname:
         # neerslagstation
@@ -284,6 +364,10 @@ def get_knmi_timeseries_stn(
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Get a knmi time series and metadata.
 
+    .. deprecated:: 0.13.3
+        `get_knmi_timeseries_stn` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_timeseries_stn`.
+
     Parameters
     ----------
     stn : int
@@ -301,7 +385,47 @@ def get_knmi_timeseries_stn(
 
     Returns
     -------
-    knmi_df : pandas DataFrame
+    ts_df : pandas DataFrame
+        time series with measurements.
+    meta : dictionary
+        metadata from the measurement station.
+    """
+    warnings.warn(
+        "the function 'get_knmi_timeseries_stn' is deprecated and will eventually be "
+        "removed, please use 'get_timeseries_stn'.",
+        DeprecationWarning,
+    )
+
+    return get_timeseries_stn(stn, meteo_var, settings, start, end)
+
+
+def get_timeseries_stn(
+    stn: int,
+    meteo_var: str,
+    settings: Dict[str, Any],
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Get a knmi time series and metadata.
+
+    Parameters
+    ----------
+    stn : int
+        measurement station e.g. 829.
+    meteo_var : str
+        observation type e.g. "RH" or "EV24". See list with all options in the
+        hpd.read_knmi function.
+    settings : dict
+        settings for obtaining the right time series, see _get_default_settings
+        for more information
+    start : pd.TimeStamp or None, optional
+        start date of observations. The default is None.
+    end : pd.TimeStamp or None, optional
+        end date of observations. The default is None.
+
+    Returns
+    -------
+    ts_df : pandas DataFrame
         time series with measurements.
     meta : dictionary
         metadata from the measurement station.
@@ -330,7 +454,7 @@ def get_knmi_timeseries_stn(
         raise ValueError(message)
     elif settings["fill_missing_obs"]:
         # download data
-        knmi_df, meta = fill_missing_measurements(
+        ts_df, meta = fill_missing_measurements(
             stn=stn,
             meteo_var=meteo_var,
             start=start,
@@ -339,14 +463,14 @@ def get_knmi_timeseries_stn(
             stn_name=stn_name,
         )
 
-        return knmi_df, meta
+        return ts_df, meta
     elif meteo_var in ["penman", "makkink", "hargreaves"]:
         # compute evaporation from data
-        knmi_df, meta = get_evaporation(
+        ts_df, meta = get_evaporation(
             meteo_var=meteo_var, stn=stn, start=start, end=end, settings=settings
         )
     else:
-        knmi_df, variables, station_meta = download_knmi_data(
+        ts_df, variables, station_meta = download_knmi_data(
             stn=stn,
             meteo_var=meteo_var,
             start=start,
@@ -354,7 +478,7 @@ def get_knmi_timeseries_stn(
             settings=settings,
             stn_name=stn_name,
         )
-        if knmi_df.empty:
+        if ts_df.empty:
             logger.warning(
                 f"No data for {meteo_var=} at {stn=} between{start=} and {end=}."
             )
@@ -378,7 +502,7 @@ def get_knmi_timeseries_stn(
         )
         meta.update(variables)
 
-    return knmi_df, meta
+    return ts_df, meta
 
 
 def get_stations(
@@ -539,10 +663,9 @@ def fill_missing_measurements(
     knmi_df : pandas DataFrame
         data from one station from one type of observation, with additional
         column to see which station is used to fill the value
-    variables : dictionary
-        information about the observerd variables
-    stations : pandas DataFrame
-        information about the measurement station.
+    meta : dictionary
+        metadata from the originally requested station even if this station
+        has no data
     """
     if settings["interval"] == "hourly":
         raise NotImplementedError("cannot yet fill missing values in hourly data")
@@ -574,13 +697,13 @@ def fill_missing_measurements(
     # 2. Download the data from the given station
     if stn not in stations_period.index:
         # no measurements in given period, continue with empty dataframe
-        knmi_df = pd.DataFrame()
+        ts_df = pd.DataFrame()
 
         # add location of station without data to dataframe
         stations_period = pd.concat([stations_period, stations.loc[[stn]]])
     else:
         # download data from station if it has data between start-end
-        knmi_df, variables, station_meta = download_knmi_data(
+        ts_df, variables, _station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
 
@@ -594,7 +717,7 @@ def fill_missing_measurements(
         )
         logger.warning(msg)
 
-        return knmi_df, meta
+        return ts_df, meta
 
     elif start < tmin_first_meas:
         msg = (
@@ -617,9 +740,9 @@ def fill_missing_measurements(
             "no need to change the end date"
         )
         logger.debug(msg)
-    elif knmi_df.empty or (end > knmi_df.index[-1]):
+    elif ts_df.empty or (end > ts_df.index[-1]):
         # get measurements at de Bilt
-        start_de_bilt = start if knmi_df.empty else knmi_df.index[-1]
+        start_de_bilt = start if ts_df.empty else ts_df.index[-1]
         ts_de_bilt, _, _ = download_knmi_data(
             stn_de_bilt,
             meteo_var,
@@ -636,7 +759,7 @@ def fill_missing_measurements(
                 f" for this period"
             )
             logger.warning(msg)
-            return knmi_df, meta
+            return ts_df, meta
 
         new_end = ts_de_bilt.index[-1]
         if new_end < end:
@@ -652,7 +775,7 @@ def fill_missing_measurements(
     # if there are no measurements that fit the requirements at the given stn
     # read the nearby station
     ignore = [stn]
-    while knmi_df.empty:
+    while ts_df.empty:
         stn_lst = get_nearest_station_df(
             stations_period.loc[[ignore[0]]],
             meteo_var=meteo_var,
@@ -676,7 +799,7 @@ def fill_missing_measurements(
 
         stn = stn_lst[0]
         stn_name = get_station_name(stn=stn, stations=stations_period)
-        knmi_df, variables, station_meta = download_knmi_data(
+        ts_df, variables, _station_meta = download_knmi_data(
             stn, meteo_var, start, end, settings, stn_name
         )
         # do not use station number for metadata
@@ -687,10 +810,10 @@ def fill_missing_measurements(
         ignore.append(stn)
 
     # 6. find and fill missing values
-    knmi_df = _add_missing_indices(knmi_df, stn, start, end)
-    missing = knmi_df[meteo_var].isna()
+    ts_df = _add_missing_indices(ts_df, stn, start, end)
+    missing = ts_df[meteo_var].isna()
     logger.debug(f"station {stn} has {missing.sum()} missing measurements")
-    knmi_df.loc[~missing, "station"] = str(stn)
+    ts_df.loc[~missing, "station"] = str(stn)
 
     while np.any(missing) and not np.all(missing):
         stn_comp = get_nearest_station_df(
@@ -718,25 +841,25 @@ def fill_missing_measurements(
             f"station {stn_comp} {stn_name_comp}"
         )
 
-        knmi_df_comp, _, __ = download_knmi_data(
+        ts_df_comp, _, __ = download_knmi_data(
             stn_comp, meteo_var, start, end, settings, stn_name_comp
         )
 
-        if knmi_df_comp.empty:
+        if ts_df_comp.empty:
             logger.debug(f"No data available for station {stn_comp}")
         else:
             # dropnans from new data
-            knmi_df_comp = knmi_df_comp.loc[~knmi_df_comp[meteo_var].isna(), :]
+            ts_df_comp = ts_df_comp.loc[~ts_df_comp[meteo_var].isna(), :]
             # get index of missing data in original timeseries
             missing_idx = missing.loc[missing].index
             # if any missing are in the new data, update
-            if missing_idx.isin(knmi_df_comp.index).any():
+            if missing_idx.isin(ts_df_comp.index).any():
                 # index for missing but in newly downloaded data
-                ix_idx = missing_idx.intersection(knmi_df_comp.index)
+                ix_idx = missing_idx.intersection(ts_df_comp.index)
                 # update missing data
-                knmi_df.loc[ix_idx, meteo_var] = knmi_df_comp.loc[ix_idx, meteo_var]
+                ts_df.loc[ix_idx, meteo_var] = ts_df_comp.loc[ix_idx, meteo_var]
                 # add source station number
-                knmi_df.loc[ix_idx, "station"] = str(stn_comp)
+                ts_df.loc[ix_idx, "station"] = str(stn_comp)
                 logger.info(
                     f"Filled {ix_idx.size} observations from station {stn_comp} "
                     f"{stn_name_comp} -> {stn} {stn_name}"
@@ -746,12 +869,12 @@ def fill_missing_measurements(
                     f"No new data available from {stn_comp} {stn_name_comp} "
                     f"for filling missing measurements"
                 )
-        missing = knmi_df[meteo_var].isna()
+        missing = ts_df[meteo_var].isna()
         ignore.append(stn_comp)
 
     meta.update(variables)
 
-    return knmi_df, meta
+    return ts_df, meta
 
 
 def download_knmi_data(
@@ -789,7 +912,7 @@ def download_knmi_data(
 
     Returns
     -------
-    knmi_df : pandas DataFrame
+    ts_df : pandas DataFrame
         data from one station from one type of observation
     variables : dictionary
         information about the observed variables
@@ -800,7 +923,7 @@ def download_knmi_data(
     logger.debug(f"download KNMI {meteo_var} data from station " + msg)
 
     # define variables
-    knmi_df = pd.DataFrame()
+    ts_df = pd.DataFrame()
     variables = {}
 
     # download and read data
@@ -809,24 +932,22 @@ def download_knmi_data(
             if settings["use_api"]:
                 if settings["interval"].startswith("hour"):
                     # hourly data from meteorological stations
-                    df, meta = get_knmi_hourly_meteo_api(
+                    df, meta = get_hourly_meteo_api(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
                     add_day = False
                 elif meteo_var == "RD":
                     # daily data from rainfall-stations
-                    df, meta = get_knmi_daily_rainfall_api(
-                        stn=stn, start=start, end=end
-                    )
+                    df, meta = get_daily_rainfall_api(stn=stn, start=start, end=end)
                     add_day = False
                 else:
                     # daily data from meteorological stations
-                    df, meta = get_knmi_daily_meteo_api(
+                    df, meta = get_daily_meteo_api(
                         stn=stn, meteo_var=meteo_var, start=start, end=end
                     )
                     add_day = True
                 if not df.empty:
-                    knmi_df, variables = interpret_knmi_file(
+                    ts_df, variables = interpret_knmi_file(
                         df=df,
                         meta=meta,
                         meteo_var=meteo_var,
@@ -852,14 +973,14 @@ def download_knmi_data(
                 raise NotImplementedError()
             elif meteo_var == "RD":
                 # daily data from rainfall-stations
-                df, meta = get_knmi_daily_rainfall_url(stn, stn_name)
+                df, meta = get_daily_rainfall_url(stn, stn_name)
                 add_day = False
             else:
                 # daily data from meteorological stations
-                df, meta = get_knmi_daily_meteo_url(stn=stn)
+                df, meta = get_daily_meteo_url(stn=stn)
                 add_day = True
             if not df.empty:
-                knmi_df, variables = interpret_knmi_file(
+                ts_df, variables = interpret_knmi_file(
                     df=df,
                     meta=meta,
                     meteo_var=meteo_var,
@@ -875,11 +996,52 @@ def download_knmi_data(
 
     stations = get_stations(meteo_var=meteo_var).loc[[stn], :]
 
-    return knmi_df, variables, stations
+    return ts_df, variables, stations
+
+
+def get_knmi_daily_rainfall_api(
+    stn: int,
+    start: Union[pd.Timestamp, None] = None,
+    end: Union[pd.Timestamp, None] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily rainfall.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_daily_rainfall_api` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_daily_rainfall_api`.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    start : pd.TimeStamp or None
+        start time of observations.
+    end : pd.TimeStamp or None
+        end time of observations.
+
+    Raises
+    ------
+    ValueError
+        if there is no data for the provided stn an error is raised.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    variables : dictionary
+        additional information about the variables
+    """
+    warnings.warn(
+        "the function 'get_knmi_daily_rainfall_api' is deprecated and will eventually be "
+        "removed, please use 'get_daily_rainfall_api'.",
+        DeprecationWarning,
+    )
+
+    return get_daily_rainfall_api(stn, start, end)
 
 
 @lru_cache()
-def get_knmi_daily_rainfall_api(
+def get_daily_rainfall_api(
     stn: int,
     start: Union[pd.Timestamp, None] = None,
     end: Union[pd.Timestamp, None] = None,
@@ -915,13 +1077,82 @@ def get_knmi_daily_rainfall_api(
         params["start"] = (start - pd.Timedelta(days=1)).strftime("%Y%m%d")
     if end is not None:
         params["end"] = end.strftime("%Y%m%d")
-    strio = get_knmi_api(url, params)
+    strio = request_api(url, params)
 
-    return read_knmi_file(strio)
+    return parse_data(strio)
+
+
+def request_url(url: str, fname=None) -> StringIO:
+    """download and read knmi daily rainfall data.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    fname : str or None, optional
+        filename to save the data to, only used if not None. The default is None.
+
+    Returns
+    -------
+    StringIO
+    """
+
+    # request zipfile
+    r = requests.get(url, stream=True, timeout=60)
+    r.raise_for_status()
+
+    # unpack data
+    with ZipFile(BytesIO(r.content), mode="r") as zf:
+        zipfile = zf.read(zf.namelist()[0])
+        result_str = zipfile.decode().replace("\r\n", "\n")
+
+    if fname is not None:
+        with open(fname, "w") as f:
+            f.write(result_str)
+
+    return StringIO(result_str)
+
+
+def get_knmi_daily_rainfall_url(
+    stn: int,
+    stn_name: str,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily rainfall.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_daily_rainfall_url` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_daily_rainfall_url`.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    stn_name : str
+        the name of the station in capital letters, can be tricky
+
+    Raises
+    ------
+    ValueError
+        if there is no data for the provided stn an error is raised.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    variables : dictionary
+        additional information about the variables
+    """
+    warnings.warn(
+        "the function 'get_knmi_daily_rainfall_url' is deprecated and will eventually be "
+        "removed, please use 'get_daily_rainfall_url'.",
+        DeprecationWarning,
+    )
+
+    get_daily_rainfall_url(stn, stn_name)
 
 
 @lru_cache()
-def get_knmi_daily_rainfall_url(
+def get_daily_rainfall_url(
     stn: int,
     stn_name: str,
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
@@ -946,38 +1177,14 @@ def get_knmi_daily_rainfall_url(
     variables : dictionary
         additional information about the variables
     """
-
     stn = f"{stn:03d}"  # make sure there are leading zeros
     url = (
         "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
         f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
     )
 
-    # get file name
-    basedir = os.path.join(tempfile.gettempdir(), "knmi")
-    if not os.path.isdir(basedir):
-        os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(), "knmi", f"neerslaggeg_{stn}.zip")
-    fname_dir = os.path.join(tempfile.gettempdir(), "knmi", f"neerslaggeg_{stn}")
-    fname_txt = os.path.join(fname_dir, f"neerslaggeg_{stn_name}_{stn}.txt")
-
-    # download zip file
-    r = requests.get(url, stream=True)
-
-    if r.status_code != 200:
-        raise ValueError(
-            f"Could not retrieve data from {url=}."
-            f"Please check if the station name is correct {stn_name}."
-        )
-
-    with open(fname_zip, "wb") as fd:
-        for chunk in r.iter_content(chunk_size=128):
-            fd.write(chunk)
-
-    # unzip file
-    util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
-
-    return read_knmi_file(fname_txt)
+    strio = request_url(url)
+    return parse_data(strio)
 
 
 def _transform_variables(
@@ -1068,7 +1275,7 @@ def _transform_variables(
     return df, variables
 
 
-def get_knmi_api(url: str, params: Dict[str, str]) -> StringIO:
+def request_api(url: str, params: Dict[str, str], fname=None) -> StringIO:
     """Download KNMI data from the API
 
     Parameters
@@ -1077,27 +1284,66 @@ def get_knmi_api(url: str, params: Dict[str, str]) -> StringIO:
         URL to parse the request to
     params : Dict[str, str]
         Dictionary with parameters that are parsed to the request get
+    fname : str or None, optional
+        filename to save the data to only used if not None, by default None
 
     Returns
     -------
     StringIO
 
     """
-    result = requests.get(url, params=params)
+    r = requests.get(url, params=params, timeout=60)
+    r.raise_for_status()
 
-    if result.status_code != 200:
-        raise requests.ConnectionError(f"Cannot connect to {url}, {params=}")
-
-    result_str = result.text
+    result_str = r.text
 
     if result_str.startswith("<!DOCTYPE html>"):
         raise RuntimeError("KNMI API down\n" + result_str)
 
+    if fname is not None:
+        with open(fname, "w") as f:
+            f.write(result_str)
+
     return StringIO(result_str)
 
 
-@lru_cache()
 def get_knmi_daily_meteo_api(
+    stn, start=None, end=None, meteo_var: Union[str, None] = None
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily meteo data.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+    meteo_var : str
+        e.g. 'EV24'.
+    start : pd.TimeStamp or None
+        start time of observations.
+    end : pd.TimeStamp or None
+        end time of observations.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    variables : dictionary
+        additional information about the variables
+    stations : pandas DataFrame
+        additional data about the measurement station
+    """
+
+    warnings.warn(
+        "the function 'get_knmi_daily_meteo_api' is deprecated and will eventually be "
+        "removed, please use 'get_daily_meteo_api'.",
+        DeprecationWarning,
+    )
+
+    return get_daily_meteo_api(stn, start, end, meteo_var)
+
+
+@lru_cache()
+def get_daily_meteo_api(
     stn, start=None, end=None, meteo_var: Union[str, None] = None
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """download and read knmi daily meteo data.
@@ -1140,13 +1386,41 @@ def get_knmi_daily_meteo_api(
         end = pd.Timestamp(end) - dt.timedelta(days=1)
         params["end"] = end.strftime("%Y%m%d")
 
-    strio = get_knmi_api(url, params)
+    strio = request_api(url, params)
 
-    return read_knmi_file(strio)
+    return parse_data(strio)
+
+
+def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """download and read knmi daily meteo data.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_daily_meteo_url` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_daily_meteo_url`.
+
+    Parameters
+    ----------
+    stn : int
+        station number.
+
+    Returns
+    -------
+    pandas DataFrame
+        measurements.
+    meta : dictionary
+        additional information about the variables
+    """
+    warnings.warn(
+        "the function 'get_knmi_daily_meteo_url' is deprecated and will eventually be "
+        "removed, please use 'get_daily_meteo_url'.",
+        DeprecationWarning,
+    )
+
+    return get_daily_meteo_url(stn)
 
 
 @lru_cache()
-def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+def get_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """download and read knmi daily meteo data.
 
     Parameters
@@ -1166,34 +1440,19 @@ def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         f"/gegevens/daggegevens/etmgeg_{stn}.zip"
     )
 
-    # get file name
-    basedir = os.path.join(tempfile.gettempdir(), "knmi")
-    if not os.path.isdir(basedir):
-        os.mkdir(basedir)
-    fname_zip = os.path.join(tempfile.gettempdir(), "knmi", f"etmgeg_{stn}.zip")
-    fname_dir = os.path.join(tempfile.gettempdir(), "knmi", f"etmgeg_{stn}")
-    fname_txt = os.path.join(fname_dir, f"etmgeg_{stn}.txt")
-
-    # download zip file
-    r = requests.get(url, stream=True)
-    with open(fname_zip, "wb") as fd:
-        for chunk in r.iter_content(chunk_size=128):
-            fd.write(chunk)
-
-    # unzip file
-    util.unzip_file(fname_zip, fname_dir, force=True, preserve_datetime=True)
-    return read_knmi_file(fname_txt)
+    strio = request_url(url)
+    return parse_data(strio)
 
 
-def read_knmi_file(
+def parse_data(
     path: Union[str, Path, StringIO],
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """read knmi daily meteo data from a file
 
     Parameters
     ----------
-    path : str
-        file path of .txt file.
+    path : str or StringIO
+        file path of .txt file or str representation.
 
     Returns
     -------
@@ -1357,8 +1616,49 @@ def interpret_knmi_file(
     return pd.DataFrame(), variables
 
 
-@lru_cache()
 def get_knmi_hourly_meteo_api(
+    stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: Union[str, None] = None
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Retrieve hourly meteorological data from the KNMI API.
+
+    .. deprecated:: 0.13.3
+        `get_knmi_hourly_meteo_api` will be removed in hydropandas 1.0.0, it is replaced
+        by `get_hourly_meteo_api`.
+
+    Parameters
+    ----------
+    stn : int
+        The station number.
+    start : pd.Timestamp or None
+        The start date and time of the data.
+    end : pd.Timestamp or None
+        The end date and time of the data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame containing the requested meteorological variable data.
+    dict
+        A dictionary containing information about the variables in the DataFrame.
+
+    Raises
+    ------
+    requests.ConnectionError
+        If there is a connection error while accessing the KNMI API.
+    RuntimeError
+        If the KNMI API is down or returns unexpected data.
+    """
+    warnings.warn(
+        "the function 'get_knmi_hourly_meteo_api' is deprecated and will eventually be "
+        "removed, please use 'get_hourly_meteo_api'.",
+        DeprecationWarning,
+    )
+
+    return get_hourly_meteo_api(stn, start, end, meteo_var)
+
+
+@lru_cache()
+def get_hourly_meteo_api(
     stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: Union[str, None] = None
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Retrieve hourly meteorological data from the KNMI API.
@@ -1411,9 +1711,9 @@ def get_knmi_hourly_meteo_api(
     s = start - pd.Timedelta(1, unit="h")
     params["start"] = s.strftime("%Y%m%d") + "01"
 
-    strio = get_knmi_api(url=url, params=params)
+    strio = request_api(url=url, params=params)
 
-    return read_knmi_file(strio)
+    return parse_data(strio)
 
 
 def get_nearest_station_df(
@@ -1575,7 +1875,7 @@ def get_n_nearest_stations_xy(
 
 
 def _add_missing_indices(
-    knmi_df: pd.DataFrame, stn: int, start: pd.Timestamp, end: pd.Timestamp
+    ts_df: pd.DataFrame, stn: int, start: pd.Timestamp, end: pd.Timestamp
 ) -> pd.DataFrame:
     """When downloading KNMI data you don't always get a DataFrame with the
     periods that you provided in your request. Thus the index does not cover
@@ -1584,7 +1884,7 @@ def _add_missing_indices(
 
     Parameters
     ----------
-    knmi_df : pandas DataFrame
+    ts_df : pandas DataFrame
         data from one station from one type of observation, with additional
         column to see which station is used to fill the value
     stn : int or str
@@ -1596,41 +1896,42 @@ def _add_missing_indices(
 
     Returns
     -------
-    knmi_df : pandas DataFrame
+    ts_df : pandas DataFrame
         data from one station from one type of observation
     """
     # check if given dates are more or less similar than measurement dates
-    if (knmi_df.index[0] - start).days < 1:
-        new_start = knmi_df.index[0]
+
+    if (ts_df.index[0] - start).days < 1:
+        new_start = ts_df.index[0]
     else:
         new_start = pd.Timestamp(
             year=start.year,
             month=start.month,
             day=start.day,
-            hour=knmi_df.index[0].hour,
-            minute=knmi_df.index[0].minute,
-            second=knmi_df.index[0].second,
+            hour=ts_df.index[0].hour,
+            minute=ts_df.index[0].minute,
+            second=ts_df.index[0].second,
         )
-        logger.info(f"station {stn} has no measurements before {knmi_df.index[0]}")
+        logger.info(f"station {stn} has no measurements before {ts_df.index[0]}")
 
-    if (end - knmi_df.index[-1]).days < 0:
-        new_end = knmi_df.index[-1]
+    if (end - ts_df.index[-1]).days < 0:
+        new_end = ts_df.index[-1]
     else:
         new_end = pd.Timestamp(
             year=end.year,
             month=end.month,
             day=end.day,
-            hour=knmi_df.index[-1].hour,
-            minute=knmi_df.index[-1].minute,
-            second=knmi_df.index[-1].second,
+            hour=ts_df.index[-1].hour,
+            minute=ts_df.index[-1].minute,
+            second=ts_df.index[-1].second,
         )
-        logger.info(f"station {stn} has no measurements after {knmi_df.index[-1]}")
+        logger.info(f"station {stn} has no measurements after {ts_df.index[-1]}")
 
     # add missing indices
     new_index = pd.date_range(new_start, new_end, freq="D")
-    knmi_df = knmi_df.reindex(new_index)
+    ts_df = ts_df.reindex(new_index)
 
-    return knmi_df
+    return ts_df
 
 
 def get_knmi_obslist(
@@ -1809,7 +2110,7 @@ def get_evaporation(
         d = {}
         mvs = ["TG", "TN", "TX"]
         for mv in mvs:
-            ts, meta = get_knmi_timeseries_stn(
+            ts, meta = get_timeseries_stn(
                 stn, meteo_var=mv, start=start, end=end, settings=settings
             )
             d[mv] = ts.squeeze()
@@ -1824,7 +2125,7 @@ def get_evaporation(
         d = {}
         mvs = ["TG", "Q"]
         for mv in mvs:
-            ts, meta = get_knmi_timeseries_stn(
+            ts, meta = get_timeseries_stn(
                 stn, meteo_var=mv, start=start, end=end, settings=settings
             )
             d[mv] = ts.squeeze()
@@ -1838,7 +2139,7 @@ def get_evaporation(
         d = {}
         mvs = ["TG", "TN", "TX", "Q", "FG", "UG"]
         for mv in mvs:
-            ts, meta = get_knmi_timeseries_stn(
+            ts, meta = get_timeseries_stn(
                 stn, meteo_var=mv, start=start, end=end, settings=settings
             )
             d[mv] = ts.squeeze()

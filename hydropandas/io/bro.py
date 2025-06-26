@@ -1,5 +1,13 @@
 """
 https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleveranciers/url-s-publieke-rest-services
+
+function levels:
+1. get_obs_list_from_gmn: list of observations from grondwatermonitoring net
+    2. get_bro_groundwater: single observation
+        3. measurements_from_gld:
+        4. get_metadata_from_gmw:
+        5. get_gld_ids_from_gmw:
+
 """
 
 import json
