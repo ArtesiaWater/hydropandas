@@ -43,7 +43,7 @@ Some sources also provide files readable by HydroPandas.
 | [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | Meteorological                 | txt          | Netherlands          |
 | [Pastastore](https://hydropandas.readthedocs.io/en/stable/examples/03_hydropandas_and_pastas.html) | Time series models                  | NA      | NA      |
 | [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water quantity and quality | csv / zip          | Netherlands          |
-| Wiski (no documentation available)                | Groundwater | csv          | Netherlands          |
+| Wiski (no docs available)                | Groundwater | csv          | Netherlands          |
 ---
 ## Install
 
@@ -76,9 +76,11 @@ typing `pip install -e .[full]` from the module root directory.
 ## Structure
 
 The HydroPandas package allows users to store a timeseries and metadata in a
-single object (Obs class). This object inherits from a pandas DataFrame, with all its
-wonderful features, and is extended with custom methods and attributes related
-to hydrological timeseries.
+single object (Obs class). Or store a collection of timeseries with metadata
+in a single object (ObsCollection class). Both inheret from a pandas DataFrame
+and are extended with custom methods and attributes related to hydrological timeseries.
+
+### The Obs class
 
 The Obs class holds the measurements and metadata for one timeseries. There are
 currently 7 specific Obs classes for different types of measurements:
@@ -95,20 +97,15 @@ Each of these Obs classes is essentially a pandas DataFrame with additional
 methods and attributes related to the type of measurement that it holds.
 Each Obs object also contains specific methods to read data from specific sources.
 
-## The ObsCollection class
+### The ObsCollection class
 
-The ObsCollection class, as the name implies, represents a collection of Obs
-classes, e.g. 10 timeseries of the groundwater level in a certain area. The
-ObsCollection is also a pandas DataFrame in which each timeseries is stored
+The ObsCollection class hold the data for a collection of Obs classes, e.g. 
+10 timeseries of the groundwater level in a certain area. The
+ObsCollection is essentialy a pandas DataFrame in which each timeseries is stored
 in a different row. Each row contains metadata (e.g. latitude and longitude
-of the observation point) and the Obs object (DataFrame) that holds the
-measurements. It is recommended to let an ObsCollection contain only one Obs
-type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate
-ObsCollection for 5 PrecipitationObs.
-
-Like the Obs class, the ObsCollection class contains a bunch of methods for
-reading data from different sources. See the next section for supported data
-sources.
+of the observation point) and the Obs object that holds the
+measurements. It's recommended to use one ObsCollection per observation type — for 
+example, group 10 GroundwaterObs in one collection and 5 PrecipitationObs in another.
 
 More information on dealing with Obs and ObsCollection objects in [the documentation](https://hydropandas.readthedocs.io/en/stable/examples/00_hydropandas_objects.html)
 
