@@ -35,7 +35,7 @@ See the table of contents to get started with `hydropandas`.
    :caption: Contents:
 
    Getting started <getting_started>
-   Examples <examples>
+   Examples <examples/index>
    User guide <user_guide>
    Hydropandas API-docs <source/modules>
    Contribute <contribute>

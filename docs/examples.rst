@@ -24,20 +24,11 @@ Or for a zipfile::
                                          ObsClass=hpd.GroundwaterObs,
                                          keep_all_obs=False)
 
-Example gallery
----------------
+My Notebook Gallery
+====================
 
-.. nbgallery::
-    :name: examples
+.. toctree::
+   :maxdepth: 1
 
-    examples/00_hydropandas_objects.ipynb
-    examples/01_groundwater_observations.ipynb
-    examples/02_knmi_observations.ipynb
-    examples/03_hydropandas_and_pastas.ipynb
-    examples/04_merging_observations.ipynb
-    examples/05_bronhouderportaal_bro.ipynb
-    examples/06_lizard.ipynb
-    examples/07_fews.ipynb
-    examples/08_waterinfo.ipynb
-    examples/09_water_connect.ipynb
-
+   examples/00_hydropandas_objects
+   examples/01_groundwater_observations
