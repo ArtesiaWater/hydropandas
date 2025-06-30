@@ -51,4 +51,4 @@ Or read a zipfile and plot the location of the measurements on a map::
    ax = dino_gw.to_gdf().plot()
    ctx.add_basemap(ax=ax, crs=28992)
 
-For more examples please see the Examples gallery <examples/index>.
+For more examples please see the `Examples gallery <examples/index>`_.
