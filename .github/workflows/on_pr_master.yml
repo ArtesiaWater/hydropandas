@@ -30,7 +30,6 @@ jobs:
           - name: Notebooks and coverage
             python: "3.11"
             toxenv: notebooks
-          - 
 
     name: ${{ matrix.name }}
     env:
