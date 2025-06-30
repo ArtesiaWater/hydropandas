@@ -94,5 +94,5 @@ master_doc = "index"
 nbsphinx_allow_errors = True
 
 nbsphinx_thumbnails = {
-    'examples/03_hydropandas_and_pastas': 'https://pastas.readthedocs.io/stable/_static/logo.png',
+    "examples/03_hydropandas_and_pastas": "https://pastas.readthedocs.io/stable/_static/logo.png",
 }
