@@ -121,6 +121,7 @@ class CollectionPlots:
         col_name_lat="lat",
         col_name_lon="lon",
         zoom_start=13,
+        popup_width=620,
         create_interactive_plots=True,
         **kwargs,
     ):
@@ -174,6 +175,8 @@ class CollectionPlots:
         create_interactive_plots : boolean, optional
             if True interactive plots will be created, if False the iplot_fname
             in the meta ditctionary of the observations is used.
+        popup_width : int, optional
+            popup width in pixels, optional.
         **kwargs :
             will be passed to the interactive_plots method options are:
 
@@ -213,7 +216,7 @@ class CollectionPlots:
         # create interactive bokeh plots
         if create_interactive_plots and not empty_obs:
             self._obj.plots.interactive_plots(
-                savedir=plot_dir, per_location=per_location, **kwargs
+                savedir=plot_dir, per_location=per_location, width=popup_width, **kwargs
             )
 
         # check if observation collection has lat and lon values
@@ -259,8 +262,10 @@ class CollectionPlots:
                 with open(o.meta["iplot_fname"], "r") as f:
                     bokeh_html = f.read()
 
-                iframe = branca.element.IFrame(html=bokeh_html, width=620, height=420)
-                popup = folium.Popup(iframe, max_width=620)
+                iframe = branca.element.IFrame(
+                    html=bokeh_html, width=popup_width, height=int(popup_width / 1.5)
+                )
+                popup = folium.Popup(iframe, max_width=popup_width)
 
                 folium.CircleMarker(
                     [
@@ -761,6 +766,7 @@ class ObsPlots:
         ylabel=None,
         plot_colors=("blue",),
         add_screen_to_legend=False,
+        width=600,
         return_filename=False,
     ):
         """Create an interactive plot of the observations using bokeh.
@@ -802,6 +808,8 @@ class ObsPlots:
         add_screen_to_legend : boolean, optional
             if True the attributes screen_top and screen_bottom
             are added to the legend name
+        width : int, optional
+            width of the interactive figure.
         return_filename : boolean, optional
             if True filename will be returned
 
@@ -843,7 +851,9 @@ class ObsPlots:
 
         # create plot
         if p is None:
-            p = figure(width=600, height=400, x_axis_type="datetime", title="")
+            p = figure(
+                width=width, height=int(width / 1.5), x_axis_type="datetime", title=""
+            )
             if ylabel is None:
                 ylabel = self._obj.unit
             p.yaxis.axis_label = ylabel

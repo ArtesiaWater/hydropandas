@@ -13,55 +13,58 @@
 # HydroPandas
 
 Hydropandas is a Python package for reading, analyzing and writing
-(hydrological) timeseries data.
+(hydrological) timeseries.
 
-## Introduction
+## Reading
 
-The HydroPandas package allows users to store a timeseries and metadata in a
-single object. This object inherits from a pandas DataFrame, with all its
-wonderful features, and is extended with custom methods and attributes related
-to hydrological timeseries.
+The HydroPandas package provides convenient read functions from various sources.
+The table below lists all API-accessible sources. Click a link in the first column
+for the documentation. The "API available" column indicates current availability
+(updated weekly).
 
-The HydroPandas package also provides convenient read functions using an API:
 
-| Source      | API available |
-|-------------|---------------|
-| [BRO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | [![BRO](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml)  |     
-| [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) |          |
-| [Lizard](https://hydropandas.readthedocs.io/en/stable/examples/06_lizard.html) | [![Lizard](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml)  |               |
-| [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_waterconnect.html) | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) |
-| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml)  |               |
+| source          | observations                       | API available | location             |
+|-----------------|------------------------------------|---------------|----------------------|
+| [BRO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | Groundwater                  | [![BRO](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml) | Netherlands          |
+| [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | Meteorological                 | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) | Netherlands          |
+| [Lizard](https://hydropandas.readthedocs.io/en/stable/examples/06_lizard.html) | Groundwater                  | [![Lizard](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml) | Netherlands (Vitens) |
+| [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_waterconnect.html) | Groundwater                  | [![Waterconnect](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) | South Australia      |
+| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water quantity and quality | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml) | Netherlands          |
+---
 
-Some data sources do not offer an API but do offer a specific file type that can also be read using hydropandas:
-- [BRO](https://www.broloket.nl)
-- [DINO](https://www.dinoloket.nl)
-- FEWS PI-XML
-- [KNMI](https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script)
-- MODFLOW groundwater models
-- IMOD groundwater models
-- [Pastastore](https://github.com/pastas/pastastore)
-- [Waterinfo](https://waterinfo.rws.nl/)
-- WISKI csv files
+Some sources also provide files readable by HydroPandas.
 
+
+| source          | observations                       | file format          | location             |
+|-----------------|------------------------------------|----------------------|----------------------|
+| [BRO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | Groundwater                  | xml          | Netherlands          |
+| [DINO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | Groundwater / surface water                  | csv          | Netherlands          |
+| [FEWS](https://hydropandas.readthedocs.io/en/stable/examples/07_fews.html) | Groundwater / surface water                  | xml          | Netherlands          |
+| [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | Meteorological                 | txt          | Netherlands          |
+| [Pastastore](https://hydropandas.readthedocs.io/en/stable/examples/03_hydropandas_and_pastas.html) | Time series models                  | NA      | NA      |
+| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water quantity and quality | csv / zip          | Netherlands          |
+| Wiski (no docs available)                | Groundwater | csv          | Netherlands          |
+---
 ## Install
 
 Install the module with pip:
 
 `pip install hydropandas`
 
-HydroPandas requires `pandas`, `scipy`, `matplotlib`, `tqdm`, `requests` and `colorama`.
+For some functionality additional packages are required. Install all optional packages:
 
-For some functionality additional packages are required:
-
-- `geopandas`: for dealing with shapefiles
-- `pastastore`: for reading or storing data from PastaStore
-- `bokeh`, `branca`, `folium`: for interactive maps
-- `flopy`: for reading data from MODFLOW models
-- `xarray`: for loading data from REGIS
+`pip install hydropandas[full]`
 
 For installing in development mode, clone the repository and install by
-typing `pip install -e .` from the module root directory.
-For installing all the optional packages use `pip install -e .[full]`.
+typing `pip install -e .[full]` from the module root directory.
+
+## Documentation
+
+-   Documentation is provided on the dedicated website
+    [hydropandas.readthedocs.io](https://hydropandas.readthedocs.io/en/stable/)
+-   Examples are available in the [examples directory on the documentation website](https://hydropandas.readthedocs.io/en/stable/examples.html)
+-   View and edit the example notebooks of hydropandas in
+    [GitHub Codespaces](https://codespaces.new/hydropandas/hydropandas?quickstart=1)
 
 ## Get in touch
 
@@ -69,25 +72,18 @@ For installing all the optional packages use `pip install -e .[full]`.
 - Bugs, feature requests and other improvements can be posted as [Github Issues](https://github.com/ArtesiaWater/hydropandas/issues).
 - Find out how to contribute to HydroPandas at our [Contribution page](https://hydropandas.readthedocs.io/en/stable/contribute.html).
 
-## Examples
 
-Importing a groundwater time series from the BRO using the BRO-id and the tube number:
+## Structure
 
-```python
-import hydropandas as hpd
-gw_bro = hpd.GroundwaterObs.from_bro("GMW000000041261", 1)
-```
+The HydroPandas package allows users to store a timeseries and metadata in a
+single object (Obs class). Or store a collection of timeseries with metadata
+in a single object (ObsCollection class). Both inheret from a pandas DataFrame
+and are extended with custom methods and attributes related to hydrological timeseries.
 
-Or import all groundwater time series from the BRO within a certain extent:
-
-```python
-oc = hpd.read_bro(extent=(117850, 118180, 439550, 439900))
-```
-
-## The Obs class
+### The Obs class
 
 The Obs class holds the measurements and metadata for one timeseries. There are
-currently 5 specific Obs classes for different types of measurements:
+currently 7 specific Obs classes for different types of measurements:
 
 - GroundwaterObs: for groundwater measurements
 - WaterQualityObs: for groundwater quality measurements
@@ -99,22 +95,19 @@ currently 5 specific Obs classes for different types of measurements:
 
 Each of these Obs classes is essentially a pandas DataFrame with additional
 methods and attributes related to the type of measurement that it holds.
-Each Obs object also contain specific methods to read data from specific sources.
+Each Obs object also contains specific methods to read data from specific sources.
 
-## The ObsCollection class
+### The ObsCollection class
 
-The ObsCollection class, as the name implies, represents a collection of Obs
-classes, e.g. 10 timeseries of the groundwater level in a certain area. The
-ObsCollection is also a pandas DataFrame in which each timeseries is stored
+The ObsCollection class hold the data for a collection of Obs classes, e.g. 
+10 timeseries of the groundwater level in a certain area. The
+ObsCollection is essentialy a pandas DataFrame in which each timeseries is stored
 in a different row. Each row contains metadata (e.g. latitude and longitude
-of the observation point) and the Obs object (DataFrame) that holds the
-measurements. It is recommended to let an ObsCollection contain only one Obs
-type, e.g. to create an ObsCollection for 10 GroundwaterObs, and a separate
-ObsCollection for 5 PrecipitationObs.
+of the observation point) and the Obs object that holds the
+measurements. It's recommended to use one ObsCollection per observation type — for 
+example, group 10 GroundwaterObs in one collection and 5 PrecipitationObs in another.
 
-Like the Obs class, the ObsCollection class contains a bunch of methods for
-reading data from different sources. See the next section for supported data
-sources.
+More information on dealing with Obs and ObsCollection objects in [the documentation](https://hydropandas.readthedocs.io/en/stable/examples/00_hydropandas_objects.html)
 
 ## Authors
 
