@@ -11,22 +11,23 @@ Supported data sources
 
 Currently supported datasources that can be read:
 
-- `BRO <https://www.broloket.nl>`_
-- `DINOLoket CSV <www.dinoloket.nl>`_
-- `FEWS PI-XML <https://publicwiki.deltares.nl/display/FEWSDOC/The+Delft-Fews+Published+Interface>`_
+- `BRO <examples/01_groundwater_observations.html>`_
+- `DINOLoket CSV <examples/01_groundwater_observations.html>`_
+- `FEWS PI-XML <examples/07_fews.html>`_
 - IMOD groundwater models
-- `KNMI data <https://www.knmi.nl/kennis-en-datacentrum/achtergrond/data-ophalen-vanuit-een-script>`_
-- `Lizard <https://vitens.lizard.net>`_
+- `KNMI data <examples/02_knmi_observations.html>`_
+- `Lizard <examples/06_lizard.html>`_
 - MODFLOW groundwater models
-- `Pastastore <https://github.com/pastas/pastastore>`_, for managing Pastas timeseries and models
-- `Waterinfo <https://waterinfo.rws.nl>`_
+- `Pastastore <examples/03_hydropandas_and_pastas.html>`_, for managing Pastas timeseries and models
+- `Water connect <examples/09_waterconnect.html>`_
+- `Waterinfo <examples/08_waterinfo.html>`_
 - WISKI csv files
 
 ObsCollection can be exported to:
-
 - Excel (with one tab for each time series and a single tab with all metadata)
-- Shapefile
 - Pastastore
+- Pickle
+- Shapefile/geopackage/geojson
 
 See the table of contents to get started with `hydropandas`.
 
@@ -35,7 +36,7 @@ See the table of contents to get started with `hydropandas`.
    :caption: Contents:
 
    Getting started <getting_started>
-   Examples <examples>
+   Examples gallery <examples/index>
    User guide <user_guide>
    Hydropandas API-docs <source/modules>
    Contribute <contribute>

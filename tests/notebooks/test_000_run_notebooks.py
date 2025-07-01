@@ -7,7 +7,7 @@ import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
 
 tst_dir = os.path.dirname(os.path.realpath(__file__))
-nbdir = os.path.join(tst_dir, "..", "examples")
+nbdir = os.path.join(tst_dir, "..", "..", "docs", "examples")
 
 
 def _run_notebook(nbdir, fname):

@@ -16,7 +16,9 @@ maintainers = [
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
 requires-python = ">=3.10"
-dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama"]
+dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama",
+                "geopandas", "pyproj", "contextily", "bokeh", "branca", "folium",
+                "rws-ddlpy"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -38,19 +40,11 @@ documentation = "https://hydropandas.readthedocs.io/en/stable/"
 
 [project.optional-dependencies]
 full = [
-    "geopandas",
     "openpyxl",
     "pastastore",
-    "bokeh",
-    "branca",
-    "folium",
     "flopy",
     "xarray",
-    "shapely",
-    "pyproj",
-    "contextily",
     "lxml",
-    "rws-ddlpy",
     "pyarrow"
 ]
 rtd = [
@@ -106,7 +100,37 @@ legacy_tox_ini = """
     description = run unit tests
     extras = pytesting
     commands =
-            pytest tests -m "not slow" --ignore=tests/test_000_run_notebooks.py
+            pytest tests -m "not slow" --ignore=tests/api --ignore=tests/notebooks
+
+    [testenv:bro]
+    description = run bro tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_101_bro_api.py
+
+    [testenv:knmi]
+    description = run knmi tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_102_knmi_api.py
+
+    [testenv:lizard]
+    description = run lizard tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_103_lizard_api.py
+
+    [testenv:waterconnect]
+    description = run waterconnect tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_104_waterconnect_api.py
+
+    [testenv:waterinfo]
+    description = run waterinfo tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_105_waterinfo_api.py
 
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
