@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # NOTE: currently only the vitens API is officially supported. If/when new endpoints
 # are added we should check whether we want to add the URL as argument or add supported
 # sources to this dictionary:
-LIZARD_APIS = {"vitens": "https://vitens.lizard.net/api/v4/"}
+LIZARD_APIS = {"vitens": "https://vitens.lizard.net/api/v4/", "rotterdam": "https://rotterdam.lizard.net/api/v4/"}
 
 
 def check_status_obs(metadata, timeseries):
@@ -443,7 +443,7 @@ def _combine_timeseries(hand_measurements, diver_measurements):
     return measurements
 
 
-def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
+def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, source="vitens"):
     """Extracts multiple timeseries (hand and/or diver measurements) for a specific tube
     using the Lizard API.
 
@@ -459,7 +459,9 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
         hand: returns only hand measurements
         diver: returns only diver measurements
         merge: the hand and diver measurements into one time series (default)
-        combine: keeps hand and diver measurements separeted
+        combine: keeps hand and diver measurements separated
+    source : str, optional
+        source indicating URL endpoint, currently only "vitens" is officially supported.
 
     Returns
     -------
@@ -478,6 +480,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
                 tube_metadata.pop("uuid_hand"),
                 tmin,
                 tmax,
+                source=source,
             )
         else:
             hand_measurements = None
@@ -488,6 +491,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
                 tube_metadata.pop("uuid_diver"),
                 tmin,
                 tmax,
+                source=source,
             )
         else:
             diver_measurements = None
@@ -519,6 +523,7 @@ def get_lizard_groundwater(
     tmax=None,
     type_timeseries="merge",
     only_metadata=False,
+    source="vitens",
 ):
     """Extracts the metadata and timeseries of an observation well from a LIZARD-API
     based on the code of a monitoring well.
@@ -542,6 +547,8 @@ def get_lizard_groundwater(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
+    source : str, optional
+        source indicating URL endpoint, currently only "vitens" is officially supported.
 
     Returns
     -------
@@ -551,7 +558,7 @@ def get_lizard_groundwater(
         dictionary containing metadata
     """
 
-    groundwaterstation_metadata = get_metadata_mw_from_code(code)
+    groundwaterstation_metadata = get_metadata_mw_from_code(code, source=source)
 
     tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr)
 
@@ -559,7 +566,7 @@ def get_lizard_groundwater(
         return pd.DataFrame(), tube_metadata
 
     measurements, tube_metadata = get_timeseries_tube(
-        tube_metadata, tmin, tmax, type_timeseries
+        tube_metadata, tmin, tmax, type_timeseries, source=source
     )
     tube_metadata = check_status_obs(tube_metadata, measurements)
 
@@ -574,6 +581,7 @@ def get_obs_list_from_codes(
     tmax=None,
     type_timeseries="merge",
     only_metadata=False,
+    source="vitens",
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
     tube numbers.
@@ -599,6 +607,8 @@ def get_obs_list_from_codes(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
+    source : str, optional
+        source indicating URL endpoint, currently only "vitens" is officially supported.
 
     Returns
     -------
@@ -614,7 +624,7 @@ def get_obs_list_from_codes(
 
     obs_list = []
     for code in codes:
-        groundwaterstation_metadata = get_metadata_mw_from_code(code)
+        groundwaterstation_metadata = get_metadata_mw_from_code(code, source=source)
         tubes = []
         if tube_nr == "all":
             for metadata_tube in groundwaterstation_metadata["filters"]:
