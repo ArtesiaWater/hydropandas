@@ -30,6 +30,7 @@ def read_lizard(
     type_timeseries="merge",
     only_metadata=False,
     source="vitens",
+    auth=None,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
     tube numbers.
@@ -58,6 +59,8 @@ def read_lizard(
         default is False.
     source : str, optional
         source of the data, by default "vitens".
+    auth : tuple, optional
+        authentication credentials for the API request
 
     Returns
     -------
@@ -74,6 +77,7 @@ def read_lizard(
         type_timeseries=type_timeseries,
         only_metadata=only_metadata,
         source=source,
+        auth=auth,
     )
     return oc
 
@@ -1392,6 +1396,7 @@ class ObsCollection(pd.DataFrame):
         type_timeseries="merge",
         only_metadata=False,
         source="vitens",
+        auth=None,
     ):
         """Get all observations within a specified extent.
 
@@ -1420,6 +1425,8 @@ class ObsCollection(pd.DataFrame):
             default is False.
         source : str, optional
             source of the data. The default is "vitens".
+        auth : tuple, optional
+            authentication credentials for the API request
 
         Returns
         -------
@@ -1439,6 +1446,7 @@ class ObsCollection(pd.DataFrame):
                 type_timeseries,
                 only_metadata=only_metadata,
                 source=source,
+                auth=auth,
             )
         elif codes is not None:
             obs_list = get_obs_list_from_codes(
@@ -1450,6 +1458,7 @@ class ObsCollection(pd.DataFrame):
                 type_timeseries,
                 only_metadata=only_metadata,
                 source=source,
+                auth=auth,
             )
         else:
             raise ValueError("specify codes or extent")
