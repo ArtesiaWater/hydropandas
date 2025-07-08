@@ -71,6 +71,7 @@ def test_run_notebook_08_waterinfo():
 def test_run_notebook_09_water_connect():
     _run_notebook(nbdir, "09_water_connect.ipynb")
 
+
 # not tested because geost only works for python 3.12 or higher
 # @pytest.mark.notebooks
 # def test_run_notebook_10_borehole():
