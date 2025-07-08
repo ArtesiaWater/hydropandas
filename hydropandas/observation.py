@@ -18,11 +18,11 @@ import logging
 import numbers
 import os
 import warnings
-from _io import StringIO
 from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from _io import StringIO
 from pandas._config import get_option
 from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
