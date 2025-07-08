@@ -743,6 +743,13 @@ def get_obs_list_from_extent(
     logger.info("Number of monitoring wells: {}".format(nr_results))
     logger.info("Number of pages: {}".format(nr_pages))
 
+    if nr_results == 0:
+        logger.warning(
+            "No monitoring wells found in the specified extent. "
+            "Please check the extent or the source."
+        )
+        return []
+
     if nr_threads > nr_pages:
         nr_threads = nr_pages
 

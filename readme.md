@@ -6,10 +6,10 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/actions/workflows/on_pr_master.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/on_pr_master.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://www.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=github.com&utm_medium=referral&utm_content=ArtesiaWater/hydropandas&utm_campaign=Badge_Grade)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://www.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=github.com&utm_medium=referral&utm_content=ArtesiaWater/hydropandas&utm_campaign=Badge_Coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://app.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://app.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
-
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://app.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 # HydroPandas
 
 Hydropandas is a Python package for reading, analyzing and writing
@@ -28,7 +28,7 @@ for the documentation. The "API available" column indicates current availability
 | [BRO](https://hydropandas.readthedocs.io/en/stable/examples/01_groundwater_observations.html) | Groundwater                  | [![BRO](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/bro.yml) | Netherlands          |
 | [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | Meteorological                 | [![KNMI](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/knmi.yml) | Netherlands          |
 | [Lizard](https://hydropandas.readthedocs.io/en/stable/examples/06_lizard.html) | Groundwater                  | [![Lizard](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard.yml) | Netherlands (Vitens) |
-| [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_waterconnect.html) | Groundwater                  | [![Waterconnect](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) | South Australia      |
+| [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_water_connect.html) | Groundwater                  | [![Waterconnect](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) | South Australia      |
 | [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water quantity and quality | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml) | Netherlands          |
 ---
 
