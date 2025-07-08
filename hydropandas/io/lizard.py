@@ -751,7 +751,7 @@ def get_obs_list_from_extent(
     arg_tuple = (ObsClass, tube_nr, tmin, tmax, type_timeseries, only_metadata)
     codes = []
     with ThreadPoolExecutor(max_workers=nr_threads) as executor:
-        for result in tqdm(executor.map(_download, urls, auth=auth), total=nr_pages, desc="Page"):
+        for result in tqdm(executor.map(_download, urls), total=nr_pages, desc="Page"):
             codes += [(d["code"],) + arg_tuple for d in result]
 
     obs_list = []
