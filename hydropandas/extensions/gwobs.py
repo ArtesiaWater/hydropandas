@@ -251,7 +251,7 @@ def get_zvec(x, y, gwf=None, ds=None):
     from shapely.geometry import Point
 
     if gwf and not ds:
-        ix = flopy.utils.GridIntersect(gwf.modelgrid)
+        ix = flopy.utils.GridIntersect(gwf.modelgrid, method="vertex")
         if gwf.modelgrid.grid_type == "structured":
             res = ix.intersect(Point(x, y))
             if len(res) > 0:
@@ -521,6 +521,12 @@ class GwObsAccessor:
         -------
         pd.Series with the modellayers of each observation
         """
+        msg = (
+            "the get_modellayers method is deprecated, please use the nlmod "
+            "function: nlmod.layer.get_modellayers_screens"
+        )
+        logger.warning(msg)
+
         modellayers = []
         for o in self._obj.obs.values:
             logger.debug("-" * 10 + f"\n {o.name}:")
@@ -572,6 +578,9 @@ class GeoAccessorObs:
         int
             modellayer
         """
+        if np.isnan(self._obj.x) or np.isnan(self._obj.y):
+            logger.warning("x or y coordinate is NaN, returning NaN")
+            return np.nan
 
         zvec = get_zvec(self._obj.x, self._obj.y, gwf=gwf, ds=ds)
 

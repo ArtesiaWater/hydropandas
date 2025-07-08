@@ -1,4 +1,9 @@
+import numpy as np
+import pandas as pd
+import pytest
 import test_001_to_from as ttf
+
+from hydropandas import GroundwaterObs
 
 
 def test_within_extent():
@@ -8,12 +13,26 @@ def test_within_extent():
     assert dino_gw.shape[0] == 4
 
 
+@pytest.fixture
+def series_consecutive_months():
+    s = pd.Series(index=pd.date_range("2020", "2021", freq="D"), data=1.0)
+    s.loc["2020-01-01":"2020-01-25"] = np.nan  # delete some data
+    s.loc["2020-04-01":"2020-04-30"] = np.nan  # delete some data
+    s = s.dropna()
+    yield GroundwaterObs(s)
+
+
 # %% stats
 
 
 def test_obscollection_consecutive_obs_years():
     gw = ttf.obscollection_dinozip_gw_keep_all_obs()
     gw.stats.consecutive_obs_years()
+
+
+def test_obscollection_consecutive_obs_months():
+    gw = ttf.obscollection_dinozip_gw_keep_all_obs()
+    gw.stats.consecutive_obs_months()
 
 
 def test_obscollection_get_number_of_obs():
@@ -39,6 +58,14 @@ def test_obscollection_get_min():
 def test_obscollection_get_max():
     gw = ttf.obscollection_dinozip_gw_keep_all_obs()
     gw.stats.get_max()
+
+
+def test_obs_consecutive_obs_months(series_consecutive_months):
+    n_obs = series_consecutive_months.stats.consecutive_obs_months(min_obs=10)
+    assert np.all(
+        n_obs.values
+        == np.array([0.0, 1.0, 2.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 0.0])
+    )
 
 
 # %% geo

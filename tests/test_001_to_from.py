@@ -19,7 +19,7 @@ def test_bro_gld():
 
 def test_bro_gmn():
     # single observation
-    bro_id = "GMN000000001084"  # 34 objects as per 2024-7-11
+    bro_id = "GMN000000000001"  # 6 objects as per 2025-4-17
     hpd.read_bro(bro_id=bro_id, only_metadata=True)
 
 
@@ -375,8 +375,8 @@ def test_waterinfo_from_dir():
 def test_waterinfo_ddlpy():
     grootheid_code = "WATHTE"
     locatie = "SCHOONHVN"
-    tmin = dt.datetime(2024, 1, 1)
-    tmax = dt.datetime(2024, 1, 2)
+    tmin = dt.datetime(2020, 1, 1)
+    tmax = dt.datetime(2020, 1, 5)
     hpd.WaterlvlObs.from_waterinfo(
         grootheid_code=grootheid_code, locatie=locatie, tmin=tmin, tmax=tmax
     )
@@ -384,8 +384,8 @@ def test_waterinfo_ddlpy():
 
 def test_waterinfo_ddlpy_extent():
     grootheid_code = "WATHTE"
-    tmin = dt.datetime(2024, 1, 1)
-    tmax = dt.datetime(2024, 1, 2)
+    tmin = dt.datetime(2020, 1, 1)
+    tmax = dt.datetime(2020, 1, 2)
     extent = (110000, 125000, 429550, 449900)
     oc = hpd.read_waterinfo(
         extent=extent, grootheid_code=grootheid_code, tmin=tmin, tmax=tmax

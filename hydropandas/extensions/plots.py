@@ -3,6 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.gridspec import GridSpec
 from tqdm.auto import tqdm
 
@@ -120,6 +121,7 @@ class CollectionPlots:
         col_name_lat="lat",
         col_name_lon="lon",
         zoom_start=13,
+        popup_width=620,
         create_interactive_plots=True,
         **kwargs,
     ):
@@ -173,6 +175,8 @@ class CollectionPlots:
         create_interactive_plots : boolean, optional
             if True interactive plots will be created, if False the iplot_fname
             in the meta ditctionary of the observations is used.
+        popup_width : int, optional
+            popup width in pixels, optional.
         **kwargs :
             will be passed to the interactive_plots method options are:
 
@@ -212,7 +216,7 @@ class CollectionPlots:
         # create interactive bokeh plots
         if create_interactive_plots and not empty_obs:
             self._obj.plots.interactive_plots(
-                savedir=plot_dir, per_location=per_location, **kwargs
+                savedir=plot_dir, per_location=per_location, width=popup_width, **kwargs
             )
 
         # check if observation collection has lat and lon values
@@ -258,8 +262,10 @@ class CollectionPlots:
                 with open(o.meta["iplot_fname"], "r") as f:
                     bokeh_html = f.read()
 
-                iframe = branca.element.IFrame(html=bokeh_html, width=620, height=420)
-                popup = folium.Popup(iframe, max_width=620)
+                iframe = branca.element.IFrame(
+                    html=bokeh_html, width=popup_width, height=int(popup_width / 1.5)
+                )
+                popup = folium.Popup(iframe, max_width=popup_width)
 
                 folium.CircleMarker(
                     [
@@ -755,11 +761,12 @@ class ObsPlots:
         plot_freq=(None,),
         tmin=None,
         tmax=None,
-        hoover_names=("Peil",),
+        hoover_names=(None,),
         hoover_date_format="%Y-%m-%d",
         ylabel=None,
         plot_colors=("blue",),
         add_screen_to_legend=False,
+        width=600,
         return_filename=False,
     ):
         """Create an interactive plot of the observations using bokeh.
@@ -801,6 +808,8 @@ class ObsPlots:
         add_screen_to_legend : boolean, optional
             if True the attributes screen_top and screen_bottom
             are added to the legend name
+        width : int, optional
+            width of the interactive figure.
         return_filename : boolean, optional
             if True filename will be returned
 
@@ -810,14 +819,19 @@ class ObsPlots:
             filename of the bokeh plot or reference to bokeh plot
         """
 
-        from bokeh.models import ColumnDataSource, HoverTool
+        from bokeh.models import ColumnDataSource, HoverTool, Range1d
         from bokeh.plotting import figure, save
         from bokeh.resources import CDN
 
+        xlim = None
+
+        hoover_names = list(hoover_names)
         cols = list(cols)
         for i, col in enumerate(cols):
             if col is None:
                 cols[i] = self._obj._get_first_numeric_col_name()
+            if hoover_names[i] is None:
+                hoover_names[i] = cols[i]
 
         # create plot dataframe
         plot_df = self._obj[tmin:tmax].copy()
@@ -826,10 +840,20 @@ class ObsPlots:
             raise ValueError(
                 "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
             )
+        elif len(plot_df) == 1:
+            markers = ["circle"] * len(cols)
+            # set xlim because there is only one measurement
+            obsdate = plot_df.index[0]
+            xlim = Range1d(
+                start=obsdate - pd.Timedelta(days=365),
+                end=obsdate + pd.Timedelta(days=365),
+            )
 
         # create plot
         if p is None:
-            p = figure(width=600, height=400, x_axis_type="datetime", title="")
+            p = figure(
+                width=width, height=int(width / 1.5), x_axis_type="datetime", title=""
+            )
             if ylabel is None:
                 ylabel = self._obj.unit
             p.yaxis.axis_label = ylabel
@@ -870,7 +894,6 @@ class ObsPlots:
                 )
 
             # plot data
-
             if markers[i] in ["line", "l"]:
                 plots.append(
                     p.line(
@@ -907,6 +930,10 @@ class ObsPlots:
             hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode="vline")
             p.add_tools(hover)
 
+        # set xlim
+        if xlim is not None:
+            p.x_range = xlim
+
         p.legend.location = "top_left"
         p.legend.click_policy = "mute"
 
@@ -915,7 +942,7 @@ class ObsPlots:
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
             self._obj.meta["iplot_fname"] = os.path.join(
-                savedir, self._obj.name + ".html"
+                savedir, str(self._obj.name) + ".html"
             )
             save(p, self._obj.meta["iplot_fname"], resources=CDN, title=self._obj.name)
 

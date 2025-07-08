@@ -109,8 +109,8 @@ ENV/
 *.png
 
 .ignore*
-.examples/figure*
-examples/test*
+.docs/examples/figure*
+docs/examples/test*
 tests/data/excel/
 *.pklz
-examples/my_obs_collection.xlsx
+docs/examples/my_obs_collection.xlsx

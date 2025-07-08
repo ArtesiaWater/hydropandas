@@ -7,7 +7,7 @@ import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
 
 tst_dir = os.path.dirname(os.path.realpath(__file__))
-nbdir = os.path.join(tst_dir, "..", "examples")
+nbdir = os.path.join(tst_dir, "..", "..", "docs", "examples")
 
 
 def _run_notebook(nbdir, fname):
@@ -54,3 +54,19 @@ def test_run_notebook_05_bronhouderportaal_bro():
 @pytest.mark.notebooks
 def test_run_notebook_06_lizard():
     _run_notebook(nbdir, "06_lizard.ipynb")
+
+
+# not tested because notebook has intentional errors
+# @pytest.mark.notebooks
+# def test_run_notebook_07_fews():
+#     _run_notebook(nbdir, "07_fews.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_08_waterinfo():
+    _run_notebook(nbdir, "08_waterinfo.ipynb")
+
+
+@pytest.mark.notebooks
+def test_run_notebook_09_water_connect():
+    _run_notebook(nbdir, "09_water_connect.ipynb")

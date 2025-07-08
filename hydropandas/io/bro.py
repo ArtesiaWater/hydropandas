@@ -1,5 +1,13 @@
 """
 https://www.bro-productomgeving.nl/bpo/latest/informatie-voor-softwareleveranciers/url-s-publieke-rest-services
+
+function levels:
+1. get_obs_list_from_gmn: list of observations from grondwatermonitoring net
+    2. get_bro_groundwater: single observation
+        3. measurements_from_gld:
+        4. get_metadata_from_gmw:
+        5. get_gld_ids_from_gmw:
+
 """
 
 import json
@@ -680,15 +688,21 @@ def get_obs_list_from_extent(
             endDate = pd.to_datetime(tmax).strftime("%Y-%m-%d")
             data["registrationPeriod"]["endDate"] = endDate
 
-    transformer = Transformer.from_crs(epsg, 4326)
     data["area"] = {}
-    if extent is not None:
-        lat1, lon1 = transformer.transform(extent[0], extent[2])
-        lat2, lon2 = transformer.transform(extent[1], extent[3])
+    if epsg == 4326:
         data["area"]["boundingBox"] = {
-            "lowerCorner": {"lat": lat1, "lon": lon1},
-            "upperCorner": {"lat": lat2, "lon": lon2},
+            "lowerCorner": {"lat": extent[2], "lon": extent[0]},
+            "upperCorner": {"lat": extent[3], "lon": extent[1]},
         }
+    else:
+        transformer = Transformer.from_crs(epsg, 4326)
+        if extent is not None:
+            lat1, lon1 = transformer.transform(extent[0], extent[2])
+            lat2, lon2 = transformer.transform(extent[1], extent[3])
+            data["area"]["boundingBox"] = {
+                "lowerCorner": {"lat": lat1, "lon": lon1},
+                "upperCorner": {"lat": lat2, "lon": lon2},
+            }
     req = requests.post(url, json=data)
     if req.status_code > 200:
         logger.error(
