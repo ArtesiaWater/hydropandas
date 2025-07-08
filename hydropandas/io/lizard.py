@@ -757,7 +757,7 @@ def get_obs_list_from_extent(
     obs_list = []
     with ThreadPoolExecutor() as executor:
         for obs_list_mw in tqdm(
-            executor.map(lambda args: get_obs_list_from_codes(*args, auth=auth), codes),
+            executor.map(lambda args: get_obs_list_from_codes(*args), codes),
             total=len(codes),
             desc="monitoring well",
         ):
