@@ -48,7 +48,6 @@ full = [
     "pyarrow",
     "brodata",
     "geost"
-
 ]
 rtd = [
     "hydropandas[full]",
