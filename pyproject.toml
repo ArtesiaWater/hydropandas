@@ -46,8 +46,7 @@ full = [
     "xarray",
     "lxml",
     "pyarrow",
-    "brodata",
-    "geost"
+    "brodata"
 ]
 rtd = [
     "hydropandas[full]",
