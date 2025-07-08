@@ -70,3 +70,7 @@ def test_run_notebook_08_waterinfo():
 @pytest.mark.notebooks
 def test_run_notebook_09_water_connect():
     _run_notebook(nbdir, "09_water_connect.ipynb")
+
+@pytest.mark.notebooks
+def test_run_notebook_10_borehole():
+    _run_notebook(nbdir, "10_borehole.ipynb")
