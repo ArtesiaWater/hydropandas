@@ -717,7 +717,7 @@ def get_obs_list_from_extent(
     Parameters
     ----------
     extent : list or shapefile
-        get groundwater monitoring wells wihtin this extent [xmin, xmax, ymin, ymax]
+        get groundwater monitoring wells within this extent [xmin, xmax, ymin, ymax]
         or within a predefined Polygon from a shapefile
     ObsClass : type
         class of the observations, e.g. GroundwaterObs
