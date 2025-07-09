@@ -108,6 +108,34 @@ def translate_flag(timeseries):
     return timeseries
 
 
+def get_monitoring_networks(source="vitens", auth=None, page_size=1000):
+    """
+    Get all monitoring networks of the specified source.
+
+    ----------
+    source : str, optional
+        source indicating URL endpoint, currently only "vitens" is officially supported
+    auth : tuple, optional
+        authentication credentials for the API request
+    page_size : int, optional
+        number of records to retrieve per page, default is 1000
+
+    Returns:
+    ----------
+    pd.DataFrame
+        pandas DataFrame containing the available monitoring networks
+    """
+    url_monitoringnetworks = f"{LIZARD_APIS[source]}monitoringnetworks/"
+    params = {"page_size": page_size}
+
+    monitoring_networks = requests.get(
+        url_monitoringnetworks, params=params, auth=auth
+    ).json()["results"]
+    monitoring_networks_df = pd.DataFrame(monitoring_networks)
+
+    return monitoring_networks_df
+
+
 def get_metadata_mw_from_code(code, source="vitens", auth=None):
     """Extracts the Groundwater Station parameters from a monitoring well based on the
     code of the monitoring well.
