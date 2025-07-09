@@ -100,7 +100,7 @@ def translate_flag(timeseries):
         4: "onbeslist",
         6: "onbetrouwbaar",
         7: "onbetrouwbaar",
-        99: "onongevalideerd",
+        99: "ongevalideerd",
         -99: "verwijderd",
     }
     timeseries["flag"] = timeseries["flag"].replace(translate_dic)
