@@ -273,7 +273,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         "location": metadata_mw["name"],
         "ground_level": metadata_mw["surface_level"],
         "source": "lizard",
-        "organisation": organisation,
+        "organisation": metadata_mw["organisation"],
         "unit": "m NAP",
         "metadata_available": True,
         "status": None,
