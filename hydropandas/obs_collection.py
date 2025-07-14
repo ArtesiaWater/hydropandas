@@ -29,7 +29,7 @@ def read_lizard(
     tmax=None,
     type_timeseries="merge",
     only_metadata=False,
-    source="vitens",
+    organisation="vitens",
     auth=None,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
@@ -57,10 +57,10 @@ def read_lizard(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
-    source : str, optional
-        source of the data, by default "vitens".
+    organisation : str, optional
+        organisation of the data, by default "vitens".
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -76,7 +76,7 @@ def read_lizard(
         tmax=tmax,
         type_timeseries=type_timeseries,
         only_metadata=only_metadata,
-        source=source,
+        organisation=organisation,
         auth=auth,
     )
     return oc
@@ -1395,7 +1395,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         type_timeseries="merge",
         only_metadata=False,
-        source="vitens",
+        organisation="vitens",
         auth=None,
     ):
         """Get all observations within a specified extent.
@@ -1423,10 +1423,10 @@ class ObsCollection(pd.DataFrame):
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
             default is False.
-        source : str, optional
-            source of the data. The default is "vitens".
+        organisation : str, optional
+            organisation of the data. The default is "vitens".
         auth : tuple, optional
-            authentication credentials for the API request
+            authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
         Returns
         -------
@@ -1445,7 +1445,7 @@ class ObsCollection(pd.DataFrame):
                 tmax,
                 type_timeseries,
                 only_metadata=only_metadata,
-                source=source,
+                organisation=organisation,
                 auth=auth,
             )
         elif codes is not None:
@@ -1457,7 +1457,7 @@ class ObsCollection(pd.DataFrame):
                 tmax,
                 type_timeseries,
                 only_metadata=only_metadata,
-                source=source,
+                organisation=organisation,
                 auth=auth,
             )
         else:
