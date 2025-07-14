@@ -114,7 +114,7 @@ def get_monitoring_networks(organisation="vitens", auth=None, page_size=1000):
     organisation : str, optional
         organisation indicating URL endpoint, currently only "vitens" is officially supported
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
     page_size : int, optional
         number of records to retrieve per page, default is 1000
 
@@ -146,7 +146,7 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     organisation : str
         organisation indicating URL endpoint, currently only "vitens" is officially supported.
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Raises
     ------
@@ -205,7 +205,7 @@ def _download(url, timeout=1800, auth=None):
     timeout : int, optional
         number of seconds to wait before terminating request
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -254,7 +254,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
     tube_nr : int or None
         select metadata from a specific tube number
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Raises
     ------
@@ -378,7 +378,7 @@ def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, organisation="vitens
     organisation : str, optional
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -500,7 +500,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, organisation
     organisation : str, optional
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -592,7 +592,7 @@ def get_lizard_groundwater(
     organisation : str, optional
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -655,7 +655,7 @@ def get_obs_list_from_codes(
     organisation : str, optional
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -741,7 +741,11 @@ def get_obs_list_from_extent(
     organisation : str
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
-        authentication credentials for the API request
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    page_size : int, optional
+        number of records to retrieve per page, default is 100
+    nr_threads : int, optional
+        number of threads to use for the API requests, default is 10
 
 
     Returns
