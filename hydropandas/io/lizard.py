@@ -163,9 +163,9 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
     try:
-        groundwaterstation_metadata = requests.get(url_groundwaterstation_code, auth=auth).json()[
-            "results"
-        ][0]
+        groundwaterstation_metadata = requests.get(
+            url_groundwaterstation_code, auth=auth
+        ).json()["results"][0]
 
     except IndexError:
         raise ValueError(f"Code {code} is invalid")
@@ -362,7 +362,9 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
     return metadata
 
 
-def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, organisation="vitens", auth=None):
+def get_timeseries_uuid(
+    uuid, tmin, tmax, page_size=100000, organisation="vitens", auth=None
+):
     """
     Get the time series (hand or diver) using the uuid.
 
@@ -397,7 +399,9 @@ def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, organisation="vitens
     params = {"start": tmin, "end": tmax, "page_size": page_size}
     url = url_timeseries + "/events/"
 
-    time_series_events = requests.get(url=url, params=params, auth=auth).json()["results"]
+    time_series_events = requests.get(url=url, params=params, auth=auth).json()[
+        "results"
+    ]
     time_series_df = pd.DataFrame(time_series_events)
 
     if time_series_df.empty:
@@ -480,7 +484,9 @@ def _combine_timeseries(hand_measurements, diver_measurements):
     return measurements
 
 
-def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, organisation="vitens", auth=None):
+def get_timeseries_tube(
+    tube_metadata, tmin, tmax, type_timeseries, organisation="vitens", auth=None
+):
     """Extracts multiple timeseries (hand and/or diver measurements) for a specific tube
     using the Lizard API.
 
@@ -602,7 +608,9 @@ def get_lizard_groundwater(
         dictionary containing metadata
     """
 
-    groundwaterstation_metadata = get_metadata_mw_from_code(code, organisation=organisation, auth=auth)
+    groundwaterstation_metadata = get_metadata_mw_from_code(
+        code, organisation=organisation, auth=auth
+    )
 
     tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr, auth=auth)
 
@@ -671,7 +679,9 @@ def get_obs_list_from_codes(
 
     obs_list = []
     for code in codes:
-        groundwaterstation_metadata = get_metadata_mw_from_code(code, organisation=organisation, auth=auth)
+        groundwaterstation_metadata = get_metadata_mw_from_code(
+            code, organisation=organisation, auth=auth
+        )
         tubes = []
         if tube_nr == "all":
             for metadata_tube in groundwaterstation_metadata["filters"]:
@@ -693,7 +703,14 @@ def get_obs_list_from_codes(
 
         else:
             o = ObsClass.from_lizard(
-                code, tube_nr, tmin, tmax, type_timeseries, only_metadata=only_metadata, organisation=organisation, auth=auth
+                code,
+                tube_nr,
+                tmin,
+                tmax,
+                type_timeseries,
+                only_metadata=only_metadata,
+                organisation=organisation,
+                auth=auth,
             )
             obs_list.append(o)
 
@@ -770,7 +787,9 @@ def get_obs_list_from_extent(
         f"{lizard_GWS_endpoint}?geometry__within={polygon_T}&page_size={page_size}"
     )
 
-    groundwaterstation_data = requests.get(url_groundwaterstation_extent, auth=auth).json()
+    groundwaterstation_data = requests.get(
+        url_groundwaterstation_extent, auth=auth
+    ).json()
     nr_results = groundwaterstation_data["count"]
     nr_pages = math.ceil(nr_results / page_size)
 
@@ -792,7 +811,11 @@ def get_obs_list_from_extent(
     arg_tuple = (ObsClass, tube_nr, tmin, tmax, type_timeseries, only_metadata)
     codes = []
     with ThreadPoolExecutor(max_workers=nr_threads) as executor:
-        for result in tqdm(executor.map(lambda url: _download(url, auth=auth), urls), total=nr_pages, desc="Page"):
+        for result in tqdm(
+            executor.map(lambda url: _download(url, auth=auth), urls),
+            total=nr_pages,
+            desc="Page",
+        ):
             codes += [(d["code"],) + arg_tuple for d in result]
 
     obs_list = []
