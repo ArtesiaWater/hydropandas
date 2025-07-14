@@ -273,7 +273,7 @@ def get_metadata_tube(metadata_mw, tube_nr):
 
     metadata = {
         "location": metadata_mw["name"],
-        "ground_level":         git reset --hard HEAD~1["surface_level"],
+        "ground_level":metadata_mw["surface_level"],
         "source": "lizard",
         "organisation": metadata_mw["organisation"],
         "unit": "m NAP",
