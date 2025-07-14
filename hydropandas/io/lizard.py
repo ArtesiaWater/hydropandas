@@ -16,10 +16,8 @@ logger = logging.getLogger(__name__)
 # - check transformation from EPSG:28992 to WGS84 (elsewhere in hydropandas we use
 #   another definition for EPSG:28992 that is provided in util.py)
 
-# NOTE: currently only the vitens API is officially supported. If/when new endpoints
-# are added we should check whether we want to add the URL as argument or add supported
-# sources to this dictionary:
-LIZARD_APIS = {"vitens": "https://vitens.lizard.net/api/v4/", "rotterdam": "https://rotterdam.lizard.net/api/v4/"}
+# Generic Lizard API endpoint (with 'organisation' as placeholder, following the Lizard documentation
+lizard_api_endpoint = "https://{organisation}.lizard.net/api/v4/"
 
 
 def check_status_obs(metadata, timeseries):
@@ -108,13 +106,13 @@ def translate_flag(timeseries):
     return timeseries
 
 
-def get_monitoring_networks(source="vitens", auth=None, page_size=1000):
+def get_monitoring_networks(organisation="vitens", auth=None, page_size=1000):
     """
-    Get all monitoring networks of the specified source.
+    Get all monitoring networks of the specified organisation.
 
     ----------
-    source : str, optional
-        source indicating URL endpoint, currently only "vitens" is officially supported
+    organisation : str, optional
+        organisation indicating URL endpoint, currently only "vitens" is officially supported
     auth : tuple, optional
         authentication credentials for the API request
     page_size : int, optional
@@ -125,7 +123,8 @@ def get_monitoring_networks(source="vitens", auth=None, page_size=1000):
     pd.DataFrame
         pandas DataFrame containing the available monitoring networks
     """
-    url_monitoringnetworks = f"{LIZARD_APIS[source]}monitoringnetworks/"
+    base_url = lizard_api_endpoint.format(organisation=organisation)
+    url_monitoringnetworks = f"{base_url}monitoringnetworks/"
     params = {"page_size": page_size}
 
     monitoring_networks = requests.get(
@@ -136,7 +135,7 @@ def get_monitoring_networks(source="vitens", auth=None, page_size=1000):
     return monitoring_networks_df
 
 
-def get_metadata_mw_from_code(code, source="vitens", auth=None):
+def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     """Extracts the Groundwater Station parameters from a monitoring well based on the
     code of the monitoring well.
 
@@ -144,8 +143,8 @@ def get_metadata_mw_from_code(code, source="vitens", auth=None):
     ----------
     code : str
         code of the monitoring well
-    source : str
-        source indicating URL endpoint, currently only "vitens" is officially supported.
+    organisation : str
+        organisation indicating URL endpoint, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request
 
@@ -159,7 +158,8 @@ def get_metadata_mw_from_code(code, source="vitens", auth=None):
     groundwaterstation_metadata : dict
         dictionary with all available metadata of the monitoring well and its filters
     """
-    lizard_GWS_endpoint = f"{LIZARD_APIS[source]}groundwaterstations/"
+    base_url = lizard_api_endpoint.format(organisation=organisation)
+    lizard_GWS_endpoint = f"{base_url}groundwaterstations/"
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
     try:
@@ -273,6 +273,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         "location": metadata_mw["name"],
         "ground_level": metadata_mw["surface_level"],
         "source": "lizard",
+        "organisation": organisation,
         "unit": "m NAP",
         "metadata_available": True,
         "status": None,
@@ -361,7 +362,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
     return metadata
 
 
-def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, source="vitens", auth=None):
+def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, organisation="vitens", auth=None):
     """
     Get the time series (hand or diver) using the uuid.
 
@@ -374,8 +375,8 @@ def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, source="vitens", aut
         end of the observations, by default the entire serie is returned
     page_size : int, optional
         Query parameter which can extend the response size. The default is 100000.
-    source : str, optional
-        source indicating URL endpoint, currently only "vitens" is officially supported
+    organisation : str, optional
+        organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request
 
@@ -384,8 +385,8 @@ def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, source="vitens", aut
     pd.DataFrame
         pandas DataFrame with the timeseries of the monitoring well
     """
-
-    url_timeseries = LIZARD_APIS[source] + "timeseries/{}".format(uuid)
+    base_url = lizard_api_endpoint.format(organisation=organisation)
+    url_timeseries = f"{base_url}timeseries/{uuid}"
 
     if tmin is not None:
         tmin = pd.to_datetime(tmin).isoformat("T")
@@ -479,7 +480,7 @@ def _combine_timeseries(hand_measurements, diver_measurements):
     return measurements
 
 
-def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, source="vitens", auth=None):
+def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, organisation="vitens", auth=None):
     """Extracts multiple timeseries (hand and/or diver measurements) for a specific tube
     using the Lizard API.
 
@@ -489,15 +490,15 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, source="vite
         metadata of a tube
     tmin : str YYYY-m-d, optional
         start of the observations, by default the entire serie is returned
-    tmax : Ttr YYYY-m-d, optional
+    tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
         hand: returns only hand measurements
         diver: returns only diver measurements
         merge: the hand and diver measurements into one time series (default)
         combine: keeps hand and diver measurements separated
-    source : str, optional
-        source indicating URL endpoint, currently only "vitens" is officially supported.
+    organisation : str, optional
+        organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request
 
@@ -518,7 +519,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, source="vite
                 tube_metadata.pop("uuid_hand"),
                 tmin,
                 tmax,
-                source=source,
+                organisation=organisation,
                 auth=auth,
             )
         else:
@@ -530,7 +531,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries, source="vite
                 tube_metadata.pop("uuid_diver"),
                 tmin,
                 tmax,
-                source=source,
+                organisation=organisation,
                 auth=auth,
             )
         else:
@@ -563,7 +564,7 @@ def get_lizard_groundwater(
     tmax=None,
     type_timeseries="merge",
     only_metadata=False,
-    source="vitens",
+    organisation="vitens",
     auth=None,
 ):
     """Extracts the metadata and timeseries of an observation well from a LIZARD-API
@@ -588,8 +589,8 @@ def get_lizard_groundwater(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
-    source : str, optional
-        source indicating URL endpoint, currently only "vitens" is officially supported.
+    organisation : str, optional
+        organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request
 
@@ -601,7 +602,7 @@ def get_lizard_groundwater(
         dictionary containing metadata
     """
 
-    groundwaterstation_metadata = get_metadata_mw_from_code(code, source=source, auth=auth)
+    groundwaterstation_metadata = get_metadata_mw_from_code(code, organisation=organisation, auth=auth)
 
     tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr, auth=auth)
 
@@ -609,7 +610,7 @@ def get_lizard_groundwater(
         return pd.DataFrame(), tube_metadata
 
     measurements, tube_metadata = get_timeseries_tube(
-        tube_metadata, tmin, tmax, type_timeseries, source=source, auth=auth
+        tube_metadata, tmin, tmax, type_timeseries, organisation=organisation, auth=auth
     )
     tube_metadata = check_status_obs(tube_metadata, measurements)
 
@@ -624,7 +625,7 @@ def get_obs_list_from_codes(
     tmax=None,
     type_timeseries="merge",
     only_metadata=False,
-    source="vitens",
+    organisation="vitens",
     auth=None,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
@@ -651,8 +652,8 @@ def get_obs_list_from_codes(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
-    source : str, optional
-        source indicating URL endpoint, currently only "vitens" is officially supported.
+    organisation : str, optional
+        organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request
 
@@ -670,7 +671,7 @@ def get_obs_list_from_codes(
 
     obs_list = []
     for code in codes:
-        groundwaterstation_metadata = get_metadata_mw_from_code(code, source=source, auth=auth)
+        groundwaterstation_metadata = get_metadata_mw_from_code(code, organisation=organisation, auth=auth)
         tubes = []
         if tube_nr == "all":
             for metadata_tube in groundwaterstation_metadata["filters"]:
@@ -684,7 +685,7 @@ def get_obs_list_from_codes(
                         tmax,
                         type_timeseries,
                         only_metadata=only_metadata,
-                        source=source,
+                        organisation=organisation,
                         auth=auth,
                     )
                     obs_list.append(o)
@@ -692,7 +693,7 @@ def get_obs_list_from_codes(
 
         else:
             o = ObsClass.from_lizard(
-                code, tube_nr, tmin, tmax, type_timeseries, only_metadata=only_metadata, source=source, auth=auth
+                code, tube_nr, tmin, tmax, type_timeseries, only_metadata=only_metadata, organisation=organisation, auth=auth
             )
             obs_list.append(o)
 
@@ -709,7 +710,7 @@ def get_obs_list_from_extent(
     only_metadata=False,
     page_size=100,
     nr_threads=10,
-    source="vitens",
+    organisation="vitens",
     auth=None,
 ):
     """Get all observations within a specified extent.
@@ -737,8 +738,8 @@ def get_obs_list_from_extent(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
-    source : str
-        source indicating URL endpoint, currently only "vitens" is officially supported.
+    organisation : str
+        organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request
 
@@ -759,7 +760,8 @@ def get_obs_list_from_extent(
     else:
         raise TypeError("Extent should be a shapefile or a list of coordinates")
 
-    lizard_GWS_endpoint = f"{LIZARD_APIS[source]}groundwaterstations/"
+    base_url = lizard_api_endpoint.format(organisation=organisation)
+    lizard_GWS_endpoint = f"{base_url}groundwaterstations/"
     url_groundwaterstation_extent = (
         f"{lizard_GWS_endpoint}?geometry__within={polygon_T}&page_size={page_size}"
     )
@@ -774,7 +776,7 @@ def get_obs_list_from_extent(
     if nr_results == 0:
         logger.warning(
             "No monitoring wells found in the specified extent. "
-            "Please check the extent or the source."
+            "Please check the extent or the organisation."
         )
         return []
 
@@ -786,7 +788,7 @@ def get_obs_list_from_extent(
     arg_tuple = (ObsClass, tube_nr, tmin, tmax, type_timeseries, only_metadata)
     codes = []
     with ThreadPoolExecutor(max_workers=nr_threads) as executor:
-        for result in tqdm(executor.map(lambda url: _download(url,auth=auth), urls), total=nr_pages, desc="Page"):
+        for result in tqdm(executor.map(lambda url: _download(url, auth=auth), urls), total=nr_pages, desc="Page"):
             codes += [(d["code"],) + arg_tuple for d in result]
 
     obs_list = []
