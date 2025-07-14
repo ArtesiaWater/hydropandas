@@ -211,8 +211,12 @@ def _download(url, timeout=1800, auth=None):
     -------
     dictionary with timeseries data
     """
-    data = requests.get(url=url, timeout=timeout, auth=auth)
-    data = data.json()["results"]
+    try:
+        data = requests.get(url=url, timeout=timeout, auth=auth)
+        data = data.json()["results"]
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout while requesting {url}. Please check your connection.")
+        data = []
 
     return data
 
