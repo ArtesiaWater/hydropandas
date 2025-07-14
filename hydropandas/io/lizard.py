@@ -211,8 +211,12 @@ def _download(url, timeout=1800, auth=None):
     -------
     dictionary with timeseries data
     """
-    data = requests.get(url=url, timeout=timeout, auth=auth)
-    data = data.json()["results"]
+    try:
+        data = requests.get(url=url, timeout=timeout, auth=auth)
+        data = data.json()["results"]
+    except requests.exceptions.Timeout:
+        logger.warning(f"Timeout occurred for URL: {url}")
+        data = []
 
     return data
 
@@ -243,7 +247,7 @@ def _split_mw_tube_nr(code):
         return code.strip(f"-{tube_nr}"), int(tube_nr)
 
 
-def get_metadata_tube(metadata_mw, tube_nr, auth=None):
+def get_metadata_tube(metadata_mw, tube_nr):
     """Extract the metadata for a specific tube from the monitoring well metadata.
 
     Parameters
@@ -253,8 +257,6 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         filters
     tube_nr : int or None
         select metadata from a specific tube number
-    auth : tuple, optional
-        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Raises
     ------
@@ -271,7 +273,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
 
     metadata = {
         "location": metadata_mw["name"],
-        "ground_level": metadata_mw["surface_level"],
+        "ground_level":         git reset --hard HEAD~1["surface_level"],
         "source": "lizard",
         "organisation": metadata_mw["organisation"],
         "unit": "m NAP",
@@ -612,7 +614,7 @@ def get_lizard_groundwater(
         code, organisation=organisation, auth=auth
     )
 
-    tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr, auth=auth)
+    tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr)
 
     if only_metadata:
         return pd.DataFrame(), tube_metadata
