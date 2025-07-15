@@ -106,35 +106,6 @@ def translate_flag(timeseries):
     return timeseries
 
 
-def get_monitoring_networks(organisation="vitens", auth=None, page_size=1000):
-    """
-    Get all monitoring networks of the specified organisation.
-
-    ----------
-    organisation : str, optional
-        organisation indicating URL endpoint, currently only "vitens" is officially supported
-    auth : tuple, optional
-        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
-    page_size : int, optional
-        number of records to retrieve per page, default is 1000
-
-    Returns:
-    ----------
-    pd.DataFrame
-        pandas DataFrame containing the available monitoring networks
-    """
-    base_url = lizard_api_endpoint.format(organisation=organisation)
-    url_monitoringnetworks = f"{base_url}monitoringnetworks/"
-    params = {"page_size": page_size}
-
-    monitoring_networks = requests.get(
-        url_monitoringnetworks, params=params, auth=auth
-    ).json()["results"]
-    monitoring_networks_df = pd.DataFrame(monitoring_networks)
-
-    return monitoring_networks_df
-
-
 def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     """Extracts the Groundwater Station parameters from a monitoring well based on the
     code of the monitoring well.
@@ -854,3 +825,115 @@ def get_obs_list_from_extent(
             obs_list += obs_list_mw
 
     return obs_list
+
+
+def get_monitoring_networks(organisation="vitens", auth=None, page_size=1000):
+    """
+    Get all monitoring networks of the specified organisation.
+
+    ----------
+    organisation : str, optional
+        organisation indicating URL endpoint, currently only "vitens" is officially supported
+    auth : tuple, optional
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    page_size : int, optional
+        number of records to retrieve per page, default is 1000
+
+    Returns:
+    ----------
+    pd.DataFrame
+        pandas DataFrame containing the available monitoring networks
+    """
+    base_url = lizard_api_endpoint.format(organisation=organisation)
+    url_monitoringnetworks = f"{base_url}monitoringnetworks/"
+    params = {"page_size": page_size}
+
+    monitoring_networks = requests.get(
+        url_monitoringnetworks, params=params, auth=auth
+    ).json()["results"]
+    monitoring_networks_df = pd.DataFrame(monitoring_networks)
+
+    return monitoring_networks_df
+
+
+def get_locations_in_monitoring_network_uuid(
+    monitoring_network_uuid, organisation="vitens", auth=None, page_size=1000
+):
+    """
+    Get all locations within a given monitoring network (specified by UUID).
+
+    ----------
+    monitoring_network_uuid : str
+        UUID of the monitoring network to query
+    organisation : str, optional
+        name of the organisation, default is "vitens"
+    auth : tuple, optional
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    page_size : int, optional
+        number of records to retrieve per page, default is 1000
+
+    Returns:
+    ----------
+    pd.DataFrame
+        pandas DataFrame containing the available monitoring networks
+    """
+
+    base_url = lizard_api_endpoint.format(organisation=organisation)
+    url_monitoring_network_locations = (
+        f"{base_url}monitoringnetworks/{monitoring_network_uuid}/locations/"
+    )
+    params = {"page_size": page_size}
+
+    locations_in_monitoring_network = requests.get(
+        url=url_monitoring_network_locations, params=params, auth=auth
+    ).json()["results"]
+    locations_in_monitoring_network_df = pd.DataFrame(locations_in_monitoring_network)
+
+    nr_results = len(locations_in_monitoring_network_df)
+    logger.info(
+        "Number of locations in current monitoring network: {}".format(nr_results)
+    )
+
+    return locations_in_monitoring_network_df
+
+
+def get_locations_in_monitoring_networks(
+    monitoring_networks, organisation="vitens", auth=None
+):
+    """
+    Retrieve all locations in all given monitoring networks and return a concatenated DataFrame.
+
+    Parameters
+    ----------
+    monitoring_networks : pd.DataFrame
+        DataFrame containing monitoring network UUIDs in the 'uuid' column.
+    organisation : str
+        Organisation name for API requests, default is "vitens".
+    auth : tuple
+        Authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing all locations from all monitoring networks.
+    """
+    locations_list = []
+    for monitoring_network_uuid in monitoring_networks["uuid"]:
+        locations_in_monitoring_network = get_locations_in_monitoring_network_uuid(
+            monitoring_network_uuid=monitoring_network_uuid,
+            organisation=organisation,
+            auth=auth,
+        )
+        if not locations_in_monitoring_network.empty:
+            locations_list.append(locations_in_monitoring_network)
+        else:
+            logger.info(
+                f"No locations found in monitoring network {monitoring_network_uuid}"
+            )
+    if locations_list:
+        locations_df = pd.concat(locations_list, ignore_index=True)
+    else:
+        logger.warning("No locations found in any monitoring network.")
+        locations_df = pd.DataFrame()
+    return locations_df
+  
