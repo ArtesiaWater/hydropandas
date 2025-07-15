@@ -247,6 +247,45 @@ def _split_mw_tube_nr(code):
         return code.strip(f"-{tube_nr}"), int(tube_nr)
 
 
+def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
+    """
+    Extracts timeseries information (hand/diver UUIDs and types) from a tube/filter dict.
+
+    Parameters
+    ----------
+    mtd_tube : dict
+        Tube/filter metadata dictionary.
+    auth : tuple, optional
+        Authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+
+    Returns
+    -------
+    dict
+        Dictionary with timeseries info and type.
+    """
+    info = {}
+    if not mtd_tube["timeseries"]:
+        info["timeseries_type"] = None
+        return info
+    for series in mtd_tube["timeseries"]:
+        series_info = requests.get(series, auth=auth).json()
+        if series_info["name"] == "WNS9040.hand":
+            info["uuid_hand"] = series_info["uuid"]
+            info["start_hand"] = series_info["start"]
+        elif series_info["name"] == "WNS9040":
+            info["uuid_diver"] = series_info["uuid"]
+            info["start_diver"] = series_info["start"]
+    if (info.get("start_hand") is None) and (info.get("start_diver") is None):
+        info["timeseries_type"] = None
+    elif (info.get("start_hand") is not None) and (info.get("start_diver") is not None):
+        info["timeseries_type"] = "diver + hand"
+    elif info.get("start_hand") is None:
+        info["timeseries_type"] = "diver"
+    elif info.get("start_diver") is None:
+        info["timeseries_type"] = "hand"
+    return info
+
+
 def get_metadata_tube(metadata_mw, tube_nr, auth=None):
     """Extract the metadata for a specific tube from the monitoring well metadata.
 
@@ -270,9 +309,11 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
     dictionary with metadata of a specific tube
     """
 
+    # Set default tube number if not provided
     if tube_nr is None:
         tube_nr = 1
 
+    # Prepare a base metadata dict from the monitoring well
     metadata = {
         "location": metadata_mw["name"],
         "ground_level": metadata_mw["surface_level"],
@@ -283,6 +324,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         "status": None,
     }
 
+    # Searches for filters matching the requested tube number
     metadata_tube_list = []
     for metadata_tube in metadata_mw["filters"]:
         # check if name+filternr ends with three digits
@@ -290,6 +332,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         if tbnr == tube_nr:
             metadata_tube_list.append(metadata_tube)
 
+    # Handles cases with no, one or multiple tubes with the same code and tube number
     if len(metadata_tube_list) == 0:
         raise ValueError(f"{metadata_mw['name']} doesn't have a tube number {tube_nr}")
     elif len(metadata_tube_list) == 1:
@@ -324,6 +367,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
 
         mtd_tube["code"] = f"{code}{tube_nr}"
 
+    # Updates metadata with tube-specific information (top level, screen levels, coords)
     metadata.update(
         {
             "tube_nr": tube_nr,
@@ -338,6 +382,11 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
     transformer = Transformer.from_crs("WGS84", "EPSG:28992")
     metadata["x"], metadata["y"] = transformer.transform(lat, lon)
 
+    # Extracts timeseries information (hand/diver UUIDs and types)
+    metadata.update(_extract_timeseries_info_from_tube(mtd_tube, auth))
+
+    """
+    # Extracts timeseries information (hand/diver UUIDs and types)
     if not mtd_tube["timeseries"]:
         metadata["timeseries_type"] = None
     else:
@@ -362,7 +411,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
             metadata["timeseries_type"] = "diver"
         elif metadata.get("start_diver") is None:
             metadata["timeseries_type"] = "hand"
-
+    """
     return metadata
 
 
