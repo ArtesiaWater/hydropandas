@@ -384,7 +384,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
 
     # Extracts timeseries information (hand/diver UUIDs and types)
     metadata.update(_extract_timeseries_info_from_tube(mtd_tube, auth))
-    
+
     return metadata
 
 
