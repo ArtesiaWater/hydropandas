@@ -936,4 +936,3 @@ def get_locations_in_monitoring_networks(
         logger.warning("No locations found in any monitoring network.")
         locations_df = pd.DataFrame()
     return locations_df
-  
