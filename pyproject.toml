@@ -45,7 +45,8 @@ full = [
     "flopy",
     "xarray",
     "lxml",
-    "pyarrow"
+    "pyarrow",
+    "brodata"
 ]
 rtd = [
     "hydropandas[full]",
@@ -77,7 +78,7 @@ version = { attr = "hydropandas.version.__version__" }
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py311"
 extend-include = ["*.ipynb"]
 lint.extend-select = ["I"]
 show-fixes = true
