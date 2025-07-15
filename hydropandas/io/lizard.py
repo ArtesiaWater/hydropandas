@@ -269,10 +269,10 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         return info
     for series in mtd_tube["timeseries"]:
         series_info = requests.get(series, auth=auth).json()
-        if series_info["name"] == "WNS9040.hand":
+        if series_info["code"] == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
-        elif series_info["name"] == "WNS9040":
+        elif series_info["code"] == "WNS9040":
             info["uuid_diver"] = series_info["uuid"]
             info["start_diver"] = series_info["start"]
     if (info.get("start_hand") is None) and (info.get("start_diver") is None):
