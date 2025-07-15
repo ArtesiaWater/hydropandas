@@ -384,34 +384,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
 
     # Extracts timeseries information (hand/diver UUIDs and types)
     metadata.update(_extract_timeseries_info_from_tube(mtd_tube, auth))
-
-    """
-    # Extracts timeseries information (hand/diver UUIDs and types)
-    if not mtd_tube["timeseries"]:
-        metadata["timeseries_type"] = None
-    else:
-        for series in mtd_tube["timeseries"]:
-            series_info = requests.get(series, auth=auth).json()
-            if series_info["name"] == "WNS9040.hand":
-                metadata["uuid_hand"] = series_info["uuid"]
-                metadata["start_hand"] = series_info["start"]
-            elif series_info["name"] == "WNS9040":
-                metadata["uuid_diver"] = series_info["uuid"]
-                metadata["start_diver"] = series_info["start"]
-
-        if (metadata.get("start_hand") is None) and (
-            metadata.get("start_diver") is None
-        ):
-            metadata["timeseries_type"] = None
-        elif (metadata.get("start_hand") is not None) and (
-            metadata.get("start_diver") is not None
-        ):
-            metadata["timeseries_type"] = "diver + hand"
-        elif metadata.get("start_hand") is None:
-            metadata["timeseries_type"] = "diver"
-        elif metadata.get("start_diver") is None:
-            metadata["timeseries_type"] = "hand"
-    """
+    
     return metadata
 
 
