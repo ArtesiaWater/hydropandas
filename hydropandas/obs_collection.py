@@ -29,6 +29,8 @@ def read_lizard(
     tmax=None,
     type_timeseries="merge",
     only_metadata=False,
+    organisation="vitens",
+    auth=None,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
     tube numbers.
@@ -55,6 +57,10 @@ def read_lizard(
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
+    organisation : str, optional
+        organisation of the data, by default "vitens".
+    auth : tuple, optional
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
     Returns
     -------
@@ -70,6 +76,8 @@ def read_lizard(
         tmax=tmax,
         type_timeseries=type_timeseries,
         only_metadata=only_metadata,
+        organisation=organisation,
+        auth=auth,
     )
     return oc
 
@@ -1387,6 +1395,8 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         type_timeseries="merge",
         only_metadata=False,
+        organisation="vitens",
+        auth=None,
     ):
         """Get all observations within a specified extent.
 
@@ -1413,6 +1423,10 @@ class ObsCollection(pd.DataFrame):
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
             default is False.
+        organisation : str, optional
+            organisation of the data. The default is "vitens".
+        auth : tuple, optional
+            authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
         Returns
         -------
@@ -1431,6 +1445,8 @@ class ObsCollection(pd.DataFrame):
                 tmax,
                 type_timeseries,
                 only_metadata=only_metadata,
+                organisation=organisation,
+                auth=auth,
             )
         elif codes is not None:
             obs_list = get_obs_list_from_codes(
@@ -1441,6 +1457,8 @@ class ObsCollection(pd.DataFrame):
                 tmax,
                 type_timeseries,
                 only_metadata=only_metadata,
+                organisation=organisation,
+                auth=auth,
             )
         else:
             raise ValueError("specify codes or extent")
