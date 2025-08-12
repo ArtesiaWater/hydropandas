@@ -589,7 +589,7 @@ def get_obs_list_from_codes(
         By default 'all' available tubes are selected.
     tmin : str YYYY-m-d, optional
         start of the observations, by default the entire serie is returned
-    tmax : Ttr YYYY-m-d, optional
+    tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
         hand: returns only hand measurements
