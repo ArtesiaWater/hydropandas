@@ -336,7 +336,7 @@ def get_timeseries_uuid(uuid, tmin, tmax, page_size=100000, source="vitens"):
         Universally Unique Identifier of the tube and type of time series.
     tmin : str YYYY-m-d
         start of the observations, by default the entire serie is returned
-    tmax : int YYYY-m-d
+    tmax : str YYYY-m-d
         end of the observations, by default the entire serie is returned
     page_size : int, optional
         Query parameter which can extend the response size. The default is 100000.
@@ -453,7 +453,7 @@ def get_timeseries_tube(tube_metadata, tmin, tmax, type_timeseries):
         metadata of a tube
     tmin : str YYYY-m-d, optional
         start of the observations, by default the entire serie is returned
-    tmax : Ttr YYYY-m-d, optional
+    tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
         hand: returns only hand measurements
@@ -532,7 +532,7 @@ def get_lizard_groundwater(
         Default selects tube_nr = 1
     tmin : str YYYY-m-d, optional
         start of the observations, by default the entire serie is returned
-    tmax : Ttr YYYY-m-d, optional
+    tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
         hand: returns only hand measurements
