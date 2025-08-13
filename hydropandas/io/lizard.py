@@ -560,8 +560,9 @@ def get_timeseries_tube(
         else:
             diver_measurements = None
 
+    if type_timeseries in ["diver_validated", "merge", "combine"]:
         if tube_metadata.get("start_diver_validated") is not None:
-            diver_measurements = get_timeseries_uuid(
+            diver_validated_measurements = get_timeseries_uuid(
                 tube_metadata.pop("uuid_diver_validated"),
                 tmin,
                 tmax,
