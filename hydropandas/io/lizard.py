@@ -259,7 +259,7 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
     if info.get("start_diver") is not None:
         ts_types.append("diver")
     if info.get("start_diver_validated") is not None:
-        ts_types.append("diver validated")
+        ts_types.append("diver_validated")
     info["timeseries_type"] = " + ".join(ts_types) if ts_types else None
     
     return info
