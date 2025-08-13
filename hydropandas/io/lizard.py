@@ -535,7 +535,6 @@ def get_timeseries_tube(
         return pd.DataFrame(), tube_metadata
 
     if type_timeseries in ["hand", "merge", "combine"]:
-        #if "hand" in tube_metadata["timeseries_type"]:
         if tube_metadata.get("start_hand") is not None:
             hand_measurements = get_timeseries_uuid(
                 tube_metadata.pop("uuid_hand"),
@@ -548,7 +547,6 @@ def get_timeseries_tube(
             hand_measurements = None
 
     if type_timeseries in ["diver", "merge", "combine"]:
-        #if "diver" in tube_metadata["timeseries_type"]:
         if tube_metadata.get("start_diver") is not None:
             diver_measurements = get_timeseries_uuid(
                 tube_metadata.pop("uuid_diver"),
