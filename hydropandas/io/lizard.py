@@ -246,14 +246,22 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         elif series_info["code"] == "WNS9040":
             info["uuid_diver"] = series_info["uuid"]
             info["start_diver"] = series_info["start"]
-    if (info.get("start_hand") is None) and (info.get("start_diver") is None):
-        info["timeseries_type"] = None
-    elif (info.get("start_hand") is not None) and (info.get("start_diver") is not None):
-        info["timeseries_type"] = "diver + hand"
-    elif info.get("start_hand") is None:
-        info["timeseries_type"] = "diver"
-    elif info.get("start_diver") is None:
-        info["timeseries_type"] = "hand"
+        elif series_info["code"] == "WNS9040.val":
+            info["uuid_diver_validated"] = series_info["uuid"]
+            info["start_diver_validated"] = series_info["start"]
+            info["end_diver_validated"] = series_info["end"]
+    
+    # Create string with all timeseries types
+    ts_types = []
+    print(info)#.get("start_hand"))
+    if info.get("start_hand") is not None:
+        ts_types.append("hand")
+    if info.get("start_diver") is not None:
+        ts_types.append("diver")
+    if info.get("start_diver_validated") is not None:
+        ts_types.append("diver validated")
+    info["timeseries_type"] = " + ".join(ts_types) if ts_types else None
+    
     return info
 
 
