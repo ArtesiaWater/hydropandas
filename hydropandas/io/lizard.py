@@ -433,37 +433,7 @@ def get_timeseries_uuid(
     return timeseries_sel
 
 
-def _merge_timeseries(hand_measurements, diver_measurements):
-    """Merges the timeseries of the hand and diver measurements into one timeserie.
-
-    Parameters
-    ----------
-    hand_measurements : DataFrame
-        DataFrame containing the hand measurements of the monitoring well
-    diver_measurements : DataFrame
-        DataFrame containing the Diver measurements of the monitoring well
-
-    Returns
-    -------
-    DataFrame where hand and diver measurements are merged in one timeseries
-    """
-    if hand_measurements.empty and diver_measurements.empty:
-        measurements = pd.DataFrame()
-
-    elif diver_measurements.first_valid_index() is None:
-        measurements = hand_measurements
-        logger.debug("no diver measurements available")
-
-    else:
-        hand_measurements_sel = hand_measurements.loc[
-            hand_measurements.index < diver_measurements.first_valid_index()
-        ]
-        measurements = pd.concat([hand_measurements_sel, diver_measurements], axis=0)
-
-    return measurements
-
-
-def _combine_timeseries(hand_measurements, diver_measurements):
+def _combine_timeseries(hand_measurements, diver_measurements, diver_validated_measurements):
     """Combines the timeseries of the hand and diver measurements into one DataFrame.
 
     Parameters
@@ -472,23 +442,50 @@ def _combine_timeseries(hand_measurements, diver_measurements):
         DataFrame containing the hand measurements of the monitoring well
     diver_measurements : DataFrame
         DataFrame containing the Diver measurements of the monitoring well
+    diver_validated_measurements : DataFrame
+        DataFrame containing the Diver validated measurements of the monitoring well
 
     Returns
     -------
     a combined DataFrame with both hand, and diver measurements
         DESCRIPTION.
     """
-    hand_measurements.rename(
-        columns={"value": "value_hand", "flag": "flag_hand"}, inplace=True
-    )
+
+    hand_measurements.rename(columns={"value": "value_hand", "flag": "flag_hand"}, inplace=True
+        )
+
     diver_measurements.rename(
-        columns={"value": "value_diver", "flag": "flag_diver"}, inplace=True
+            columns={"value": "value_diver", "flag": "flag_diver"}, inplace=True
+        )
+
+    diver_validated_measurements.rename(
+            columns={"value": "value_diver_validated", "flag": "flag_diver_validated"}, inplace=True
+        )
+
+    measurements = pd.concat(
+        [
+            hand_measurements,
+            diver_validated_measurements,
+            diver_measurements,
+        ],
+        axis=1,
     )
 
-    measurements = pd.concat([hand_measurements, diver_measurements], axis=1)
-    measurements = measurements.loc[
-        :, ["value_hand", "value_diver", "flag_hand", "flag_diver"]
-    ]
+    if measurements.empty:
+        logger.debug("No measurements available within selected time interval")
+    else:
+
+        expected_cols = [
+            "value_hand",
+            "value_diver_validated",
+            "value_diver",
+            "flag_hand",
+            "flag_diver_validated",
+            "flag_diver",
+        ]
+
+        present_cols = [col for col in expected_cols if col in measurements.columns]
+        measurements = measurements.loc[:, present_cols]
 
     return measurements
 
@@ -511,8 +508,8 @@ def get_timeseries_tube(
         hand: returns only hand measurements (WNS9040.hand)
         diver: returns only diver measurements (WNS9040)
         diver_validated: returns only diver_validated measurements (WNS9040.val)
-        merge: the hand and diver measurements into one time series (default)
-        combine: keeps hand and diver measurements separated
+        merge: the 'hand' and 'diver' measurements into one time series (default)
+        combine: keeps 'hand' and 'diver' measurements separated
     organisation : str, optional
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
@@ -534,6 +531,7 @@ def get_timeseries_tube(
     if tube_metadata["timeseries_type"] is None:
         return pd.DataFrame(), tube_metadata
 
+    measurements_list = []
     if type_timeseries in ["hand", "merge", "combine"]:
         if tube_metadata.get("start_hand") is not None:
             hand_measurements = get_timeseries_uuid(
@@ -544,7 +542,8 @@ def get_timeseries_tube(
                 auth=auth,
             )
         else:
-            hand_measurements = None
+            hand_measurements = pd.DataFrame()
+        measurements_list.append(hand_measurements)
 
     if type_timeseries in ["diver", "merge", "combine"]:
         if tube_metadata.get("start_diver") is not None:
@@ -556,7 +555,8 @@ def get_timeseries_tube(
                 auth=auth,
             )
         else:
-            diver_measurements = None
+            diver_measurements = pd.DataFrame()
+        measurements_list.append(diver_measurements)
 
     if type_timeseries in ["diver_validated", "merge", "combine"]:
         if tube_metadata.get("start_diver_validated") is not None:
@@ -568,26 +568,22 @@ def get_timeseries_tube(
                 auth=auth,
             )
         else:
-            diver_validated_measurements = None
+            diver_validated_measurements = pd.DataFrame()
+        measurements_list.append(diver_validated_measurements)
 
-    if type_timeseries == "hand" and hand_measurements is not None:
-        measurements = hand_measurements
-    elif type_timeseries == "diver" and diver_measurements is not None:
-        measurements = diver_measurements
-    elif type_timeseries == "diver_validated" and diver_validated_measurements is not None:
-        measurements = diver_validated_measurements
-    elif type_timeseries in ["merge", "combine"]:
-        if (hand_measurements is not None) and (diver_measurements is not None):
-            if type_timeseries == "merge":
-                measurements = _merge_timeseries(hand_measurements, diver_measurements)
-            elif type_timeseries == "combine":
-                measurements = _combine_timeseries(
-                    hand_measurements, diver_measurements
-                )
-        elif hand_measurements is not None:
-            measurements = hand_measurements
-        elif diver_measurements is not None:
-            measurements = diver_measurements
+    
+    if type_timeseries == "combine":
+        measurements = _combine_timeseries(
+            hand_measurements, diver_measurements, diver_validated_measurements
+        )
+    else:   # Exporting for all cases except 'combine'
+        
+        measurements = pd.concat(
+            measurements_list,
+            axis=0,
+            ignore_index=False,
+        )
+        measurements.sort_index(inplace=True)
 
     return measurements, tube_metadata
 
@@ -617,8 +613,9 @@ def get_lizard_groundwater(
     tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
-        hand: returns only hand measurements
-        diver: returns only diver measurements
+        hand: returns only hand measurements (WNS9040.hand)
+        diver: returns only diver measurements (WNS9040)
+        diver_validated: returns only diver validated measurements (WNS9040.val)
         merge: the hand and diver measurements into one time series (default)
         combine: keeps hand and diver measurements separated
     only_metadata : bool, optional
