@@ -253,7 +253,7 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
     
     # Create string with all timeseries types
     ts_types = []
-    print(info)#.get("start_hand"))
+    
     if info.get("start_hand") is not None:
         ts_types.append("hand")
     if info.get("start_diver") is not None:
