@@ -250,10 +250,10 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
             info["uuid_diver_validated"] = series_info["uuid"]
             info["start_diver_validated"] = series_info["start"]
             info["end_diver_validated"] = series_info["end"]
-    
+
     # Create string with all timeseries types
     ts_types = []
-    
+
     if info.get("start_hand") is not None:
         ts_types.append("hand")
     if info.get("start_diver") is not None:
@@ -261,7 +261,7 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
     if info.get("start_diver_validated") is not None:
         ts_types.append("diver_validated")
     info["timeseries_type"] = " + ".join(ts_types) if ts_types else None
-    
+
     return info
 
 
@@ -433,7 +433,9 @@ def get_timeseries_uuid(
     return timeseries_sel
 
 
-def _combine_timeseries(hand_measurements, diver_measurements, diver_validated_measurements):
+def _combine_timeseries(
+    hand_measurements, diver_measurements, diver_validated_measurements
+):
     """Combines the timeseries of the hand and diver measurements into one DataFrame.
 
     Parameters
@@ -451,16 +453,18 @@ def _combine_timeseries(hand_measurements, diver_measurements, diver_validated_m
         DESCRIPTION.
     """
 
-    hand_measurements.rename(columns={"value": "value_hand", "flag": "flag_hand"}, inplace=True
-        )
+    hand_measurements.rename(
+        columns={"value": "value_hand", "flag": "flag_hand"}, inplace=True
+    )
 
     diver_measurements.rename(
-            columns={"value": "value_diver", "flag": "flag_diver"}, inplace=True
-        )
+        columns={"value": "value_diver", "flag": "flag_diver"}, inplace=True
+    )
 
     diver_validated_measurements.rename(
-            columns={"value": "value_diver_validated", "flag": "flag_diver_validated"}, inplace=True
-        )
+        columns={"value": "value_diver_validated", "flag": "flag_diver_validated"},
+        inplace=True,
+    )
 
     measurements = pd.concat(
         [
@@ -474,7 +478,6 @@ def _combine_timeseries(hand_measurements, diver_measurements, diver_validated_m
     if measurements.empty:
         logger.debug("No measurements available within selected time interval")
     else:
-
         expected_cols = [
             "value_hand",
             "value_diver_validated",
@@ -571,13 +574,11 @@ def get_timeseries_tube(
             diver_validated_measurements = pd.DataFrame()
         measurements_list.append(diver_validated_measurements)
 
-    
     if type_timeseries == "combine":
         measurements = _combine_timeseries(
             hand_measurements, diver_measurements, diver_validated_measurements
         )
-    else:   # Exporting for all cases except 'combine'
-        
+    else:  # Exporting for all cases except 'combine'
         measurements = pd.concat(
             measurements_list,
             axis=0,
