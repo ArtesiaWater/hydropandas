@@ -508,8 +508,9 @@ def get_timeseries_tube(
     tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional
-        hand: returns only hand measurements
-        diver: returns only diver measurements
+        hand: returns only hand measurements (WNS9040.hand)
+        diver: returns only diver measurements (WNS9040)
+        diver_validated: returns only diver_validated measurements (WNS9040.val)
         merge: the hand and diver measurements into one time series (default)
         combine: keeps hand and diver measurements separated
     organisation : str, optional
@@ -523,6 +524,11 @@ def get_timeseries_tube(
         timeseries of the monitoring well
     metadata_df : dict
         metadata of the monitoring well
+
+    Notes
+    -----
+    Vitens does not seem to use the 'WNS9040.val' code, so there 'diver' should be the appropriate label.
+    Other customers do however use 'WNS9040.val', so then also the 'diver_validated' column is used.
     """
 
     if tube_metadata["timeseries_type"] is None:
@@ -554,10 +560,23 @@ def get_timeseries_tube(
         else:
             diver_measurements = None
 
+        if tube_metadata.get("start_diver_validated") is not None:
+            diver_measurements = get_timeseries_uuid(
+                tube_metadata.pop("uuid_diver_validated"),
+                tmin,
+                tmax,
+                organisation=organisation,
+                auth=auth,
+            )
+        else:
+            diver_validated_measurements = None
+
     if type_timeseries == "hand" and hand_measurements is not None:
         measurements = hand_measurements
     elif type_timeseries == "diver" and diver_measurements is not None:
         measurements = diver_measurements
+    elif type_timeseries == "diver_validated" and diver_validated_measurements is not None:
+        measurements = diver_validated_measurements
     elif type_timeseries in ["merge", "combine"]:
         if (hand_measurements is not None) and (diver_measurements is not None):
             if type_timeseries == "merge":
