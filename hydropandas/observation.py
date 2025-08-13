@@ -664,6 +664,8 @@ class GroundwaterObs(Obs):
         tmax=None,
         type_timeseries="merge",
         only_metadata=False,
+        organisation="vitens",
+        auth=None,
     ):
         """Extracts the metadata and timeseries of a observation well from a LIZARD-API
         based on the code of a monitoring well.
@@ -687,6 +689,10 @@ class GroundwaterObs(Obs):
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
             default is False.
+        organisation : str, optional
+            organisation of the data. Currently only 'vitens' is officially supported.
+        auth : tuple, optional
+            authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
         Returns
         -------
@@ -703,6 +709,8 @@ class GroundwaterObs(Obs):
             tmax,
             type_timeseries,
             only_metadata=only_metadata,
+            organisation=organisation,
+            auth=auth,
         )
         return cls(
             measurements,
