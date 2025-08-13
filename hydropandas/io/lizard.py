@@ -230,6 +230,11 @@ def get_metadata_tube(metadata_mw, tube_nr):
     Returns
     -------
     dictionary with metadata of a specific tube
+
+    .. warning::
+       This function assumes that there is only one 'hand' timeseries and one 'diver'
+       timeseries for each tube. This seems to comply with the Vitens use of Lizard.
+       If there are more than one 'diver' timeseries for a tube, the last one will be used.
     """
 
     if tube_nr is None:
