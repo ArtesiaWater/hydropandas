@@ -3,6 +3,7 @@ import pytest
 import hydropandas as hpd
 import os
 
+
 # Original tests when only Vitens was supported
 def test_single_observation():
     code = "27BP0003"
@@ -43,6 +44,7 @@ def test_combine():
 # Additional tests for use with the 'Rotterdam' data
 api_key_rotterdam = os.getenv("LIZARD_ROTTERDAM_API_KEY")
 auth = ("__key__", api_key_rotterdam)
+
 
 def test_single_observation_rotterdam():
     code = "GMW000000036819"
