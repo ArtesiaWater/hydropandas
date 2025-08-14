@@ -584,12 +584,16 @@ def get_timeseries_tube(
         # Remove empty DataFrames before concatenation
         measurements_list = [df for df in measurements_list if not df.empty]
 
-        measurements = pd.concat(
-            measurements_list,
-            axis=0,
-            ignore_index=False,
-        )
-        measurements.sort_index(inplace=True)
+        # Concatenate if there is at least one non-empty DataFrame
+        if measurements_list:
+            measurements = pd.concat(
+                measurements_list,
+                axis=0,
+                ignore_index=False,
+            )
+            measurements.sort_index(inplace=True)
+        else:
+            measurements = pd.DataFrame()
 
     return measurements, tube_metadata
 
