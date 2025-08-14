@@ -412,9 +412,7 @@ def get_timeseries_uuid(
     url = url_timeseries + "/events/"
 
     r = requests.get(url=url, params=params, auth=auth)
-    time_series_events = r.json()[
-        "results"
-    ]
+    time_series_events = r.json()["results"]
     time_series_df = pd.DataFrame(time_series_events)
 
     if time_series_df.empty:
@@ -583,6 +581,9 @@ def get_timeseries_tube(
             hand_measurements, diver_measurements, diver_validated_measurements
         )
     else:  # Exporting for all cases except 'combine'
+        # Remove empty DataFrames before concatenation
+        measurements_list = [df for df in measurements_list if not df.empty]
+
         measurements = pd.concat(
             measurements_list,
             axis=0,
@@ -817,9 +818,7 @@ def get_obs_list_from_extent(
     url_groundwaterstation_extent = (
         f"{lizard_GWS_endpoint}?geometry__within={polygon_T}&page_size={page_size}"
     )
-    r = requests.get(
-        url_groundwaterstation_extent, auth=auth
-    )
+    r = requests.get(url_groundwaterstation_extent, auth=auth)
     r.raise_for_status()
     groundwaterstation_data = r.json()
     nr_results = groundwaterstation_data["count"]
