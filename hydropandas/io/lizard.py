@@ -133,11 +133,11 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     lizard_GWS_endpoint = f"{base_url}groundwaterstations/"
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
-    try:
-        groundwaterstation_metadata = requests.get(
-            url_groundwaterstation_code, auth=auth
-        ).json()["results"][0]
+    r = requests.get(url_groundwaterstation_code, auth=auth)
+    r.raise_for_status()
 
+    try:
+        groundwaterstation_metadata = r.json()["results"][0]
     except IndexError:
         raise ValueError(f"Code {code} is invalid")
 
@@ -183,8 +183,9 @@ def _download(url, timeout=1800, auth=None):
     dictionary with timeseries data
     """
     try:
-        data = requests.get(url=url, timeout=timeout, auth=auth)
-        data = data.json()["results"]
+        r = requests.get(url=url, timeout=timeout, auth=auth)
+        r.raise_for_status()
+        data = r.json()["results"]
     except requests.exceptions.Timeout:
         logger.error(f"Timeout while requesting {url}. Please check your connection.")
         data = []
@@ -239,7 +240,9 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         info["timeseries_type"] = None
         return info
     for series in mtd_tube["timeseries"]:
-        series_info = requests.get(series, auth=auth).json()
+        r = requests.get(series, auth=auth)
+        r.raise_for_status()
+        series_info = r.json()
         if series_info["code"] == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
@@ -408,7 +411,8 @@ def get_timeseries_uuid(
     params = {"start": tmin, "end": tmax, "page_size": page_size}
     url = url_timeseries + "/events/"
 
-    time_series_events = requests.get(url=url, params=params, auth=auth).json()[
+    r = requests.get(url=url, params=params, auth=auth)
+    time_series_events = r.json()[
         "results"
     ]
     time_series_df = pd.DataFrame(time_series_events)
@@ -813,10 +817,11 @@ def get_obs_list_from_extent(
     url_groundwaterstation_extent = (
         f"{lizard_GWS_endpoint}?geometry__within={polygon_T}&page_size={page_size}"
     )
-
-    groundwaterstation_data = requests.get(
+    r = requests.get(
         url_groundwaterstation_extent, auth=auth
-    ).json()
+    )
+    r.raise_for_status()
+    groundwaterstation_data = r.json()
     nr_results = groundwaterstation_data["count"]
     nr_pages = math.ceil(nr_results / page_size)
 
