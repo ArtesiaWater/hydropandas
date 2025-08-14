@@ -45,8 +45,9 @@ def test_combine():
 api_key_rotterdam = os.getenv("LIZARD_ROTTERDAM_API_KEY")
 if api_key_rotterdam is not None:
     auth = ("__key__", api_key_rotterdam)
-else
+else:
     auth = None
+
 
 def test_single_observation_rotterdam():
     code = "GMW000000036819"
