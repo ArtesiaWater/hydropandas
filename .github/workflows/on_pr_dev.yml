@@ -46,5 +46,7 @@ jobs:
         run: tox -e ${{ matrix.toxenv }} --notest
 
       - name: Test
+        env:
+            LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
         
