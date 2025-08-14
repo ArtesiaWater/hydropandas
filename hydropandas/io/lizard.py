@@ -538,7 +538,7 @@ def get_timeseries_tube(
     if type_timeseries in ["hand", "merge", "combine"]:
         if tube_metadata.get("start_hand") is not None:
             hand_measurements = get_timeseries_uuid(
-                tube_metadata.pop("uuid_hand"),
+                tube_metadata.get("uuid_hand"),
                 tmin,
                 tmax,
                 organisation=organisation,
@@ -551,7 +551,7 @@ def get_timeseries_tube(
     if type_timeseries in ["diver", "merge", "combine"]:
         if tube_metadata.get("start_diver") is not None:
             diver_measurements = get_timeseries_uuid(
-                tube_metadata.pop("uuid_diver"),
+                tube_metadata.get("uuid_diver"),
                 tmin,
                 tmax,
                 organisation=organisation,
@@ -564,7 +564,7 @@ def get_timeseries_tube(
     if type_timeseries in ["diver_validated", "merge", "combine"]:
         if tube_metadata.get("start_diver_validated") is not None:
             diver_validated_measurements = get_timeseries_uuid(
-                tube_metadata.pop("uuid_diver_validated"),
+                tube_metadata.get("uuid_diver_validated"),
                 tmin,
                 tmax,
                 organisation=organisation,
