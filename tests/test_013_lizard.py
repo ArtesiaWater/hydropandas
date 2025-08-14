@@ -1,7 +1,7 @@
+import os
 import pytest
 
 import hydropandas as hpd
-import os
 
 
 # Original tests when only Vitens was supported
