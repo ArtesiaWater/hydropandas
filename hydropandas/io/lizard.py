@@ -436,7 +436,7 @@ def get_timeseries_uuid(
     return timeseries_sel
 
 
-def _filter_timeseries(ts_dict, filters):
+def _filter_timeseries(ts_dict, datafilters):
     """
     Generic filter function for multiple timeseries.
 
@@ -444,8 +444,8 @@ def _filter_timeseries(ts_dict, filters):
     ----------
     ts_dict : dict
         Dictionary of timeseries DataFrames, e.g. {'hand': df1, 'diver': df2, ...}
-    filters : list of str
-        List of filter names as strings, e.g. ["remove_unvalidated_diver_values_when_validated_available", "remove_hand_during_diver_period"]
+    datafilters : list of str
+        List of datafilter names as strings, e.g. ["remove_unvalidated_diver_values_when_validated_available", "remove_hand_during_diver_period"]
 
     Returns
     -------
@@ -453,7 +453,7 @@ def _filter_timeseries(ts_dict, filters):
         Filtered ts_dict.
     """
     # Define standard filters by name. Note that the order may be relevant (uppermost filter is applied first).
-    standard_filters = {
+    standard_datafilters = {
         "remove_unvalidated_diver_values_when_validated_available": {
             "target": "diver",
             "action": "remove_before",
@@ -468,12 +468,12 @@ def _filter_timeseries(ts_dict, filters):
         },
     }
 
-    # Convert string filters to dicts using standard_filters
+    # Convert string datafilters to dicts using standard_datafilters
     filter_dicts = []
-    for f in filters:
+    for f in datafilters:
         if isinstance(f, str):
-            if f in standard_filters:
-                filter_dicts.append(standard_filters[f])
+            if f in standard_datafilters:
+                datafilter_dicts.append(standard_datafilters[f])
             else:
                 raise ValueError(f"Unknown filter name: {f}")
         else:
@@ -483,7 +483,7 @@ def _filter_timeseries(ts_dict, filters):
 
     ts_dict = {k: v.copy() for k, v in ts_dict.items()}
 
-    for f in filter_dicts:
+    for f in datafilter_dicts:
         
         targets = f["target"] if isinstance(f["target"], list) else [f["target"]]
         refs = f["reference"] if isinstance(f["reference"], list) else [f["reference"]]
@@ -519,7 +519,7 @@ def get_timeseries_tube(
     tmax,
     type_timeseries=None,  # deprecated argument
     which_timeseries=None,  # new preferred argument
-    filters=None,
+    datafilters=None,
     combine_method="merge",
     organisation="vitens",
     auth=None,
@@ -540,10 +540,10 @@ def get_timeseries_tube(
     which_timeseries : list of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
         If None, defaults to ["hand", "diver", "diver_validated"].
-    filters : list of strings, optional
+    datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
-        Currently implemented filter methods:
+        Currently implemented datafilter methods:
         "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
         "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
     combine_method : str, optional
@@ -604,8 +604,8 @@ def get_timeseries_tube(
         ts_dict[ts_type] = ts
 
     # Filter
-    if filters is not None:
-        ts_dict_filtered = _filter_timeseries(ts_dict, filters)
+    if datafilters is not None:
+        ts_dict_filtered = _filter_timeseries(ts_dict, datafilters)
     else:
         ts_dict_filtered = ts_dict  
 
@@ -652,7 +652,10 @@ def get_lizard_groundwater(
     tube_nr=None,
     tmin=None,
     tmax=None,
-    type_timeseries="merge",
+    type_timeseries=None,  # deprecated argument
+    which_timeseries=None,  # new preferred argument
+    datafilters=None,
+    combine_method="merge",
     only_metadata=False,
     organisation="vitens",
     auth=None,
@@ -703,7 +706,7 @@ def get_lizard_groundwater(
         return pd.DataFrame(), tube_metadata
 
     measurements, tube_metadata = get_timeseries_tube(
-        tube_metadata, tmin, tmax, type_timeseries, organisation=organisation, auth=auth
+        tube_metadata, tmin, tmax, which_timeseries=["hand","diver"], datafilters=None, combine_method="merge", organisation=organisation, auth=auth
     )
     tube_metadata = check_status_obs(tube_metadata, measurements)
 
