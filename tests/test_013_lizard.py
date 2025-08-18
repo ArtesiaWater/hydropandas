@@ -42,9 +42,9 @@ def test_combine():
 
 
 # Additional tests for use with the 'Rotterdam' data
-api_key_rotterdam = os.getenv("LIZARD_ROTTERDAM_API_KEY")
+api_key_rotterdam = os.environ["LIZARD_ROTTERDAM_API_KEY"]
+assert len(api_key_rotterdam) == 41
 if api_key_rotterdam is not None:
-    assert len(api_key_rotterdam) == 41
     auth = ("__key__", api_key_rotterdam)
 else:
     auth = None
