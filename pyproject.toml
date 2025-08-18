@@ -92,16 +92,16 @@ addopts = "--durations=0"
 markers = ["slow: mark test as slow."]
 
 [tool.tox]
-passenv = LIZARD_ROTTERDAM_API_KEY
 legacy_tox_ini = """
     [tox]
+    passenv = LIZARD_ROTTERDAM_API_KEY
     requires = tox>=4
     env_list = ruff, notebooks, py{310, 311, 312, 313}
-    
 
     [testenv]
     description = run unit tests
     extras = pytesting
+    passenv = LIZARD_ROTTERDAM_API_KEY
     commands =
             pytest tests -m "not slow" --ignore=tests/api --ignore=tests/notebooks
 
