@@ -50,7 +50,7 @@ def read_lizard(
         By default 'all' available tubes are selected.
     tmin : str YYYY-m-d, optional
         start of the observations, by default the entire time series is returned
-    tmax : Ttr YYYY-m-d, optional
+    tmax : str YYYY-m-d, optional
         end of the observations, by default the entire time series is returned
     type_timeseries : str, optional (deprecated)
         Old keyword, use which_timeseries instead.
@@ -82,11 +82,9 @@ def read_lizard(
 
     # Deprecation warning for type_timeseries
     if type_timeseries is not None:
-        warnings.warn(
+        logger.warning(
             "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead.",
-            DeprecationWarning,
-            stacklevel=2,
+            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
@@ -1479,11 +1477,9 @@ class ObsCollection(pd.DataFrame):
 
         # Deprecation warning for type_timeseries
         if type_timeseries is not None:
-            warnings.warn(
+            logger.warning(
                 "The 'type_timeseries' argument is deprecated. "
                 "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead.",
-                DeprecationWarning,
-                stacklevel=2,
             )
             # Map old type_timeseries to which_timeseries and combine_method
             if type_timeseries == "combine":

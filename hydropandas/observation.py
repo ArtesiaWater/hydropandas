@@ -714,11 +714,9 @@ class GroundwaterObs(Obs):
 
         # Deprecation warning for type_timeseries
         if type_timeseries is not None:
-            warnings.warn(
+            logger.warning(
                 "The 'type_timeseries' argument is deprecated. "
-                "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead.",
-                DeprecationWarning,
-                stacklevel=2,
+                "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
             )
             # Map old type_timeseries to which_timeseries and combine_method
             if type_timeseries == "combine":
