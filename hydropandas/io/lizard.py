@@ -134,12 +134,14 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     lizard_GWS_endpoint = f"{base_url}groundwaterstations/"
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
+    ValueError(url_groundwaterstation_code)
     r = requests.get(url_groundwaterstation_code, auth=auth)
     r.raise_for_status()
 
     try:
         groundwaterstation_metadata = r.json()["results"][0]
     except IndexError:
+        raise ValueError(r.json())
         raise ValueError(f"Code {code} is invalid")
 
     return groundwaterstation_metadata
@@ -904,6 +906,7 @@ def get_obs_list_from_extent(
     logger.info("Number of pages: {}".format(nr_pages))
 
     if nr_results == 0:
+        ValueError(r.json())
         logger.warning(
             "No monitoring wells found in the specified extent. "
             "Please check the extent or the organisation."
