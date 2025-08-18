@@ -52,7 +52,7 @@ else:
 
 def test_single_observation_rotterdam():
     code = "GMW000000036819"
-    raise ValueError(auth['__key__'][:3]) # check first 3 digits
+    raise ValueError(auth["__key__"][:3])  # check first 3 digits
     o = hpd.GroundwaterObs.from_lizard(code, organisation="rotterdam", auth=auth)
     assert o.tube_nr == 1
 
