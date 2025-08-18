@@ -663,7 +663,7 @@ class GroundwaterObs(Obs):
         tmin=None,
         tmax=None,
         type_timeseries=None,  # deprecated argument
-        which_timeseries=None,  # new preferred argument
+        which_timeseries=["hand", "diver"],  # new preferred argument
         datafilters=None,
         combine_method="merge",
         only_metadata=False,
@@ -671,45 +671,45 @@ class GroundwaterObs(Obs):
         auth=None,
     ):
         """Extracts the metadata and timeseries of a observation well from a LIZARD-API
-            based on the code of a monitoring well.
+        based on the code of a monitoring well.
 
-            Parameters
-            ----------
-            code : str
-                code of the measuring well
-            tube_nr : int, optional
-                select specific tube top
-                Default selects tube_nr = 1
-            tmin : str YYYY-m-d, optional
-                start of the observations, by default the entire serie is returned
-            tmax : str YYYY-m-d, optional
-                end of the observations, by default the entire serie is returned
-            type_timeseries : str, optional (deprecated)
-                Old keyword, use which_timeseries instead.
-            which_timeseries : list of str, optional
-                Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-                If None, defaults to ["hand", "diver", "diver_validated"].
-            datafilters : list of strings, optional
-                Methods to filter the timeseries data.
-                If None (default), all measurements will be shown.
-                Currently implemented datafilter methods:
-                "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
-                "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
-            combine_method : str, optional
-                "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
-                If None, defaults to "merge".
-            only_metadata : bool, optional
-                if True only metadata is returned and no time series data. The
-                default is False.
-            organisation : str, optional
-                organisation of the data. Currently only 'vitens' is officially supported.
-            auth : tuple, optional
-                authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+        Parameters
+        ----------
+        code : str
+            code of the measuring well
+        tube_nr : int, optional
+            select specific tube top
+            Default selects tube_nr = 1
+        tmin : str YYYY-m-d, optional
+            start of the observations, by default the entire serie is returned
+        tmax : str YYYY-m-d, optional
+            end of the observations, by default the entire serie is returned
+        type_timeseries : str, optional (deprecated)
+            Old keyword, use which_timeseries instead.
+        which_timeseries : list of str, optional
+            Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
+            Defaults to ["hand", "diver"] (which should be correct for Vitens).
+        datafilters : list of strings, optional
+            Methods to filter the timeseries data.
+            If None (default), all measurements will be shown.
+            Currently implemented datafilter methods:
+            "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
+            "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
+        combine_method : str, optional
+            "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+            If None, defaults to "merge".
+        only_metadata : bool, optional
+            if True only metadata is returned and no time series data. The
+            default is False.
+        organisation : str, optional
+            organisation of the data. Currently only 'vitens' is officially supported.
+        auth : tuple, optional
+            authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
-            Returns
-            -------
-            ObsCollection
-                Returns a DataFrame with metadata and timeseries
+        Returns
+        -------
+        ObsCollection
+            Returns a DataFrame with metadata and timeseries
         """
 
         # Deprecation warning for type_timeseries
@@ -722,10 +722,8 @@ class GroundwaterObs(Obs):
             )
             # Map old type_timeseries to which_timeseries and combine_method
             if type_timeseries == "combine":
-                which_timeseries = ["hand", "diver"]
                 combine_method = "combine"
             elif type_timeseries == "merge":
-                which_timeseries = ["hand", "diver"]
                 combine_method = "merge"
             else:
                 which_timeseries = [type_timeseries]
@@ -738,7 +736,7 @@ class GroundwaterObs(Obs):
             tube_nr,
             tmin,
             tmax,
-            which_timeseries,
+            which_timeseries=which_timeseries,
             combine_method=combine_method,
             datafilters=datafilters,
             only_metadata=only_metadata,

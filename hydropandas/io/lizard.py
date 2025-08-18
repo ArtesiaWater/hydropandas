@@ -518,7 +518,7 @@ def get_timeseries_tube(
     tmin,
     tmax,
     type_timeseries=None,  # deprecated argument
-    which_timeseries=None,  # new preferred argument
+    which_timeseries=["hand", "diver"],  # new preferred argument
     datafilters=None,
     combine_method="merge",
     organisation="vitens",
@@ -539,7 +539,7 @@ def get_timeseries_tube(
         Old keyword, use which_timeseries instead.
     which_timeseries : list of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        If None, defaults to ["hand", "diver"].
+        Defaults to ["hand", "diver"] (which should be correct for Vitens).
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -571,10 +571,8 @@ def get_timeseries_tube(
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
-            which_timeseries = ["hand", "diver"]
             combine_method = "combine"
         elif type_timeseries == "merge":
-            which_timeseries = ["hand", "diver"]
             combine_method = "merge"
         else:
             which_timeseries = [type_timeseries]
@@ -582,10 +580,7 @@ def get_timeseries_tube(
 
     if tube_metadata["timeseries_type"] is None:
         return pd.DataFrame(), tube_metadata
-
-    if which_timeseries is None:
-        which_timeseries = ["hand", "diver"]    # For 'vitens' this should be the default
-
+    
     # Fetch requested timeseries
     ts_dict = {}
     for ts_type in which_timeseries:
@@ -653,7 +648,7 @@ def get_lizard_groundwater(
     tmin=None,
     tmax=None,
     type_timeseries=None,  # deprecated argument
-    which_timeseries=None,  # new preferred argument
+    which_timeseries=["hand", "diver"],  # new preferred argument
     datafilters=None,
     combine_method="merge",
     only_metadata=False,
@@ -678,7 +673,7 @@ def get_lizard_groundwater(
         Old keyword, use which_timeseries instead.
     which_timeseries : list of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        If None, defaults to ["hand", "diver"].
+        Defaults to ["hand", "diver"] (which should be correct for Vitens).
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -714,10 +709,8 @@ def get_lizard_groundwater(
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
-            which_timeseries = ["hand", "diver"]
             combine_method = "combine"
         elif type_timeseries == "merge":
-            which_timeseries = ["hand", "diver"]
             combine_method = "merge"
         else:
             which_timeseries = [type_timeseries]
