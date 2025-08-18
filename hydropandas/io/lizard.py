@@ -486,7 +486,6 @@ def _filter_timeseries(ts_dict, datafilters):
     ts_dict = {k: v.copy() for k, v in ts_dict.items()}
 
     for f in datafilter_dicts:
-        
         targets = f["target"] if isinstance(f["target"], list) else [f["target"]]
         refs = f["reference"] if isinstance(f["reference"], list) else [f["reference"]]
         how = f.get("how", "range")
@@ -514,6 +513,7 @@ def _filter_timeseries(ts_dict, datafilters):
                 # Add more actions as needed
             ts_dict[target] = df[mask]
     return ts_dict
+
 
 def get_timeseries_tube(
     tube_metadata,
@@ -582,7 +582,7 @@ def get_timeseries_tube(
 
     if tube_metadata["timeseries_type"] is None:
         return pd.DataFrame(), tube_metadata
-    
+
     # Fetch requested timeseries
     ts_dict = {}
     for ts_type in which_timeseries:
@@ -604,7 +604,7 @@ def get_timeseries_tube(
     if datafilters is not None:
         ts_dict_filtered = _filter_timeseries(ts_dict, datafilters)
     else:
-        ts_dict_filtered = ts_dict  
+        ts_dict_filtered = ts_dict
 
     # Combine as requested
     if combine_method == "combine":
@@ -618,15 +618,29 @@ def get_timeseries_tube(
                 columns={"value": "value_diver", "flag": "flag_diver"}
             )
         if not ts_dict_filtered.get("diver_validated", pd.DataFrame()).empty:
-            ts_dict_filtered["diver_validated"] = ts_dict_filtered["diver_validated"].rename(
-                columns={"value": "value_diver_validated", "flag": "flag_diver_validated"}
+            ts_dict_filtered["diver_validated"] = ts_dict_filtered[
+                "diver_validated"
+            ].rename(
+                columns={
+                    "value": "value_diver_validated",
+                    "flag": "flag_diver_validated",
+                }
             )
-        dfs = [df for key in ["hand", "diver_validated", "diver"] if key in ts_dict_filtered and not ts_dict_filtered[key].empty for df in [ts_dict_filtered[key]]]
+        dfs = [
+            df
+            for key in ["hand", "diver_validated", "diver"]
+            if key in ts_dict_filtered and not ts_dict_filtered[key].empty
+            for df in [ts_dict_filtered[key]]
+        ]
         measurements = pd.concat(dfs, axis=1) if dfs else pd.DataFrame()
         # Only keep present expected columns
         expected_cols = [
-            "value_hand", "value_diver_validated", "value_diver",
-            "flag_hand", "flag_diver_validated", "flag_diver",
+            "value_hand",
+            "value_diver_validated",
+            "value_diver",
+            "flag_hand",
+            "flag_diver_validated",
+            "flag_diver",
         ]
         present_cols = [col for col in expected_cols if col in measurements.columns]
         if not measurements.empty:
@@ -643,6 +657,7 @@ def get_timeseries_tube(
         measurements = pd.concat(dfs, axis=0).sort_index() if dfs else pd.DataFrame()
 
     return measurements, tube_metadata
+
 
 def get_lizard_groundwater(
     code,
@@ -728,7 +743,14 @@ def get_lizard_groundwater(
         return pd.DataFrame(), tube_metadata
 
     measurements, tube_metadata = get_timeseries_tube(
-        tube_metadata, tmin, tmax, which_timeseries=which_timeseries, datafilters=datafilters, combine_method=combine_method, organisation=organisation, auth=auth
+        tube_metadata,
+        tmin,
+        tmax,
+        which_timeseries=which_timeseries,
+        datafilters=datafilters,
+        combine_method=combine_method,
+        organisation=organisation,
+        auth=auth,
     )
     tube_metadata = check_status_obs(tube_metadata, measurements)
 
