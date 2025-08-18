@@ -539,7 +539,7 @@ def get_timeseries_tube(
         Old keyword, use which_timeseries instead.
     which_timeseries : list of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        If None, defaults to ["hand", "diver", "diver_validated"].
+        If None, defaults to ["hand", "diver"].
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -678,7 +678,7 @@ def get_lizard_groundwater(
         Old keyword, use which_timeseries instead.
     which_timeseries : list of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        If None, defaults to ["hand", "diver", "diver_validated"].
+        If None, defaults to ["hand", "diver"].
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -733,7 +733,7 @@ def get_lizard_groundwater(
         return pd.DataFrame(), tube_metadata
 
     measurements, tube_metadata = get_timeseries_tube(
-        tube_metadata, tmin, tmax, which_timeseries=["hand","diver"], datafilters=None, combine_method="merge", organisation=organisation, auth=auth
+        tube_metadata, tmin, tmax, which_timeseries=which_timeseries, datafilters=datafilters, combine_method=combine_method, organisation=organisation, auth=auth
     )
     tube_metadata = check_status_obs(tube_metadata, measurements)
 
