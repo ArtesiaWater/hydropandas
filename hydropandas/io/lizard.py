@@ -469,7 +469,7 @@ def _filter_timeseries(ts_dict, datafilters):
     }
 
     # Convert string datafilters to dicts using standard_datafilters
-    filter_dicts = []
+    datafilter_dicts = []
     for f in datafilters:
         if isinstance(f, str):
             if f in standard_datafilters:
@@ -674,12 +674,20 @@ def get_lizard_groundwater(
         start of the observations, by default the entire serie is returned
     tmax : str YYYY-m-d, optional
         end of the observations, by default the entire serie is returned
-    type_timeseries : str, optional
-        hand: returns only hand measurements (WNS9040.hand)
-        diver: returns only diver measurements (WNS9040)
-        diver_validated: returns only diver validated measurements (WNS9040.val)
-        merge: the hand and diver measurements into one time series (default)
-        combine: keeps hand and diver measurements separated
+    type_timeseries : str, optional (deprecated)
+        Old keyword, use which_timeseries instead.
+    which_timeseries : list of str, optional
+        Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
+        If None, defaults to ["hand", "diver", "diver_validated"].
+    datafilters : list of strings, optional
+        Methods to filter the timeseries data.
+        If None (default), all measurements will be shown.
+        Currently implemented datafilter methods:
+        "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
+        "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
+    combine_method : str, optional
+        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        If None, defaults to "merge".
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
@@ -695,6 +703,25 @@ def get_lizard_groundwater(
     tube_metadata : dict
         dictionary containing metadata
     """
+
+    # Deprecation warning for type_timeseries
+    if type_timeseries is not None:
+        warnings.warn(
+            "The 'type_timeseries' argument is deprecated. "
+            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Map old type_timeseries to which_timeseries and combine_method
+        if type_timeseries == "combine":
+            which_timeseries = ["hand", "diver"]
+            combine_method = "combine"
+        elif type_timeseries == "merge":
+            which_timeseries = ["hand", "diver"]
+            combine_method = "merge"
+        else:
+            which_timeseries = [type_timeseries]
+            combine_method = "merge"
 
     groundwaterstation_metadata = get_metadata_mw_from_code(
         code, organisation=organisation, auth=auth
