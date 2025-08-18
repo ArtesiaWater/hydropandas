@@ -2,6 +2,7 @@ import logging
 import math
 import pathlib
 from concurrent.futures import ThreadPoolExecutor
+import warnings
 
 import geopandas
 import pandas as pd
@@ -435,88 +436,121 @@ def get_timeseries_uuid(
     return timeseries_sel
 
 
-def _combine_timeseries(
-    hand_measurements, diver_measurements, diver_validated_measurements
-):
-    """Combines the timeseries of the hand and diver measurements into one DataFrame.
+def _filter_timeseries(ts_dict, filters):
+    """
+    Generic filter function for multiple timeseries.
 
     Parameters
     ----------
-    hand_measurements : DataFrame
-        DataFrame containing the hand measurements of the monitoring well
-    diver_measurements : DataFrame
-        DataFrame containing the Diver measurements of the monitoring well
-    diver_validated_measurements : DataFrame
-        DataFrame containing the Diver validated measurements of the monitoring well
+    ts_dict : dict
+        Dictionary of timeseries DataFrames, e.g. {'hand': df1, 'diver': df2, ...}
+    filters : list of str
+        List of filter names as strings, e.g. ["remove_unvalidated_diver_values_when_validated_available", "remove_hand_during_diver_period"]
 
     Returns
     -------
-    a combined DataFrame with both hand, and diver measurements
-        DESCRIPTION.
+    dict
+        Filtered ts_dict.
     """
+    # Define standard filters by name. Note that the order may be relevant (uppermost filter is applied first).
+    standard_filters = {
+        "remove_unvalidated_diver_values_when_validated_available": {
+            "target": "diver",
+            "action": "remove_before",
+            "reference": "diver_validated",
+            "how": "max",
+        },
+        "remove_hand_during_diver_period": {
+            "target": "hand",
+            "action": "remove_between",
+            "reference": ["diver", "diver_validated"],
+            "how": "range",
+        },
+    }
 
-    hand_measurements.rename(
-        columns={"value": "value_hand", "flag": "flag_hand"}, inplace=True
-    )
+    # Convert string filters to dicts using standard_filters
+    filter_dicts = []
+    for f in filters:
+        if isinstance(f, str):
+            if f in standard_filters:
+                filter_dicts.append(standard_filters[f])
+            else:
+                raise ValueError(f"Unknown filter name: {f}")
+        else:
+            raise ValueError(
+                "Each filter must be a string referring to a standard filter."
+            )
 
-    diver_measurements.rename(
-        columns={"value": "value_diver", "flag": "flag_diver"}, inplace=True
-    )
+    ts_dict = {k: v.copy() for k, v in ts_dict.items()}
 
-    diver_validated_measurements.rename(
-        columns={"value": "value_diver_validated", "flag": "flag_diver_validated"},
-        inplace=True,
-    )
-
-    measurements = pd.concat(
-        [
-            hand_measurements,
-            diver_validated_measurements,
-            diver_measurements,
-        ],
-        axis=1,
-    )
-
-    if measurements.empty:
-        logger.debug("No measurements available within selected time interval")
-    else:
-        expected_cols = [
-            "value_hand",
-            "value_diver_validated",
-            "value_diver",
-            "flag_hand",
-            "flag_diver_validated",
-            "flag_diver",
-        ]
-
-        present_cols = [col for col in expected_cols if col in measurements.columns]
-        measurements = measurements.loc[:, present_cols]
-
-    return measurements
-
+    for f in filter_dicts:
+        
+        targets = f["target"] if isinstance(f["target"], list) else [f["target"]]
+        refs = f["reference"] if isinstance(f["reference"], list) else [f["reference"]]
+        how = f.get("how", "range")
+        on = f.get("on", None)
+        for target in targets:
+            df = ts_dict.get(target)
+            if df is None or df.empty:
+                continue
+            mask = pd.Series(True, index=df.index)
+            for ref in refs:
+                ref_df = ts_dict.get(ref)
+                if ref_df is None or ref_df.empty:
+                    continue
+                idx = ref_df.index if on is None else ref_df[on]
+                if f["action"] == "remove_before":
+                    val = idx.max() if how == "max" else idx.min()
+                    mask &= df.index > val
+                elif f["action"] == "remove_after":
+                    val = idx.min() if how == "min" else idx.max()
+                    mask &= df.index < val
+                elif f["action"] == "remove_between":
+                    mask &= ~df.index.to_series().between(idx.min(), idx.max())
+                elif f["action"] == "keep_only":
+                    mask &= df.index.to_series().between(idx.min(), idx.max())
+                # Add more actions as needed
+            ts_dict[target] = df[mask]
+    return ts_dict
 
 def get_timeseries_tube(
-    tube_metadata, tmin, tmax, type_timeseries, organisation="vitens", auth=None
+    tube_metadata,
+    tmin,
+    tmax,
+    type_timeseries=None,  # deprecated argument
+    which_timeseries=None,  # new preferred argument
+    filters=None,
+    combine_method="merge",
+    organisation="vitens",
+    auth=None,
 ):
-    """Extracts multiple timeseries (hand and/or diver measurements) for a specific tube
-    using the Lizard API.
+    """
+    Extracts specified timeseries for a tube and combines them as requested.
 
     Parameters
     ----------
     tube_metadata : dict
         metadata of a tube
     tmin : str YYYY-m-d, optional
-        start of the observations, by default the entire serie is returned
+        start of the observations
     tmax : str YYYY-m-d, optional
-        end of the observations, by default the entire serie is returned
-    type_timeseries : str, optional
-        hand: returns only hand measurements (WNS9040.hand)
-        diver: returns only diver measurements (WNS9040)
-        diver_validated: returns only diver_validated measurements (WNS9040.val)
-        merge: the 'hand' and 'diver' measurements into one time series (default)
-        combine: keeps 'hand' and 'diver' measurements separated
+        end of the observations
+    type_timeseries : str, optional (deprecated)
+        Old keyword, use which_timeseries instead.
+    which_timeseries : list of str, optional
+        Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
+        If None, defaults to ["hand", "diver", "diver_validated"].
+    filters : list of strings, optional
+        Methods to filter the timeseries data.
+        If None (default), all measurements will be shown.
+        Currently implemented filter methods:
+        "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
+        "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
+    combine_method : str, optional
+        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        If None, defaults to "merge".
     organisation : str, optional
-        organisation as used by Lizard, currently only "vitens" is officially supported.
+        organisation as used by Lizard.
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
 
@@ -526,77 +560,92 @@ def get_timeseries_tube(
         timeseries of the monitoring well
     metadata_df : dict
         metadata of the monitoring well
-
-    Notes
-    -----
-    Vitens does not seem to use the 'WNS9040.val' code, so there 'diver' should be the appropriate label.
-    Other customers do however use 'WNS9040.val', so then also the 'diver_validated' column is used.
     """
+    # Deprecation warning for type_timeseries
+    if type_timeseries is not None:
+        warnings.warn(
+            "The 'type_timeseries' argument is deprecated. "
+            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Map old type_timeseries to which_timeseries and combine_method
+        if type_timeseries == "combine":
+            which_timeseries = ["hand", "diver"]
+            combine_method = "combine"
+        elif type_timeseries == "merge":
+            which_timeseries = ["hand", "diver"]
+            combine_method = "merge"
+        else:
+            which_timeseries = [type_timeseries]
+            combine_method = "merge"
 
     if tube_metadata["timeseries_type"] is None:
         return pd.DataFrame(), tube_metadata
 
-    measurements_list = []
-    if type_timeseries in ["hand", "merge", "combine"]:
-        if tube_metadata.get("start_hand") is not None:
-            hand_measurements = get_timeseries_uuid(
-                tube_metadata.get("uuid_hand"),
+    if which_timeseries is None:
+        which_timeseries = ["hand", "diver"]    # For 'vitens' this should be the default
+
+    # Fetch requested timeseries
+    ts_dict = {}
+    for ts_type in which_timeseries:
+        uuid_key = f"uuid_{ts_type}"
+        start_key = f"start_{ts_type}"
+        if tube_metadata.get(start_key) is not None:
+            ts = get_timeseries_uuid(
+                tube_metadata.get(uuid_key),
                 tmin,
                 tmax,
                 organisation=organisation,
                 auth=auth,
             )
         else:
-            hand_measurements = pd.DataFrame()
-        measurements_list.append(hand_measurements)
+            ts = pd.DataFrame()
+        ts_dict[ts_type] = ts
 
-    if type_timeseries in ["diver", "merge", "combine"]:
-        if tube_metadata.get("start_diver") is not None:
-            diver_measurements = get_timeseries_uuid(
-                tube_metadata.get("uuid_diver"),
-                tmin,
-                tmax,
-                organisation=organisation,
-                auth=auth,
+    # Filter
+    if filters is not None:
+        ts_dict_filtered = _filter_timeseries(ts_dict, filters)
+    else:
+        ts_dict_filtered = ts_dict  
+
+    # Combine as requested
+    if combine_method == "combine":
+        # Side-by-side
+        if not ts_dict_filtered.get("hand", pd.DataFrame()).empty:
+            ts_dict_filtered["hand"] = ts_dict_filtered["hand"].rename(
+                columns={"value": "value_hand", "flag": "flag_hand"}
             )
-        else:
-            diver_measurements = pd.DataFrame()
-        measurements_list.append(diver_measurements)
-
-    if type_timeseries in ["diver_validated", "merge", "combine"]:
-        if tube_metadata.get("start_diver_validated") is not None:
-            diver_validated_measurements = get_timeseries_uuid(
-                tube_metadata.get("uuid_diver_validated"),
-                tmin,
-                tmax,
-                organisation=organisation,
-                auth=auth,
+        if not ts_dict_filtered.get("diver", pd.DataFrame()).empty:
+            ts_dict_filtered["diver"] = ts_dict_filtered["diver"].rename(
+                columns={"value": "value_diver", "flag": "flag_diver"}
             )
-        else:
-            diver_validated_measurements = pd.DataFrame()
-        measurements_list.append(diver_validated_measurements)
-
-    if type_timeseries == "combine":
-        measurements = _combine_timeseries(
-            hand_measurements, diver_measurements, diver_validated_measurements
-        )
-    else:  # Exporting for all cases except 'combine'
-        # Remove empty DataFrames before concatenation
-        measurements_list = [df for df in measurements_list if not df.empty]
-
-        # Concatenate if there is at least one non-empty DataFrame
-        if measurements_list:
-            measurements = pd.concat(
-                measurements_list,
-                axis=0,
-                ignore_index=False,
+        if not ts_dict_filtered.get("diver_validated", pd.DataFrame()).empty:
+            ts_dict_filtered["diver_validated"] = ts_dict_filtered["diver_validated"].rename(
+                columns={"value": "value_diver_validated", "flag": "flag_diver_validated"}
             )
-            measurements.sort_index(inplace=True)
-        else:
-            measurements = pd.DataFrame()
+        dfs = [df for key in ["hand", "diver_validated", "diver"] if key in ts_dict_filtered and not ts_dict_filtered[key].empty for df in [ts_dict_filtered[key]]]
+        measurements = pd.concat(dfs, axis=1) if dfs else pd.DataFrame()
+        # Only keep present expected columns
+        expected_cols = [
+            "value_hand", "value_diver_validated", "value_diver",
+            "flag_hand", "flag_diver_validated", "flag_diver",
+        ]
+        present_cols = [col for col in expected_cols if col in measurements.columns]
+        if not measurements.empty:
+            measurements = measurements.loc[:, present_cols]
+    else:
+        # Default: merge (vertical stack)
+        dfs = []
+        for key in which_timeseries:
+            df = ts_dict_filtered.get(key)
+            if df is not None and not df.empty:
+                df = df.copy()
+                df["origin"] = key
+                dfs.append(df)
+        measurements = pd.concat(dfs, axis=0).sort_index() if dfs else pd.DataFrame()
 
     return measurements, tube_metadata
-
 
 def get_lizard_groundwater(
     code,
