@@ -134,7 +134,7 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
     ValueError(url_groundwaterstation_code)
-    r = requests.get(url_groundwaterstation_code, auth=auth)
+    r = requests.get(url_groundwaterstation_code, auth=auth, timeout=1200)
     r.raise_for_status()
 
     try:
