@@ -96,6 +96,7 @@ legacy_tox_ini = """
     [tox]
     requires = tox>=4
     env_list = ruff, notebooks, py{310, 311, 312, 313}
+    passenv = LIZARD_ROTTERDAM_API_KEY
 
     [testenv]
     description = run unit tests
