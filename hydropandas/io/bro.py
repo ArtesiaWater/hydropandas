@@ -95,6 +95,9 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
             )
             if keep_all_obs:
                 obs_list.append(o)
+        elif not o.index.is_monotonic_increasing:
+            o = o.sort_index()
+            obs_list.append(o)
         else:
             obs_list.append(o)
         obs_list.append(o)
@@ -757,6 +760,9 @@ def get_obs_list_from_extent(
                 )
                 if keep_all_obs:
                     obs_list.append(o)
+            elif not o.index.is_monotonic_increasing:
+                o = o.sort_index()
+                obs_list.append(o)
             else:
                 obs_list.append(o)
 
