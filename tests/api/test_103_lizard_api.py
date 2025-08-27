@@ -1,6 +1,7 @@
 # %%
 import os
 
+import pytest
 import requests
 
 import hydropandas as hpd
