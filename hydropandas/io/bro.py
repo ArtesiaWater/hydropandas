@@ -168,7 +168,7 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
             df, meta_new = measurements_from_gld(gld_id, **kwargs)
             meta.update(meta_new)
             dfl.append(df)
-        df = pd.concat(dfl, axis=0)
+        df = pd.concat(dfl, axis=0).sort_index()
 
         return df, meta
 
