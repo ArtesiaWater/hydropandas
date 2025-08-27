@@ -19,7 +19,7 @@ def test_extent():
 @pytest.mark.slow
 def test_codes():
     oc = hpd.read_lizard(
-        codes=["39F-0735", "39F-0736", "39F-0737"], type_timeseries="merge"
+        codes=["39F-0735", "39F-0736", "39F-0737"], combine_method="merge"
     )
     assert not oc.empty
 

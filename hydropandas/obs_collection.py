@@ -27,7 +27,10 @@ def read_lizard(
     tube_nr="all",
     tmin=None,
     tmax=None,
-    type_timeseries="merge",
+    type_timeseries=None,  # deprecated argument
+    which_timeseries=["hand", "diver"],  # new preferred argument
+    datafilters=None,
+    combine_method="merge",
     only_metadata=False,
     organisation="vitens",
     auth=None,
@@ -47,13 +50,22 @@ def read_lizard(
         By default 'all' available tubes are selected.
     tmin : str YYYY-m-d, optional
         start of the observations, by default the entire time series is returned
-    tmax : Ttr YYYY-m-d, optional
+    tmax : str YYYY-m-d, optional
         end of the observations, by default the entire time series is returned
-    type_timeseries : str, optional
-        hand: returns only hand measurements
-        diver: returns only diver measurements
-        merge: the hand and diver measurements into one time series (default)
-        combine: keeps hand and diver measurements separeted
+    type_timeseries : str, optional (deprecated)
+        Old keyword, use which_timeseries instead.
+    which_timeseries : list of str, optional
+        Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
+        Defaults to ["hand", "diver"] (which should be correct for Vitens).
+    datafilters : list of strings, optional
+        Methods to filter the timeseries data.
+        If None (default), all measurements will be shown.
+        Currently implemented datafilter methods:
+        "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
+        "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
+    combine_method : str, optional
+        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        If None, defaults to "merge".
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
         default is False.
@@ -67,6 +79,22 @@ def read_lizard(
     ObsCollection
         ObsCollection DataFrame with the 'obs' column
     """
+
+    # Deprecation warning for type_timeseries
+    if type_timeseries is not None:
+        logger.warning(
+            "The 'type_timeseries' argument is deprecated. "
+            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
+        )
+        # Map old type_timeseries to which_timeseries and combine_method
+        if type_timeseries == "combine":
+            combine_method = "combine"
+        elif type_timeseries == "merge":
+            combine_method = "merge"
+        else:
+            which_timeseries = [type_timeseries]
+            combine_method = "merge"
+
     oc = ObsCollection.from_lizard(
         extent=extent,
         codes=codes,
@@ -74,7 +102,9 @@ def read_lizard(
         tube_nr=tube_nr,
         tmin=tmin,
         tmax=tmax,
-        type_timeseries=type_timeseries,
+        which_timeseries=which_timeseries,
+        datafilters=datafilters,
+        combine_method=combine_method,
         only_metadata=only_metadata,
         organisation=organisation,
         auth=auth,
@@ -1393,7 +1423,10 @@ class ObsCollection(pd.DataFrame):
         tube_nr="all",
         tmin=None,
         tmax=None,
-        type_timeseries="merge",
+        type_timeseries=None,  # deprecated argument
+        which_timeseries=["hand", "diver"],  # new preferred argument
+        datafilters=None,
+        combine_method="merge",
         only_metadata=False,
         organisation="vitens",
         auth=None,
@@ -1414,12 +1447,20 @@ class ObsCollection(pd.DataFrame):
             start of the observations, by default the entire serie is returned
         tmax : Ttr YYYY-m-d, optional
             end of the observations, by default the entire serie is returned
-        type_timeseries : str, optional
-            hand: returns only hand measurements
-            diver: returns only diver measurements
-            merge: the hand and diver measurements into one time series (default)
-            combine: keeps hand and diver measurements separeted
-            The default is merge.
+        type_timeseries : str, optional (deprecated)
+            Old keyword, use which_timeseries instead.
+        which_timeseries : list of str, optional
+            Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
+            Defaults to ["hand", "diver"] (which should be correct for Vitens).
+        datafilters : list of strings, optional
+            Methods to filter the timeseries data.
+            If None (default), all measurements will be shown.
+            Currently implemented datafilter methods:
+            "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
+            "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
+        combine_method : str, optional
+            "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+            If None, defaults to "merge".
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
             default is False.
@@ -1434,6 +1475,21 @@ class ObsCollection(pd.DataFrame):
             ObsCollection DataFrame with the 'obs' column
         """
 
+        # Deprecation warning for type_timeseries
+        if type_timeseries is not None:
+            logger.warning(
+                "The 'type_timeseries' argument is deprecated. "
+                "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead.",
+            )
+            # Map old type_timeseries to which_timeseries and combine_method
+            if type_timeseries == "combine":
+                combine_method = "combine"
+            elif type_timeseries == "merge":
+                combine_method = "merge"
+            else:
+                which_timeseries = [type_timeseries]
+                combine_method = "merge"
+
         from .io.lizard import get_obs_list_from_codes, get_obs_list_from_extent
 
         if extent is not None:
@@ -1443,7 +1499,9 @@ class ObsCollection(pd.DataFrame):
                 tube_nr,
                 tmin,
                 tmax,
-                type_timeseries,
+                which_timeseries=which_timeseries,
+                datafilters=datafilters,
+                combine_method=combine_method,
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
@@ -1455,7 +1513,9 @@ class ObsCollection(pd.DataFrame):
                 tube_nr,
                 tmin,
                 tmax,
-                type_timeseries,
+                which_timeseries=which_timeseries,
+                datafilters=datafilters,
+                combine_method=combine_method,
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
