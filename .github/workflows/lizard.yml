@@ -33,6 +33,7 @@ jobs:
       # Pytest
       PYTEST_ADDOPTS: "--color=yes"
     steps:
+      - run: echo "Repo is ${{ github.repository }}"
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python }}
