@@ -1,4 +1,3 @@
-import os
 import pytest
 
 import hydropandas as hpd
