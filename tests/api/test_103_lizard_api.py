@@ -1,5 +1,6 @@
 # %%
 import os
+
 import requests
 
 
@@ -10,7 +11,7 @@ def test_groundwaterstations_vitens():
     r = requests.get(url_groundwaterstation_code)
 
     r.raise_for_status()
-    assert r.json()['count'] > 0, 'request returned empty json'
+    assert r.json()["count"] > 0, "request returned empty json"
 
 
 def test_timeseries_vitens():
@@ -30,7 +31,7 @@ def test_groundwaterstations_rotterdam():
     r = requests.get(url_groundwaterstation_code, auth=auth)
 
     r.raise_for_status()
-    assert r.json()['count'] > 0, 'request returned empty json'
+    assert r.json()["count"] > 0, "request returned empty json"
 
 
 def test_timeseries_rotterdam():
