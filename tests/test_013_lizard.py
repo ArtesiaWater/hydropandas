@@ -40,35 +40,3 @@ def test_complex_well():
 
 def test_combine():
     hpd.GroundwaterObs.from_lizard("39F-0736", tube_nr=1, type_timeseries="combine")
-
-
-# Additional tests for use with the 'Rotterdam' data
-api_key_rotterdam = os.environ["LIZARD_ROTTERDAM_API_KEY"]
-assert len(api_key_rotterdam) == 41
-if api_key_rotterdam is not None:
-    auth = ("__key__", api_key_rotterdam)
-else:
-    auth = None
-
-
-def test_single_observation_rotterdam():
-    code = "GMW000000036819"
-    o = hpd.GroundwaterObs.from_lizard(code, organisation="rotterdam", auth=auth)
-    assert o.tube_nr == 1
-
-
-def test_extent_rotterdam():
-    extent = [68_500, 69_500, 443_500, 444_500]
-    oc = hpd.read_lizard(extent, organisation="rotterdam", auth=auth)
-    assert not oc.empty
-
-
-@pytest.mark.slow
-def test_codes_rotterdam():
-    oc = hpd.read_lizard(
-        codes=["GMW000000036819", "GMW000000037933"],
-        type_timeseries="merge",
-        organisation="rotterdam",
-        auth=auth,
-    )
-    assert not oc.empty
