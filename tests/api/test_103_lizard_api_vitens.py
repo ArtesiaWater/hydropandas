@@ -1,6 +1,7 @@
 # %%
 import requests
 
+
 def test_groundwaterstations_vitens():
     lizard_GWS_endpoint = "https://vitens.lizard.net/api/v4/groundwaterstations/"
     code = "27BP0003"
