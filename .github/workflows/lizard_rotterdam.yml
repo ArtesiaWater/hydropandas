@@ -19,9 +19,9 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: Test lizard api
+          - name: Test lizard api rotterdam
             python: "3.11"
-            toxenv: lizard
+            toxenv: lizard_rotterdam
 
     name: ${{ matrix.name }}
     env:
