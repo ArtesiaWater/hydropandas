@@ -65,6 +65,8 @@ jobs:
       - name: Run codacy-coverage-reporter
         if: ${{ matrix.toxenv == 'notebooks' && github.repository == 'ArtesiaWater/hydropandas' && success() }}
         uses: codacy/codacy-coverage-reporter-action@master
+        env:
+            LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
