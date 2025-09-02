@@ -145,6 +145,7 @@ legacy_tox_ini = """
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
     extras = pytesting,coveraging
+    passenv = LIZARD_ROTTERDAM_API_KEY
     commands =
             coverage run -m pytest tests
             coverage xml
