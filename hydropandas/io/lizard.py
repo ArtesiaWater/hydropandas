@@ -519,7 +519,7 @@ def get_timeseries_tube(
     tmin,
     tmax,
     type_timeseries=None,  # deprecated argument
-    which_timeseries=["hand", "diver"],  # new preferred argument
+    which_timeseries=("hand", "diver"),  # new preferred argument
     datafilters=None,
     combine_method="merge",
     organisation="vitens",
@@ -538,9 +538,9 @@ def get_timeseries_tube(
         end of the observations
     type_timeseries : str, optional (deprecated)
         Old keyword, use which_timeseries instead.
-    which_timeseries : list of str, optional
+    which_timeseries : tuple of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        Defaults to ["hand", "diver"] (which should be correct for Vitens).
+        Defaults to ("hand", "diver") (which should be correct for Vitens).
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -566,7 +566,7 @@ def get_timeseries_tube(
     if type_timeseries is not None:
         logger.warning(
             "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
+            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
@@ -574,7 +574,7 @@ def get_timeseries_tube(
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = [type_timeseries]
+            which_timeseries = type_timeseries
             combine_method = "merge"
 
     if tube_metadata["timeseries_type"] is None:
@@ -664,7 +664,7 @@ def get_lizard_groundwater(
     tmin=None,
     tmax=None,
     type_timeseries=None,  # deprecated argument
-    which_timeseries=["hand", "diver"],  # new preferred argument
+    which_timeseries=("hand", "diver"),  # new preferred argument
     datafilters=None,
     combine_method="merge",
     only_metadata=False,
@@ -687,9 +687,9 @@ def get_lizard_groundwater(
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional (deprecated)
         Old keyword, use which_timeseries instead.
-    which_timeseries : list of str, optional
+    which_timeseries : tuple of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        Defaults to ["hand", "diver"] (which should be correct for Vitens).
+        Defaults to ("hand", "diver") (which should be correct for Vitens).
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -719,7 +719,7 @@ def get_lizard_groundwater(
     if type_timeseries is not None:
         logger.warning(
             "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
+            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
         )
 
         # Map old type_timeseries to which_timeseries and combine_method
@@ -728,7 +728,7 @@ def get_lizard_groundwater(
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = [type_timeseries]
+            which_timeseries = type_timeseries
             combine_method = "merge"
 
     groundwaterstation_metadata = get_metadata_mw_from_code(
@@ -762,7 +762,7 @@ def get_obs_list_from_codes(
     tmin=None,
     tmax=None,
     type_timeseries=None,  # deprecated argument
-    which_timeseries=["hand", "diver"],  # new preferred argument
+    which_timeseries=("hand", "diver"),  # new preferred argument
     datafilters=None,
     combine_method="merge",
     only_metadata=False,
@@ -787,9 +787,9 @@ def get_obs_list_from_codes(
         end of the observations, by default the entire serie is returned
     type_timeseries : str, optional (deprecated)
         Old keyword, use which_timeseries instead.
-    which_timeseries : list of str, optional
+    which_timeseries : tuple of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        Defaults to ["hand", "diver"] (which should be correct for Vitens).
+        Defaults to ("hand", "diver") (which should be correct for Vitens).
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -817,7 +817,7 @@ def get_obs_list_from_codes(
     if type_timeseries is not None:
         logger.warning(
             "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
+            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
@@ -825,7 +825,7 @@ def get_obs_list_from_codes(
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = [type_timeseries]
+            which_timeseries = type_timeseries
             combine_method = "merge"
 
     if isinstance(codes, str):
@@ -886,7 +886,7 @@ def get_obs_list_from_extent(
     tmin=None,
     tmax=None,
     type_timeseries=None,  # deprecated argument
-    which_timeseries=["hand", "diver"],  # new preferred argument
+    which_timeseries=("hand", "diver"),  # new preferred argument
     datafilters=None,
     combine_method="merge",
     only_metadata=False,
@@ -915,9 +915,9 @@ def get_obs_list_from_extent(
         is returned
     type_timeseries : str, optional (deprecated)
         Old keyword, use which_timeseries instead.
-    which_timeseries : list of str, optional
+    which_timeseries : tuple of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        Defaults to ["hand", "diver"] (which should be correct for Vitens).
+        Defaults to ("hand", "diver") (which should be correct for Vitens).
     datafilters : list of strings, optional
         Methods to filter the timeseries data.
         If None (default), all measurements will be shown.
@@ -950,7 +950,7 @@ def get_obs_list_from_extent(
     if type_timeseries is not None:
         logger.warning(
             "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
+            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
@@ -958,7 +958,7 @@ def get_obs_list_from_extent(
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = [type_timeseries]
+            which_timeseries = type_timeseries
             combine_method = "merge"
 
     if isinstance(extent, (list, tuple)):
