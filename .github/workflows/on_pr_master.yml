@@ -40,6 +40,8 @@ jobs:
       PY_COLORS: 1
       # Pytest
       PYTEST_ADDOPTS: "--color=yes"
+      # Lizard API key for tests that use the Lizard API
+      LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,4 +61,11 @@ jobs:
 
       - name: Test
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
+
+      - name: Run codacy-coverage-reporter
+        if: ${{ matrix.toxenv == 'notebooks' && github.repository == 'ArtesiaWater/hydropandas' && success() }}
+        uses: codacy/codacy-coverage-reporter-action@master
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
         

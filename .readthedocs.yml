@@ -16,7 +16,7 @@ formats: all
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.11"
+    python: "3.12"
 
 # Optionally set the Python requirements required to build your docs
 python:

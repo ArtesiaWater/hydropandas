@@ -1,4 +1,4 @@
-name: lizard
+name: lizard Vitens
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
     branches:
       - master
       - dev
+  schedule:
+    - cron: '0 0 * * 1'
 
 jobs:
   test:
@@ -16,9 +18,9 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - name: Test lizard api
+          - name: Test lizard api vitens
             python: "3.11"
-            toxenv: lizard
+            toxenv: lizard_vitens
 
     name: ${{ matrix.name }}
     env:
@@ -30,6 +32,7 @@ jobs:
       # Pytest
       PYTEST_ADDOPTS: "--color=yes"
     steps:
+      - run: echo "Repo is ${{ github.event.pull_request.head.repo.full_name }}"
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python }}

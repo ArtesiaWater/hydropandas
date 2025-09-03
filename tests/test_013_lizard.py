@@ -3,6 +3,7 @@ import pytest
 import hydropandas as hpd
 
 
+# Original tests when only Vitens was supported
 def test_single_observation():
     code = "27BP0003"
     o = hpd.GroundwaterObs.from_lizard(code)
@@ -13,12 +14,13 @@ def test_extent():
     extent = [201500, 202000, 502000, 502200]
     oc = hpd.read_lizard(extent)
     assert not oc.empty
+    assert not oc.get_obs(name=oc.index[0]).empty
 
 
 @pytest.mark.slow
 def test_codes():
     oc = hpd.read_lizard(
-        codes=["39F-0735", "39F-0736", "39F-0737"], type_timeseries="merge"
+        codes=["39F-0735", "39F-0736", "39F-0737"], combine_method="merge"
     )
     assert not oc.empty
 

@@ -1,4 +1,4 @@
-name: knmi
+name: lizard Rotterdam
 
 on:
   push:
@@ -13,14 +13,15 @@ on:
 
 jobs:
   test:
+    if: ${{ github.event.pull_request.head.repo.full_name == 'ArtesiaWater/hydropandas' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         include:
-          - name: Test knmi api
+          - name: Test lizard api rotterdam
             python: "3.11"
-            toxenv: knmi
+            toxenv: lizard_rotterdam
 
     name: ${{ matrix.name }}
     env:
@@ -32,6 +33,7 @@ jobs:
       # Pytest
       PYTEST_ADDOPTS: "--color=yes"
     steps:
+      - run: echo "Repo is ${{ github.event.pull_request.head.repo.full_name }}"
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python }}
@@ -49,4 +51,6 @@ jobs:
         run: tox -e ${{ matrix.toxenv }} --notest
 
       - name: Test
+        env:
+            LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
