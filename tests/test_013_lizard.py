@@ -14,6 +14,7 @@ def test_extent():
     extent = [201500, 202000, 502000, 502200]
     oc = hpd.read_lizard(extent)
     assert not oc.empty
+    assert not oc.get_obs(name=oc.index[0]).empty
 
 
 @pytest.mark.slow

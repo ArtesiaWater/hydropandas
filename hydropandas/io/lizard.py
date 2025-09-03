@@ -1,6 +1,19 @@
+"""
+Module with functions to read or download time series with observations from knmi.
+
+function levels:
+1. get_obs_list_from_extent: list of observations from extent
+    2. get_obs_list_from_codes: list of observations from codes
+        3. get_lizard_groundwater: get single obs object
+            4. get_timeseries_tube: get timeseries for a tube
+                5. get_timeseries_uuid: get timeseries for a uuid
+
+"""
+
 import logging
 import math
 import pathlib
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 
 import geopandas
@@ -245,13 +258,13 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         r = requests.get(series, auth=auth)
         r.raise_for_status()
         series_info = r.json()
-        if series_info["code"] == "WNS9040.hand":
+        if series_info["name"] == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
-        elif series_info["code"] == "WNS9040":
+        elif series_info["name"] == "WNS9040":
             info["uuid_diver"] = series_info["uuid"]
             info["start_diver"] = series_info["start"]
-        elif series_info["code"] == "WNS9040.val":
+        elif series_info["name"] == "WNS9040.val":
             info["uuid_diver_validated"] = series_info["uuid"]
             info["start_diver_validated"] = series_info["start"]
             info["end_diver_validated"] = series_info["end"]
@@ -537,7 +550,7 @@ def get_timeseries_tube(
     tmax : str YYYY-m-d, optional
         end of the observations
     type_timeseries : str, optional (deprecated)
-        Old keyword, use which_timeseries instead.
+        deprecated, use 'which_timeseries' and 'combine_method' instead.
     which_timeseries : tuple of str, optional
         Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
         Defaults to ("hand", "diver") (which should be correct for Vitens).
@@ -564,9 +577,10 @@ def get_timeseries_tube(
     """
     # Deprecation warning for type_timeseries
     if type_timeseries is not None:
-        logger.warning(
-            "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
+        warnings.warn(
+            "the argument 'type_timeseries' is deprecated and will eventually be "
+            "removed, please use the arguments 'which_timeseries' and 'combine_method'.",
+            DeprecationWarning,
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
@@ -715,22 +729,6 @@ def get_lizard_groundwater(
         dictionary containing metadata
     """
 
-    # Deprecation warning for type_timeseries
-    if type_timeseries is not None:
-        logger.warning(
-            "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
-        )
-
-        # Map old type_timeseries to which_timeseries and combine_method
-        if type_timeseries == "combine":
-            combine_method = "combine"
-        elif type_timeseries == "merge":
-            combine_method = "merge"
-        else:
-            which_timeseries = type_timeseries
-            combine_method = "merge"
-
     groundwaterstation_metadata = get_metadata_mw_from_code(
         code, organisation=organisation, auth=auth
     )
@@ -744,6 +742,7 @@ def get_lizard_groundwater(
         tube_metadata,
         tmin,
         tmax,
+        type_timeseries=type_timeseries,
         which_timeseries=which_timeseries,
         datafilters=datafilters,
         combine_method=combine_method,
@@ -813,21 +812,6 @@ def get_obs_list_from_codes(
         list of observations
     """
 
-    # Deprecation warning for type_timeseries
-    if type_timeseries is not None:
-        logger.warning(
-            "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
-        )
-        # Map old type_timeseries to which_timeseries and combine_method
-        if type_timeseries == "combine":
-            combine_method = "combine"
-        elif type_timeseries == "merge":
-            combine_method = "merge"
-        else:
-            which_timeseries = type_timeseries
-            combine_method = "merge"
-
     if isinstance(codes, str):
         codes = [codes]
 
@@ -850,7 +834,7 @@ def get_obs_list_from_codes(
                         tnr,
                         tmin,
                         tmax,
-                        # type_timeseries,
+                        type_timeseries=type_timeseries,
                         which_timeseries=which_timeseries,
                         datafilters=datafilters,
                         combine_method=combine_method,
@@ -946,21 +930,6 @@ def get_obs_list_from_extent(
         ObsCollection DataFrame with the 'obs' column
     """
 
-    # Deprecation warning for type_timeseries
-    if type_timeseries is not None:
-        logger.warning(
-            "The 'type_timeseries' argument is deprecated. "
-            "Please use 'which_timeseries' (a tuple, e.g. ('hand', 'diver')) and 'combine_method' instead."
-        )
-        # Map old type_timeseries to which_timeseries and combine_method
-        if type_timeseries == "combine":
-            combine_method = "combine"
-        elif type_timeseries == "merge":
-            combine_method = "merge"
-        else:
-            which_timeseries = type_timeseries
-            combine_method = "merge"
-
     if isinstance(extent, (list, tuple)):
         polygon_T = extent_to_wgs84_polygon(extent)
 
@@ -1004,6 +973,7 @@ def get_obs_list_from_extent(
         "tube_nr": tube_nr,
         "tmin": tmin,
         "tmax": tmax,
+        "type_timeseries": type_timeseries,
         "which_timeseries": which_timeseries,
         "datafilters": datafilters,
         "combine_method": combine_method,

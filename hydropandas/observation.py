@@ -712,28 +712,12 @@ class GroundwaterObs(Obs):
             Returns a DataFrame with metadata and timeseries
         """
 
-        # Deprecation warning for type_timeseries
-        if type_timeseries is not None:
-            logger.warning(
-                "The 'type_timeseries' argument is deprecated. "
-                "Please use 'which_timeseries' (a list, e.g. ['hand', 'diver']) and 'combine_method' instead."
-            )
-            # Map old type_timeseries to which_timeseries and combine_method
-            if type_timeseries == "combine":
-                combine_method = "combine"
-            elif type_timeseries == "merge":
-                combine_method = "merge"
-            else:
-                which_timeseries = [type_timeseries]
-                combine_method = "merge"
-
-        from .io import lizard
-
         measurements, meta = lizard.get_lizard_groundwater(
             code,
             tube_nr,
             tmin,
             tmax,
+            type_timeseries=type_timeseries,
             which_timeseries=which_timeseries,
             combine_method=combine_method,
             datafilters=datafilters,
