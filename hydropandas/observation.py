@@ -712,6 +712,8 @@ class GroundwaterObs(Obs):
             Returns a DataFrame with metadata and timeseries
         """
 
+        from .io import lizard
+
         measurements, meta = lizard.get_lizard_groundwater(
             code,
             tube_nr,
