@@ -14,6 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 def _read_dino_groundwater_header(f):
+    """ read the heade of a dino groundwater csv file
+
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     line = f.readline()
     header = {}
     while line.strip() not in ["", ",,,,,,,,,,,,"]:
@@ -36,12 +48,42 @@ def _read_dino_groundwater_header(f):
 
 
 def _read_empty(f, line):
+    """ read an empty line (or line with only commas and/or line endings).
+
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+    line : str
+        previous line
+
+    Returns
+    -------
+    line : str
+        new line
+    """
     while line.strip() in ["", ",,,,,,,,,,,,"] and line != "":
         line = f.readline()
     return line
 
 
 def _read_dino_groundwater_referencelvl(f, line):
+    """ read the referencelvl of a dino groundwater csv file
+    
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+    line : str
+        previous line
+
+    Returns
+    -------
+    line : str
+        next line
+    ref : dict
+        dictionary with reference level information
+    """ 
     ref = {}
     while line.strip() not in ["", ",,,,,,,,,,,,"]:
         propval = line.replace('"', "").strip().split(",")
@@ -55,6 +97,24 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 
 def _read_dino_groundwater_metadata(f, line):
+    """ read the metadata of a dino groundwater csv file
+
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+    line : str
+        line with start of metadata
+
+    Returns
+    -------
+    line : str
+        first line after metadata
+    obs_att : dict
+        dictionary with metadata
+    meta_ts : dict
+        dictionary with time dependent metadata
+    """
     if "Peildatum" in line:
         return line, {"metadata_available": False}, {}
 
@@ -141,6 +201,23 @@ def _read_dino_groundwater_metadata(f, line):
 
 
 def _read_dino_groundwater_measurements(f, line):
+    """ read the measurements of a dino groundwater csv file
+
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+    line : str
+        line with start of measurements
+
+    Returns
+    -------
+    line : str
+        first line after last measurements
+    measurements : pd.DataFrame
+        dataframe with time series of measurements
+    """
+
     line = line.strip()
     titel = line.split(",")
     while "" in titel:
@@ -182,7 +259,7 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
 
     Parameters
     ----------
-    filepath_or_buffer : str
+    filepath_or_buffer : str, Path or FileIO
         path to txt file
 
     Returns
@@ -191,18 +268,20 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
     meta : dict
         dictionary with metadata
     """
-
-    if isinstance(f, str):
-        fname = f
+    # get fname
+    if isinstance(f, (str, Path)):
+        fname = str(f)
     else:
         fname = f.name.split(os.sep)[-1]
+
+    logger.info("reading -> {}".format(fname))
+
+    # open file if needed
     if isinstance(f, (str, Path)):
         if isinstance(f, str):
             f = Path(f)
         fname = str(f.stem)
         f = f.open("r")
-
-    logger.info("reading -> {}".format(fname))
 
     # LOCATIE gegevens
     line = f.readline().rstrip("\n")
@@ -285,7 +364,7 @@ def read_dino_groundwater_csv(
 
     Parameters
     ----------
-    f : Union[str, Path, TextIOWrapper]
+    f : str, Path, TextIOWrapper
         path to csv file
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
@@ -370,6 +449,22 @@ def read_dino_groundwater_csv(
 
 
 def _read_artdino_groundwater_metadata(f, line):
+    """read artdino groundwater metadata
+
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+    line : str
+        first line with meta dictionary keys
+
+    Returns
+    -------
+    line : str
+        first line after metadata
+    meta : dict
+        dictionary with metadata
+    """
     metalist = list()
     line = line.strip()
     properties = line.split(",")
@@ -428,6 +523,22 @@ def _read_artdino_groundwater_metadata(f, line):
 
 
 def _read_artdino_groundwater_measurements(f, line):
+    """ read the measurements of an artdino groundwater csv file
+
+    Parameters
+    ----------
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
+    line : str
+        first line with timeseries header
+
+    Returns
+    -------
+    line : str
+        first line after last measurements
+    measurements : pd.DataFrame
+        dataframe with time series of measurements
+    """
     line = line.strip()
     titel = line.split(",")
     while "" in titel:
@@ -465,7 +576,7 @@ def read_artdino_groundwater_csv(path, to_mnap=True, read_series=True):
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         path to csv file
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
@@ -535,15 +646,15 @@ def read_artdino_dir(
 
     Parameters
     ----------
-    dirname : str
+    dirname : str or Path
         directory name, can be a .zip file or the parent directory of subdir
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
-    subdir : str
+    subdir : str or Path
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
-    unpackdir : str
+    unpackdir : str or Path
         destination directory of the unzipped file
     force_unpack : boolean, optional
         force unpack if dst already exists
@@ -564,7 +675,7 @@ def read_artdino_dir(
     from ..util import unzip_file
 
     # unzip dir
-    if dirname.endswith(".zip"):
+    if str(dirname).endswith(".zip"):
         zipf = dirname
         if unpackdir is None:
             dirname = tempfile.TemporaryDirectory().name
@@ -606,7 +717,8 @@ def _read_dino_waterlvl_metadata(f, line):
 
     Parameters
     ----------
-    f : text wrapper
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
     line : str
         line with meta dictionary keys
     meta_dic : dict (optional)
@@ -636,11 +748,12 @@ def _read_dino_waterlvl_metadata(f, line):
 
 
 def _read_dino_waterlvl_measurements(f, line):
-    """
+    """read dino waterlevel measurements
 
     Parameters
     ----------
-    f : text wrapper
+    f : _io.TextIOWrapper
+        text wrapper of the csv file
     line: str
         header of dataframe
 
@@ -666,10 +779,6 @@ def _read_dino_waterlvl_measurements(f, line):
         dayfirst=True,
         usecols=usecols,
     )
-
-    # measurements['Stand (m t.o.v. NAP)'] = measurements['Stand (cm t.o.v. NAP)'] /100.
-
-    # measurements.set_index('Peildatum', inplace=True)
 
     return measurements
 

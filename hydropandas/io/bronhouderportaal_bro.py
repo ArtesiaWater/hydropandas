@@ -50,7 +50,7 @@ def get_obs_list_from_dir(
 
     Parameters
     ----------
-    dirname : str
+    dirname : str or Path
         name of directory with XML files
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs

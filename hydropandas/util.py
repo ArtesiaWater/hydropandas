@@ -58,9 +58,9 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
 
     Parameters
     ----------
-    src : str
+    src : str or Path
         source zip file
-    dst : str
+    dst : str or Path
         destination directory
     force : boolean, optional
         force unpack if dst already exists
