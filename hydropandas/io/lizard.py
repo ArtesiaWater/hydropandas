@@ -256,13 +256,13 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         r = requests.get(series, auth=auth)
         r.raise_for_status()
         series_info = r.json()
-        if series_info["name"] == "WNS9040.hand":
+        if series_info["code"] == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
-        elif series_info["name"] == "WNS9040":
+        elif series_info["code"] == "WNS9040":
             info["uuid_diver"] = series_info["uuid"]
             info["start_diver"] = series_info["start"]
-        elif series_info["name"] == "WNS9040.val":
+        elif series_info["code"] == "WNS9040.val":
             info["uuid_diver_validated"] = series_info["uuid"]
             info["start_diver_validated"] = series_info["start"]
             info["end_diver_validated"] = series_info["end"]
