@@ -101,7 +101,6 @@ legacy_tox_ini = """
     [testenv]
     description = run unit tests
     extras = pytesting
-    passenv = LIZARD_ROTTERDAM_API_KEY
     commands =
             pytest tests -m "not slow" --ignore=tests/api --ignore=tests/notebooks
 
@@ -117,11 +116,19 @@ legacy_tox_ini = """
     commands =
             pytest tests/api/test_102_knmi_api.py
 
-    [testenv:lizard]
-    description = run lizard tests
+    [testenv:lizard_vitens]
+    description = run lizard vitens tests
     extras = pytesting
     commands =
-            pytest tests/api/test_103_lizard_api.py
+            pytest tests/api/test_103_lizard_api_vitens.py
+
+    [testenv:lizard_rotterdam]
+    description = run lizard rotterdam tests
+    extras = pytesting
+    passenv = LIZARD_ROTTERDAM_API_KEY
+    commands =
+            pytest tests/api/test_106_lizard_api_rotterdam.py
+
 
     [testenv:waterconnect]
     description = run waterconnect tests
@@ -138,6 +145,7 @@ legacy_tox_ini = """
     [testenv:notebooks]
     description = run all tests with notebooks and coverage
     extras = pytesting,coveraging
+    passenv = LIZARD_ROTTERDAM_API_KEY
     commands =
             coverage run -m pytest tests
             coverage xml

@@ -1,4 +1,4 @@
-name: lizard
+name: lizard Vitens
 
 on:
   push:
@@ -13,15 +13,14 @@ on:
 
 jobs:
   test:
-    if: github.repository == 'ArtesiaWater/hydropandas'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         include:
-          - name: Test lizard api
+          - name: Test lizard api vitens
             python: "3.11"
-            toxenv: lizard
+            toxenv: lizard_vitens
 
     name: ${{ matrix.name }}
     env:
@@ -33,6 +32,7 @@ jobs:
       # Pytest
       PYTEST_ADDOPTS: "--color=yes"
     steps:
+      - run: echo "Repo is ${{ github.event.pull_request.head.repo.full_name }}"
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python }}
@@ -50,6 +50,4 @@ jobs:
         run: tox -e ${{ matrix.toxenv }} --notest
 
       - name: Test
-        env:
-            LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install

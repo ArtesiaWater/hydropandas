@@ -40,6 +40,8 @@ jobs:
       PY_COLORS: 1
       # Pytest
       PYTEST_ADDOPTS: "--color=yes"
+      # Lizard API key for tests that use the Lizard API
+      LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,8 +60,6 @@ jobs:
         run: tox -e ${{ matrix.toxenv }} --notest
 
       - name: Test
-        env:
-            LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
         run: tox -e ${{ matrix.toxenv }} --skip-pkg-install
 
       - name: Run codacy-coverage-reporter
