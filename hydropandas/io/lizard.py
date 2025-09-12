@@ -256,6 +256,9 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         r = requests.get(series, auth=auth)
         r.raise_for_status()
         series_info = r.json()
+        # Note: For the WNS code the most reliable indentifier is 'code'.
+        # For Vitens the field 'name' contains the same information, but this is
+        # not the case in for Rotterdam, where 'name' contains a parameter description.
         if series_info["code"] == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
