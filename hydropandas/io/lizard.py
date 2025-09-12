@@ -589,7 +589,7 @@ def get_timeseries_tube(
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = type_timeseries
+            which_timeseries = [type_timeseries]
             combine_method = "merge"
 
     if tube_metadata["timeseries_type"] is None:
