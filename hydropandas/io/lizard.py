@@ -257,7 +257,7 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         r.raise_for_status()
         series_info = r.json()
         # Note: See Github issue #311 for an explanation of 'wns_string'
-        wns_string = series_info["name"].split(":", 1)[0]
+        wns_string = series_info["code"].split(":", 1)[0]
         if wns_string == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
