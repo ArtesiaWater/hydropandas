@@ -107,6 +107,7 @@ def translate_flag(timeseries):
     translate_dic = {
         0: "betrouwbaar",
         1: "betrouwbaar",
+        2: "onbeslist",
         3: "onbeslist",
         4: "onbeslist",
         6: "onbetrouwbaar",
