@@ -107,6 +107,7 @@ def translate_flag(timeseries):
     translate_dic = {
         0: "betrouwbaar",
         1: "betrouwbaar",
+        2: "onbeslist",
         3: "onbeslist",
         4: "onbeslist",
         6: "onbetrouwbaar",
@@ -146,15 +147,13 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     lizard_GWS_endpoint = f"{base_url}groundwaterstations/"
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
-    ValueError(url_groundwaterstation_code)
     r = requests.get(url_groundwaterstation_code, auth=auth, timeout=1200)
     r.raise_for_status()
 
     try:
         groundwaterstation_metadata = r.json()["results"][0]
     except IndexError:
-        raise ValueError(r.json())
-        raise ValueError(f"Code {code} is invalid")
+        raise ValueError(f"Code {code} is invalid. Response: {r.json()}")
 
     return groundwaterstation_metadata
 
@@ -258,13 +257,15 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         r = requests.get(series, auth=auth)
         r.raise_for_status()
         series_info = r.json()
-        if series_info["name"] == "WNS9040.hand":
+        # Note: See Github issue #311 for an explanation of 'wns_string'
+        wns_string = series_info["code"].split(":", 1)[0]
+        if wns_string == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
-        elif series_info["name"] == "WNS9040":
+        elif wns_string == "WNS9040":
             info["uuid_diver"] = series_info["uuid"]
             info["start_diver"] = series_info["start"]
-        elif series_info["name"] == "WNS9040.val":
+        elif wns_string == "WNS9040.val":
             info["uuid_diver_validated"] = series_info["uuid"]
             info["start_diver_validated"] = series_info["start"]
             info["end_diver_validated"] = series_info["end"]
@@ -588,7 +589,7 @@ def get_timeseries_tube(
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = type_timeseries
+            which_timeseries = [type_timeseries]
             combine_method = "merge"
 
     if tube_metadata["timeseries_type"] is None:
