@@ -1,18 +1,17 @@
-import requests
+import json
+import logging
 from io import StringIO
-import hydropandas as hpd
+from pathlib import Path
+from typing import Literal
+
 import geopandas as gpd
 import numpy as np
-import logging
-
-hpd.util.get_color_logger("DEBUG")
 import pandas as pd
-import json
-from pathlib import Path
-from shapely.geometry import box, Point
-from tqdm import tqdm
+import requests
 from pyproj import Proj, Transformer
-from typing import Union, Literal
+from shapely.geometry import Point, box
+from tqdm import tqdm
+
 from ..util import EPSG_28992
 
 URL = "https://noos.matroos.rws.nl/direct/get_series.php?"
@@ -389,15 +388,15 @@ def get_matroos_obs(
     # check if location, source and unit are valid
     params_dic = get_loc_source_units()
     if location not in params_dic.keys():
-        msg = f"{location} not listed in possible locations, please select location from {all_params_dic.keys()}"
+        msg = f"{location} not listed in possible locations, please select location from {params_dic.keys()}"
         logger.warning(msg)
 
     elif unit not in params_dic[location]["units"].keys():
-        msg = f"{unit} not available for {location=}, please select unit from {all_params_dic[location]['units'].keys()}"
+        msg = f"{unit} not available for {location=}, please select unit from {params_dic[location]['units'].keys()}"
         logger.warning(msg)
 
     elif source not in params_dic[location]["units"][unit]:
-        msg = f"{source} not available for {location=} and {unit=}, please select source from {all_params_dic[location]['units'][unit]}"
+        msg = f"{source} not available for {location=} and {unit=}, please select source from {params_dic[location]['units'][unit]}"
         logger.warning(msg)
 
     # parse tmin and tmax

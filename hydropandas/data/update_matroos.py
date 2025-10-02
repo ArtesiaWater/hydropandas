@@ -1,10 +1,10 @@
 import json
+
 import requests
+from pyproj import Proj, Transformer
 
 from hydropandas.io import matroos
 from hydropandas.util import EPSG_28992
-from pyproj import Proj, Transformer
-
 
 # %% parse locations, sources and units
 URL = "https://noos.matroos.rws.nl/direct/get_series.php?"
@@ -83,8 +83,8 @@ def parse_locations(result_str):
         locations
     """
     lsu = result_str.split("Locations:")[1]
-    l, su = lsu.split("Sources:")
-    return l.split("\n")[2:-2]
+    llocation, su = lsu.split("Sources:")
+    return llocation.split("\n")[2:-2]
 
 
 def parse_units(result_str):
