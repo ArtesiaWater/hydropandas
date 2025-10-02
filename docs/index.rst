@@ -16,6 +16,7 @@ Currently supported datasources that can be read:
 - `FEWS PI-XML <examples/07_fews.html>`_
 - IMOD groundwater models
 - `KNMI data <examples/02_knmi_observations.html>`_
+- `Matroos data <examples/11_matroos.html>`_
 - `Lizard <examples/06_lizard.html>`_
 - MODFLOW groundwater models
 - `Pastastore <examples/03_hydropandas_and_pastas.html>`_, for managing Pastas timeseries and models
