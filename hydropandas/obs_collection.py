@@ -20,84 +20,6 @@ from . import util
 logger = logging.getLogger(__name__)
 
 
-def read_lizard(
-    extent=None,
-    codes=None,
-    name="",
-    tube_nr="all",
-    tmin=None,
-    tmax=None,
-    type_timeseries=None,  # deprecated argument
-    which_timeseries=("hand", "diver"),  # new preferred argument
-    datafilters=None,
-    combine_method="merge",
-    only_metadata=False,
-    organisation="vitens",
-    auth=None,
-):
-    """Get all observations from a list of codes of the monitoring wells and a list of
-    tube numbers.
-
-    Parameters
-    ----------
-    extent : list, shapefile path or None
-        get groundwater monitoring wells within this extent [xmin, ymin, xmax, ymax]
-        or within a predefined Polygon from a shapefile
-    codes : lst of str or None
-        codes of the monitoring wells
-    tube_nr : lst of str
-        list of tube numbers of the monitoring wells that should be selected.
-        By default 'all' available tubes are selected.
-    tmin : str YYYY-m-d, optional
-        start of the observations, by default the entire time series is returned
-    tmax : str YYYY-m-d, optional
-        end of the observations, by default the entire time series is returned
-    type_timeseries : str, optional (deprecated)
-        Old keyword, use which_timeseries instead.
-    which_timeseries : tuple of str, optional
-        Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-        Defaults to ("hand", "diver") (which should be correct for Vitens).
-    datafilters : list of strings, optional
-        Methods to filter the timeseries data.
-        If None (default), all measurements will be shown.
-        Currently implemented datafilter methods:
-        "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
-        "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
-    combine_method : str, optional
-        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
-        If None, defaults to "merge".
-    only_metadata : bool, optional
-        if True only metadata is returned and no time series data. The
-        default is False.
-    organisation : str, optional
-        organisation of the data, by default "vitens".
-    auth : tuple, optional
-        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
-
-    Returns
-    -------
-    ObsCollection
-        ObsCollection DataFrame with the 'obs' column
-    """
-
-    oc = ObsCollection.from_lizard(
-        extent=extent,
-        codes=codes,
-        name=name,
-        tube_nr=tube_nr,
-        tmin=tmin,
-        tmax=tmax,
-        type_timeseries=type_timeseries,
-        which_timeseries=which_timeseries,
-        datafilters=datafilters,
-        combine_method=combine_method,
-        only_metadata=only_metadata,
-        organisation=organisation,
-        auth=auth,
-    )
-    return oc
-
-
 def read_bro(
     extent=None,
     bro_id=None,
@@ -578,6 +500,138 @@ def read_knmi(
         raise_exceptions=raise_exceptions,
     )
 
+    return oc
+
+
+def read_lizard(
+    extent=None,
+    codes=None,
+    name="",
+    tube_nr="all",
+    tmin=None,
+    tmax=None,
+    type_timeseries=None,  # deprecated argument
+    which_timeseries=("hand", "diver"),  # new preferred argument
+    datafilters=None,
+    combine_method="merge",
+    only_metadata=False,
+    organisation="vitens",
+    auth=None,
+):
+    """Get all observations from a list of codes of the monitoring wells and a list of
+    tube numbers.
+
+    Parameters
+    ----------
+    extent : list, shapefile path or None
+        get groundwater monitoring wells within this extent [xmin, ymin, xmax, ymax]
+        or within a predefined Polygon from a shapefile
+    codes : lst of str or None
+        codes of the monitoring wells
+    tube_nr : lst of str
+        list of tube numbers of the monitoring wells that should be selected.
+        By default 'all' available tubes are selected.
+    tmin : str YYYY-m-d, optional
+        start of the observations, by default the entire time series is returned
+    tmax : str YYYY-m-d, optional
+        end of the observations, by default the entire time series is returned
+    type_timeseries : str, optional (deprecated)
+        Old keyword, use which_timeseries instead.
+    which_timeseries : tuple of str, optional
+        Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
+        Defaults to ("hand", "diver") (which should be correct for Vitens).
+    datafilters : list of strings, optional
+        Methods to filter the timeseries data.
+        If None (default), all measurements will be shown.
+        Currently implemented datafilter methods:
+        "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
+        "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
+    combine_method : str, optional
+        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        If None, defaults to "merge".
+    only_metadata : bool, optional
+        if True only metadata is returned and no time series data. The
+        default is False.
+    organisation : str, optional
+        organisation of the data, by default "vitens".
+    auth : tuple, optional
+        authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection DataFrame with the 'obs' column
+    """
+
+    oc = ObsCollection.from_lizard(
+        extent=extent,
+        codes=codes,
+        name=name,
+        tube_nr=tube_nr,
+        tmin=tmin,
+        tmax=tmax,
+        type_timeseries=type_timeseries,
+        which_timeseries=which_timeseries,
+        datafilters=datafilters,
+        combine_method=combine_method,
+        only_metadata=only_metadata,
+        organisation=organisation,
+        auth=auth,
+    )
+    return oc
+
+
+def read_matroos(
+    extent=None,
+    name="",
+    ObsClass=obs.WaterlvlObs,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=False,
+    **kwargs,
+):
+    """Read measurement using the Matroos API within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get measurements within this extent
+        [xmin, xmax, ymin, ymax]
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type
+        class of the observations, e.g. WaterlvlObs
+    tmin : pd.Timestamp, str or None, optional
+        start time of observations. The default is None.
+    tmax : pd.Timestamp, str or None, optional
+        end time of observations. The default is None.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster. The default
+        is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept. The default
+        is True.
+    **kwargs
+        additional keyword arguments are passed to the ObsClass.from_matroos()
+        method
+
+    Returns
+    -------
+    ObsCollection
+        ObsCollection containing data
+    """
+
+    oc = ObsCollection.from_matroos(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        tmin=tmin,
+        tmax=tmax,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        **kwargs,
+    )
     return oc
 
 
@@ -2047,6 +2101,64 @@ class ObsCollection(pd.DataFrame):
         """
         obs_df = util._obslist_to_frame(obs_list)
         return cls(obs_df, name=name)
+
+    @classmethod
+    def from_matroos(
+        cls,
+        extent=None,
+        name="",
+        ObsClass=obs.WaterlvlObs,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        keep_all_obs=False,
+        **kwargs,
+    ):
+        """Read measurement using the Matroos API within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple, numpy-array or None, optional
+            get measurements within this extent
+            [xmin, xmax, ymin, ymax]
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type
+            class of the observations, e.g. WaterlvlObs
+        tmin : pd.Timestamp, str or None, optional
+            start time of observations. The default is None.
+        tmax : pd.Timestamp, str or None, optional
+            end time of observations. The default is None.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster. The default
+            is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept. The default
+            is True.
+        **kwargs
+            additional keyword arguments are passed to the ObsClass.from_matroos()
+            method
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io import matroos
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = matroos.get_obs_list_from_extent(
+            ObsClass,
+            extent,
+            tmin=tmin,
+            tmax=tmax,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            **kwargs,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_menyanthes(
