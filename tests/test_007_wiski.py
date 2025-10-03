@@ -48,7 +48,6 @@ def test_read_wiski_zip() -> None:
         parse_dates={"datetime": [0, 1]},
         index_col=["datetime"],
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
-        verbose=True,
         dayfirst=True,
     )
 
