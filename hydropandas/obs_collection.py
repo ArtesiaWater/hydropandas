@@ -585,6 +585,9 @@ def read_matroos(
     extent=None,
     name="",
     ObsClass=obs.WaterlvlObs,
+    locations=None,
+    units=None,
+    sources=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
@@ -602,6 +605,12 @@ def read_matroos(
         name of the collection, by default ""
     ObsClass : type
         class of the observations, e.g. WaterlvlObs
+    locations : list, tuple or None, optional
+        locations to select, if None all locations are selected, by default None
+    units : list, tuple or None, optional
+        units to select, if None all units are selected, by default None
+    sources : list, tuple or None, optional
+        sources to select, if None all sources are selected, by default None
     tmin : pd.Timestamp, str or None, optional
         start time of observations. The default is None.
     tmax : pd.Timestamp, str or None, optional
@@ -626,6 +635,9 @@ def read_matroos(
         extent=extent,
         name=name,
         ObsClass=ObsClass,
+        locations=locations,
+        units=units,
+        sources=sources,
         tmin=tmin,
         tmax=tmax,
         only_metadata=only_metadata,
@@ -2108,6 +2120,9 @@ class ObsCollection(pd.DataFrame):
         extent=None,
         name="",
         ObsClass=obs.WaterlvlObs,
+        locations=None,
+        units=None,
+        sources=None,
         tmin=None,
         tmax=None,
         only_metadata=False,
@@ -2125,6 +2140,12 @@ class ObsCollection(pd.DataFrame):
             name of the collection, by default ""
         ObsClass : type
             class of the observations, e.g. WaterlvlObs
+        locations : list, tuple or None, optional
+            locations to select, if None all locations are selected, by default None
+        units : list, tuple or None, optional
+            units to select, if None all units are selected, by default None
+        sources : list, tuple or None, optional
+            sources to select, if None all sources are selected, by default None
         tmin : pd.Timestamp, str or None, optional
             start time of observations. The default is None.
         tmax : pd.Timestamp, str or None, optional
@@ -2151,6 +2172,9 @@ class ObsCollection(pd.DataFrame):
         obs_list = matroos.get_obs_list_from_extent(
             ObsClass,
             extent,
+            locations=locations,
+            units=units,
+            sources=sources,
             tmin=tmin,
             tmax=tmax,
             only_metadata=only_metadata,

@@ -1188,10 +1188,10 @@ class WaterlvlObs(Obs):
         ----------
         location : str
             location e.g. 'krimpen a/d lek'
-        source : str
-            source e.g. 'observed'
         unit : str
             unit e.g. 'waterlevel'
+        source : str
+            source e.g. 'observed'
         tmin : pd.Timestamp, str or None, optional
             start of time series if None tmin is 10 days ago, by default None
         tmax : pd.Timestamp, str or None, optional
@@ -1213,7 +1213,7 @@ class WaterlvlObs(Obs):
         from .io import matroos
 
         df, metadata = matroos.get_matroos_obs(
-            location, source, unit, tmin=None, tmax=None, only_metadata=False, **kwargs
+            location, unit, source, tmin=None, tmax=None, only_metadata=False, **kwargs
         )
 
         return cls(

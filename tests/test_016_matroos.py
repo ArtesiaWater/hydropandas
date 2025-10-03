@@ -8,8 +8,8 @@ def test_single_waterlevel_observation():
     tmax = pd.Timestamp("2020-1-3")
     o = hpd.WaterlvlObs.from_matroos(
         location="krimpen a/d lek",
-        source="observed",
         unit="waterlevel",
+        source="observed",
         tmin=tmin,
         tmax=tmax,
     )

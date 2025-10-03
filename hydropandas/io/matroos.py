@@ -1,3 +1,17 @@
+"""
+Module with functions to read and download time series from the matroos api.
+
+function levels:
+1. get_obs_list_from_extent: list of observations
+    2. get_matroos_obs: single observation
+        3. request_api: request to matroos api
+
+helpers:
+- get_locations_within_extent: get locations within a certain extent
+- load_parameter_metadata: get available locations, sources and units
+- select_parameters: select locations, sources and units based on available parameters
+"""
+
 import json
 import logging
 from io import StringIO
@@ -23,8 +37,8 @@ def get_obs_list_from_extent(
     ObsClass,
     extent=None,
     locations=None,
-    sources=None,
     units=None,
+    sources=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
@@ -41,10 +55,12 @@ def get_obs_list_from_extent(
     extent : list, tuple, numpy-array or None, optional
         get measurements within this extent
         [xmin, xmax, ymin, ymax]
-    locations :
-    sources :
-    units :
-
+    locations : list, tuple or None, optional
+        locations to select, if None all locations are selected, by default None
+    units : list, tuple or None, optional
+        units to select, if None all units are selected, by default None
+    sources : list, tuple or None, optional
+        sources to select, if None all sources are selected, by default None
     tmin : str or None, optional
         start time of observations. The default is None.
     tmax : str or None, optional
@@ -55,16 +71,11 @@ def get_obs_list_from_extent(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept. The default
         is True.
-    location_gdf : GeoDataFrame, optional
-        geodataframe with the locations of the water drill holes you want to include.
-    update : bool, optional
-        if True new locations are downloaded and stored locally (slow) otherwise a
-        cached version of the locations is used. By default False
     force_download : bool, optional
         if True an attempt is made to download data even if the params dic indicates
         there is no data for that combination of location, source and unit.
     **kwargs
-        additional keyword arguments are passed to the ObsClass.from_waterconnect()
+        additional keyword arguments are passed to the ObsClass.from_matroos()
         method
 
     Returns
@@ -81,18 +92,22 @@ def get_obs_list_from_extent(
         )
         keep_all_obs = True
 
-    params_dic = get_loc_source_units()
+    params_dic = load_parameter_metadata()
 
     # parse tmin and tmax
     if isinstance(tmin, str):
         tmin = pd.to_datetime(tmin)
     elif tmin is None:
         tmin = (pd.Timestamp.now() - pd.Timedelta(10, unit="D")).strftime("%Y%m%d%H%M")
+    if isinstance(tmin, pd.Timestamp):
+        tmin = tmin.strftime("%Y%m%d%H%M")
 
     if isinstance(tmax, str):
         tmax = pd.to_datetime(tmax)
     elif tmax is None:
         tmax = pd.Timestamp.now()
+    if isinstance(tmax, pd.Timestamp):
+        tmax = tmax.strftime("%Y%m%d%H%M")
 
     if extent is not None:
         if locations is None:
@@ -102,10 +117,10 @@ def get_obs_list_from_extent(
     if len(locations) < 1:
         raise ValueError(f"no locations found within {extent=}")
 
-    download_pars = select_by_params(
+    download_pars = select_parameters(
         locations=locations,
-        sources=sources,
         units=units,
+        sources=sources,
         force=force_download,
         params_dic=params_dic,
         keep_coords=False,
@@ -131,6 +146,7 @@ def get_obs_list_from_extent(
                     tmin=tmin,
                     tmax=tmax,
                     only_metadata=only_metadata,
+                    validate=False,
                     **kwargs,
                 )
                 if o.empty and not keep_all_obs:
@@ -144,69 +160,55 @@ def get_obs_list_from_extent(
     return obs_list
 
 
-def _params_dic_to_df(params_dic):
-    """convert params_dic to a pandas dataframe
-
-    Parameters
-    ----------
-    params_dic : dict
-        dictionary with locations, sources and units
-
-    Returns
-    -------
-    pd.DataFrame
-        dataframe with columns location, unit, source, x, y
-    """
-    df = pd.DataFrame(params_dic).T
-    return df
-
-
-def _params_dic_to_gdf(params_dic):
-    """convert params_dic to a pandas dataframe
-
-    Parameters
-    ----------
-    params_dic : dict
-        dictionary with locations, sources and units
-
-    Returns
-    -------
-    gpd.GeoDataFrame
-        geodataframe with columns location, unit, source, x, y
-    """
-    df = _params_dic_to_df(params_dic)
-
-    if "coords" not in df.columns:
-        raise ValueError(
-            "no coordinates found in params_dic, please use keep_coords=True in select_by_params function"
-        )
-
-    gdf = gpd.GeoDataFrame(
-        df, geometry=df["coords"].apply(lambda x: Point(x[0], x[1])), crs="EPSG:28992"
-    )
-    return gdf
-
-
-def select_by_params(
+def select_parameters(
     locations=None,
-    sources=None,
     units=None,
+    sources=None,
     force=False,
     params_dic=None,
     keep_coords=True,
     astype: Literal["dict", "dataframe", "geodataframe"] = "dict",
 ):
+    """select locations, sources and units based on available parameters
+
+    Parameters
+    ----------
+    locations : list, tuple or None, optional
+        locations to select, if None all locations are selected, by default None
+    units : list, tuple or None, optional
+        units to select, if None all units are selected, by default None
+    sources : list, tuple or None, optional
+        sources to select, if None all sources are selected, by default None
+    force : bool, optional
+        if True the selected sources and units are used even if they are not
+        available for a certain location, by default False
+    params_dic : dict or None, optional
+        dictionary with available parameters, if None the parameters are
+        downloaded using load_parameter_metadata(), by default None
+    keep_coords : bool, optional
+        if True the coordinates of each location are kept in the output,
+        by default True
+    astype : str, optional
+        type of output, one of 'dict', 'dataframe' or 'geodataframe',
+        by default 'dict'
+
+    Returns
+    -------
+    dict, pd.DataFrame or gpd.GeoDataFrame
+        selected locations, sources and units
+    """
+
     # make sure locations, sources and units are lists, tuples or None
     if locations is not None and not isinstance(locations, (list, tuple)):
         locations = [locations]
-    if sources is not None and not isinstance(sources, (list, tuple)):
-        sources = [sources]
     if units is not None and not isinstance(units, (list, tuple)):
         units = [units]
+    if sources is not None and not isinstance(sources, (list, tuple)):
+        sources = [sources]
 
     # get all locations, sources and units
     if params_dic is None:
-        params_dic = get_loc_source_units()
+        params_dic = load_parameter_metadata()
 
     if locations is None:
         locations = params_dic.keys()
@@ -287,7 +289,7 @@ def get_locations_within_extent(params_dic, extent):
     return locations
 
 
-def get_loc_source_units():
+def load_parameter_metadata():
     """get the possible values for location, source and unit + the coordinates of each location
 
     Returns
@@ -311,17 +313,17 @@ def get_loc_source_units():
     return d
 
 
-def request_api(location, source, unit, tmin, tmax, timeout=600, fname=None):
+def request_api(location, unit, source, tmin, tmax, timeout=600, fname=None):
     """make a request to the Matroos api for a specific location, source and unit
 
     Parameters
     ----------
     location : str
         location e.g. 'krimpen a/d lek'
-    source : str
-        source e.g. 'observed'
     unit : str
         unit e.g. 'waterlevel'
+    source : str
+        source e.g. 'observed'
     tmin : str
         start of requested time series, format '%Y%m%d%H%M' e.g. '202505100110'
     tmax : str
@@ -357,7 +359,14 @@ def request_api(location, source, unit, tmin, tmax, timeout=600, fname=None):
 
 
 def get_matroos_obs(
-    location, source, unit, tmin=None, tmax=None, only_metadata=False, **kwargs
+    location,
+    unit,
+    source,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    validate=True,
+    **kwargs,
 ):
     """get observations for a certain location, source and unit between
     tmin and tmax.
@@ -366,10 +375,10 @@ def get_matroos_obs(
     ----------
     location : str
         location e.g. 'krimpen a/d lek'
-    source : str
-        source e.g. 'observed'
     unit : str
         unit e.g. 'waterlevel'
+    source : str
+        source e.g. 'observed'
     tmin : pd.Timestamp, str or None, optional
         start of time series if None tmin is 10 days ago, by default None
     tmax : pd.Timestamp, str or None, optional
@@ -377,6 +386,8 @@ def get_matroos_obs(
     only_metadata : bool, optional
         if True download only metadata, slightly faster. The default
         is False.
+    validate : bool, optional
+        if True check if location, source and unit are valid, by default True
     **kwargs are passed to request_api function
 
     Returns
@@ -386,28 +397,29 @@ def get_matroos_obs(
     dict: metadata
     """
     # check if location, source and unit are valid
-    params_dic = get_loc_source_units()
-    if location not in params_dic.keys():
-        msg = f"{location} not listed in possible locations, please select location from {params_dic.keys()}"
-        logger.warning(msg)
+    if validate:
+        params_dic = load_parameter_metadata()
+        if location not in params_dic.keys():
+            msg = f"{location} not listed in possible locations, please select location from {params_dic.keys()}"
+            logger.warning(msg)
 
-    elif unit not in params_dic[location]["units"].keys():
-        msg = f"{unit} not available for {location=}, please select unit from {params_dic[location]['units'].keys()}"
-        logger.warning(msg)
+        elif unit not in params_dic[location]["units"].keys():
+            msg = f"{unit} not available for {location=}, please select unit from {params_dic[location]['units'].keys()}"
+            logger.warning(msg)
 
-    elif source not in params_dic[location]["units"][unit]:
-        msg = f"{source} not available for {location=} and {unit=}, please select source from {params_dic[location]['units'][unit]}"
-        logger.warning(msg)
+        elif source not in params_dic[location]["units"][unit]:
+            msg = f"{source} not available for {location=} and {unit=}, please select source from {params_dic[location]['units'][unit]}"
+            logger.warning(msg)
 
     # parse tmin and tmax
-    if isinstance(tmin, str):
+    if isinstance(tmin, str) and not (len(tmin) == 12 and tmin.isdigit()):
         tmin = pd.to_datetime(tmin)
     elif tmin is None:
         tmin = (pd.Timestamp.now() - pd.Timedelta(10, unit="D")).strftime("%Y%m%d%H%M")
     if isinstance(tmin, pd.Timestamp):
         tmin = tmin.strftime("%Y%m%d%H%M")
 
-    if isinstance(tmax, str):
+    if isinstance(tmax, str) and not (len(tmax) == 12 and tmax.isdigit()):
         tmax = pd.to_datetime(tmax)
     elif tmax is None:
         tmax = pd.Timestamp.now()
@@ -415,7 +427,7 @@ def get_matroos_obs(
         tmax = tmax.strftime("%Y%m%d%H%M")
 
     # request api
-    f = request_api(location, source, unit, tmin, tmax, **kwargs)
+    f = request_api(location, unit, source, tmin, tmax, **kwargs)
 
     # read first 4 lines:
     breakline = f.readline()
