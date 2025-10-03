@@ -21,7 +21,7 @@ Version control, Git, and GitHub
 The code is hosted on GitHub. To contribute you will need to sign up for a free
 GitHub account. We use Git for version control to allow many people to work
 together on the project. If you have no experience with Git we recommend to
-install `Github Desktop <https://desktop.github.com/>`_.
+use `Github Desktop <https://desktop.github.com/>`_.
 
 Contributing guidelines
 -----------------------
@@ -51,9 +51,7 @@ For pull request we use the following guidelines (similar to the
   docstring should be a standalone summary. Parameters and return values should
   be documented explicitly.
 - Follow PEP 8 when possible. We use 
-  `Black <https://black.readthedocs.io/en/stable/>`_ and 
-  `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to ensure a consistent code
+  `Ruff <https://docs.astral.sh/ruff/>`_ to ensure a consistent code
   format throughout the project.
-- We use `isort <https://pycqa.github.io/isort/>`_ to automatically sort imports.
 - We encourage backward compatability between HydroPandas versions but do not
   ensure it (yet) because of the rapid changes to the code base.
