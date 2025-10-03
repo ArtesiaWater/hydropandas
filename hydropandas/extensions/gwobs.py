@@ -614,7 +614,7 @@ class GeoAccessorObs:
             return "nan"
 
         # connect to regis netcdf
-        regis_url = r"http://www.dinodata.nl:80/opendap/REGIS/REGIS.nc"
+        regis_url = "https://dinodata.nl/opendap/REGIS/REGIS.nc"
         regis_ds = xr.open_dataset(regis_url, decode_times=False)
 
         # rename layer in regis netcdf

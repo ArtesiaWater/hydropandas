@@ -116,6 +116,12 @@ legacy_tox_ini = """
     commands =
             pytest tests/api/test_102_knmi_api.py
 
+    [testenv:matroos]
+    description = run matroos tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_107_matroos_api.py
+
     [testenv:lizard_vitens]
     description = run lizard vitens tests
     extras = pytesting

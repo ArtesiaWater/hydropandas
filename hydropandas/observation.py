@@ -1179,6 +1179,54 @@ class WaterlvlObs(Obs):
         return cls(measurements, meta=meta, **meta)
 
     @classmethod
+    def from_matroos(
+        cls, location, source, unit, tmin=None, tmax=None, only_metadata=False, **kwargs
+    ):
+        """Read data using the Matroos API
+
+        Parameters
+        ----------
+        location : str
+            location e.g. 'krimpen a/d lek'
+        unit : str
+            unit e.g. 'waterlevel'
+        source : str
+            source e.g. 'observed'
+        tmin : pd.Timestamp, str or None, optional
+            start of time series if None tmin is 10 days ago, by default None
+        tmax : pd.Timestamp, str or None, optional
+            start of time series if None tmin is today, by default None
+        only_metadata : bool, optional
+            if True download only metadata, slightly faster. The default
+            is False.
+
+        Returns
+        -------
+        df : WaterlvlObs
+            WaterlvlObs object
+
+        Raises
+        ------
+        ValueError
+            if file contains data for more than one location
+        """
+        from .io import matroos
+
+        df, metadata = matroos.get_matroos_obs(
+            location, unit, source, tmin=None, tmax=None, only_metadata=False, **kwargs
+        )
+
+        return cls(
+            df,
+            name=metadata.pop("name"),
+            x=metadata.pop("x"),
+            y=metadata.pop("y"),
+            location=metadata.pop("location"),
+            source=metadata.pop("source"),
+            meta=metadata,
+        )
+
+    @classmethod
     def from_waterinfo(
         cls,
         path=None,
