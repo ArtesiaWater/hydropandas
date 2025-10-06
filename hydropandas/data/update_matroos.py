@@ -83,7 +83,7 @@ def parse_locations(result_str):
         locations
     """
     lsu = result_str.split("Locations:")[1]
-    llocation, su = lsu.split("Sources:")
+    llocation, _su = lsu.split("Sources:")
     return llocation.split("\n")[2:-2]
 
 
@@ -101,7 +101,7 @@ def parse_units(result_str):
         units
     """
     _, su = result_str.split("Sources:")
-    s, u = su.split("Units:")
+    _s, u = su.split("Units:")
 
     return u.split("\n")[2:-2]
 
