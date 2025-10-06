@@ -696,7 +696,7 @@ class GroundwaterObs(Obs):
             "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
             "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
         combine_method : str, optional
-            "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+            "merge" (vertical stack with 'origin' column) or "columns" (side-by-side columns).
             If None, defaults to "merge".
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
