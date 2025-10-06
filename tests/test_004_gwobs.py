@@ -81,7 +81,6 @@ def test_get_modellayers_mf6_structured():
     dino_gw.gwobs.get_modellayers(gwf)
 
 
-# temporary disable, see #315
-# def test_get_regis_layer():
-#     dino_gw = ttf.obscollection_dinozip_gw()
-#     dino_gw.gwobs.get_regis_layers()
+def test_get_regis_layer():
+    dino_gw = ttf.obscollection_dinozip_gw()
+    dino_gw.gwobs.get_regis_layers()
