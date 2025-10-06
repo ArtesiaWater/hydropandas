@@ -1,7 +1,7 @@
 from importlib import metadata
 from sys import version as os_version
 
-__version__ = "0.15.2dev"
+__version__ = "0.16.0"
 
 
 def show_versions():
