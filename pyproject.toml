@@ -44,6 +44,7 @@ full = [
     "pastastore",
     "flopy",
     "xarray",
+    "netCDF4",
     "lxml",
     "pyarrow",
     "brodata"
@@ -54,7 +55,6 @@ rtd = [
     "requests",
     "nbconvert",
     "ipykernel",
-    "netCDF4",
     "docutils<0.18",
     "sphinx_rtd_theme",
     "Ipython",
