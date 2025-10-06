@@ -127,7 +127,7 @@ def get_knmi_obs(
     elif fname is not None:
         logger.info(f"get KNMI data from file {fname} and meteo variable {meteo_var}")
         ts, meta = get_timeseries_from_file(
-            fname=str(fname),
+            fname=fname,
             meteo_var=meteo_var,
             settings=settings,
             start=start,
@@ -235,6 +235,7 @@ def get_timeseries_from_file(
     """
 
     df, meta = parse_data(fname)
+    fname = str(fname)
     # first try to figure out filetype by it's name
     if "neerslaggeg" in fname:
         # neerslagstation
@@ -1451,7 +1452,7 @@ def parse_data(
 
     Parameters
     ----------
-    path : str or StringIO
+    path : str, pathlib.Path or StringIO
         file path of .txt file or str representation.
 
     Returns
@@ -1466,8 +1467,9 @@ def parse_data(
     data_id = "STN,"
     meta = {}
     df = None
-    # with open(path, "r") as f:
-    if isinstance(path, str):
+    if isinstance(path, os.PathLike):
+        f = open(path, "r")
+    elif isinstance(path, str):
         f = open(path, "r")
     elif isinstance(path, StringIO):
         f = path
