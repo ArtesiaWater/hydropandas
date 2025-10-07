@@ -4,8 +4,8 @@ import hydropandas as hpd
 
 
 def test_single_waterlevel_observation():
-    tmin = pd.Timestamp("2020-1-1")
-    tmax = pd.Timestamp("2020-1-3")
+    tmin = pd.Timestamp("2022-1-1")
+    tmax = pd.Timestamp("2022-1-2")
     o = hpd.WaterlvlObs.from_matroos(
         location="krimpen a/d lek",
         unit="waterlevel",
