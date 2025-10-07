@@ -1213,7 +1213,7 @@ class WaterlvlObs(Obs):
         from .io import matroos
 
         df, metadata = matroos.get_matroos_obs(
-            location, unit, source, tmin=None, tmax=None, only_metadata=False, **kwargs
+            location, unit, source, tmin=tmin, tmax=tmax, only_metadata=False, **kwargs
         )
 
         return cls(
