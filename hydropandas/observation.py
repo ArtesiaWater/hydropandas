@@ -30,6 +30,77 @@ from pandas.io.formats import console
 logger = logging.getLogger(__name__)
 
 
+def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
+    """Read a csv file and return an Obs object.
+
+    Parameters
+    ----------
+    path : str
+        path of the csv file
+    parse_dates : bool, optional
+        whether to parse the dates when reading the csv file. The default is True.
+    index_col : int, optional
+        column to use as index, by default 0
+    **kwargs
+        keyword arguments passed to pd.read_csv
+
+    Returns
+    -------
+    Obs
+        Obs object with metadata and observations from the csv file.
+    """
+    with open(path, "r") as buf:
+        # read observation type
+        obstype = buf.readline().split("Obs")[0] + "Obs"
+
+        # read metadata
+        assert buf.readline() == "-----metadata------\n", (
+            f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+        )
+        line = buf.readline()
+        meta = {}
+        while line.strip() != "":
+            key_val = line.split(":")
+            key = key_val[0].strip()
+            val = ":".join(key_val[1:]).strip()
+            if key in [
+                "x",
+                "y",
+                "screen_top",
+                "screen_bottom",
+                "ground_level",
+                "tube_top",
+            ]:
+                if val == "":
+                    meta[key] = np.nan
+                else:
+                    meta[key] = float(val)
+            elif key in ["tube_nr", "station"]:
+                if val == "":
+                    meta[key] = np.nan
+                else:
+                    try:
+                        meta[key] = int(val)
+                    except ValueError:
+                        meta[key] = float(val)
+            elif key in ["metadata_available"]:
+                if val == "":
+                    meta[key] = np.nan
+                else:
+                    meta[key] = bool(val)
+            else:
+                meta[key] = val
+            line = buf.readline()
+
+        # read observations
+        assert buf.readline() == "-----observations------\n", (
+            f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+        )
+        df = pd.read_csv(buf, index_col=index_col, parse_dates=parse_dates, **kwargs)
+
+    return globals()[obstype](df, **meta)
+
+
 class Obs(pd.DataFrame):
     """Generic class for a time series with measurements at a certain location.
 
@@ -516,6 +587,35 @@ class Obs(pd.DataFrame):
             setattr(o, key, item)
 
         return o
+
+    def to_csv(self, path, **kwargs):
+        """Write Obs object to a comma-separated values (csv) file.
+
+        Parameters
+        ----------
+        path : str or path object
+            String, path object (implementing os.PathLike[str]), or file-like
+            object implementing a write() function.
+        **kwargs
+            Additional keyword arguments passed to pandas.DataFrame.to_csv
+
+        Returns
+        -------
+        None
+        """
+        with open(path, "w", newline="") as buf:
+            buf.write(f"{type(self).__name__} {self.name}\n")
+
+            # write metadata properties
+            buf.write("-----metadata------\n")
+            for att in self._get_meta_attr():
+                if not att == "meta":
+                    buf.write(f"{att} : {getattr(self, att)} \n")
+            buf.write("\n")
+
+            # write observations
+            buf.write("-----observations------\n")
+            super().to_csv(buf, **kwargs)
 
 
 class GroundwaterObs(Obs):

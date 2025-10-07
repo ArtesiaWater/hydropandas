@@ -10,6 +10,7 @@ http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending
 import logging
 import numbers
 from typing import List, Optional
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -113,6 +114,78 @@ def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
     return oc
 
 
+def read_csv(path, parse_dates=True, index_col=0, **kwargs):
+    """Create an observation collection from one or more csv files. The csv file(s)
+    should have the same format as csv files created with the `to_csv` method of an
+    ObsCollection.
+
+    Parameters
+    ----------
+    path : str
+        directory with csv files, a .zip file with csv files or a single csv file.
+    parse_dates : bool, optional
+        whether to parse the dates when reading the csv files. The default is True.
+    index_col : int, optional
+        column to use as index, by default 0
+    kwargs:
+        kwargs are passed to the pandas.read_csv function
+
+    Returns
+    -------
+    ObsCollection
+
+    Notes
+    -----
+    if you write a csv file using the 'to_csv' method and read a csv
+    with the 'read_csv' method you lose this information:
+    - The 'name' and 'meta' attributes of the ObsCollection
+    - metadata of each Observation stored in the 'meta' attribute
+    - integer dtypes may become floats
+
+    If you don't want to lose this data consider using the `to_pickle` and
+    `read_pickle` function.
+    """
+    path = Path(path)
+    if path.is_dir():
+        # read csv files in directory
+        obslist = []
+        for file in path.glob("*.csv"):
+            obslist.append(
+                obs.read_csv_obs(
+                    file, parse_dates=parse_dates, index_col=index_col, **kwargs
+                )
+            )
+        if not obslist:
+            logger.warning(f"No csv files found in directory {path}")
+    elif path.suffix == ".zip":
+        # unzip and read .csv files in directory
+        dirpath, files = util.get_files(path, ".csv")
+        if not files:
+            logger.warning(f"No csv files found in directory {path}")
+
+        obslist = []
+        for file in files:
+            obslist.append(
+                obs.read_csv_obs(
+                    Path(dirpath) / file,
+                    parse_dates=parse_dates,
+                    index_col=index_col,
+                    **kwargs,
+                )
+            )
+    elif path.suffix == ".csv":
+        # read single csv file
+        obslist = [
+            obs.read_csv_obs(
+                path, parse_dates=parse_dates, index_col=index_col, **kwargs
+            )
+        ]
+    else:
+        raise ValueError(f"Path {path} is not a directory, a zipfile or a .csv file")
+
+    return ObsCollection(obslist)
+
+
 def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
@@ -131,7 +204,7 @@ def read_dino(
         directory name, can be a .zip file or the parent directory
         of subdir
     ObsClass : type
-        class of the observations, so far only GroundwaterObs is supported
+        class of the observations, so far only obs.GroundwaterObs is supported
     subdir : str
         subdirectory of dirname with data files. For old school dino zip files this
         should be "Grondwaterstanden_Put". For new style the default value
@@ -660,7 +733,7 @@ def read_menyanthes(
         name of the observation collection. The default is "".
     ObsClass : type, optional
         class of the observations, e.g. GroundwaterObs. The default is
-        obs.Obs.
+        Obs.
     load_oseries : bool, optional
         if True the observations are read. The default is True.
     load_stresses : bool, optional
@@ -879,7 +952,7 @@ def read_waterinfo(
     name : str, optional
         name of the collection, by default ""
     ObsClass : Obs, optional
-        type of Obs to read data as, by default obs.WaterlvlObs
+        type of Obs to read data as, by default WaterlvlObs
     locatie : str or list of str, optional
         select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
     grootheid_code : str or list of str, optional
@@ -951,7 +1024,7 @@ def read_wiski(
     dirname : str
         path of the zipfile with wiski data.
     ObsClass : type, optional
-        type of Obs. The default is obs.GroundwaterObs.
+        type of Obs. The default is GroundwaterObs.
     suffix : str, optional
         extension of filenames to read. The default is ".csv".
     unpackdir : str or None, optional
@@ -1001,7 +1074,7 @@ def read_pastastore(
     libname : str
         name of library (e.g. oseries or stresses)
     ObsClass : Obs, optional
-        type of Obs to read data as, by default obs.GroundwaterObs
+        type of Obs to read data as, by default GroundwaterObs
     metadata_mapping : dict, optional
         dictionary containing map between metadata field names in pastastore and
         metadata field names expected by hydropandas, by default None.
@@ -1609,7 +1682,7 @@ class ObsCollection(pd.DataFrame):
             list of observations. Default is None
         ObsClass : class, optional
             observation class used to create empty obs object, by
-            default obs.GroundwaterObs
+            default GroundwaterObs
 
         Returns
         -------
@@ -2351,7 +2424,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the collection, by default ""
         ObsClass : Obs, optional
-            type of Obs to read data as, by default obs.WaterlvlObs
+            type of Obs to read data as, by default WaterlvlObs
         locatie : str or list of str, optional
             select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
         grootheid_code : str or list of str, optional
@@ -2464,7 +2537,7 @@ class ObsCollection(pd.DataFrame):
         libname : str
             name of library (e.g. oseries or stresses)
         ObsClass : Obs, optional
-            type of Obs to read data as, by default obs.GroundwaterObs
+            type of Obs to read data as, by default GroundwaterObs
         metadata_mapping : dict, optional
             dictionary containing map between metadata field names in pastastore and
             metadata field names expected by hydropandas, by default None.
@@ -2532,6 +2605,29 @@ class ObsCollection(pd.DataFrame):
                 f"multiple observations for given conditions {selected_obs.index}"
             )
 
+    def to_csv(self, path, check_consistency=True, **kwargs):
+        """Write all observations in the ObsCollection to csv files.
+
+        Parameters
+        ----------
+        path : str
+            directory to which the csv files will be written.
+        check_consistency : bool, optional
+            If True the consistency of the collection is checked. If set to False the excel file may be unreadable by hydropandas. The
+            default is True.
+        **kwargs : keyword arguments
+            kwargs are passed to the to_csv method of each observation.
+        """
+        if check_consistency and not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
+
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"writing {len(self)} observations to {path}")
+        for o in self.obs:
+            o.to_csv(path / f"{o.name}.csv", **kwargs)
+
     def to_excel(self, path, meta_sheet_name="metadata", check_consistency=True):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
         metadata, the other tabs are the timeseries of each observation.
@@ -2566,9 +2662,8 @@ class ObsCollection(pd.DataFrame):
         If you don't want this consider using the `to_pickle` method.
         """
 
-        if check_consistency:
-            if not self._is_consistent():
-                raise RuntimeError("inconsistent observation collection")
+        if check_consistency and not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
 
         oc = self.copy(deep=True)
 

@@ -10,6 +10,7 @@ from .obs_collection import (
     ObsCollection,
     read_bro,
     read_bronhouderportaal_bro,
+    read_csv,
     read_dino,
     read_excel,
     read_fews,
