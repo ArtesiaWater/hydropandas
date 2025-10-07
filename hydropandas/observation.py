@@ -696,7 +696,7 @@ class GroundwaterObs(Obs):
             "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
             "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
         combine_method : str, optional
-            "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+            "merge" (vertical stack with 'origin' column) or "columns" (side-by-side columns).
             If None, defaults to "merge".
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
@@ -1177,6 +1177,54 @@ class WaterlvlObs(Obs):
         measurements, meta = dino.read_dino_waterlvl_csv(path, **kwargs)
 
         return cls(measurements, meta=meta, **meta)
+
+    @classmethod
+    def from_matroos(
+        cls, location, source, unit, tmin=None, tmax=None, only_metadata=False, **kwargs
+    ):
+        """Read data using the Matroos API
+
+        Parameters
+        ----------
+        location : str
+            location e.g. 'krimpen a/d lek'
+        unit : str
+            unit e.g. 'waterlevel'
+        source : str
+            source e.g. 'observed'
+        tmin : pd.Timestamp, str or None, optional
+            start of time series if None tmin is 10 days ago, by default None
+        tmax : pd.Timestamp, str or None, optional
+            start of time series if None tmin is today, by default None
+        only_metadata : bool, optional
+            if True download only metadata, slightly faster. The default
+            is False.
+
+        Returns
+        -------
+        df : WaterlvlObs
+            WaterlvlObs object
+
+        Raises
+        ------
+        ValueError
+            if file contains data for more than one location
+        """
+        from .io import matroos
+
+        df, metadata = matroos.get_matroos_obs(
+            location, unit, source, tmin=None, tmax=None, only_metadata=False, **kwargs
+        )
+
+        return cls(
+            df,
+            name=metadata.pop("name"),
+            x=metadata.pop("x"),
+            y=metadata.pop("y"),
+            location=metadata.pop("location"),
+            source=metadata.pop("source"),
+            meta=metadata,
+        )
 
     @classmethod
     def from_waterinfo(

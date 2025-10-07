@@ -9,7 +9,7 @@ The `Obs` class
 ---------------
 
 The Obs class holds the measurements and metadata for one timeseries. There
-are currently 5 specific Obs classes for different types of measurements:
+are currently 7 specific Obs classes for different types of measurements:
 
 - GroundwaterObs: for groundwater measurements
 - WaterQualityObs: for (ground)water quality measurements

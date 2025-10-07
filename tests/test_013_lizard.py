@@ -38,4 +38,4 @@ def test_complex_well():
 
 
 def test_combine():
-    hpd.GroundwaterObs.from_lizard("39F-0736", tube_nr=1, type_timeseries="combine")
+    hpd.GroundwaterObs.from_lizard("39F-0736", tube_nr=1, combine_method="columns")

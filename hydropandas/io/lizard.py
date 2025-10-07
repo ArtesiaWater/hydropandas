@@ -107,6 +107,7 @@ def translate_flag(timeseries):
     translate_dic = {
         0: "betrouwbaar",
         1: "betrouwbaar",
+        2: "onbeslist",
         3: "onbeslist",
         4: "onbeslist",
         6: "onbetrouwbaar",
@@ -114,7 +115,7 @@ def translate_flag(timeseries):
         99: "ongevalideerd",
         -99: "verwijderd",
     }
-    timeseries["flag"] = timeseries["flag"].replace(translate_dic)
+    timeseries["flag_description"] = timeseries["flag"].replace(translate_dic)
 
     return timeseries
 
@@ -146,15 +147,13 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
     lizard_GWS_endpoint = f"{base_url}groundwaterstations/"
     url_groundwaterstation_code = f"{lizard_GWS_endpoint}?code={code}"
 
-    ValueError(url_groundwaterstation_code)
     r = requests.get(url_groundwaterstation_code, auth=auth, timeout=1200)
     r.raise_for_status()
 
     try:
         groundwaterstation_metadata = r.json()["results"][0]
     except IndexError:
-        raise ValueError(r.json())
-        raise ValueError(f"Code {code} is invalid")
+        raise ValueError(f"Code {code} is invalid. Response: {r.json()}")
 
     return groundwaterstation_metadata
 
@@ -258,13 +257,15 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
         r = requests.get(series, auth=auth)
         r.raise_for_status()
         series_info = r.json()
-        if series_info["name"] == "WNS9040.hand":
+        # Note: See Github issue #311 for an explanation of 'wns_string'
+        wns_string = series_info["code"].split(":", 1)[0]
+        if wns_string == "WNS9040.hand":
             info["uuid_hand"] = series_info["uuid"]
             info["start_hand"] = series_info["start"]
-        elif series_info["name"] == "WNS9040":
+        elif wns_string == "WNS9040":
             info["uuid_diver"] = series_info["uuid"]
             info["start_diver"] = series_info["start"]
-        elif series_info["name"] == "WNS9040.val":
+        elif wns_string == "WNS9040.val":
             info["uuid_diver_validated"] = series_info["uuid"]
             info["start_diver_validated"] = series_info["start"]
             info["end_diver_validated"] = series_info["end"]
@@ -561,7 +562,7 @@ def get_timeseries_tube(
         "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
         "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
     combine_method : str, optional
-        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        "merge" (vertical stack with 'origin' column) or "columns" (side-by-side columns).
         If None, defaults to "merge".
     organisation : str, optional
         organisation as used by Lizard.
@@ -584,11 +585,11 @@ def get_timeseries_tube(
         )
         # Map old type_timeseries to which_timeseries and combine_method
         if type_timeseries == "combine":
-            combine_method = "combine"
+            combine_method = "columns"
         elif type_timeseries == "merge":
             combine_method = "merge"
         else:
-            which_timeseries = type_timeseries
+            which_timeseries = [type_timeseries]
             combine_method = "merge"
 
     if tube_metadata["timeseries_type"] is None:
@@ -619,7 +620,7 @@ def get_timeseries_tube(
         ts_dict_filtered = ts_dict
 
     # Combine as requested
-    if combine_method == "combine":
+    if combine_method == "columns":
         # Side-by-side
         if not ts_dict_filtered.get("hand", pd.DataFrame()).empty:
             ts_dict_filtered["hand"] = ts_dict_filtered["hand"].rename(
@@ -658,7 +659,7 @@ def get_timeseries_tube(
         present_cols = [col for col in expected_cols if col in measurements.columns]
         if not measurements.empty:
             measurements = measurements.loc[:, present_cols]
-    else:
+    elif combine_method == "merge":
         # Default: merge (vertical stack)
         dfs = []
         for key in which_timeseries:
@@ -668,6 +669,10 @@ def get_timeseries_tube(
                 df["origin"] = key
                 dfs.append(df)
         measurements = pd.concat(dfs, axis=0).sort_index() if dfs else pd.DataFrame()
+    else:
+        raise ValueError(
+            f'{combine_method=} not supported, choose between "merge" and "columns".'
+        )
 
     return measurements, tube_metadata
 
@@ -711,7 +716,7 @@ def get_lizard_groundwater(
         "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
         "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
     combine_method : str, optional
-        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        "merge" (vertical stack with 'origin' column) or "columns" (side-by-side columns).
         If None, defaults to "merge".
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
@@ -796,7 +801,7 @@ def get_obs_list_from_codes(
         "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
         "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
     combine_method : str, optional
-        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        "merge" (vertical stack with 'origin' column) or "columns" (side-by-side columns).
         If None, defaults to "merge".
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The
@@ -909,7 +914,7 @@ def get_obs_list_from_extent(
         "remove_unvalidated_diver_values_when_validated_available": Removes diver values before last date with validated diver.
         "remove_hand_during_diver_period": Removes hand measurements during periods where diver or diver_validated measurements are available.
     combine_method : str, optional
-        "merge" (vertical stack with 'origin' column) or "combine" (side-by-side columns).
+        "merge" (vertical stack with 'origin' column) or "columns" (side-by-side columns).
         If None, defaults to "merge".
     only_metadata : bool, optional
         if True only metadata is returned and no time series data. The

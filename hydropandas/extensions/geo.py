@@ -150,7 +150,7 @@ class GeoAccessor:
         elif gdf2 is None:
             raise ValueError("obs_collecction2 or gdf2 should be defined")
 
-        pts_gdf2 = gdf2.geometry.unary_union
+        pts_gdf2 = gdf2.geometry.union_all()
 
         def nearest_point(point_gdf1, pts=pts_gdf2):
             # find the nearest point and return the corresponding Place value

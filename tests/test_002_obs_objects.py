@@ -171,7 +171,7 @@ def test_merge_overlapping():
     # observation with partially overlapping time series and extra columns
     o2 = o.copy()
     o2.index = pd.date_range("2020-1-6", "2020-1-15")
-    o2["values"].iloc[:5] = o["values"].iloc[-5:]
+    o2.loc[o2.index[:5], "values"] = o.loc[o.index[-5:], "values"]
     o2["valid"] = np.random.randint(0, 2, 10)
     o2["qualifier"] = "test"
 

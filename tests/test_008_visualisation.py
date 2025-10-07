@@ -1,6 +1,8 @@
 import test_001_to_from as ttf
 
-plot_dir = "./tests/data/2019-Dino-test/plots"
+from pathlib import Path
+
+plot_dir = Path(__file__).parent / "data" / "2019-Dino-test" / "plots"
 
 
 def test_interactive_plot():

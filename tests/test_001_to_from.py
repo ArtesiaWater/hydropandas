@@ -5,8 +5,11 @@ import pandas as pd
 import pastastore as pst
 import pytest
 from requests.exceptions import ConnectionError, HTTPError
+from pathlib import Path
 
 import hydropandas as hpd
+
+datadir = Path(__file__).parent / "data"
 
 # %% BRO
 
@@ -39,28 +42,30 @@ def test_bro_extent_too_big():
 
 
 # %% DINO
-dinozip = "./tests/data/2019-Dino-test/dino.zip"
+dino2019 = datadir / "2019-Dino-test"
+dino2024 = datadir / "2024-Dino-test"
+dinozip = dino2019 / "dino.zip"
 
 
 def test_observation_gwq():
     # single observation
-    path = "./tests/data/2019-Dino-test/Grondwatersamenstellingen_Put/B52C0057.txt"
+    path = dino2019 / "Grondwatersamenstellingen_Put/B52C0057.txt"
     hpd.WaterQualityObs.from_dino(path)
 
 
 def test_observation_wl():
-    path = "./tests/data/2019-Dino-test/Peilschaal/P58A0001.csv"
+    path = dino2019 / "Peilschaal/P58A0001.csv"
     hpd.WaterlvlObs.from_dino(path)
 
 
 def observation_gw_dino_old():
-    path = "./tests/data/2019-Dino-test/Grondwaterstanden_Put/B33F0080001_1.csv"
+    path = dino2019 / "Grondwaterstanden_Put/B33F0080001_1.csv"
     o = hpd.GroundwaterObs.from_dino(path=path)
     return o
 
 
 def observation_gw_dino_new():
-    path = "./tests/data/2024-Dino-test/DINO_Grondwaterstanden/B02H0090001.csv"
+    path = dino2024 / "DINO_Grondwaterstanden/B02H0090001.csv"
     o = hpd.GroundwaterObs.from_dino(path=path)
     return o
 
@@ -72,7 +77,7 @@ def test_observation_gw():
 
 def test_obscollection_from_directory_old_school():
     dino_gw = hpd.read_dino(
-        dirname=dinozip,
+        dirname=dino2019 / "dino.zip",
         ObsClass=hpd.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
@@ -83,8 +88,9 @@ def test_obscollection_from_directory_old_school():
 
 
 def test_obscollection_from_directory_new_school():
-    dinozip = "./tests/data/2024-Dino-test/dino.zip"
-    hpd.read_dino(dirname=dinozip, ObsClass=hpd.GroundwaterObs, keep_all_obs=True)
+    hpd.read_dino(
+        dirname=dino2024 / "dino.zip", ObsClass=hpd.GroundwaterObs, keep_all_obs=True
+    )
 
 
 def test_obscollection_from_df():
@@ -103,7 +109,7 @@ def test_obscollection_empty():
 def obscollection_dinozip_gw():
     # groundwater quantity
     oc = hpd.read_dino(
-        dirname=dinozip,
+        dirname=dino2019 / "dino.zip",
         ObsClass=hpd.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
@@ -115,7 +121,7 @@ def obscollection_dinozip_gw():
 def obscollection_dinozip_gw_keep_all_obs():
     # do not delete empty dataframes
     oc = hpd.read_dino(
-        dirname=dinozip,
+        dirname=dino2019 / "dino.zip",
         ObsClass=hpd.GroundwaterObs,
         subdir="Grondwaterstanden_Put",
         suffix="1.csv",
@@ -127,7 +133,10 @@ def obscollection_dinozip_gw_keep_all_obs():
 def obscollection_dinozip_wl():
     # surface water
     oc = hpd.read_dino(
-        dirname=dinozip, ObsClass=hpd.WaterlvlObs, subdir="Peilschaal", suffix=".csv"
+        dirname=dino2019 / "dino.zip",
+        ObsClass=hpd.WaterlvlObs,
+        subdir="Peilschaal",
+        suffix=".csv",
     )
 
     return oc
@@ -149,7 +158,7 @@ def test_obscollection_dinozip_wl():
 def test_obscollection_dinozip_gwq():
     # groundwater quality
     hpd.read_dino(
-        dirname=dinozip,
+        dirname=dino2019 / "dino.zip",
         ObsClass=hpd.WaterQualityObs,
         subdir="Grondwatersamenstellingen_Put",
         suffix=".txt",
@@ -157,11 +166,12 @@ def test_obscollection_dinozip_gwq():
 
 
 # %% FEWS
+fewsdir = datadir / "2019-FEWS-test"
 
 
 def obscollection_fews_lowmemory():
     oc = hpd.read_fews(
-        "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
     )
@@ -170,7 +180,7 @@ def obscollection_fews_lowmemory():
 
 def test_obscollection_fews_highmemory():
     hpd.read_fews(
-        "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         to_mnap=False,
         remove_nan=False,
         low_memory=False,
@@ -183,16 +193,19 @@ def test_obscollection_fews_lowmemory():
 
 def test_obscollection_fews_selection():
     hpd.read_fews(
-        "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=("MPN-N-2",),
     )
 
 
 # %% WISKI
+wiskidir = datadir / "2019-WISKI-test"
+
+
 @pytest.mark.slow
 def test_observation_wiskicsv_gw():
     hpd.GroundwaterObs.from_wiski(
-        "./tests/data/2019-WISKI-test/1016_PBF.csv",
+        wiskidir / "1016_PBF.csv",
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
@@ -206,7 +219,7 @@ def test_observation_wiskicsv_gw():
 @pytest.mark.slow
 def test_obscollection_wiskizip_gw():
     hpd.read_wiski(
-        r"./tests/data/2019-WISKI-test/1016_PBF.zip",
+        wiskidir / "1016_PBF.zip",
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
         sep=r"\s+",
         header_sep=":",
@@ -240,7 +253,7 @@ def test_from_pastastore():
 
 def test_to_excel():
     oc = hpd.read_fews(
-        "./tests/data/2019-FEWS-test/WaalenBurg_201810-20190215_prod.zip",
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
     )
@@ -273,9 +286,11 @@ def test_pressure_read_knmi():
 
 # %% Evaporation
 
+knmidir = datadir / "2023-KNMI-test"
+
 
 def test_evap_obs_from_file():
-    path = "./tests/data/2023-KNMI-test/etmgeg_260.txt"
+    path = knmidir / "etmgeg_260.txt"
     hpd.EvaporationObs.from_knmi(fname=path)
 
 
@@ -299,7 +314,7 @@ def test_evap_obs_from_stn_hargreaves():
 
 
 def test_precip_obs_from_file():
-    path = "./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt"
+    path = knmidir / "neerslaggeg_ESBEEK_831.txt"
     hpd.PrecipitationObs.from_knmi(fname=path)
 
 
@@ -366,9 +381,11 @@ def test_knmi_collection_from_grid():
 
 # %% WATERINFO
 
+waterinfodir = datadir / "2023-waterinfo-test"
+
 
 def test_waterinfo_from_dir():
-    path = "./tests/data/2023-waterinfo-test"
+    path = waterinfodir
     hpd.read_waterinfo(file_or_dir=path)
 
 
@@ -397,5 +414,5 @@ def test_waterinfo_ddlpy_extent():
 
 
 def test_obscollection_menyanthes():
-    fname = "./tests/data/2023-MEN-test/test.men"
+    fname = datadir / "2023-MEN-test" / "test.men"
     hpd.read_menyanthes(fname, ObsClass=hpd.GroundwaterObs)

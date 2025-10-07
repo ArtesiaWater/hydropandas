@@ -97,7 +97,7 @@ class CollectionPlots:
                         p=p,
                         tmin=tmin,
                         tmax=tmax,
-                        plot_colors=[_color_cycle[i + 1]],
+                        plot_colors=[_color_cycle[i]],
                         return_filename=False,
                         **kwargs,
                     )

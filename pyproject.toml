@@ -44,6 +44,7 @@ full = [
     "pastastore",
     "flopy",
     "xarray",
+    "netCDF4",
     "lxml",
     "pyarrow",
     "brodata"
@@ -54,7 +55,6 @@ rtd = [
     "requests",
     "nbconvert",
     "ipykernel",
-    "netCDF4",
     "docutils<0.18",
     "sphinx_rtd_theme",
     "Ipython",
@@ -115,6 +115,12 @@ legacy_tox_ini = """
     extras = pytesting
     commands =
             pytest tests/api/test_102_knmi_api.py
+
+    [testenv:matroos]
+    description = run matroos tests
+    extras = pytesting
+    commands =
+            pytest tests/api/test_107_matroos_api.py
 
     [testenv:lizard_vitens]
     description = run lizard vitens tests

@@ -5,8 +5,11 @@ import pandas as pd
 
 import hydropandas as hpd
 from hydropandas.io import knmi
+from pathlib import Path
 
 logging.basicConfig(level=logging.DEBUG)
+
+knmidir = Path(__file__).parent / "data" / "2023-KNMI-test"
 
 
 # compare api calls with pre-downloaded files
@@ -24,7 +27,7 @@ def test_knmi_meteo_station_hourly_api_values():
         add_day=False,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/uurgeg_260_1991-2000.txt")
+    truth, _ = knmi.parse_data(knmidir / "uurgeg_260_1991-2000.txt")
 
     # check raw data
     pd.testing.assert_series_equal(
@@ -52,7 +55,7 @@ def test_knmi_meteo_station_daily_api_values():
         add_day=True,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/etmgeg_260.txt")
+    truth, _ = knmi.parse_data(knmidir / "etmgeg_260.txt")
     # check raw data
     pd.testing.assert_series_equal(
         df["RH"].loc["2000"], truth["RH"].loc["2000"], check_dtype=False
@@ -76,7 +79,7 @@ def test_knmi_meteo_station_daily_url_values():
         add_day=True,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data("./tests/data/2023-KNMI-test/etmgeg_260.txt")
+    truth, _ = knmi.parse_data(knmidir / "etmgeg_260.txt")
     # check raw data
     pd.testing.assert_series_equal(
         df["RH"].loc["2000"], truth["RH"].loc["2000"], check_dtype=False
@@ -114,9 +117,7 @@ def test_knmi_daily_rainfall_api_values():
         add_day=False,
         add_hour=True,
     )
-    truth, _ = knmi.parse_data(
-        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
-    )
+    truth, _ = knmi.parse_data(knmidir / "neerslaggeg_DE-BILT_550.txt")
     # check raw data
     pd.testing.assert_series_equal(df.loc[start:end, "RD"], truth["RD"])
     # check after interpretation
@@ -148,9 +149,7 @@ def test_knmi_daily_rainfall_url_values():
         add_hour=True,
     )
 
-    truth, _ = knmi.parse_data(
-        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
-    )
+    truth, _ = knmi.parse_data(knmidir / "neerslaggeg_DE-BILT_550.txt")
     # check raw data
     pd.testing.assert_series_equal(
         df.loc[start:end, "RD"], truth["RD"], check_dtype=False
@@ -170,7 +169,7 @@ def test_knmi_daily_rainfall_url_values():
 def test_read_daily_rainfall():
     # neerslagstation
     knmi.get_knmi_obs(
-        fname="./tests/data/2023-KNMI-test/neerslaggeg_ESBEEK_831.txt",
+        fname=knmidir / "neerslaggeg_ESBEEK_831.txt",
         start="2010-1-1",
         end="2010-1-10",
     )
@@ -178,18 +177,18 @@ def test_read_daily_rainfall():
 
 def test_read_daily_rainfall2():
     # neerslagstation
-    knmi.get_knmi_obs(fname="./tests/data/2023-KNMI-test/neerslaggeg_VILSTEREN_342.txt")
+    knmi.get_knmi_obs(fname=knmidir / "neerslaggeg_VILSTEREN_342.txt")
 
 
 def test_read_daily_rainfall3():
     # neerslagstation
-    knmi.get_knmi_obs(fname="./tests/data/2023-KNMI-test/precipitation_st_anthonis.txt")
+    knmi.get_knmi_obs(fname=knmidir / "precipitation_st_anthonis.txt")
 
 
 def test_read_hourly_meteo():
     # neerslagstation
     knmi.get_knmi_obs(
-        fname="./tests/data/2023-KNMI-test/uurgeg_260_2001-2010.txt",
+        fname=knmidir / "uurgeg_260_2001-2010.txt",
         meteo_var="RH",
         interval="hourly",
     )
@@ -453,9 +452,7 @@ def test_knmi_daily_rainfall():
         add_hour=True,
     )
 
-    truth, _ = knmi.parse_data(
-        "./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt"
-    )
+    truth, _ = knmi.parse_data(knmidir / "neerslaggeg_DE-BILT_550.txt")
 
     # check raw data
     pd.testing.assert_series_equal(
@@ -492,7 +489,7 @@ def test_meteo_station_methods():
 
     # daily meteo station from file
     precip3 = hpd.PrecipitationObs.from_knmi(
-        fname=r"./tests/data/2023-KNMI-test/etmgeg_260.txt",
+        fname=knmidir / "etmgeg_260.txt",
         start=start,
         end=end,
     )
@@ -524,7 +521,7 @@ def test_rainfall_station_methods():
 
     # daily rainfall station from file
     precip3 = hpd.PrecipitationObs.from_knmi(
-        fname=r"./tests/data/2023-KNMI-test/neerslaggeg_DE-BILT_550.txt",
+        fname=knmidir / "neerslaggeg_DE-BILT_550.txt",
         start=start,
         end=end,
     )
