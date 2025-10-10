@@ -451,26 +451,26 @@ class CollectionPlots:
         # loop over all wells, plot observations and details in section plot
         for counter, name in enumerate(self._obj.index):
             if plot_obs:
-                # which column to plot?
-                cols = list(cols)
-                for i, col in enumerate(cols):
+                # which column to plot? Create a local copy to avoid modifying original
+                cols_local = list(cols)
+                for i, col in enumerate(cols_local):
                     if col is None:
-                        cols[i] = self._obj.loc[
+                        cols_local[i] = self._obj.loc[
                             name, "obs"
                         ]._get_first_numeric_col_name()
 
                 # create plot dataframe
-                plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols].copy()
-                if plot_df.empty or plot_df[cols].isna().all().all():
+                plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols_local].copy()
+                if plot_df.empty or plot_df[cols_local].isna().all().all():
                     logger.warning(f"{name} has no data between {tmin} and {tmax}")
                     continue
 
                 # PART 1: plot timeseries of observations
                 # one or multiple columns to plot?
-                if len(cols) == 1:
+                if len(cols_local) == 1:
                     p = ax_obs.plot(plot_df, label=name)
                 else:
-                    for col in cols:
+                    for col in cols_local:
                         p = ax_obs.plot(plot_df[col], label=f"{name}, {col}")
                 plot_color = p[0].get_color()
 
@@ -479,7 +479,7 @@ class CollectionPlots:
                     # column is close to bottom of screen
                     offset = 0.1
                     if self._obj.loc[name, "screen_bottom"] > (
-                        plot_df[cols[0]].dropna().min() - offset
+                        plot_df[cols_local[0]].dropna().min() - offset
                     ):
                         ax_obs.axhline(
                             y=self._obj.loc[name, "screen_bottom"],
