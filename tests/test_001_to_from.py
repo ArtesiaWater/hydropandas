@@ -265,6 +265,24 @@ def test_from_excel():
     hpd.read_excel("tests/data/excel/test.xlsx")
 
 
+# %% csv
+
+
+def test_to_csv():
+    oc = hpd.read_fews(
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
+        locations=None,
+        low_memory=True,
+    )
+
+    oc.to_csv("tests/data/csv/test")
+
+
+def test_from_csv():
+    oc = hpd.read_csv("tests/data/csv/test")
+    assert len(oc) > 0
+
+
 # %% Meteo
 
 
