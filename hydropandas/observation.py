@@ -14,6 +14,7 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
+import json
 import logging
 import numbers
 import os
@@ -42,7 +43,7 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
     index_col : int, optional
         column to use as index, by default 0
     **kwargs
-        keyword arguments passed to pd.read_csv
+        keyword arguments passed to pd.read_csv for reading the timeseries
 
     Returns
     -------
@@ -53,53 +54,11 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
         # read observation type
         obstype = buf.readline().split("Obs")[0] + "Obs"
 
-        # read metadata
-        assert buf.readline() == "-----metadata------\n", (
-            f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+        assert obstype in globals().keys(), (   
+            f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
         )
-        line = buf.readline()
-        meta = {}
-        while line.strip() != "":
-            key_val = line.split(":")
-            key = key_val[0].strip()
-            val = ":".join(key_val[1:]).strip()
-            if key in [
-                "x",
-                "y",
-                "screen_top",
-                "screen_bottom",
-                "ground_level",
-                "tube_top",
-            ]:
-                if val == "":
-                    meta[key] = np.nan
-                else:
-                    meta[key] = float(val)
-            elif key in ["tube_nr", "station"]:
-                if val == "":
-                    meta[key] = np.nan
-                else:
-                    try:
-                        meta[key] = int(val)
-                    except ValueError:
-                        meta[key] = float(val)
-            elif key in ["metadata_available"]:
-                if val == "":
-                    meta[key] = np.nan
-                else:
-                    meta[key] = bool(val)
-            else:
-                meta[key] = val
-            line = buf.readline()
 
-        # read observations
-        assert buf.readline() == "-----observations------\n", (
-            f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
-        )
-        df = pd.read_csv(buf, index_col=index_col, parse_dates=parse_dates, **kwargs)
-
-    return globals()[obstype](df, **meta)
-
+    return globals()[obstype].from_csv(path, parse_dates=parse_dates, index_col=index_col, **kwargs)
 
 class Obs(pd.DataFrame):
     """Generic class for a time series with measurements at a certain location.
@@ -326,6 +285,113 @@ class Obs(pd.DataFrame):
                 setattr(o, att, val.copy())
 
         return o
+
+
+    @classmethod
+    def from_csv(cls, path, parse_dates=True, index_col=0, **kwargs):
+        """Read a csv file and return an Obs object.
+
+        Parameters
+        ----------
+        path : str
+            path of the csv file
+        parse_dates : bool, optional
+            whether to parse the dates when reading the csv file. The default is True.
+        index_col : int, optional
+            column to use as index, by default 0
+        **kwargs
+            keyword arguments passed to pd.read_csv for reading the timeseries
+
+        Returns
+        -------
+        Obs
+            Obs object with metadata and observations from the csv file.
+        """
+        with open(path, "r") as buf:
+            # read observation type
+            obstype = buf.readline().split("Obs")[0] + "Obs"
+            assert cls.__name__ == obstype, (
+                f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+            )
+
+            # read metadata
+            assert buf.readline() == "-----metadata------\n", (
+                f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            )
+            line = buf.readline()
+            meta = {}
+            while line.strip() != "":
+                key_val = line.split(":")
+                key = key_val[0].strip()
+                val = ":".join(key_val[1:]).strip()
+                if key in [
+                    "x",
+                    "y",
+                    "screen_top",
+                    "screen_bottom",
+                    "ground_level",
+                    "tube_top",
+                ]:
+                    if val == "":
+                        meta[key] = np.nan
+                    else:
+                        meta[key] = float(val)
+                elif key in ["tube_nr", "station"]:
+                    if val == "":
+                        meta[key] = np.nan
+                    else:
+                        try:
+                            meta[key] = int(val)
+                        except ValueError:
+                            meta[key] = float(val)
+                elif key in ["metadata_available"]:
+                    if val == "":
+                        meta[key] = np.nan
+                    else:
+                        meta[key] = bool(val)
+                else:
+                    meta[key] = val
+                line = buf.readline()
+
+            # read observations
+            assert buf.readline() == "-----observations------\n", (
+                f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            )
+            df = pd.read_csv(buf, index_col=index_col, parse_dates=parse_dates, **kwargs)
+
+        return cls(df, **meta)
+
+
+    @classmethod
+    def from_json(cls, path, **kwargs):
+        """Read a JSON file and return an Obs object.
+
+        Parameters
+        ----------
+        path : str
+            path of the JSON file
+        **kwargs
+            keyword arguments passed to pd.read_json for reading the timeseries
+
+        Returns
+        -------
+        Obs
+            Obs object with metadata and observations from the JSON file.
+        """
+        with open(path, "r") as fo:
+            # read observation type
+            obstype = fo.readline().split("Obs")[0] + "Obs"
+            assert cls.__name__ == obstype, (
+                f"cannot read a json file from {obstype=} using the {cls.__name__}.from_json method, this is probably because the json file was not created with hydropandas. Try parsing using pandas.read_json"
+            )
+
+            meta = json.load(StringIO(fo.readline()))
+
+            # read observations
+            df = pd.read_json(fo, **kwargs)
+
+        return cls(df, meta=meta.pop('meta'), **meta)
+
 
     def to_collection_dict(self, include_meta=False):
         """Get dictionary with registered attributes and their values of an Obs object.
@@ -617,6 +683,31 @@ class Obs(pd.DataFrame):
             buf.write("-----observations------\n")
             super().to_csv(buf, **kwargs)
 
+
+    def to_json(self, path, **kwargs):
+        """Write Obs object to a JSON file.
+
+        Parameters
+        ----------
+        path : str or path object
+            String, path object (implementing os.PathLike[str]), or file-like
+            object implementing a write() function.
+        **kwargs
+            Additional keyword arguments passed to pandas.DataFrame.to_json
+
+        Returns
+        -------
+        None
+        """
+        metadata = self.to_collection_dict(include_meta=True)
+        metadata.pop("obs")
+        with open(path, "w", newline="\n") as fo:
+            fo.write(f"{type(self).__name__} {self.name}\n")
+
+            json.dump(metadata, fo)
+            fo.write("\n")
+
+            super().to_json(fo, **kwargs)
 
 class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.

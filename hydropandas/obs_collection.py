@@ -1732,14 +1732,18 @@ class ObsCollection(pd.DataFrame):
         for oname, row in df.iterrows():
             measurements = pd.read_excel(path, oname, index_col=0)
             all_metadata = row.to_dict()
-            obsclass = getattr(obs, row["obs"])
+            obsclass = getattr(obs, all_metadata.pop('obs'))
             # get observation specific metadata
             metadata = {
                 k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
             }
             metadata["name"] = oname
 
-            o = obsclass(measurements, **metadata)
+            extra_meta = {
+                k: v for (k, v) in all_metadata.items() if k not in obsclass._metadata
+            }
+
+            o = obsclass(measurements, meta=extra_meta, **metadata)
             df.at[oname, "obs"] = o
 
         return cls(df)
@@ -2613,7 +2617,7 @@ class ObsCollection(pd.DataFrame):
         path : str
             directory to which the csv files will be written.
         check_consistency : bool, optional
-            If True the consistency of the collection is checked. If set to False the excel file may be unreadable by hydropandas. The
+            If True the consistency of the collection is checked. If set to False the csv file(s) may be unreadable by hydropandas. The
             default is True.
         **kwargs : keyword arguments
             kwargs are passed to the to_csv method of each observation.
