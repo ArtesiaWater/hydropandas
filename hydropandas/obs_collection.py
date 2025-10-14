@@ -2029,8 +2029,9 @@ class ObsCollection(pd.DataFrame):
         xmlstring : str or None
             string with xml data, only used if file_or_dir is None. Default is
             None
-        ObsClass : type
-            class of the observations, e.g. GroundwaterObs or WaterlvlObs
+        ObsClass : type or dict
+            class of the observations, e.g. GroundwaterObs or WaterlvlObs or a
+            dictionary with a class for each locationId
         name : str, optional
             name of the observation collection, 'fews' by default
         translate_dic : dic or None, optional
@@ -2067,7 +2068,7 @@ class ObsCollection(pd.DataFrame):
         if translate_dic is None:
             translate_dic = {"locationId": "location"}
 
-        meta = {"type": ObsClass.__name__}
+        meta = {}
 
         if file_or_dir is not None:
             # get files
