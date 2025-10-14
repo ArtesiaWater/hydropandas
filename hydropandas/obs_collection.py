@@ -145,8 +145,8 @@ def read_csv(path, parse_dates=True, index_col=0, **kwargs):
     - metadata of each Observation stored in the 'meta' attribute
     - integer dtypes may become floats
 
-    If you don't want to lose this data consider using the `to_pickle` and
-    `read_pickle` function.
+    If you don't want to lose this data consider using the `to_json` and
+    `read_json` function.
     """
     path = Path(path)
     if path.is_dir():
@@ -266,8 +266,8 @@ def read_excel(path, meta_sheet_name="metadata"):
     - The 'name' and 'meta' attributes of the ObsCollection
     - metadata of each Observation stored in the 'meta' attribute
 
-    If you don't want to lose this data consider using the `to_pickle` and
-    `read_pickle` function.
+    If you don't want to lose this data consider using the `to_json` and
+    `read_json` function.
     """
 
     oc = ObsCollection.from_excel(path, meta_sheet_name=meta_sheet_name)
@@ -427,12 +427,13 @@ def read_json(path, **kwargs):
     else:
         obstype = obstype.split("Obs")[0] + "Obs"
         if hasattr(obs, obstype):
-            return getattr(obs,obstype).from_json(path, **kwargs)
+            return getattr(obs, obstype).from_json(path, **kwargs)
         else:
-            msg = (f"cannot read a json file from {obstype=}, this is probably "
-                   "because the json file was not created with hydropandas. Try "
-                   "parsing using pandas.read_json"
-        )
+            msg = (
+                f"cannot read a json file from {obstype=}, this is probably "
+                "because the json file was not created with hydropandas. Try "
+                "parsing using pandas.read_json"
+            )
             raise ValueError(msg)
 
 
@@ -1786,8 +1787,8 @@ class ObsCollection(pd.DataFrame):
         - The 'name' and 'meta' attributes of the ObsCollection
         - metadata of each Observation stored in the 'meta' attribute
 
-        If you don't want to lose this data consider using the `to_pickle` and
-        `read_pickle` function.
+        If you don't want to lose this data consider using the `to_json` and
+        `read_json` function.
         """
 
         df = pd.read_excel(path, meta_sheet_name, index_col=0)
@@ -2726,6 +2727,20 @@ class ObsCollection(pd.DataFrame):
             default is True.
         **kwargs : keyword arguments
             kwargs are passed to the to_csv method of each observation.
+
+        Notes
+        -----
+        if you write a csv file using the 'to_csv' method and read a csv
+        with the 'read_csv' method you lose this information:
+        - The 'name' and 'meta' attributes of the ObsCollection
+        - metadata of each Observation stored in the 'meta' attribute
+        - integer dtypes may become floats
+
+        If you don't want to lose this data consider using the `to_json` and
+        `read_json` function.
+
+        If you want to write the metadata to a single csv file consider using:
+        'pd.DataFrame(oc).to_csv()'.
         """
         if check_consistency and not self._is_consistent():
             raise RuntimeError("inconsistent observation collection")
@@ -2736,6 +2751,10 @@ class ObsCollection(pd.DataFrame):
         logger.info(f"writing {len(self)} observations to {path}")
         for o in self.obs:
             o.to_csv(path / f"{o.name}.csv", **kwargs)
+            if o.meta:
+                logger.warning(
+                    f"metadata of observation {o.name} not written to csv, consider using the to_json method toe keep the metadata"
+                )
 
     def to_excel(self, path, meta_sheet_name="metadata", check_consistency=True):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
@@ -2768,7 +2787,7 @@ class ObsCollection(pd.DataFrame):
         - The 'name' and 'meta' attributes of the ObsCollection
         - metadata of each Observation stored in the 'meta' dictionary
 
-        If you don't want this consider using the `to_pickle` method.
+        If you don't want this consider using the `to_json` method.
         """
 
         if check_consistency and not self._is_consistent():
