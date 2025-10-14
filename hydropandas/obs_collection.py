@@ -403,6 +403,39 @@ def read_imod(
     return oc
 
 
+def read_json(path, **kwargs):
+    """Read an observation collection or an observation from a json file. The json file
+    should have the same format as json files created with the `to_json` method of an
+    ObsCollection or Observation object.
+
+    Parameters
+    ----------
+    path : str
+        full file path (including extension) of the json file.
+    kwargs:
+        kwargs are passed to the pandas.read_csv function
+
+    Returns
+    -------
+    ObsCollection
+    """
+    with open(path, "r") as fo:
+        obstype = fo.readline().strip()
+
+    if obstype == "ObsCollection":
+        return ObsCollection.from_json(path, **kwargs)
+    else:
+        obstype = obstype.split("Obs")[0] + "Obs"
+        if hasattr(obs, obstype):
+            return getattr(obs,obstype).from_json(path, **kwargs)
+        else:
+            msg = (f"cannot read a json file from {obstype=}, this is probably "
+                   "because the json file was not created with hydropandas. Try "
+                   "parsing using pandas.read_json"
+        )
+            raise ValueError(msg)
+
+
 def read_knmi(
     locations=None,
     stns=None,
