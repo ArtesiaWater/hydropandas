@@ -2067,7 +2067,7 @@ class ObsCollection(pd.DataFrame):
         if translate_dic is None:
             translate_dic = {"locationId": "location"}
 
-        meta = {"type": ObsClass}
+        meta = {"type": ObsClass.__name__}
 
         if file_or_dir is not None:
             # get files

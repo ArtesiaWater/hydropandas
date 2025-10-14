@@ -283,6 +283,24 @@ def test_from_csv():
     assert len(oc) > 0
 
 
+# %% json
+
+
+def test_to_json():
+    oc = hpd.read_fews(
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
+        locations=None,
+        low_memory=True,
+    )
+
+    oc.to_json("tests/data/test.json")
+
+
+def test_from_json():
+    oc = hpd.read_json("tests/data/test.json")
+    assert len(oc) > 0
+
+
 # %% Meteo
 
 
