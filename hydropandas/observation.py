@@ -19,7 +19,7 @@ import logging
 import numbers
 import os
 import warnings
-from _io import StringIO
+from io import StringIO, TextIOWrapper
 from typing import List, Optional
 
 import numpy as np
@@ -54,11 +54,14 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
         # read observation type
         obstype = buf.readline().split("Obs")[0] + "Obs"
 
-        assert obstype in globals().keys(), (   
+        assert obstype in globals().keys(), (
             f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
         )
 
-    return globals()[obstype].from_csv(path, parse_dates=parse_dates, index_col=index_col, **kwargs)
+    return globals()[obstype].from_csv(
+        path, parse_dates=parse_dates, index_col=index_col, **kwargs
+    )
+
 
 class Obs(pd.DataFrame):
     """Generic class for a time series with measurements at a certain location.
@@ -286,7 +289,6 @@ class Obs(pd.DataFrame):
 
         return o
 
-
     @classmethod
     def from_csv(cls, path, parse_dates=True, index_col=0, **kwargs):
         """Read a csv file and return an Obs object.
@@ -357,10 +359,11 @@ class Obs(pd.DataFrame):
             assert buf.readline() == "-----observations------\n", (
                 f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
             )
-            df = pd.read_csv(buf, index_col=index_col, parse_dates=parse_dates, **kwargs)
+            df = pd.read_csv(
+                buf, index_col=index_col, parse_dates=parse_dates, **kwargs
+            )
 
         return cls(df, **meta)
-
 
     @classmethod
     def from_json(cls, path, **kwargs):
@@ -378,20 +381,33 @@ class Obs(pd.DataFrame):
         Obs
             Obs object with metadata and observations from the JSON file.
         """
-        with open(path, "r") as fo:
-            # read observation type
-            obstype = fo.readline().split("Obs")[0] + "Obs"
-            assert cls.__name__ == obstype, (
-                f"cannot read a json file from {obstype=} using the {cls.__name__}.from_json method, this is probably because the json file was not created with hydropandas. Try parsing using pandas.read_json"
+
+        if isinstance(path, (TextIOWrapper, StringIO)):
+            fo = path
+            closing = False
+        elif isinstance(path, (str, bytes, os.PathLike)):
+            fo = open(path, "r")
+            closing = True
+        else:
+            raise TypeError(
+                f"path should be a str, bytes, os.PathLike object or TextIOWrapper, not {type(path)}"
             )
 
-            meta = json.load(StringIO(fo.readline()))
+        # read observation type
+        obstype = fo.readline().split("Obs")[0] + "Obs"
+        assert cls.__name__ == obstype, (
+            f"cannot read a json file from {obstype=} using the {cls.__name__}.from_json method, this is probably because the json file was not created with hydropandas. Try parsing using pandas.read_json"
+        )
 
-            # read observations
-            df = pd.read_json(fo, **kwargs)
+        meta = json.load(StringIO(fo.readline()))
 
-        return cls(df, meta=meta.pop('meta'), **meta)
+        # read observations
+        df = pd.read_json(fo, **kwargs)
 
+        if closing:
+            fo.close()
+
+        return cls(df, meta=meta.pop("meta"), **meta)
 
     def to_collection_dict(self, include_meta=False):
         """Get dictionary with registered attributes and their values of an Obs object.
@@ -683,7 +699,6 @@ class Obs(pd.DataFrame):
             buf.write("-----observations------\n")
             super().to_csv(buf, **kwargs)
 
-
     def to_json(self, path, **kwargs):
         """Write Obs object to a JSON file.
 
@@ -701,13 +716,27 @@ class Obs(pd.DataFrame):
         """
         metadata = self.to_collection_dict(include_meta=True)
         metadata.pop("obs")
-        with open(path, "w", newline="\n") as fo:
-            fo.write(f"{type(self).__name__} {self.name}\n")
+        if isinstance(path, (TextIOWrapper, StringIO)):
+            fo = path
+            closing = False
+        elif isinstance(path, (str, bytes, os.PathLike)):
+            fo = open(path, "w", newline="\n")
+            closing = True
+        else:
+            raise TypeError(
+                f"path should be a str, bytes, os.PathLike object or TextIOWrapper, not {type(path)}"
+            )
 
-            json.dump(metadata, fo)
-            fo.write("\n")
+        fo.write(f"{type(self).__name__} {self.name}\n")
 
-            super().to_json(fo, **kwargs)
+        json.dump(metadata, fo)
+        fo.write("\n")
+
+        super().to_json(fo, **kwargs)
+
+        if closing:
+            fo.close()
+
 
 class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.
