@@ -1,11 +1,11 @@
 import datetime as dt
 import os
+from pathlib import Path
 
 import pandas as pd
 import pastastore as pst
 import pytest
 from requests.exceptions import ConnectionError, HTTPError
-from pathlib import Path
 
 import hydropandas as hpd
 

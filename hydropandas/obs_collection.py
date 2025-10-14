@@ -7,13 +7,14 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
-import logging
 import json
+import logging
 import numbers
+import os
 import warnings
-from io import StringIO
-from typing import List, Optional
+from io import StringIO, TextIOWrapper
 from pathlib import Path
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -404,9 +405,7 @@ def read_imod(
 
 
 def read_json(path, **kwargs):
-    """Read an observation collection or an observation from a json file. The json file
-    should have the same format as json files created with the `to_json` method of an
-    ObsCollection or Observation object.
+    """Read an observation collection or an observation from a json file.
 
     Parameters
     ----------
@@ -419,13 +418,27 @@ def read_json(path, **kwargs):
     -------
     ObsCollection
     """
-    with open(path, "r") as fo:
-        obstype = fo.readline().strip()
 
+    if isinstance(path, (TextIOWrapper, StringIO)):
+        fo = path
+        closing = False
+    elif isinstance(path, (str, os.PathLike)):
+        fo = open(path, "r")
+        closing = True
+
+    d = json.load(fo)
+    if closing:
+        fo.close()
+    msg = (
+        "cannot read json file because no obstype is present, this is probably "
+        "because the json file was not created with hydropandas. Try "
+        "parsing using pandas.read_json"
+    )
+    assert "obstype" in d, msg
+    obstype = d["obstype"]
     if obstype == "ObsCollection":
         return ObsCollection.from_json(path, **kwargs)
     else:
-        obstype = obstype.split("Obs")[0] + "Obs"
         if hasattr(obs, obstype):
             return getattr(obs, obstype).from_json(path, **kwargs)
         else:
@@ -1764,6 +1777,38 @@ class ObsCollection(pd.DataFrame):
         return cls(df)
 
     @classmethod
+    def from_dict(cls, d, **kwargs):
+        """Create an observation collection from a dictionary. The dictionary should
+        have the same format as dictionaries created with the `to_dict` method of an
+        ObsCollection.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary with data
+
+        Returns
+        -------
+        ObsCollection
+        """
+        d = d.copy()
+        assert "obstype" in d, (
+            "dictionary should contain an 'obstype' key with the observation type"
+        )
+        obstype = d.pop("obstype")
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
+
+        df = d.pop("df", None)
+        df = pd.DataFrame(df, **kwargs)
+        obs_list = [
+            getattr(obs, od["obstype"]).from_dict(od) for od in d.pop("obs_list")
+        ]
+
+        return cls(df, obs_list=obs_list, **d)
+
+    @classmethod
     def from_excel(cls, path, meta_sheet_name="metadata"):
         """Create an observation collection from an excel file. The excel file should
         have the same format as excel files created with the `to_excel` method of an
@@ -2126,36 +2171,36 @@ class ObsCollection(pd.DataFrame):
         path : str
             full file path (including extension) of the json file.
 
-
         Returns
         -------
         ObsCollection
         """
-        with open(path, "r") as fo:
-            # read observation type
-            obstype = fo.readline().strip()
-            assert cls.__name__ == obstype, (
-                f"cannot read a json file from {obstype=} using the {cls.__name__}.from_json method, this is probably because the json file was not created with hydropandas. Try parsing using pandas.read_json"
-            )
-            # read collection metadata
-            meta = json.load(StringIO(fo.readline()))
+        if isinstance(path, (TextIOWrapper, StringIO)):
+            fo = path
+            closing = False
+        elif isinstance(path, (str, os.PathLike)):
+            fo = open(path, "r")
+            closing = True
 
-            # read metadata observations
-            df = pd.read_json(StringIO(fo.readline()))
+        d = json.load(fo)
+        if closing:
+            fo.close()
 
-            # read each observation
-            obs_list = []
-            for _ in range(len(df)):
-                obsline = "".join([fo.readline() for _ in range(3)])
+        assert "obstype" in d, (
+            "json file should contain an 'obstype' key with the observation type"
+        )
+        obstype = d.pop("obstype")
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
 
-                # determine obs type
-                obstype = obsline.split("Obs")[0] + "Obs"
+        df = pd.read_json(StringIO(d.pop("df")))
+        obs_list = []
+        for od in d.pop("obs_list"):
+            obstype = json.load(StringIO(od))["obstype"]
+            obs_list.append(getattr(obs, obstype).from_json(StringIO(od)))
 
-                # create observation object
-                o = getattr(obs, obstype).from_json(StringIO(obsline))
-                obs_list.append(o)
-
-        return cls(df, obs_list=obs_list, **meta)
+        return cls(df, obs_list=obs_list, **d)
 
     @classmethod
     def from_knmi(
@@ -2751,12 +2796,20 @@ class ObsCollection(pd.DataFrame):
         logger.info(f"writing {len(self)} observations to {path}")
         for o in self.obs:
             o.to_csv(path / f"{o.name}.csv", **kwargs)
-            if o.meta:
-                msg = (
-                    f"metadata of observation {o.name} not written to csv, "
-                    " consider using the to_json method to keep the metadata"
-                )
-                logger.warning(msg)
+
+    def to_dict(self):
+        """Convert ObsCollection to dictionary.
+
+        Returns
+        -------
+        dict
+            dictionary with metadata and observations
+        """
+        d = {k: getattr(self, k) for k in self._metadata}
+        d["df"] = super().drop(columns="obs").to_dict()
+        d["obstype"] = self.__class__.__name__
+        d["obs_list"] = [o.to_dict() for o in self.obs]
+        return d
 
     def to_excel(self, path, meta_sheet_name="metadata", check_consistency=True):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
@@ -2812,37 +2865,36 @@ class ObsCollection(pd.DataFrame):
                     sheetname = sheetname.replace(ch, "_")
                 o.to_excel(writer, sheet_name=sheetname)
 
-    def to_json(self, path, **kwargs):
+    def to_json(self, path=None, **kwargs):
         """Write ObsCollection to a JSON file.
 
         Parameters
         ----------
-        path : str or path object
+        path_or_buf : str, path object, file-like object, or None, default None
             String, path object (implementing os.PathLike[str]), or file-like
-            object implementing a write() function.
+            object implementing a write() function. If None, the result is
+            returned as a string.
         **kwargs
-            Additional keyword arguments passed to pandas.DataFrame.to_json
+            Additional keyword arguments passed to json.dump or json.dumps.
 
         Returns
         -------
         None
         """
-        metadata = {k: getattr(self, k) for k in self._metadata}
-        with open(path, "w", newline="\n") as fo:
-            fo.write(f"{type(self).__name__} {self.name}\n")
+        d = {k: getattr(self, k) for k in self._metadata}
+        d["obstype"] = type(self).__name__
+        if self.empty:
+            d["df"] = super().to_json()
+            d["obs_list"] = []
+        else:
+            d["df"] = super().drop(columns="obs").to_json()
+            d["obs_list"] = [o.to_json() for o in self.obs]
 
-            json.dump(metadata, fo)
-            fo.write("\n")
-
-            # write dataframe to json
-            super().drop(columns="obs").to_json(fo, **kwargs)
-
-            fo.write("\n")
-
-            # write each observation to json
-            for o in self.obs:
-                o.to_json(fo)
-                fo.write("\n")
+        if path is None:
+            return json.dumps(d, **kwargs)
+        else:
+            with open(path, "w") as fo:
+                json.dump(d, fo, **kwargs)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import fews

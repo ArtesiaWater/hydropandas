@@ -1,7 +1,7 @@
 import logging
+from pathlib import Path
 
 from hydropandas.io import dino
-from pathlib import Path
 
 logging.basicConfig(level=logging.DEBUG)
 

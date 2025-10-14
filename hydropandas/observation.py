@@ -55,7 +55,7 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
         obstype = buf.readline().split("Obs")[0] + "Obs"
 
         assert obstype in globals().keys(), (
-            f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+            f"cannot read a csv file from {obstype=}, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
         )
 
     return globals()[obstype].from_csv(
@@ -366,6 +366,38 @@ class Obs(pd.DataFrame):
         return cls(df, **meta)
 
     @classmethod
+    def from_dict(cls, d, **kwargs):
+        """Create an Obs object from a dictionary.
+
+        The dictionary should contain the metadata and the observations.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary with metadata and observations.
+        **kwargs
+            keyword arguments passed to pd.DataFrame for creating the timeseries
+
+        Returns
+        -------
+        Obs
+            Obs object with metadata and observations from the dictionary.
+        """
+        d = d.copy()
+        assert "obstype" in d, (
+            "dictionary should contain an 'obstype' key with the observation type"
+        )
+        obstype = d.pop("obstype")
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
+
+        obs_data = d.pop("obs", None)
+        df = pd.DataFrame(obs_data, **kwargs)
+
+        return cls(df, **d)
+
+    @classmethod
     def from_json(cls, path, **kwargs):
         """Read a JSON file and return an Obs object.
 
@@ -381,33 +413,20 @@ class Obs(pd.DataFrame):
         Obs
             Obs object with metadata and observations from the JSON file.
         """
-
         if isinstance(path, (TextIOWrapper, StringIO)):
             fo = path
             closing = False
-        elif isinstance(path, (str, bytes, os.PathLike)):
+        elif isinstance(path, (str, os.PathLike)):
             fo = open(path, "r")
             closing = True
-        else:
-            raise TypeError(
-                f"path should be a str, bytes, os.PathLike object or TextIOWrapper, not {type(path)}"
-            )
 
-        # read observation type
-        obstype = fo.readline().split("Obs")[0] + "Obs"
-        assert cls.__name__ == obstype, (
-            f"cannot read a json file from {obstype=} using the {cls.__name__}.from_json method, this is probably because the json file was not created with hydropandas. Try parsing using pandas.read_json"
-        )
-
-        meta = json.load(StringIO(fo.readline()))
-
-        # read observations
-        df = pd.read_json(fo, **kwargs)
+        d = json.load(fo)
+        d["obs"] = pd.read_json(StringIO(d["obs"]), **kwargs)
 
         if closing:
             fo.close()
 
-        return cls(df, meta=meta.pop("meta"), **meta)
+        return cls.from_dict(d)
 
     def to_collection_dict(self, include_meta=False):
         """Get dictionary with registered attributes and their values of an Obs object.
@@ -687,8 +706,8 @@ class Obs(pd.DataFrame):
         """
         if self.meta:
             msg = (
-                f"metadata of observation {self.name} not written to csv, "
-                " consider using the to_json method to keep the metadata"
+                f"additional metadata of observation {self.name} not written to csv, "
+                "consider using the to_json method to keep the metadata"
             )
             logger.warning(msg)
 
@@ -706,43 +725,45 @@ class Obs(pd.DataFrame):
             buf.write("-----observations------\n")
             super().to_csv(buf, **kwargs)
 
-    def to_json(self, path, **kwargs):
+    def to_dict(self):
+        """Convert the Obs object to a dictionary.
+
+        The dictionary contains the metadata and the observations.
+
+        Returns
+        -------
+        d : dict
+            dictionary with metadata and observations.
+        """
+        d = self.to_collection_dict(include_meta=True)
+        d.pop("obs")
+        d["obs"] = super().to_dict()
+        d["obstype"] = self.__class__.__name__
+        return d
+
+    def to_json(self, path=None, **kwargs):
         """Write Obs object to a JSON file.
 
         Parameters
         ----------
-        path : str or path object
+        path_or_buf : str, path object, file-like object, or None, default None
             String, path object (implementing os.PathLike[str]), or file-like
-            object implementing a write() function.
+            object implementing a write() function. If None, the result is
+            returned as a string.
         **kwargs
-            Additional keyword arguments passed to pandas.DataFrame.to_json
+            Additional keyword arguments passed to json.dump or json.dumps.
 
         Returns
         -------
         None
         """
-        metadata = self.to_collection_dict(include_meta=True)
-        metadata.pop("obs")
-        if isinstance(path, (TextIOWrapper, StringIO)):
-            fo = path
-            closing = False
-        elif isinstance(path, (str, bytes, os.PathLike)):
-            fo = open(path, "w", newline="\n")
-            closing = True
+        d = self.to_dict()
+        d["obs"] = super().to_json()
+        if path is None:
+            return json.dumps(d, **kwargs)
         else:
-            raise TypeError(
-                f"path should be a str, bytes, os.PathLike object or TextIOWrapper, not {type(path)}"
-            )
-
-        fo.write(f"{type(self).__name__} {self.name}\n")
-
-        json.dump(metadata, fo)
-        fo.write("\n")
-
-        super().to_json(fo, **kwargs)
-
-        if closing:
-            fo.close()
+            with open(path, "w") as fo:
+                json.dump(d, fo, **kwargs)
 
 
 class GroundwaterObs(Obs):
@@ -782,11 +803,10 @@ class GroundwaterObs(Obs):
         **kwargs can be one of the attributes listed in _metadata or keyword arguments
         for the constructor of a pandas.DataFrame.
         """
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
