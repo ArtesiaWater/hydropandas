@@ -685,6 +685,13 @@ class Obs(pd.DataFrame):
         -------
         None
         """
+        if self.meta:
+            msg = (
+                f"metadata of observation {self.name} not written to csv, "
+                " consider using the to_json method to keep the metadata"
+            )
+            logger.warning(msg)
+
         with open(path, "w", newline="") as buf:
             buf.write(f"{type(self).__name__} {self.name}\n")
 

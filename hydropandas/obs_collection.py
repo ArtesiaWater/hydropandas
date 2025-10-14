@@ -2752,9 +2752,11 @@ class ObsCollection(pd.DataFrame):
         for o in self.obs:
             o.to_csv(path / f"{o.name}.csv", **kwargs)
             if o.meta:
-                logger.warning(
-                    f"metadata of observation {o.name} not written to csv, consider using the to_json method toe keep the metadata"
+                msg = (
+                    f"metadata of observation {o.name} not written to csv, "
+                    " consider using the to_json method to keep the metadata"
                 )
+                logger.warning(msg)
 
     def to_excel(self, path, meta_sheet_name="metadata", check_consistency=True):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
