@@ -425,6 +425,8 @@ def read_json(path, **kwargs):
     elif isinstance(path, (str, os.PathLike)):
         fo = open(path, "r")
         closing = True
+    else:
+        raise ValueError("path should be a string or a file object")
 
     d = json.load(fo)
     if closing:
