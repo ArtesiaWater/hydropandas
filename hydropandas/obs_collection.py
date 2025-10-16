@@ -21,6 +21,7 @@ import pandas as pd
 
 from . import observation as obs
 from . import util
+from .serialization import HydropandasEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -2868,7 +2869,7 @@ class ObsCollection(pd.DataFrame):
                     sheetname = sheetname.replace(ch, "_")
                 o.to_excel(writer, sheet_name=sheetname)
 
-    def to_json(self, path=None, **kwargs):
+    def to_json(self, path=None, cls=HydropandasEncoder, **kwargs):
         """Write ObsCollection to a JSON file.
 
         Parameters
@@ -2894,10 +2895,10 @@ class ObsCollection(pd.DataFrame):
             d["obs_list"] = [o.to_json() for o in self.obs]
 
         if path is None:
-            return json.dumps(d, **kwargs)
+            return json.dumps(d, cls=cls, **kwargs)
         else:
             with open(path, "w") as fo:
-                json.dump(d, fo, **kwargs)
+                json.dump(d, fo, cls=cls, **kwargs)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import fews

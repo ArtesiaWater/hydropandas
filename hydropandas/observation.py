@@ -28,6 +28,8 @@ from pandas._config import get_option
 from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
 
+from .serialization import HydropandasEncoder
+
 logger = logging.getLogger(__name__)
 
 
@@ -741,7 +743,7 @@ class Obs(pd.DataFrame):
         d["obstype"] = self.__class__.__name__
         return d
 
-    def to_json(self, path=None, **kwargs):
+    def to_json(self, path=None, cls=HydropandasEncoder, **kwargs):
         """Write Obs object to a JSON file.
 
         Parameters
@@ -760,10 +762,10 @@ class Obs(pd.DataFrame):
         d = self.to_dict()
         d["obs"] = super().to_json()
         if path is None:
-            return json.dumps(d, **kwargs)
+            return json.dumps(d, cls=cls, **kwargs)
         else:
             with open(path, "w") as fo:
-                json.dump(d, fo, **kwargs)
+                json.dump(d, fo, cls=cls, **kwargs)
 
 
 class GroundwaterObs(Obs):
