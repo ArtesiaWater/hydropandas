@@ -14,11 +14,12 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
+import json
 import logging
 import numbers
 import os
 import warnings
-from _io import StringIO
+from io import StringIO, TextIOWrapper
 from typing import List, Optional
 
 import numpy as np
@@ -27,7 +28,41 @@ from pandas._config import get_option
 from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
 
+from .serialization import HydropandasEncoder
+
 logger = logging.getLogger(__name__)
+
+
+def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
+    """Read a csv file and return an Obs object.
+
+    Parameters
+    ----------
+    path : str
+        path of the csv file
+    parse_dates : bool, optional
+        whether to parse the dates when reading the csv file. The default is True.
+    index_col : int, optional
+        column to use as index, by default 0
+    **kwargs
+        keyword arguments passed to pd.read_csv for reading the timeseries
+
+    Returns
+    -------
+    Obs
+        Obs object with metadata and observations from the csv file.
+    """
+    with open(path, "r") as buf:
+        # read observation type
+        obstype = buf.readline().split("Obs")[0] + "Obs"
+
+        assert obstype in globals().keys(), (
+            f"cannot read a csv file from {obstype=}, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+        )
+
+    return globals()[obstype].from_csv(
+        path, parse_dates=parse_dates, index_col=index_col, **kwargs
+    )
 
 
 class Obs(pd.DataFrame):
@@ -255,6 +290,145 @@ class Obs(pd.DataFrame):
                 setattr(o, att, val.copy())
 
         return o
+
+    @classmethod
+    def from_csv(cls, path, parse_dates=True, index_col=0, **kwargs):
+        """Read a csv file and return an Obs object.
+
+        Parameters
+        ----------
+        path : str
+            path of the csv file
+        parse_dates : bool, optional
+            whether to parse the dates when reading the csv file. The default is True.
+        index_col : int, optional
+            column to use as index, by default 0
+        **kwargs
+            keyword arguments passed to pd.read_csv for reading the timeseries
+
+        Returns
+        -------
+        Obs
+            Obs object with metadata and observations from the csv file.
+        """
+        with open(path, "r") as buf:
+            # read observation type
+            obstype = buf.readline().split("Obs")[0] + "Obs"
+            assert cls.__name__ == obstype, (
+                f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+            )
+
+            # read metadata
+            assert buf.readline() == "-----metadata------\n", (
+                f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            )
+            line = buf.readline()
+            meta = {}
+            while line.strip() != "":
+                key_val = line.split(":")
+                key = key_val[0].strip()
+                val = ":".join(key_val[1:]).strip()
+                if key in [
+                    "x",
+                    "y",
+                    "screen_top",
+                    "screen_bottom",
+                    "ground_level",
+                    "tube_top",
+                ]:
+                    if val == "":
+                        meta[key] = np.nan
+                    else:
+                        meta[key] = float(val)
+                elif key in ["tube_nr", "station"]:
+                    if val == "":
+                        meta[key] = np.nan
+                    else:
+                        try:
+                            meta[key] = int(val)
+                        except ValueError:
+                            meta[key] = float(val)
+                elif key in ["metadata_available"]:
+                    if val == "":
+                        meta[key] = np.nan
+                    else:
+                        meta[key] = bool(val)
+                else:
+                    meta[key] = val
+                line = buf.readline()
+
+            # read observations
+            assert buf.readline() == "-----observations------\n", (
+                f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            )
+            df = pd.read_csv(
+                buf, index_col=index_col, parse_dates=parse_dates, **kwargs
+            )
+
+        return cls(df, **meta)
+
+    @classmethod
+    def from_dict(cls, d, **kwargs):
+        """Create an Obs object from a dictionary.
+
+        The dictionary should contain the metadata and the observations.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary with metadata and observations.
+        **kwargs
+            keyword arguments passed to pd.DataFrame for creating the timeseries
+
+        Returns
+        -------
+        Obs
+            Obs object with metadata and observations from the dictionary.
+        """
+        d = d.copy()
+        assert "obstype" in d, (
+            "dictionary should contain an 'obstype' key with the observation type"
+        )
+        obstype = d.pop("obstype")
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
+
+        obs_data = d.pop("obs", None)
+        df = pd.DataFrame(obs_data, **kwargs)
+
+        return cls(df, **d)
+
+    @classmethod
+    def from_json(cls, path, **kwargs):
+        """Read a JSON file and return an Obs object.
+
+        Parameters
+        ----------
+        path : str
+            path of the JSON file
+        **kwargs
+            keyword arguments passed to pd.read_json for reading the timeseries
+
+        Returns
+        -------
+        Obs
+            Obs object with metadata and observations from the JSON file.
+        """
+        if isinstance(path, (TextIOWrapper, StringIO)):
+            fo = path
+            closing = False
+        elif isinstance(path, (str, os.PathLike)):
+            fo = open(path, "r")
+            closing = True
+
+        d = json.load(fo)
+        d["obs"] = pd.read_json(StringIO(d["obs"]), **kwargs)
+
+        if closing:
+            fo.close()
+
+        return cls.from_dict(d)
 
     def to_collection_dict(self, include_meta=False):
         """Get dictionary with registered attributes and their values of an Obs object.
@@ -517,6 +691,82 @@ class Obs(pd.DataFrame):
 
         return o
 
+    def to_csv(self, path, **kwargs):
+        """Write Obs object to a comma-separated values (csv) file.
+
+        Parameters
+        ----------
+        path : str or path object
+            String, path object (implementing os.PathLike[str]), or file-like
+            object implementing a write() function.
+        **kwargs
+            Additional keyword arguments passed to pandas.DataFrame.to_csv
+
+        Returns
+        -------
+        None
+        """
+        if self.meta:
+            msg = (
+                f"additional metadata of observation {self.name} not written to csv, "
+                "consider using the to_json method to keep the metadata"
+            )
+            logger.warning(msg)
+
+        with open(path, "w", newline="") as buf:
+            buf.write(f"{type(self).__name__} {self.name}\n")
+
+            # write metadata properties
+            buf.write("-----metadata------\n")
+            for att in self._get_meta_attr():
+                if not att == "meta":
+                    buf.write(f"{att} : {getattr(self, att)} \n")
+            buf.write("\n")
+
+            # write observations
+            buf.write("-----observations------\n")
+            super().to_csv(buf, **kwargs)
+
+    def to_dict(self):
+        """Convert the Obs object to a dictionary.
+
+        The dictionary contains the metadata and the observations.
+
+        Returns
+        -------
+        d : dict
+            dictionary with metadata and observations.
+        """
+        d = self.to_collection_dict(include_meta=True)
+        d.pop("obs")
+        d["obs"] = super().to_dict()
+        d["obstype"] = self.__class__.__name__
+        return d
+
+    def to_json(self, path=None, cls=HydropandasEncoder, **kwargs):
+        """Write Obs object to a JSON file.
+
+        Parameters
+        ----------
+        path_or_buf : str, path object, file-like object, or None, default None
+            String, path object (implementing os.PathLike[str]), or file-like
+            object implementing a write() function. If None, the result is
+            returned as a string.
+        **kwargs
+            Additional keyword arguments passed to json.dump or json.dumps.
+
+        Returns
+        -------
+        None
+        """
+        d = self.to_dict()
+        d["obs"] = super().to_json()
+        if path is None:
+            return json.dumps(d, cls=cls, **kwargs)
+        else:
+            with open(path, "w") as fo:
+                json.dump(d, fo, cls=cls, **kwargs)
+
 
 class GroundwaterObs(Obs):
     """Class for groundwater quantity observations.
@@ -555,11 +805,10 @@ class GroundwaterObs(Obs):
         **kwargs can be one of the attributes listed in _metadata or keyword arguments
         for the constructor of a pandas.DataFrame.
         """
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
+                    kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")

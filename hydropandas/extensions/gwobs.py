@@ -396,13 +396,13 @@ class GwObsAccessor:
                 )
                 dup_x = self._obj.loc[distance_to_other_tubes < radius]
                 if dup_x.shape[0] == 1:
-                    self._obj._set_metadata_value(
+                    self._obj.set_metadata_value(
                         name, "tube_nr", 1, add_to_meta=add_to_meta
                     )
                 else:
                     dup_x2 = dup_x.sort_values("screen_bottom", ascending=False)
                     for i, pb_dub in enumerate(dup_x2.index):
-                        self._obj._set_metadata_value(
+                        self._obj.set_metadata_value(
                             pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
 
@@ -480,11 +480,11 @@ class GwObsAccessor:
                 )
                 dup_x = self._obj.loc[distance_to_other_tubes < radius]
                 if dup_x.shape[0] == 1:
-                    self._obj._set_metadata_value(
+                    self._obj.set_metadata_value(
                         name, "tube_nr", 1, add_to_meta=add_to_meta
                     )
                     location = self._obj.loc[name, loc_col]
-                    self._obj._set_metadata_value(
+                    self._obj.set_metadata_value(
                         name,
                         "location",
                         location,
@@ -495,10 +495,10 @@ class GwObsAccessor:
                     for i, pb_dub in enumerate(dup_x2.index):
                         if i == 0:
                             location = self._obj.loc[pb_dub, loc_col]
-                        self._obj._set_metadata_value(
+                        self._obj.set_metadata_value(
                             pb_dub, "tube_nr", i + 1, add_to_meta=add_to_meta
                         )
-                        self._obj._set_metadata_value(
+                        self._obj.set_metadata_value(
                             pb_dub,
                             "location",
                             location,

@@ -1,11 +1,11 @@
 # %%
 import logging
+from pathlib import Path
 
 import pandas as pd
 
 import hydropandas as hpd
 from hydropandas.io import knmi
-from pathlib import Path
 
 logging.basicConfig(level=logging.DEBUG)
 

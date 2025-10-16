@@ -206,7 +206,7 @@ class CollectionPlots:
         if all([o.empty for o in self._obj.obs.values]):
             logger.warning("all observations in the collection are empty")
             for oname in self._obj.index:
-                self._obj._set_metadata_value(
+                self._obj.set_metadata_value(
                     oname, "iplot_fname", None, add_to_meta=True
                 )
             empty_obs = True
