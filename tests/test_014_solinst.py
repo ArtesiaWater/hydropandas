@@ -1,10 +1,9 @@
 # %%
 import logging
+from pathlib import Path
 
 from hydropandas import observation
 from hydropandas.io import solinst
-
-from pathlib import Path
 
 logging.basicConfig(level=logging.DEBUG)
 

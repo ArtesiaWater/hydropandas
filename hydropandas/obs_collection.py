@@ -7,8 +7,13 @@ More information about subclassing pandas DataFrames can be found here:
 http://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 """
 
+import json
 import logging
 import numbers
+import os
+import warnings
+from io import StringIO, TextIOWrapper
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
@@ -16,6 +21,7 @@ import pandas as pd
 
 from . import observation as obs
 from . import util
+from .serialization import HydropandasEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +119,78 @@ def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
     return oc
 
 
+def read_csv(path, parse_dates=True, index_col=0, **kwargs):
+    """Create an observation collection from one or more csv files. The csv file(s)
+    should have the same format as csv files created with the `to_csv` method of an
+    ObsCollection.
+
+    Parameters
+    ----------
+    path : str
+        directory with csv files, a .zip file with csv files or a single csv file.
+    parse_dates : bool, optional
+        whether to parse the dates when reading the csv files. The default is True.
+    index_col : int, optional
+        column to use as index, by default 0
+    kwargs:
+        kwargs are passed to the pandas.read_csv function
+
+    Returns
+    -------
+    ObsCollection
+
+    Notes
+    -----
+    if you write a csv file using the 'to_csv' method and read a csv
+    with the 'read_csv' method you lose this information:
+    - The 'name' and 'meta' attributes of the ObsCollection
+    - metadata of each Observation stored in the 'meta' attribute
+    - integer dtypes may become floats
+
+    If you don't want to lose this data consider using the `to_json` and
+    `read_json` function.
+    """
+    path = Path(path)
+    if path.is_dir():
+        # read csv files in directory
+        obslist = []
+        for file in path.glob("*.csv"):
+            obslist.append(
+                obs.read_csv_obs(
+                    file, parse_dates=parse_dates, index_col=index_col, **kwargs
+                )
+            )
+        if not obslist:
+            logger.warning(f"No csv files found in directory {path}")
+    elif path.suffix == ".zip":
+        # unzip and read .csv files in directory
+        dirpath, files = util.get_files(path, ".csv")
+        if not files:
+            logger.warning(f"No csv files found in directory {path}")
+
+        obslist = []
+        for file in files:
+            obslist.append(
+                obs.read_csv_obs(
+                    Path(dirpath) / file,
+                    parse_dates=parse_dates,
+                    index_col=index_col,
+                    **kwargs,
+                )
+            )
+    elif path.suffix == ".csv":
+        # read single csv file
+        obslist = [
+            obs.read_csv_obs(
+                path, parse_dates=parse_dates, index_col=index_col, **kwargs
+            )
+        ]
+    else:
+        raise ValueError(f"Path {path} is not a directory, a zipfile or a .csv file")
+
+    return ObsCollection(obslist)
+
+
 def read_dino(
     dirname=None,
     ObsClass=obs.GroundwaterObs,
@@ -131,7 +209,7 @@ def read_dino(
         directory name, can be a .zip file or the parent directory
         of subdir
     ObsClass : type
-        class of the observations, so far only GroundwaterObs is supported
+        class of the observations, so far only obs.GroundwaterObs is supported
     subdir : str
         subdirectory of dirname with data files. For old school dino zip files this
         should be "Grondwaterstanden_Put". For new style the default value
@@ -190,8 +268,8 @@ def read_excel(path, meta_sheet_name="metadata"):
     - The 'name' and 'meta' attributes of the ObsCollection
     - metadata of each Observation stored in the 'meta' attribute
 
-    If you don't want to lose this data consider using the `to_pickle` and
-    `read_pickle` function.
+    If you don't want to lose this data consider using the `to_json` and
+    `read_json` function.
     """
 
     oc = ObsCollection.from_excel(path, meta_sheet_name=meta_sheet_name)
@@ -325,6 +403,54 @@ def read_imod(
     )
 
     return oc
+
+
+def read_json(path, **kwargs):
+    """Read an observation collection or an observation from a json file.
+
+    Parameters
+    ----------
+    path : str
+        full file path (including extension) of the json file.
+    kwargs:
+        kwargs are passed to the pandas.read_csv function
+
+    Returns
+    -------
+    ObsCollection
+    """
+
+    if isinstance(path, (TextIOWrapper, StringIO)):
+        fo = path
+        closing = False
+    elif isinstance(path, (str, os.PathLike)):
+        fo = open(path, "r")
+        closing = True
+    else:
+        raise ValueError("path should be a string or a file object")
+
+    d = json.load(fo)
+    if closing:
+        fo.close()
+    msg = (
+        "cannot read json file because no obstype is present, this is probably "
+        "because the json file was not created with hydropandas. Try "
+        "parsing using pandas.read_json"
+    )
+    assert "obstype" in d, msg
+    obstype = d["obstype"]
+    if obstype == "ObsCollection":
+        return ObsCollection.from_json(path, **kwargs)
+    else:
+        if hasattr(obs, obstype):
+            return getattr(obs, obstype).from_json(path, **kwargs)
+        else:
+            msg = (
+                f"cannot read a json file from {obstype=}, this is probably "
+                "because the json file was not created with hydropandas. Try "
+                "parsing using pandas.read_json"
+            )
+            raise ValueError(msg)
 
 
 def read_knmi(
@@ -660,7 +786,7 @@ def read_menyanthes(
         name of the observation collection. The default is "".
     ObsClass : type, optional
         class of the observations, e.g. GroundwaterObs. The default is
-        obs.Obs.
+        Obs.
     load_oseries : bool, optional
         if True the observations are read. The default is True.
     load_stresses : bool, optional
@@ -879,7 +1005,7 @@ def read_waterinfo(
     name : str, optional
         name of the collection, by default ""
     ObsClass : Obs, optional
-        type of Obs to read data as, by default obs.WaterlvlObs
+        type of Obs to read data as, by default WaterlvlObs
     locatie : str or list of str, optional
         select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
     grootheid_code : str or list of str, optional
@@ -951,7 +1077,7 @@ def read_wiski(
     dirname : str
         path of the zipfile with wiski data.
     ObsClass : type, optional
-        type of Obs. The default is obs.GroundwaterObs.
+        type of Obs. The default is GroundwaterObs.
     suffix : str, optional
         extension of filenames to read. The default is ".csv".
     unpackdir : str or None, optional
@@ -1001,7 +1127,7 @@ def read_pastastore(
     libname : str
         name of library (e.g. oseries or stresses)
     ObsClass : Obs, optional
-        type of Obs to read data as, by default obs.GroundwaterObs
+        type of Obs to read data as, by default GroundwaterObs
     metadata_mapping : dict, optional
         dictionary containing map between metadata field names in pastastore and
         metadata field names expected by hydropandas, by default None.
@@ -1068,9 +1194,6 @@ class ObsCollection(pd.DataFrame):
             super().__init__(**kwargs)
         elif isinstance(args[0], ObsCollection):
             super().__init__(*args, **kwargs)
-        elif len(args) == 0:
-            logger.debug("Create empty ObsCollection")
-            super().__init__(**kwargs)
         elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df = util._obslist_to_frame(args[0])
@@ -1084,8 +1207,13 @@ class ObsCollection(pd.DataFrame):
         elif isinstance(args[0], pd.DataFrame) and (
             "obs_list" in kwargs or "ObsClass" in kwargs
         ):
-            df = self.from_dataframe(*args, **kwargs)
-            super().__init__(df, **kwargs)
+            if "obs_list" in kwargs:
+                obs_list = kwargs.pop("obs_list")
+                obs_df = self.from_dataframe(*args, obs_list=obs_list, **kwargs)
+            elif "ObsClass" in kwargs:
+                ObsClass = kwargs.pop("ObsClass")
+                obs_df = self.from_dataframe(*args, ObsClass=ObsClass, **kwargs)
+            super().__init__(obs_df, **kwargs)
         else:
             super().__init__(*args, **kwargs)
 
@@ -1114,15 +1242,24 @@ class ObsCollection(pd.DataFrame):
         else:
             raise TypeError("could not infer observation type")
 
-    def _set_metadata_value(self, iname, att_name, value, add_to_meta=False):
-        """Set a value on three different levels at once:
+    def _set_metadata_value(self, *args, **kwargs):
+        warnings.warn(
+            "the private method '_set_metadata_value' is deprecated and will eventually"
+            "be removed, please use the non-private 'set_metadata_value' method.",
+            DeprecationWarning,
+        )
+
+        return self.set_metadata_value(*args, **kwargs)
+
+    def set_metadata_value(self, oname, att_name, value, add_to_meta=False):
+        """Set a value on two levels at once:
             1. the value in an ObsCollection DataFrame
             2. the attribute of the observation
-            3. the value in the meta dictionary of an observation (optional)
+            Optionally set the value in the meta dictionary of an observation
 
         Parameters
         ----------
-        iname : str, int, float, ...
+        oname : str, int, float, ...
             observation name. Must be same type as self.index.
             e.g. B52D0111_3
         att_name : str, int, float, ...
@@ -1137,31 +1274,31 @@ class ObsCollection(pd.DataFrame):
         Raises
         ------
         ValueError
-            if the iname is not in self.index the value cannot be set.
+            if the oname is not in self.index the value cannot be set.
 
         Returns
         -------
         None.
 
         """
-        if iname not in self.index:
-            raise ValueError(f"{iname}  not in index")
+        if oname not in self.index:
+            raise ValueError(f"{oname}  not in index")
 
-        o = self.loc[iname, "obs"]
+        o = self.loc[oname, "obs"]
         if att_name in o._get_meta_attr():
             setattr(o, att_name, value)
-            logger.debug(f"set attribute {att_name} of {iname} to {value}")
+            logger.debug(f"set attribute {att_name} of {oname} to {value}")
 
         if att_name == "name":
             # name is the index of the ObsCollection dataframe
-            self.rename(index={iname: value}, inplace=True)
+            self.rename(index={oname: value}, inplace=True)
         else:
-            self.loc[iname, att_name] = value
-        logger.debug(f"set {iname}, {att_name} to {value} in obscollection")
+            self.loc[oname, att_name] = value
+        logger.debug(f"set {oname}, {att_name} to {value} in obscollection")
 
         if add_to_meta:
             o.meta.update({att_name: value})
-            logger.debug(f"add {att_name} of {iname} with value {value} to meta")
+            logger.debug(f"add {att_name} of {oname} with value {value} to meta")
 
     def _is_consistent(self, check_individual_obs=True):
         """check if an observation collection is consistent. An observation
@@ -1188,16 +1325,19 @@ class ObsCollection(pd.DataFrame):
         """
         # check unique index
         if not self.index.is_unique:
-            logger.warning(
-                f""""index of observation collection -> {self.name}
-                           not unique. non unique indices are:"""
+            msg = (
+                f"index of observation collection '{self.name}' is "
+                "not unique. non unique indices are: "
             )
-            logger.warning(" ".join(self.index[self.index.duplicated()]))
+            msg += " ".join(self.index[self.index.duplicated()])
+            logger.warning(msg)
             return False
 
         # check nan values in observations
         if self.obs.isna().any():
-            logger.warning(f"missing observation object in collection -> {self.name} ")
+            logger.warning(
+                f"missing observation(s) object in collection '{self.name}' "
+            )
             return False
 
         # check oc data with individual object attributes
@@ -1219,29 +1359,30 @@ class ObsCollection(pd.DataFrame):
 
                                 # otherwise return Nan
                                 logger.warning(
-                                    f"observation collection -> {self.name} not"
-                                    f"consistent with observation -> {o.name}"
-                                    f"{att} value"
+                                    f"observation collection '{self.name}' not "
+                                    f"consistent because of metadata value '{att}' "
+                                    f"of observation '{o.name}'"
                                 )
                                 return False
                         except TypeError:
                             logger.warning(
-                                f"observation collection -> {self.name} not"
-                                f"consistent with observation -> {o.name} {att}"
-                                "value"
+                                f"observation collection '{self.name}' not "
+                                f"consistent because of metadata type '{att}' "
+                                f"of observation '{o.name}'"
                             )
                             return False
                     elif att == "name":
                         if o.name not in self.index:
                             logger.warning(
-                                f"observation collection -> {self.name} not"
-                                f"consistent with observation -> {o.name} name"
+                                f"observation collection '{self.name}' not "
+                                f"consistent because observation '{o.name}' not "
+                                "in collection index"
                             )
                             return False
 
         return True
 
-    def add_observation(self, o, check_consistency=True, **kwargs):
+    def add_observation(self, o, check_consistency=True, inplace=False, **kwargs):
         """Add an observation to an existing observation collection. If the observation
         exists the two observations are merged.
 
@@ -1252,6 +1393,9 @@ class ObsCollection(pd.DataFrame):
         check_consistency : bool, optional
             If True the consistency of the collection is first checked. The
             default is True.
+        inplace : bool, optional
+            If True, modifies the ObsCollection in place (do not create a new
+            object). The default is False.
         **kwargs passed to Obs.merge_observation:
             merge_metadata : bool, optional
                 If True and observations are merged the metadata of the two
@@ -1287,20 +1431,28 @@ class ObsCollection(pd.DataFrame):
         if not isinstance(o, obs.Obs):
             raise TypeError("Observation should be of type hydropandas.observation.Obs")
 
+        if inplace:
+            oc = self
+        else:
+            oc = self.copy(deep=True)
+
         # add new observation to collection
-        if o.name not in self.index:
+        if o.name not in oc.index:
             logger.info(f"adding {o.name} to collection")
-            self.loc[o.name] = o.to_collection_dict()
+            oc.loc[o.name] = o.to_collection_dict()
         else:
             logger.info(
                 f"observation name {o.name} already in collection, merging observations"
             )
 
-            o1 = self.loc[o.name, "obs"]
+            o1 = oc.loc[o.name, "obs"]
             omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
-            self.loc[o.name] = omerged.to_collection_dict()
+            oc.loc[o.name] = omerged.to_collection_dict()
+
+        if not inplace:
+            return oc
 
     def add_obs_collection(
         self, obs_collection, check_consistency=True, inplace=False, **kwargs
@@ -1597,19 +1749,20 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_dataframe(cls, df, obs_list=None, ObsClass=obs.GroundwaterObs):
-        """Create an observation collection from a DataFrame by adding a column with
-        empty observations.
+        """Create an observation collection from a DataFrame and optionally a list of
+        observations. If no list of observations is given empty observations are added
+        of the type specified by ObsClass.
 
         Parameters
         ----------
         df : pandas DataFrame
             input dataframe. If this dataframe has a column named 'obs' the
-            column is replaced with empty observation objects.
+            column is replaced with new observation objects.
         obs_list : list of observation.Obs, optional
             list of observations. Default is None
         ObsClass : class, optional
             observation class used to create empty obs object, by
-            default obs.GroundwaterObs
+            default GroundwaterObs
 
         Returns
         -------
@@ -1625,6 +1778,38 @@ class ObsCollection(pd.DataFrame):
             raise TypeError(f"df should be type pandas.DataFrame not {type(df)}")
 
         return cls(df)
+
+    @classmethod
+    def from_dict(cls, d, **kwargs):
+        """Create an observation collection from a dictionary. The dictionary should
+        have the same format as dictionaries created with the `to_dict` method of an
+        ObsCollection.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary with data
+
+        Returns
+        -------
+        ObsCollection
+        """
+        d = d.copy()
+        assert "obstype" in d, (
+            "dictionary should contain an 'obstype' key with the observation type"
+        )
+        obstype = d.pop("obstype")
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
+
+        df = d.pop("df", None)
+        df = pd.DataFrame(df, **kwargs)
+        obs_list = [
+            getattr(obs, od["obstype"]).from_dict(od) for od in d.pop("obs_list")
+        ]
+
+        return cls(df, obs_list=obs_list, **d)
 
     @classmethod
     def from_excel(cls, path, meta_sheet_name="metadata"):
@@ -1650,8 +1835,8 @@ class ObsCollection(pd.DataFrame):
         - The 'name' and 'meta' attributes of the ObsCollection
         - metadata of each Observation stored in the 'meta' attribute
 
-        If you don't want to lose this data consider using the `to_pickle` and
-        `read_pickle` function.
+        If you don't want to lose this data consider using the `to_json` and
+        `read_json` function.
         """
 
         df = pd.read_excel(path, meta_sheet_name, index_col=0)
@@ -1659,14 +1844,18 @@ class ObsCollection(pd.DataFrame):
         for oname, row in df.iterrows():
             measurements = pd.read_excel(path, oname, index_col=0)
             all_metadata = row.to_dict()
-            obsclass = getattr(obs, row["obs"])
+            obsclass = getattr(obs, all_metadata.pop("obs"))
             # get observation specific metadata
             metadata = {
                 k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
             }
             metadata["name"] = oname
 
-            o = obsclass(measurements, **metadata)
+            extra_meta = {
+                k: v for (k, v) in all_metadata.items() if k not in obsclass._metadata
+            }
+
+            o = obsclass(measurements, meta=extra_meta, **metadata)
             df.at[oname, "obs"] = o
 
         return cls(df)
@@ -1843,8 +2032,9 @@ class ObsCollection(pd.DataFrame):
         xmlstring : str or None
             string with xml data, only used if file_or_dir is None. Default is
             None
-        ObsClass : type
-            class of the observations, e.g. GroundwaterObs or WaterlvlObs
+        ObsClass : type or dict
+            class of the observations, e.g. GroundwaterObs or WaterlvlObs or a
+            dictionary with a class for each locationId
         name : str, optional
             name of the observation collection, 'fews' by default
         translate_dic : dic or None, optional
@@ -1881,7 +2071,7 @@ class ObsCollection(pd.DataFrame):
         if translate_dic is None:
             translate_dic = {"locationId": "location"}
 
-        meta = {"type": ObsClass}
+        meta = {}
 
         if file_or_dir is not None:
             # get files
@@ -1973,6 +2163,48 @@ class ObsCollection(pd.DataFrame):
         )
         obs_df = util._obslist_to_frame(mo_list)
         return cls(obs_df, name=modelname)
+
+    @classmethod
+    def from_json(cls, path, **kwargs):
+        """Create an observation collection from a json file. The json file should
+        have the same format as json files created with the `to_json` method of an
+        ObsCollection.
+
+        Parameters
+        ----------
+        path : str
+            full file path (including extension) of the json file.
+
+        Returns
+        -------
+        ObsCollection
+        """
+        if isinstance(path, (TextIOWrapper, StringIO)):
+            fo = path
+            closing = False
+        elif isinstance(path, (str, os.PathLike)):
+            fo = open(path, "r")
+            closing = True
+
+        d = json.load(fo)
+        if closing:
+            fo.close()
+
+        assert "obstype" in d, (
+            "json file should contain an 'obstype' key with the observation type"
+        )
+        obstype = d.pop("obstype")
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
+
+        df = pd.read_json(StringIO(d.pop("df")))
+        obs_list = []
+        for od in d.pop("obs_list"):
+            obstype = json.load(StringIO(od))["obstype"]
+            obs_list.append(getattr(obs, obstype).from_json(StringIO(od)))
+
+        return cls(df, obs_list=obs_list, **d)
 
     @classmethod
     def from_knmi(
@@ -2351,7 +2583,7 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the collection, by default ""
         ObsClass : Obs, optional
-            type of Obs to read data as, by default obs.WaterlvlObs
+            type of Obs to read data as, by default WaterlvlObs
         locatie : str or list of str, optional
             select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
         grootheid_code : str or list of str, optional
@@ -2464,7 +2696,7 @@ class ObsCollection(pd.DataFrame):
         libname : str
             name of library (e.g. oseries or stresses)
         ObsClass : Obs, optional
-            type of Obs to read data as, by default obs.GroundwaterObs
+            type of Obs to read data as, by default GroundwaterObs
         metadata_mapping : dict, optional
             dictionary containing map between metadata field names in pastastore and
             metadata field names expected by hydropandas, by default None.
@@ -2532,6 +2764,57 @@ class ObsCollection(pd.DataFrame):
                 f"multiple observations for given conditions {selected_obs.index}"
             )
 
+    def to_csv(self, path, check_consistency=True, **kwargs):
+        """Write all observations in the ObsCollection to csv files.
+
+        Parameters
+        ----------
+        path : str
+            directory to which the csv files will be written.
+        check_consistency : bool, optional
+            If True the consistency of the collection is checked. If set to False the csv file(s) may be unreadable by hydropandas. The
+            default is True.
+        **kwargs : keyword arguments
+            kwargs are passed to the to_csv method of each observation.
+
+        Notes
+        -----
+        if you write a csv file using the 'to_csv' method and read a csv
+        with the 'read_csv' method you lose this information:
+        - The 'name' and 'meta' attributes of the ObsCollection
+        - metadata of each Observation stored in the 'meta' attribute
+        - integer dtypes may become floats
+
+        If you don't want to lose this data consider using the `to_json` and
+        `read_json` function.
+
+        If you want to write the metadata to a single csv file consider using:
+        'pd.DataFrame(oc).to_csv()'.
+        """
+        if check_consistency and not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
+
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"writing {len(self)} observations to {path}")
+        for o in self.obs:
+            o.to_csv(path / f"{o.name}.csv", **kwargs)
+
+    def to_dict(self):
+        """Convert ObsCollection to dictionary.
+
+        Returns
+        -------
+        dict
+            dictionary with metadata and observations
+        """
+        d = {k: getattr(self, k) for k in self._metadata}
+        d["df"] = super().drop(columns="obs").to_dict()
+        d["obstype"] = self.__class__.__name__
+        d["obs_list"] = [o.to_dict() for o in self.obs]
+        return d
+
     def to_excel(self, path, meta_sheet_name="metadata", check_consistency=True):
         """Write an ObsCollection to an excel, the first sheet in the excel contains the
         metadata, the other tabs are the timeseries of each observation.
@@ -2563,12 +2846,11 @@ class ObsCollection(pd.DataFrame):
         - The 'name' and 'meta' attributes of the ObsCollection
         - metadata of each Observation stored in the 'meta' dictionary
 
-        If you don't want this consider using the `to_pickle` method.
+        If you don't want this consider using the `to_json` method.
         """
 
-        if check_consistency:
-            if not self._is_consistent():
-                raise RuntimeError("inconsistent observation collection")
+        if check_consistency and not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
 
         oc = self.copy(deep=True)
 
@@ -2586,6 +2868,37 @@ class ObsCollection(pd.DataFrame):
                 for ch in ["[", "]", ":", "*", "?", "/", "\\"]:
                     sheetname = sheetname.replace(ch, "_")
                 o.to_excel(writer, sheet_name=sheetname)
+
+    def to_json(self, path=None, cls=HydropandasEncoder, **kwargs):
+        """Write ObsCollection to a JSON file.
+
+        Parameters
+        ----------
+        path_or_buf : str, path object, file-like object, or None, default None
+            String, path object (implementing os.PathLike[str]), or file-like
+            object implementing a write() function. If None, the result is
+            returned as a string.
+        **kwargs
+            Additional keyword arguments passed to json.dump or json.dumps.
+
+        Returns
+        -------
+        None
+        """
+        d = {k: getattr(self, k) for k in self._metadata}
+        d["obstype"] = type(self).__name__
+        if self.empty:
+            d["df"] = super().to_json()
+            d["obs_list"] = []
+        else:
+            d["df"] = super().drop(columns="obs").to_json()
+            d["obs_list"] = [o.to_json() for o in self.obs]
+
+        if path is None:
+            return json.dumps(d, cls=cls, **kwargs)
+        else:
+            with open(path, "w") as fo:
+                json.dump(d, fo, cls=cls, **kwargs)
 
     def to_pi_xml(self, fname, timezone="", version="1.24"):
         from .io import fews

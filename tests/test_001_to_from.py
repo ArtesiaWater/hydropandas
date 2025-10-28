@@ -1,11 +1,11 @@
 import datetime as dt
 import os
+from pathlib import Path
 
 import pandas as pd
 import pastastore as pst
 import pytest
 from requests.exceptions import ConnectionError, HTTPError
-from pathlib import Path
 
 import hydropandas as hpd
 
@@ -263,6 +263,42 @@ def test_to_excel():
 
 def test_from_excel():
     hpd.read_excel("tests/data/excel/test.xlsx")
+
+
+# %% csv
+
+
+def test_to_csv():
+    oc = hpd.read_fews(
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
+        locations=None,
+        low_memory=True,
+    )
+
+    oc.to_csv("tests/data/csv/test")
+
+
+def test_from_csv():
+    oc = hpd.read_csv("tests/data/csv/test")
+    assert len(oc) > 0
+
+
+# %% json
+
+
+def test_to_json():
+    oc = hpd.read_fews(
+        fewsdir / "WaalenBurg_201810-20190215_prod.zip",
+        locations=None,
+        low_memory=True,
+    )
+
+    oc.to_json("tests/data/test.json")
+
+
+def test_from_json():
+    oc = hpd.read_json("tests/data/test.json")
+    assert len(oc) > 0
 
 
 # %% Meteo

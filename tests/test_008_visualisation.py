@@ -1,6 +1,6 @@
-import test_001_to_from as ttf
-
 from pathlib import Path
+
+import test_001_to_from as ttf
 
 plot_dir = Path(__file__).parent / "data" / "2019-Dino-test" / "plots"
 

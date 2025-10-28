@@ -16,9 +16,22 @@ maintainers = [
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
 requires-python = ">=3.10"
-dependencies = ["scipy", "pandas", "matplotlib", "tqdm", "requests", "colorama",
-                "geopandas", "pyproj", "contextily", "bokeh", "branca", "folium",
-                "rws-ddlpy"]
+dependencies = [
+    "scipy",
+ "pandas",
+ "matplotlib",
+ "tqdm",
+ "requests",
+ "colorama",
+ "geopandas",
+ "pyproj",
+ "contextily",
+ "bokeh",
+ "branca",
+ "folium",
+ "rws-ddlpy",
+ "pastastore>=1.10.2",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
