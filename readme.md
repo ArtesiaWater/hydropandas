@@ -63,7 +63,7 @@ typing `pip install -e .[full]` from the module root directory.
 
 -   Documentation is provided on the dedicated website
     [hydropandas.readthedocs.io](https://hydropandas.readthedocs.io/en/stable/)
--   Examples are available in the [examples directory on the documentation website](https://hydropandas.readthedocs.io/en/stable/examples.html)
+-   Examples are available in the [examples directory on the documentation website](https://hydropandas.readthedocs.io/en/stable/examples/)
 -   View and edit the example notebooks of hydropandas in
     [GitHub Codespaces](https://codespaces.new/hydropandas/hydropandas?quickstart=1)
 
