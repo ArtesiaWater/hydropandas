@@ -166,7 +166,7 @@ legacy_tox_ini = """
     extras = pytesting,coveraging
     passenv = LIZARD_ROTTERDAM_API_KEY
     commands =
-            coverage run --source=src/hydropandas -m pytest tests
+            coverage run --source=hydropandas -m pytest tests
             coverage xml
 
     [testenv:ruff]
