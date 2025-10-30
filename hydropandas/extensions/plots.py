@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from ..observation import GroundwaterObs
 from . import accessor
