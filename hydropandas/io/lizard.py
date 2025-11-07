@@ -444,8 +444,8 @@ def get_timeseries_uuid(
     # Calculate number of pages needed
     nr_pages = math.ceil(total_count / page_size)
 
-    logger.info(f"Number of timeseries events: {total_count}")
-    logger.info(f"Number of pages: {nr_pages}")
+    #logger.info(f"Number of timeseries events: {total_count}")
+    #logger.info(f"Number of pages: {nr_pages}")
 
     # If only one page, return first page results
     if nr_pages <= 1:
