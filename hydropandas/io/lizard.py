@@ -389,6 +389,7 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
 
     return metadata
 
+
 def get_timeseries_uuid(
     uuid, tmin, tmax, page_size=100000, nr_threads=10, organisation="vitens", auth=None
 ):
@@ -433,16 +434,16 @@ def get_timeseries_uuid(
     first_response = requests.get(url=url_timeseries, params=params, auth=auth)
     first_response.raise_for_status()
     first_data = first_response.json()
-    
+
     total_count = first_data.get("count", 0)
     time_series_events = first_data.get("results", [])
-    
+
     if total_count == 0:
         return pd.DataFrame()
 
     # Calculate number of pages needed
     nr_pages = math.ceil(total_count / page_size)
-    
+
     logger.info(f"Number of timeseries events: {total_count}")
     logger.info(f"Number of pages: {nr_pages}")
 
@@ -452,11 +453,12 @@ def get_timeseries_uuid(
     else:
         # Multi-page: use existing helper functions with ThreadPoolExecutor
         from urllib.parse import urlencode
+
         base_url_with_params = url_timeseries + "?" + urlencode(params)
-        
+
         # Prepare URLs for all pages using existing helper
         urls = _prepare_API_input(nr_pages, base_url_with_params)
-        
+
         # Adjust nr_threads if more threads than pages
         if nr_threads > nr_pages:
             nr_threads = nr_pages
@@ -470,7 +472,7 @@ def get_timeseries_uuid(
                 desc=f"Downloading timeseries {uuid}",
             ):
                 all_page_results.extend(result)
-        
+
         # Combine first page with additional pages
         time_series_events = time_series_events + all_page_results
 
@@ -491,9 +493,12 @@ def get_timeseries_uuid(
     timeseries_sel.set_index("time", inplace=True)
     timeseries_sel.index.rename("peil_datum_tijd", inplace=True)
 
-    logger.info(f"Successfully retrieved {len(timeseries_sel)} timeseries events for UUID {uuid}")
+    logger.info(
+        f"Successfully retrieved {len(timeseries_sel)} timeseries events for UUID {uuid}"
+    )
 
     return timeseries_sel
+
 
 def _filter_timeseries(ts_dict, datafilters):
     """
