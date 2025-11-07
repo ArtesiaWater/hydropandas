@@ -473,8 +473,8 @@ def get_timeseries_uuid(
             ):
                 all_page_results.extend(result)
 
-        # Combine first page with additional pages
-        time_series_events = time_series_events + all_page_results
+        # Use results from all pages
+        time_series_events = all_page_results
 
     # Convert to DataFrame and process (existing logic)
     if not time_series_events:
