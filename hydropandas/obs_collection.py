@@ -1510,12 +1510,12 @@ class ObsCollection(pd.DataFrame):
 
         if inplace:
             for o in obs_collection.obs.values:
-                self.add_observation(o, check_consistency=False, **kwargs)
+                self.add_observation(o, check_consistency=False, inplace=True, **kwargs)
 
         else:
             oc = self.copy()
             for o in obs_collection.obs.values:
-                oc.add_observation(o, check_consistency=False, **kwargs)
+                oc.add_observation(o, check_consistency=False, inplace=True, **kwargs)
 
             return oc
 
