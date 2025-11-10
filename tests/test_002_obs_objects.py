@@ -197,9 +197,12 @@ def test_merge_errors():
 def test_add_observation_to_oc():
     oc = _obscollection_from_list()
 
-    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    name = "groundwaterobs_010"
+    o = _get_groundwater_obs(name=name, tube_nr=10)
 
-    oc.add_observation(o)
+    oc_new = oc.add_observation(o)
+
+    assert name in oc_new.index, "observation not added to collection"
 
 
 def test_interpolate_obscollection():
