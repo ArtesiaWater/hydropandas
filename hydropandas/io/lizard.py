@@ -391,11 +391,13 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
 
 
 def get_timeseries_uuid(
-    uuid, tmin, tmax, page_size=100000, organisation="vitens", auth=None
+    uuid, tmin, tmax, page_size=100000, nr_threads=10, organisation="vitens", auth=None
 ):
     """
     Get the time series (hand or diver) using the uuid.
+    Handles pagination to retrieve all results across multiple pages.
 
+    Parameters
     ----------
     uuid : str
         Universally Unique Identifier of the tube and type of time series.
@@ -405,6 +407,8 @@ def get_timeseries_uuid(
         end of the observations, by default the entire serie is returned
     page_size : int, optional
         Query parameter which can extend the response size. The default is 100000.
+    nr_threads : int, optional
+        number of threads to use for the API requests, default is 10
     organisation : str, optional
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
@@ -416,7 +420,7 @@ def get_timeseries_uuid(
         pandas DataFrame with the timeseries of the monitoring well
     """
     base_url = lizard_api_endpoint.format(organisation=organisation)
-    url_timeseries = f"{base_url}timeseries/{uuid}"
+    url_timeseries = f"{base_url}timeseries/{uuid}/events/"
 
     if tmin is not None:
         tmin = pd.to_datetime(tmin).isoformat("T")
@@ -425,28 +429,73 @@ def get_timeseries_uuid(
         tmax = pd.to_datetime(tmax).isoformat("T")
 
     params = {"start": tmin, "end": tmax, "page_size": page_size}
-    url = url_timeseries + "/events/"
 
-    r = requests.get(url=url, params=params, auth=auth)
-    time_series_events = r.json()["results"]
-    time_series_df = pd.DataFrame(time_series_events)
+    # First request to get total count and determine pagination needs
+    first_response = requests.get(url=url_timeseries, params=params, auth=auth)
+    first_response.raise_for_status()
+    first_data = first_response.json()
 
-    if time_series_df.empty:
+    total_count = first_data.get("count", 0)
+    time_series_events = first_data.get("results", [])
+
+    if total_count == 0:
         return pd.DataFrame()
 
+    # Calculate number of pages needed
+    nr_pages = math.ceil(total_count / page_size)
+
+    # logger.info(f"Number of timeseries events: {total_count}")
+    # logger.info(f"Number of pages: {nr_pages}")
+
+    # If only one page, return first page results
+    if nr_pages <= 1:
+        pass  # time_series_events already contains first page data
     else:
-        time_series_df = translate_flag(time_series_df)
+        # Multi-page: use existing helper functions with ThreadPoolExecutor
+        from urllib.parse import urlencode
 
-        timeseries_sel = time_series_df.loc[:, ["time", "value", "flag", "comment"]]
-        timeseries_sel["time"] = pd.to_datetime(
-            timeseries_sel["time"], format="%Y-%m-%dT%H:%M:%SZ", errors="coerce"
-        ) + pd.DateOffset(hours=1)
+        base_url_with_params = url_timeseries + "?" + urlencode(params)
 
-        timeseries_sel = timeseries_sel[~timeseries_sel["time"].isnull()]
+        # Prepare URLs for all pages using existing helper
+        urls = _prepare_API_input(nr_pages, base_url_with_params)
 
-        timeseries_sel.set_index("time", inplace=True)
-        timeseries_sel.index.rename("peil_datum_tijd", inplace=True)
-        # timeseries_sel.dropna(inplace=True)
+        # Adjust nr_threads if more threads than pages
+        if nr_threads > nr_pages:
+            nr_threads = nr_pages
+
+        # Download all pages in parallel using existing helper
+        with ThreadPoolExecutor(max_workers=nr_threads) as executor:
+            all_page_results = []
+            for result in tqdm(
+                executor.map(lambda url: _download(url, auth=auth), urls),
+                total=nr_pages,
+                desc=f"Downloading timeseries {uuid}",
+            ):
+                all_page_results.extend(result)
+
+        # Use results from all pages
+        time_series_events = all_page_results
+
+    # Convert to DataFrame and process (existing logic)
+    if not time_series_events:
+        return pd.DataFrame()
+
+    time_series_df = pd.DataFrame(time_series_events)
+    time_series_df = translate_flag(time_series_df)
+
+    timeseries_sel = time_series_df.loc[:, ["time", "value", "flag", "comment"]]
+    timeseries_sel["time"] = pd.to_datetime(
+        timeseries_sel["time"], format="%Y-%m-%dT%H:%M:%SZ", errors="coerce"
+    ) + pd.DateOffset(hours=1)
+
+    timeseries_sel = timeseries_sel[~timeseries_sel["time"].isnull()]
+
+    timeseries_sel.set_index("time", inplace=True)
+    timeseries_sel.index.rename("peil_datum_tijd", inplace=True)
+
+    logger.info(
+        f"Successfully retrieved {len(timeseries_sel)} timeseries events for UUID {uuid}"
+    )
 
     return timeseries_sel
 
