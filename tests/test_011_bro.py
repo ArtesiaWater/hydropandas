@@ -23,6 +23,11 @@ def test_groundwater_observations():
     bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False)
 
 
+def test_groundwater_observations_brodata():
+    bro_id = "GLD000000012893"
+    bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, method="brodata")
+
+
 def test_gld_no_monitoringnet():
     bro_id = "GLD000000013128"
     bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False)
