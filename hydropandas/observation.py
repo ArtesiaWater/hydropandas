@@ -249,7 +249,7 @@ class Obs(pd.DataFrame):
         If there are no observations, but the DataFrame has columns with numeric datatype,
         then still the first numeric column name is returned.
         """
-        
+
         for col in self.columns:
             if is_numeric_dtype(self[col]):
                 return col
