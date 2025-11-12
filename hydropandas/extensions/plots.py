@@ -375,7 +375,7 @@ class CollectionPlots:
             Plots observation. Default is True
 
         TODO:
-            - speficy colors via extra column in ObsCollection
+            - specify colors via extra column in ObsCollection
             - addtional visual checks:
                 maximum observation is close to or above ground level,
                 maximum observation is close to or above tube top
@@ -460,7 +460,10 @@ class CollectionPlots:
                         ]._get_first_numeric_col_name()
 
                 # create plot dataframe
-                plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols_local].copy()
+                try:
+                    plot_df = self._obj.loc[name, "obs"][tmin:tmax][cols_local].copy()
+                except KeyError:
+                    plot_df = pd.DataFrame()
                 if plot_df.empty or plot_df[cols_local].isna().all().all():
                     logger.warning(f"{name} has no data between {tmin} and {tmax}")
                     continue
