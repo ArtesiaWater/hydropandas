@@ -56,9 +56,9 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
         # read observation type
         obstype = buf.readline().split("Obs")[0] + "Obs"
 
-        assert (
-            obstype in globals().keys()
-        ), f"cannot read a csv file from {obstype=}, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+        assert obstype in globals().keys(), (
+            f"cannot read a csv file from {obstype=}, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+        )
 
     return globals()[obstype].from_csv(
         path, parse_dates=parse_dates, index_col=index_col, **kwargs
@@ -317,14 +317,14 @@ class Obs(pd.DataFrame):
         with open(path, "r") as buf:
             # read observation type
             obstype = buf.readline().split("Obs")[0] + "Obs"
-            assert (
-                cls.__name__ == obstype
-            ), f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+            assert cls.__name__ == obstype, (
+                f"cannot read a csv file from {obstype=} using the {cls.__name__}.from_csv method, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
+            )
 
             # read metadata
-            assert (
-                buf.readline() == "-----metadata------\n"
-            ), f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            assert buf.readline() == "-----metadata------\n", (
+                f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            )
             line = buf.readline()
             meta = {}
             while line.strip() != "":
@@ -361,9 +361,9 @@ class Obs(pd.DataFrame):
                 line = buf.readline()
 
             # read observations
-            assert (
-                buf.readline() == "-----observations------\n"
-            ), f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            assert buf.readline() == "-----observations------\n", (
+                f"invalid file {path}, probably not a csv created with hydropandas. Try parsing using pandas.read_csv"
+            )
             df = pd.read_csv(
                 buf, index_col=index_col, parse_dates=parse_dates, **kwargs
             )
@@ -389,13 +389,13 @@ class Obs(pd.DataFrame):
             Obs object with metadata and observations from the dictionary.
         """
         d = d.copy()
-        assert (
-            "obstype" in d
-        ), "dictionary should contain an 'obstype' key with the observation type"
+        assert "obstype" in d, (
+            "dictionary should contain an 'obstype' key with the observation type"
+        )
         obstype = d.pop("obstype")
-        assert (
-            cls.__name__ == obstype
-        ), f"{obstype=} not an observation type supported by hydropandas"
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
 
         obs_data = d.pop("obs", None)
         df = pd.DataFrame(obs_data, **kwargs)

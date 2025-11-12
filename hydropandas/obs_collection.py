@@ -1808,13 +1808,13 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
         """
         d = d.copy()
-        assert (
-            "obstype" in d
-        ), "dictionary should contain an 'obstype' key with the observation type"
+        assert "obstype" in d, (
+            "dictionary should contain an 'obstype' key with the observation type"
+        )
         obstype = d.pop("obstype")
-        assert (
-            cls.__name__ == obstype
-        ), f"{obstype=} not an observation type supported by hydropandas"
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
 
         df = d.pop("df", None)
         df = pd.DataFrame(df, **kwargs)
@@ -2203,13 +2203,13 @@ class ObsCollection(pd.DataFrame):
         if closing:
             fo.close()
 
-        assert (
-            "obstype" in d
-        ), "json file should contain an 'obstype' key with the observation type"
+        assert "obstype" in d, (
+            "json file should contain an 'obstype' key with the observation type"
+        )
         obstype = d.pop("obstype")
-        assert (
-            cls.__name__ == obstype
-        ), f"{obstype=} not an observation type supported by hydropandas"
+        assert cls.__name__ == obstype, (
+            f"{obstype=} not an observation type supported by hydropandas"
+        )
 
         df = pd.read_json(StringIO(d.pop("df")))
         obs_list = []
