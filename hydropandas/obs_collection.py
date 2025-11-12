@@ -36,6 +36,7 @@ def read_bro(
     keep_all_obs=True,
     epsg=28992,
     ignore_max_obs=False,
+    method="internal",
 ):
     """Get all the observations within an extent or within a groundwatermonitoring net.
 
@@ -64,6 +65,10 @@ def read_bro(
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
         prompt. The default is False
+    method : str
+        The method to use for requesting data from the bro-database. When method is
+        'internal', use internal logic in hydropandas. When method is 'brodata', use the
+        python-package `brodata`. The default is 'internal'.
 
     Returns
     -------
@@ -81,6 +86,7 @@ def read_bro(
         keep_all_obs=keep_all_obs,
         epsg=epsg,
         ignore_max_obs=ignore_max_obs,
+        method=method,
     )
 
     return oc
@@ -1553,6 +1559,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         epsg=28992,
         ignore_max_obs=False,
+        method="internal",
     ):
         """Get all the observations within an extent or within a groundwatermonitoring
         net.
@@ -1582,6 +1589,10 @@ class ObsCollection(pd.DataFrame):
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
             prompt. The default is False
+        method : str
+            The method to use for requesting data from the bro-database. When method is
+            'internal', use internal logic in hydropandas. When method is 'brodata', use the
+            python-package `brodata`. The default is 'internal'.
 
         Returns
         -------
@@ -1601,6 +1612,7 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
                 ignore_max_obs=ignore_max_obs,
+                method=method,
             )
             meta = {}
         elif bro_id is not None:
@@ -1609,6 +1621,7 @@ class ObsCollection(pd.DataFrame):
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
+                method=method,
             )
             name = meta.pop("name")
         else:
@@ -1795,13 +1808,13 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
         """
         d = d.copy()
-        assert "obstype" in d, (
-            "dictionary should contain an 'obstype' key with the observation type"
-        )
+        assert (
+            "obstype" in d
+        ), "dictionary should contain an 'obstype' key with the observation type"
         obstype = d.pop("obstype")
-        assert cls.__name__ == obstype, (
-            f"{obstype=} not an observation type supported by hydropandas"
-        )
+        assert (
+            cls.__name__ == obstype
+        ), f"{obstype=} not an observation type supported by hydropandas"
 
         df = d.pop("df", None)
         df = pd.DataFrame(df, **kwargs)
@@ -2190,13 +2203,13 @@ class ObsCollection(pd.DataFrame):
         if closing:
             fo.close()
 
-        assert "obstype" in d, (
-            "json file should contain an 'obstype' key with the observation type"
-        )
+        assert (
+            "obstype" in d
+        ), "json file should contain an 'obstype' key with the observation type"
         obstype = d.pop("obstype")
-        assert cls.__name__ == obstype, (
-            f"{obstype=} not an observation type supported by hydropandas"
-        )
+        assert (
+            cls.__name__ == obstype
+        ), f"{obstype=} not an observation type supported by hydropandas"
 
         df = pd.read_json(StringIO(d.pop("df")))
         obs_list = []

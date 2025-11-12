@@ -53,3 +53,11 @@ def test_obs_list_from_extent():
     bro.get_obs_list_from_extent(
         extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992, only_metadata=True
     )
+
+
+def test_groundwater_obs_from_bro_id():
+    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1)
+
+
+def test_groundwater_obs_from_bro_id_brodata():
+    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1, method="brodata")
