@@ -192,16 +192,7 @@ def get_bro_groundwater(
         if method == "brodata":
             import brodata
 
-            obs_df = brodata.gmw.get_observations(bro_id, tube_number=tube_nr)
-
-            if len(obs_df) == 0:
-                df = brodata.gld._get_empty_observation_df()
-            elif len(obs_df) == 1:
-                df = obs_df.iloc[0]["observation"]
-            else:
-                df = brodata.gmw._combine_observations(
-                    obs_df["observation"], kind="gld", bro_id=meta["name"]
-                )
+            df = brodata.gmw.get_tube_observations(bro_id, tube_number=tube_nr)
             return df, meta
 
         gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
