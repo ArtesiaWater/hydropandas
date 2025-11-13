@@ -25,7 +25,7 @@ def test_groundwater_observations():
 
 def test_groundwater_observations_brodata():
     bro_id = "GLD000000012893"
-    bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, method="brodata")
+    bro.get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, use_brodata=True)
 
 
 def test_gld_no_monitoringnet():
@@ -65,4 +65,4 @@ def test_groundwater_obs_from_bro_id():
 
 
 def test_groundwater_obs_from_bro_id_brodata():
-    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1, method="brodata")
+    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1, use_brodata=True)
