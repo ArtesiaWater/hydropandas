@@ -762,8 +762,10 @@ def get_obs_list_from_extent(
         Grondwatermonitoring (GM) in samenhang - karakteristieken, hosted by PDOK. This
         up-to-date dataset combines well- and tube-properties. So users do not have to
         download each individual Groundwater Monitoring Well (GMW), which speeds up the
-        request. The Groundwater Level Dossiers (GLD) are still downloaded individually.
-        The default is True.
+        request. The gm-dataset does not contain the attributes `tube_top` and
+        `ground_level`, so you need to set use_gm=False if you need those. The
+        Groundwater Level Dossiers (GLD) are still downloaded individually. The default
+        is True.
 
     Raises
     ------
