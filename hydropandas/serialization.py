@@ -14,6 +14,8 @@ class HydropandasEncoder(json.JSONEncoder):
             return str(obj)
         elif isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, type):
+            return f'class : {obj.__name__}'
 
         # Add other conversions here
         return super().default(obj)
