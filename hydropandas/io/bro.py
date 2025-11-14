@@ -28,7 +28,13 @@ from ..util import EPSG_28992
 logger = logging.getLogger(__name__)
 
 
-def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
+def get_obs_list_from_gmn(
+    bro_id,
+    ObsClass,
+    only_metadata=False,
+    keep_all_obs=True,
+    use_brodata=True,
+):
     """get a list of observation from a groundwater monitoring network.
 
     Parameters
@@ -43,6 +49,10 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without
         measurements
+    use_brodata : str
+        When True, use the python-package `brodata` for requesting data from the
+        bro-database. When False, use internal logic in hydropandas. The default is
+        False.
 
     Raises
     ------
@@ -60,6 +70,26 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
 
     if not bro_id.startswith("GMN"):
         raise ValueError("bro id should start with GMN")
+
+    if use_brodata:
+        import brodata
+
+        gmn = brodata.gmn.GroundwaterMonitoringNetwork.from_bro_id(bro_id)
+        gmw_ids = gmn.measuringPoint.index.levels[0].unique()
+        gmws = brodata.gmw.get_data_for_bro_ids(gmw_ids)
+        obs_list = []
+        for gmw_id, tube_number in gmn.measuringPoint.index:
+            if only_metadata:
+                df = brodata.gld._get_empty_observation_df()
+            else:
+                df = brodata.gmw.get_tube_observations(gmw_id, tube_number)
+                df = df.rename(columns={"value": "values"})
+            meta = _brodata_gmw_to_meta(gmws[gmw_id], tube_number)
+            o = ObsClass(df, **meta)
+            obs_list.append(o)
+
+        meta = {"name": gmn.name, "doel": gmn.monitoringPurpose, "bro_id": bro_id}
+        return obs_list, meta
 
     url = f"https://publiek.broservices.nl/gm/gmn/v1/objects/{bro_id}"
     req = requests.get(url)
@@ -97,7 +127,6 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
                 obs_list.append(o)
         else:
             obs_list.append(o)
-        obs_list.append(o)
 
     meta = {}
     meta["name"] = gmn.find("xmlns:name", ns).text
@@ -107,7 +136,9 @@ def get_obs_list_from_gmn(bro_id, ObsClass, only_metadata=False, keep_all_obs=Tr
     return obs_list, meta
 
 
-def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
+def get_bro_groundwater(
+    bro_id, tube_nr=None, only_metadata=False, use_brodata=False, **kwargs
+):
     """get bro groundwater measurement from a GLD id or a GMW id with a
     filter number.
 
@@ -122,6 +153,10 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
     only_metadata : bool, optional
         if True download only metadata, significantly faster. The default
         is False.
+    use_brodata : str
+        When True, use the python-package `brodata` for requesting data from the
+        bro-database. When False, use internal logic in hydropandas. The default is
+        False.
     **kwargs :
         passes to measurements_from_gld.
 
@@ -143,20 +178,33 @@ def get_bro_groundwater(bro_id, tube_nr=None, only_metadata=False, **kwargs):
     if bro_id.startswith("GLD"):
         if only_metadata:
             raise ValueError("cannot get metadata from gld id")
+        if use_brodata:
+            import brodata
+
+            gld = brodata.gld.GroundwaterLevelDossier.from_bro_id(bro_id)
+            df = gld.observation.rename(columns={"value": "values"})
+            meta = get_metadata_from_gmw(
+                gld.groundwaterMonitoringWell, gld.tubeNumber, use_brodata=use_brodata
+            )
+            return df, meta
         return measurements_from_gld(bro_id, **kwargs)
 
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
             raise ValueError("if bro_id is GMW a tube_nr should be specified")
+        meta = get_metadata_from_gmw(bro_id, tube_nr, use_brodata=use_brodata)
+        if use_brodata:
+            import brodata
 
-        meta = get_metadata_from_gmw(bro_id, tube_nr)
+            df = brodata.gmw.get_tube_observations(bro_id, tube_number=tube_nr)
+            return df, meta
+
         gld_ids = get_gld_ids_from_gmw(bro_id, tube_nr)
 
+        meta["name"] = f"{bro_id}_{tube_nr}"
         if gld_ids is None:
-            meta["name"] = f"{bro_id}_{tube_nr}"
             only_metadata = True  # cannot get time series without gld id
         else:
-            meta["name"] = f"{bro_id}_{tube_nr}"
             meta["gld_ids"] = gld_ids
 
         if only_metadata:
@@ -353,7 +401,7 @@ def measurements_from_gld(
     return df, meta
 
 
-def get_full_metadata_from_gmw(bro_id, tube_nr):
+def get_full_metadata_from_gmw(bro_id, tube_nr, use_brodata=False):
     """get metadata for a groundwater monitoring well.
 
 
@@ -363,6 +411,10 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
         bro id of groundwater monitoring well e.g. 'GMW000000036287'.
     tube_nr : int
         filter number you want metadata for.
+    use_brodata : str
+        When True, use the python-package `brodata` for requesting data from the
+        bro-database. When False, use internal logic in hydropandas. The default is
+        False.
 
     Raises
     ------
@@ -375,6 +427,14 @@ def get_full_metadata_from_gmw(bro_id, tube_nr):
         dictionary with metadata.
 
     """
+    if use_brodata:
+        import brodata
+
+        gmw = brodata.gmw.GroundwaterMonitoringWell.from_bro_id(bro_id)
+        _check_tube_number(bro_id, tube_nr, gmw.monitoringTube.index)
+        tube_gdf = brodata.gmw.get_tube_gdf([gmw])
+        meta = tube_gdf.loc[(bro_id, tube_nr)].to_dict()
+        return meta
 
     if not bro_id.startswith("GMW"):
         raise ValueError("can only get metadata if bro id starts with GMW")
@@ -528,7 +588,25 @@ def get_tube_nrs_from_gmw(bro_id):
     return tube_numbers
 
 
-def get_metadata_from_gmw(bro_id, tube_nr):
+def _brodata_gmw_to_meta(gmw, tube_nr):
+    meta = {
+        "name": f"{gmw.broId}_{tube_nr}",
+        "location": gmw.broId,
+        "tube_nr": tube_nr,
+        "source": "BRO",
+        "x": gmw.deliveredLocation.x,
+        "y": gmw.deliveredLocation.y,
+        "unit": "m NAP",
+        "ground_level": gmw.groundLevelPosition,
+        "tube_top": gmw.monitoringTube.at[tube_nr, "tubeTopPosition"],
+        "screen_top": gmw.monitoringTube.at[tube_nr, "screenTopPosition"],
+        "screen_bottom": gmw.monitoringTube.at[tube_nr, "screenBottomPosition"],
+        "metadata_available": True,
+    }
+    return meta
+
+
+def get_metadata_from_gmw(bro_id, tube_nr, use_brodata=False):
     """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
 
@@ -538,6 +616,10 @@ def get_metadata_from_gmw(bro_id, tube_nr):
         bro id of groundwater monitoring well e.g. 'GMW000000036287'.
     tube_nr : int
         tube number you want metadata for.
+    use_brodata : str
+        When True, use the python-package `brodata` for requesting data from the
+        bro-database. When False, use internal logic in hydropandas. The default is
+        False.
 
     Raises
     ------
@@ -552,6 +634,14 @@ def get_metadata_from_gmw(bro_id, tube_nr):
         dictionary with metadata.
 
     """
+    if use_brodata:
+        import brodata
+
+        gmw = brodata.gmw.GroundwaterMonitoringWell.from_bro_id(bro_id)
+        _check_tube_number(bro_id, tube_nr, gmw.monitoringTube.index)
+        meta = _brodata_gmw_to_meta(gmw, tube_nr)
+
+        return meta
     if not isinstance(tube_nr, int):
         raise TypeError(f"expected integer got {type(tube_nr)}")
 
@@ -597,11 +687,7 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     # buis eigenschappen
     tubes = gmw.findall("dsgmw:monitoringTube", ns)
     tube_nrs = [int(tube.find("dsgmw:tubeNumber", ns).text) for tube in tubes]
-    if tube_nr not in tube_nrs:
-        raise ValueError(
-            f"gmw {bro_id} has no tube_nr {tube_nr} please choose a tube_nr from"
-            f"{tube_nrs}"
-        )
+    _check_tube_number(bro_id, tube_nr, tube_nrs)
     tube = tubes[tube_nrs.index(tube_nr)]
 
     # tube_top
@@ -624,6 +710,14 @@ def get_metadata_from_gmw(bro_id, tube_nr):
     return meta
 
 
+def _check_tube_number(bro_id, tube_nr, tube_nrs):
+    if tube_nr not in tube_nrs:
+        raise ValueError(
+            f"gmw {bro_id} has no tube_nr {tube_nr} please choose a tube_nr from"
+            f"{tube_nrs}"
+        )
+
+
 def get_obs_list_from_extent(
     extent,
     ObsClass,
@@ -633,6 +727,8 @@ def get_obs_list_from_extent(
     keep_all_obs=True,
     epsg=28992,
     ignore_max_obs=False,
+    use_brodata=False,
+    use_gm=True,
 ):
     """get a list of gmw observations within an extent.
 
@@ -657,6 +753,19 @@ def get_obs_list_from_extent(
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
         prompt. The default is False
+    use_brodata : str
+        When True, use the python-package `brodata` for requesting data from the
+        bro-database. When False, use internal logic in hydropandas. The default is
+        False.
+    use_gm : str
+        Only used when use_brodata=True. When use_gm=True, use the dataset
+        Grondwatermonitoring (GM) in samenhang - karakteristieken, hosted by PDOK. This
+        up-to-date dataset combines well- and tube-properties. So users do not have to
+        download each individual Groundwater Monitoring Well (GMW), which speeds up the
+        request. The gm-dataset does not contain the attributes `tube_top` and
+        `ground_level`, so you need to set use_gm=False if you need those. The
+        Groundwater Level Dossiers (GLD) are still downloaded individually. The default
+        is True.
 
     Raises
     ------
@@ -675,6 +784,50 @@ def get_obs_list_from_extent(
             "you will get an empty ObsCollection with only_metadata is True and"
             "keep_all_obs is False"
         )
+    if use_brodata:
+        import brodata
+
+        obs_list = []
+        if only_metadata:
+            kind = None
+        else:
+            kind = "gld"
+
+        if use_gm:
+            # use Grondwatermonitoring (GM) in samenhang
+            # so we do not have to download each individual Groundwater Monitoring Well
+            gdf = brodata.gm.get_data_in_extent(
+                extent, kind=kind, tmin=tmin, tmax=tmax, combine=True
+            )
+        else:
+            gdf = brodata.gmw.get_data_in_extent(
+                extent, kind=kind, tmin=tmin, tmax=tmax, combine=True
+            )
+
+        for index in gdf.index:
+            kwargs = dict(
+                name=f"{index[0]}_{index[1]}",
+                x=gdf.geometry[index].x,
+                y=gdf.geometry[index].y,
+                location=index[0],
+                tube_nr=index[1],
+                metadata_available=True,
+            )
+            if use_gm:
+                kwargs["screen_top"] = gdf.at[index, "screen_top_position"]
+                kwargs["screen_bottom"] = gdf.at[index, "screen_bottom_position"]
+            else:
+                kwargs["tube_top"] = gdf.at[index, "tubeTopPosition"]
+                kwargs["ground_level"] = gdf.at[index, "groundLevelPosition"]
+                kwargs["screen_top"] = gdf.at[index, "screenTopPosition"]
+                kwargs["screen_bottom"] = gdf.at[index, "screenBottomPosition"]
+
+            if only_metadata:
+                o = ObsClass(**kwargs)
+            else:
+                o = ObsClass(gdf.at[index, "observation"], **kwargs)
+            obs_list.append(o)
+        return obs_list
 
     url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
 

@@ -848,6 +848,7 @@ class GroundwaterObs(Obs):
         to_wintertime=True,
         drop_duplicate_times=True,
         only_metadata=False,
+        use_brodata=False,
     ):
         """Download BRO groundwater observations from the server.
 
@@ -871,6 +872,10 @@ class GroundwaterObs(Obs):
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
             default is False
+        use_brodata : str
+            When True, use the python-package `brodata` for requesting data from the
+            bro-database. When False, use internal logic in hydropandas. The default is
+            False.
 
         Returns
         -------
@@ -888,6 +893,7 @@ class GroundwaterObs(Obs):
             to_wintertime=to_wintertime,
             drop_duplicate_times=drop_duplicate_times,
             only_metadata=only_metadata,
+            use_brodata=use_brodata,
         )
 
         return cls(

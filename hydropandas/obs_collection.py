@@ -36,6 +36,7 @@ def read_bro(
     keep_all_obs=True,
     epsg=28992,
     ignore_max_obs=False,
+    use_brodata=False,
 ):
     """Get all the observations within an extent or within a groundwatermonitoring net.
 
@@ -64,6 +65,10 @@ def read_bro(
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
         prompt. The default is False
+    use_brodata : str
+        When True, use the python-package `brodata` for requesting data from the
+        bro-database. When False, use internal logic in hydropandas. The default is
+        False.
 
     Returns
     -------
@@ -81,6 +86,7 @@ def read_bro(
         keep_all_obs=keep_all_obs,
         epsg=epsg,
         ignore_max_obs=ignore_max_obs,
+        use_brodata=use_brodata,
     )
 
     return oc
@@ -1553,6 +1559,8 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         epsg=28992,
         ignore_max_obs=False,
+        use_brodata=False,
+        use_gm=True,
     ):
         """Get all the observations within an extent or within a groundwatermonitoring
         net.
@@ -1582,6 +1590,19 @@ class ObsCollection(pd.DataFrame):
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
             prompt. The default is False
+        use_brodata : str
+            When True, use the python-package `brodata` for requesting data from the
+            bro-database. When False, use internal logic in hydropandas. The default is
+            False.
+        use_gm : str
+            Only used when use_brodata=True. When use_gm=True, use the dataset
+            Grondwatermonitoring (GM) in samenhang - karakteristieken, hosted by PDOK. This
+            up-to-date dataset combines well- and tube-properties. So users do not have to
+            download each individual Groundwater Monitoring Well (GMW), which speeds up the
+            request. The gm-dataset does not contain the attributes `tube_top` and
+            `ground_level`, so you need to set use_gm=False if you need those. The
+            Groundwater Level Dossiers (GLD) are still downloaded individually. The default
+            is True.
 
         Returns
         -------
@@ -1601,6 +1622,8 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
                 ignore_max_obs=ignore_max_obs,
+                use_brodata=use_brodata,
+                use_gm=use_gm,
             )
             meta = {}
         elif bro_id is not None:
@@ -1609,6 +1632,7 @@ class ObsCollection(pd.DataFrame):
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
+                use_brodata=use_brodata,
             )
             name = meta.pop("name")
         else:
