@@ -502,7 +502,10 @@ class CollectionPlots:
             # PART 2: fancy section plot with lines along tube
 
             # highlight filter on section plot
-            if "screen_top" in self._obj.columns and "screen_bottom" in self._obj.columns:
+            if (
+                "screen_top" in self._obj.columns
+                and "screen_bottom" in self._obj.columns
+            ):
                 ax_section.plot(
                     [plot_x[counter]] * 2,
                     [
@@ -518,7 +521,10 @@ class CollectionPlots:
             if "screen_top" in self._obj.columns:
                 ax_section.plot(
                     [plot_x[counter]] * 2,
-                    [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
+                    [
+                        self._obj.loc[name, "screen_top"],
+                        self._obj.loc[name, "tube_top"],
+                    ],
                     color=plot_color,
                     lw=3,
                 )
