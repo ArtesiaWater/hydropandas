@@ -414,39 +414,43 @@ class CollectionPlots:
 
         if plot_well_layout_markers:
             # plot well layout via markers
-            ax_section.scatter(
-                plot_x,
-                self._obj.tube_top.values,
-                section_markersize,
-                label="tube top",
-                marker="*",
-                facecolors="none",
-                color=section_well_layout_color,
-            )
-            ax_section.scatter(
-                plot_x,
-                self._obj.ground_level.values,
-                section_markersize,
-                label="ground level",
-                marker="_",
-                color=section_well_layout_color,
-            )
-            ax_section.scatter(
-                plot_x,
-                self._obj.screen_top.values,
-                section_markersize / 2,
-                label="screen top",
-                marker="x",
-                color=section_well_layout_color,
-            )
-            ax_section.scatter(
-                plot_x,
-                self._obj.screen_bottom.values,
-                section_markersize,
-                label="screen bottom",
-                marker="+",
-                color=section_well_layout_color,
-            )
+            if "tube_top" in self._obj.columns:
+                ax_section.scatter(
+                    plot_x,
+                    self._obj.tube_top.values,
+                    section_markersize,
+                    label="tube top",
+                    marker="*",
+                    facecolors="none",
+                    color=section_well_layout_color,
+                )
+            if "ground_level" in self._obj.columns:
+                ax_section.scatter(
+                    plot_x,
+                    self._obj.ground_level.values,
+                    section_markersize,
+                    label="ground level",
+                    marker="_",
+                    color=section_well_layout_color,
+                )
+            if "screen_top" in self._obj.columns:
+                ax_section.scatter(
+                    plot_x,
+                    self._obj.screen_top.values,
+                    section_markersize / 2,
+                    label="screen top",
+                    marker="x",
+                    color=section_well_layout_color,
+                )
+            if "screen_bottom" in self._obj.columns:
+                ax_section.scatter(
+                    plot_x,
+                    self._obj.screen_bottom.values,
+                    section_markersize,
+                    label="screen bottom",
+                    marker="+",
+                    color=section_well_layout_color,
+                )
 
         # loop over all wells, plot observations and details in section plot
         for counter, name in enumerate(self._obj.index):
@@ -498,24 +502,26 @@ class CollectionPlots:
             # PART 2: fancy section plot with lines along tube
 
             # highlight filter on section plot
-            ax_section.plot(
-                [plot_x[counter]] * 2,
-                [
-                    self._obj.loc[name, "screen_top"],
-                    self._obj.loc[name, "screen_bottom"],
-                ],
-                color="k",
-                lw=3,
-                ls="-",
-            )
+            if "screen_top" in self._obj.columns and "screen_bottom" in self._obj.columns:
+                ax_section.plot(
+                    [plot_x[counter]] * 2,
+                    [
+                        self._obj.loc[name, "screen_top"],
+                        self._obj.loc[name, "screen_bottom"],
+                    ],
+                    color="k",
+                    lw=3,
+                    ls="-",
+                )
 
             # highlight blind tube on section plot
-            ax_section.plot(
-                [plot_x[counter]] * 2,
-                [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
-                color=plot_color,
-                lw=3,
-            )
+            if "screen_top" in self._obj.columns:
+                ax_section.plot(
+                    [plot_x[counter]] * 2,
+                    [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
+                    color=plot_color,
+                    lw=3,
+                )
 
             # add sandtrap when present
             if "tube_bottom" in self._obj.columns:
