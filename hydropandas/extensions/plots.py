@@ -518,7 +518,7 @@ class CollectionPlots:
                 )
 
             # highlight blind tube on section plot
-            if "screen_top" in self._obj.columns:
+            if "screen_top" in self._obj.columns and "tube_top" in self._obj.columns:
                 ax_section.plot(
                     [plot_x[counter]] * 2,
                     [
@@ -530,7 +530,10 @@ class CollectionPlots:
                 )
 
             # add sandtrap when present
-            if "tube_bottom" in self._obj.columns:
+            if (
+                "screen_bottom" in self._obj.columns
+                and "tube_bottom" in self._obj.columns
+            ):
                 ax_section.plot(
                     [plot_x[counter]] * 2,
                     [
