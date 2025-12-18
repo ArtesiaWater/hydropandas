@@ -950,7 +950,7 @@ def read_waterconnect(
         if True new locations are downloaded and stored locally (slow) otherwise a
         cached version of the locations is used. By default False
     **kwargs
-        additional keyword arguments are passed to the ObsClass.from_waterinfo()
+        additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
 
     Returns
@@ -984,6 +984,7 @@ def read_waterinfo(
     grootheid_code=None,
     groepering_code=None,
     parameter_code=None,
+    proces_type=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
@@ -1007,13 +1008,15 @@ def read_waterinfo(
     ObsClass : Obs, optional
         type of Obs to read data as, by default WaterlvlObs
     locatie : str or list of str, optional
-        select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+        select only measurement with this location(s), e.g. 'schoonhoven', default is None
     grootheid_code : str or list of str, optional
         select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
     parameter_code :  str or list of str, optional
-            select only measurement with this parameter_code, e.g. 'Cl', default is None
+        select only measurement with this parameter_code, e.g. 'Cl', default is None
+    proces_type : str or list of str, optional
+        select only measurement with this proces_type, e.g. 'meting', default is None
     tmin : pd.Timestamp, str or None, optional
         start time of observations. The default is None.
     tmax : pd.Timestamp, str or None, optional
@@ -1047,6 +1050,7 @@ def read_waterinfo(
         grootheid_code=grootheid_code,
         groepering_code=groepering_code,
         parameter_code=parameter_code,
+        proces_type=proces_type,
         tmin=tmin,
         tmax=tmax,
         only_metadata=only_metadata,
@@ -2495,7 +2499,7 @@ class ObsCollection(pd.DataFrame):
         update=False,
         **kwargs,
     ):
-        """Read waterinfo measurement within an extent or from a file or directory.
+        """Read waterconnect measurement within an extent or from a file or directory.
 
         Parameters
         ----------
@@ -2522,7 +2526,7 @@ class ObsCollection(pd.DataFrame):
             if True new locations are downloaded and stored locally (slow) otherwise a
             cached version of the locations is used. By default False
         **kwargs
-            additional keyword arguments are passed to the ObsClass.from_waterinfo()
+            additional keyword arguments are passed to the ObsClass.from_waterconnect()
             method
 
         Returns
@@ -2562,6 +2566,7 @@ class ObsCollection(pd.DataFrame):
         grootheid_code=None,
         groepering_code=None,
         parameter_code=None,
+        proces_type=None,
         tmin=None,
         tmax=None,
         only_metadata=False,
@@ -2585,13 +2590,15 @@ class ObsCollection(pd.DataFrame):
         ObsClass : Obs, optional
             type of Obs to read data as, by default WaterlvlObs
         locatie : str or list of str, optional
-            select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+            select only measurement with this location(s), e.g. 'schoonhoven', default is None
         grootheid_code : str or list of str, optional
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         parameter_code :  str or list of str, optional
             select only measurement with this parameter_code, e.g. 'Cl', default is None
+        proces_type : str or list of str, optional
+            select only measurement with this proces_type, e.g. 'meting', default is None
         tmin : pd.Timestamp, str or None, optional
             start time of observations. The default is None.
         tmax : pd.Timestamp, str or None, optional
@@ -2627,6 +2634,7 @@ class ObsCollection(pd.DataFrame):
                 grootheid_code=grootheid_code,
                 groepering_code=groepering_code,
                 parameter_code=parameter_code,
+                proces_type=proces_type,
                 tmin=tmin,
                 tmax=tmax,
                 only_metadata=only_metadata,
