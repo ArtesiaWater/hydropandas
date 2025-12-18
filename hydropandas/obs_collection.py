@@ -36,6 +36,7 @@ def read_bro(
     keep_all_obs=True,
     epsg=28992,
     ignore_max_obs=False,
+    engine="hydropandas",
 ):
     """Get all the observations within an extent or within a groundwatermonitoring net.
 
@@ -64,6 +65,9 @@ def read_bro(
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
         prompt. The default is False
+    engine : str, optional
+        Select how data from the bro-database is obtained, options are 'hydropandas' or
+        'brodata' The default is 'hydropandas'.
 
     Returns
     -------
@@ -81,6 +85,7 @@ def read_bro(
         keep_all_obs=keep_all_obs,
         epsg=epsg,
         ignore_max_obs=ignore_max_obs,
+        engine=engine,
     )
 
     return oc
@@ -1553,6 +1558,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         epsg=28992,
         ignore_max_obs=False,
+        engine="hydropandas",
     ):
         """Get all the observations within an extent or within a groundwatermonitoring
         net.
@@ -1582,6 +1588,17 @@ class ObsCollection(pd.DataFrame):
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
             prompt. The default is False
+        engine : str, optional
+            Select how data from the bro-database is obtained, options are 'hydropandas',
+            'brodata' or 'brodata_gm'. 'brodata_gm' is only available when extent is not
+            None. When engine='brodata_gm' use the dataset Grondwatermonitoring (GM) in
+            samenhang - karakteristieken, hosted by PDOK. This
+            up-to-date dataset combines well- and tube-properties. So users do not have to
+            download each individual Groundwater Monitoring Well (GMW), which speeds up the
+            request. The gm-dataset does not contain the attributes `tube_top` and
+            `ground_level`, so you need to use engine='brodata' or 'hydropandas' if you
+            need those. The Groundwater Level Dossiers (GLD) are still downloaded
+            individually. The default is True. The default is 'hydropandas'.
 
         Returns
         -------
@@ -1601,6 +1618,7 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
                 ignore_max_obs=ignore_max_obs,
+                engine=engine,
             )
             meta = {}
         elif bro_id is not None:
@@ -1609,6 +1627,7 @@ class ObsCollection(pd.DataFrame):
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
+                engine=engine,
             )
             name = meta.pop("name")
         else:
