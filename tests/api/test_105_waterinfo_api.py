@@ -29,16 +29,21 @@ def test_waarnemingen():
                 "Grootheid": {"Code": "WATHTE"},
                 "Hoedanigheid": {"Code": "NAP"},
                 "Parameter": {"Code": "NVT"},
-                "Groepering": {"Code": "NVT"},
+                "Groepering": {"Code": ""},
+                "ProcesType": "meting",
             }
         },
-        "Locatie": {"X": 627246.546177034, "Y": 5756327.60323024, "Code": "SCHOONHVN"},
+        "Locatie": {"Code": "schoonhoven"},
         "Periode": {
             "Begindatumtijd": "2024-01-01T00:00:00.000+00:00",
             "Einddatumtijd": "2024-01-03T00:00:00.000+00:00",
         },
     }
-    url = "https://waterwebservices.rijkswaterstaat.nl/ONLINEWAARNEMINGENSERVICES_DBO/OphalenWaarnemingen"
+    url = "https://ddapi20-waterwebservices.rijkswaterstaat.nl/ONLINEWAARNEMINGENSERVICES/OphalenWaarnemingen"
     r = requests.post(url, json=json, timeout=300)
 
     r.raise_for_status()
+
+    assert r.json()["Succesvol"], (
+        f"API call was not successful {r.json()['Foutmelding']}"
+    )
