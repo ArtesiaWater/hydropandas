@@ -205,7 +205,7 @@ def read_dino(
     name=None,
     **kwargs,
 ):
-    """Read dino observations within an extent from the server or from a directory with
+    """Read dino observations from a directory with
     downloaded files.
 
     Parameters
