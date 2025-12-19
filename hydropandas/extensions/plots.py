@@ -484,9 +484,9 @@ class CollectionPlots:
                     # add horizonal line to plot when minimum observation in first plot
                     # column is close to bottom of screen
                     offset = 0.1
-                    if GroundwaterObs in otypes and self._obj.loc[name, "screen_bottom"] > (
-                        plot_df[cols_local[0]].dropna().min() - offset
-                    ):
+                    if GroundwaterObs in otypes and self._obj.loc[
+                        name, "screen_bottom"
+                    ] > (plot_df[cols_local[0]].dropna().min() - offset):
                         ax_obs.axhline(
                             y=self._obj.loc[name, "screen_bottom"],
                             ls="--",
