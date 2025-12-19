@@ -3147,7 +3147,7 @@ class ObsCollection(pd.DataFrame):
         """
 
         otype = self._infer_otype()
-        if len(otype)>1:
+        if len(otype) > 1:
             raise TypeError(
                 "Please make sure that all Obs are of the same type. Currently"
                 f" found {', '.join([x.__name__ for x in otype])}."

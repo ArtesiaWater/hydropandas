@@ -503,7 +503,6 @@ class CollectionPlots:
 
             # PART 2: fancy section plot with lines along tube
 
-            
             if GroundwaterObs in otypes:
                 # highlight filter on section plot
                 ax_section.plot(
