@@ -3146,11 +3146,11 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
         """
 
-        otype = self._infer_otype()
-        if len(otype) > 1:
+        otypes = self._infer_otype()
+        if len(otypes) > 1:
             raise TypeError(
                 "Please make sure that all Obs are of the same type. Currently"
-                f" found {', '.join([x.__name__ for x in otype])}."
+                f" found {', '.join([x.__name__ for x in otypes])}."
             )
 
         xy_oc = pd.concat([self.loc[:, "x"], self.loc[:, "y"]], axis=1)
@@ -3162,7 +3162,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otype._metadata) - set(
+        meta_att = set(otypes[0]._metadata) - set(
             ["x", "y", "location", "monitoring_well", "name", "source", "meta"]
         )
         for att in meta_att:
@@ -3171,7 +3171,7 @@ class ObsCollection(pd.DataFrame):
 
         obs_list = []
         for i, col in enumerate(fill_df.columns):
-            o = otype(
+            o = otypes[0](
                 fill_df.loc[:, [col]].copy(),
                 x=xy[i][0],
                 y=xy[i][1],
