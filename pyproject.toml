@@ -60,7 +60,7 @@ full = [
     "netCDF4",
     "lxml",
     "pyarrow",
-    "brodata"
+    "brodata>=0.1.4"
 ]
 rtd = [
     "hydropandas[full]",

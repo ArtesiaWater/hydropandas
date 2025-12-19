@@ -19,6 +19,7 @@ def get_obs_list_from_extent(
     grootheid_code=None,
     groepering_code=None,
     parameter_code=None,
+    proces_type=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
@@ -37,13 +38,15 @@ def get_obs_list_from_extent(
     ObsClass : type
         class of the observations, e.g. WaterlvlObs
     locatie : str or list of str, optional
-        select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+        select only measurement with this location(s), e.g. 'schoonhoven', default is None
     grootheid_code : str or list of str, optional
         select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
     parameter_code :  str or list of str, optional
         select only measurement with this parameter_code, e.g. 'Cl', default is None
+    proces_type : str or list of str, optional
+        select only measurement with this proces type, e.g. 'meting', default is None
     tmin : str or None, optional
         start time of observations. The default is None.
     tmax : str or None, optional
@@ -77,7 +80,7 @@ def get_obs_list_from_extent(
             return []
 
     gdf = _select_location(
-        gdf, locatie, grootheid_code, groepering_code, parameter_code
+        gdf, locatie, grootheid_code, groepering_code, parameter_code, proces_type
     )
 
     if gdf.empty:
@@ -118,6 +121,7 @@ def get_waterinfo_obs(
     grootheid_code=None,
     groepering_code=None,
     parameter_code=None,
+    proces_type=None,
     tmin=None,
     tmax=None,
     **kwargs,
@@ -131,13 +135,15 @@ def get_waterinfo_obs(
     location_gdf : geopandas.GeoDataFrame, optional
         geodataframe with locations, default is None
     locatie : str or list of str, optional
-        name of the location, e.g. 'SCHOONHVN', default is None
+        name of the location, e.g. 'schoonhoven', default is None
     grootheid_code : str or list of str, optional
         code(s) of the grootheid, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         code(s) of the groepering, e.g. 'GETETBRKD2', default is None
     parameter_code : str or list of str, optional
         code(s) of the parameter, e.g. 'Cl', default is None
+    proces_type : str or list of str, optional
+        code(s) of the proces type, e.g. 'meting', default is None
     tmin : pd.Timestamp, optional
         start date of the measurements, default is None
     tmax : pd.Timestamp, optional
@@ -160,6 +166,7 @@ def get_waterinfo_obs(
             grootheid_code,
             groepering_code,
             parameter_code,
+            proces_type,
             tmin,
             tmax,
         )
@@ -198,7 +205,7 @@ def _get_metadata_from_series(selected):
 
 
 def _select_location(
-    location_gdf, locatie, grootheid_code, groepering_code, parameter_code
+    location_gdf, locatie, grootheid_code, groepering_code, parameter_code, proces_type
 ):
     """Select location from a geodataframe with locations
 
@@ -211,9 +218,11 @@ def _select_location(
     grootheid_code : str or list of str
         code(s) of the grootheid
     groepering_code : str or list of str
-        code(s) of the groepering, e.g. 'GETETBRKD2', default is None
+        code(s) of the groepering, e.g. 'GETETBRKD2'
     parameter_code : str or list of str
-        code(s) of the parameter, e.g. 'Cl', default is None
+        code(s) of the parameter, e.g. 'Cl'
+    proces_type : str or list of str
+        code(s) of the proces type, e.g. 'meting'
 
     Returns
     -------
@@ -245,10 +254,14 @@ def _select_location(
             location_gdf["Parameter.Code"].isin(parameter_code)
         ]
 
+    if proces_type is not None:
+        if isinstance(proces_type, str):
+            proces_type = [proces_type]
+        location_gdf = location_gdf.loc[location_gdf["ProcesType"].isin(proces_type)]
+
     if location_gdf.empty:
-        raise ValueError(
-            f"No location found for {locatie=}, {grootheid_code=} and {groepering_code=}"
-        )
+        msg = f"No location found for {locatie=}, {grootheid_code=}, {groepering_code=}, {parameter_code=}, {proces_type=}"
+        raise ValueError(msg)
 
     return location_gdf
 
@@ -259,6 +272,7 @@ def get_measurements_ddlpy(
     grootheid_code=None,
     groepering_code=None,
     parameter_code=None,
+    proces_type=None,
     tmin=None,
     tmax=None,
 ):
@@ -276,6 +290,8 @@ def get_measurements_ddlpy(
         code(s) of the groepering
     parameter_code : str or list of str, optional
         code(s) of the parameter
+    proces_type : str or list of str, optional
+        code(s) of the proces type, e.g. 'meting'
     tmin : pd.Timestamp, optional
         start date of the measurements, default is 2025-01-01
     tmax : pd.Timestamp, optional
@@ -309,18 +325,18 @@ def get_measurements_ddlpy(
         grootheid_code = selected["Grootheid.Code"]
         groepering_code = selected["Groepering.Code"]
         parameter_code = selected["Parameter.Code"]
+        proces_type = selected["ProcesType"]
         df = ddlpy.measurements(selected, start_date=tmin, end_date=tmax)
     else:
         selected = _select_location(
-            location_gdf, locatie, grootheid_code, groepering_code, parameter_code
+            location_gdf,
+            locatie,
+            grootheid_code,
+            groepering_code,
+            parameter_code,
+            proces_type,
         )
-        if selected.empty:
-            msg = (
-                f"No location found for {locatie=}, {grootheid_code=}, "
-                f"{groepering_code=} and {parameter_code=}"
-            )
-            raise ValueError(msg)
-        elif isinstance(selected, pd.DataFrame):
+        if isinstance(selected, pd.DataFrame):
             if len(selected) == 1:
                 selected = selected.iloc[0]
                 df = ddlpy.measurements(selected, start_date=tmin, end_date=tmax)
@@ -339,7 +355,8 @@ def get_measurements_ddlpy(
     if df.empty:
         msg = (
             f"No measurements for {locatie=}, {grootheid_code=}, "
-            f"{groepering_code=} and {parameter_code=} between {tmin} and {tmax}"
+            f"{groepering_code=}, {parameter_code=} and {proces_type=} between "
+            f"{tmin} and {tmax}"
         )
         logger.info(msg)
     else:
@@ -370,8 +387,8 @@ def get_locations_gdf(epsg=28992):
     import ddlpy
 
     locations = ddlpy.locations()
-    geometries = gpd.points_from_xy(locations["X"], locations["Y"])
-    gdf = gpd.GeoDataFrame(locations, geometry=geometries, crs=25831)
+    geometries = gpd.points_from_xy(locations["Lon"], locations["Lat"])
+    gdf = gpd.GeoDataFrame(locations, geometry=geometries, crs=4326)
     gdf.to_crs(epsg, inplace=True)
 
     return gdf

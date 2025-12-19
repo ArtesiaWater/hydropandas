@@ -243,9 +243,12 @@ class Obs(pd.DataFrame):
         -------
         col : str, int or None
             Column name. None if there are no numeric columns.
+
+        Notes
+        -----
+        If there are no observations, but the DataFrame has columns with numeric datatype,
+        then still the first numeric column name is returned.
         """
-        if self.empty:
-            return None
 
         for col in self.columns:
             if is_numeric_dtype(self[col]):
@@ -845,6 +848,7 @@ class GroundwaterObs(Obs):
         to_wintertime=True,
         drop_duplicate_times=True,
         only_metadata=False,
+        engine="hydropandas",
     ):
         """Download BRO groundwater observations from the server.
 
@@ -868,6 +872,9 @@ class GroundwaterObs(Obs):
         only_metadata : bool, optional
             if True only metadata is returned and no time series data. The
             default is False
+        engine : str, optional
+            Select how data from the bro-database is obtained, options are 'hydropandas' or
+            'brodata' The default is 'hydropandas'.
 
         Returns
         -------
@@ -885,6 +892,7 @@ class GroundwaterObs(Obs):
             to_wintertime=to_wintertime,
             drop_duplicate_times=drop_duplicate_times,
             only_metadata=only_metadata,
+            engine=engine,
         )
 
         return cls(
@@ -1323,11 +1331,12 @@ class WaterQualityObs(Obs):
         grootheid_code=None,
         groepering_code=None,
         parameter_code=None,
+        proces_type=None,
         tmin=None,
         tmax=None,
         **kwargs,
     ):
-        """Read data from waterinfo csv-file or zip.
+        """Read data from waterinfo csv, zip or using the API.
 
         Parameters
         ----------
@@ -1336,13 +1345,15 @@ class WaterQualityObs(Obs):
         location_gdf : geopandas.GeoDataFrame, optional
             geodataframe with locations, only used if path is None, default is None
         locatie : str or list of str, optional
-            select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+            select only measurement with this location(s), e.g. 'schoonhoven', default is None
         grootheid_code : str or list of str, optional
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         parameter_code :  str or list of str, optional
             select only measurement with this parameter_code, e.g. 'Cl', default is None
+        proces_type : str or list of str, optional
+            select only measurement with this proces_type, e.g. 'meting', default is None
         tmin : pd.Timestamp or str, optional
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
@@ -1367,6 +1378,7 @@ class WaterQualityObs(Obs):
             grootheid_code=grootheid_code,
             groepering_code=groepering_code,
             parameter_code=parameter_code,
+            proces_type=proces_type,
             tmin=tmin,
             tmax=tmax,
             **kwargs,
@@ -1484,11 +1496,12 @@ class WaterlvlObs(Obs):
         grootheid_code=None,
         groepering_code=None,
         parameter_code=None,
+        proces_type=None,
         tmin=None,
         tmax=None,
         **kwargs,
     ):
-        """Read data from waterinfo csv-file or zip.
+        """Read data from waterinfo csv-file, zip or using the API.
 
         Parameters
         ----------
@@ -1497,13 +1510,15 @@ class WaterlvlObs(Obs):
         location_gdf : geopandas.GeoDataFrame, optional
             geodataframe with locations, only used if path is None, default is None
         locatie : str or list of str, optional
-            select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+            select only measurement with this location(s), e.g. 'schoonhoven', default is None
         grootheid_code : str or list of str, optional
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         parameter_code :  str or list of str, optional
             select only measurement with this parameter_code, e.g. 'Cl', default is None
+        proces_type : str or list of str, optional
+            select only measurement with this proces_type, e.g. 'meting', default is None
         tmin : pd.Timestamp or str, optional
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
@@ -1528,6 +1543,7 @@ class WaterlvlObs(Obs):
             grootheid_code=grootheid_code,
             groepering_code=groepering_code,
             parameter_code=parameter_code,
+            proces_type=proces_type,
             tmin=tmin,
             tmax=tmax,
             **kwargs,
