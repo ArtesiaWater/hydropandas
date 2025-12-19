@@ -1602,7 +1602,7 @@ class ObsCollection(pd.DataFrame):
             request. The gm-dataset does not contain the attributes `tube_top` and
             `ground_level`, so you need to use engine='brodata' or 'hydropandas' if you
             need those. The Groundwater Level Dossiers (GLD) are still downloaded
-            individually. The default is True. The default is 'hydropandas'.
+            individually. The default is 'hydropandas'.
 
         Returns
         -------
