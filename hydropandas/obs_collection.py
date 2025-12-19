@@ -1229,13 +1229,13 @@ class ObsCollection(pd.DataFrame):
 
         Returns
         -------
-        otype, otypes
-            type or list of types of the observation objects
+        otypes
+            list of types of the observation objects
         """
         otypes = self.obs.apply(lambda x: type(x)).unique()
         if otypes.shape[0] == 1:
             logger.debug("inferred observation type: {}".format(otypes[0]))
-            return otypes[0]
+            return otypes
         elif otypes.shape[0] > 1:
             logger.debug("inferred multiple otypes, types: {}".format(otypes))
             return otypes
@@ -3120,7 +3120,7 @@ class ObsCollection(pd.DataFrame):
         """
 
         otype = self._infer_otype()
-        if isinstance(otype, (list, np.ndarray)):
+        if len(otype)>1:
             raise TypeError(
                 "Please make sure that all Obs are of the same type. Currently"
                 f" found {', '.join([x.__name__ for x in otype])}."
