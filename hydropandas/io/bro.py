@@ -983,7 +983,7 @@ def get_obs_list_from_extent(
         for gmw_id in tqdm(gmws_ids):
             gmws = tree.findall(f'.//*[brocom:broId="{gmw_id}"]', ns)
             if len(gmws) < 1:
-                raise RuntimeError("unexpected")
+                raise RuntimeError(f"unexpected number of gmw ids found for {gmw_id=}")
 
             tube_nrs = get_tube_nrs_from_gmw(gmw_id)
             for tube_nr in tube_nrs:
