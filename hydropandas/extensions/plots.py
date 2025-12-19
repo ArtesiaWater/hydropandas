@@ -412,7 +412,10 @@ class CollectionPlots:
             ax_section = fig.add_subplot(111)
             axes = [ax_section]
 
-        if plot_well_layout_markers:
+        # check observation types
+        otypes = self._obj._infer_otype()
+
+        if plot_well_layout_markers and GroundwaterObs in otypes:
             # plot well layout via markers
             ax_section.scatter(
                 plot_x,
@@ -423,6 +426,7 @@ class CollectionPlots:
                 facecolors="none",
                 color=section_well_layout_color,
             )
+
             ax_section.scatter(
                 plot_x,
                 self._obj.ground_level.values,
@@ -431,6 +435,7 @@ class CollectionPlots:
                 marker="_",
                 color=section_well_layout_color,
             )
+
             ax_section.scatter(
                 plot_x,
                 self._obj.screen_top.values,
@@ -439,6 +444,7 @@ class CollectionPlots:
                 marker="x",
                 color=section_well_layout_color,
             )
+
             ax_section.scatter(
                 plot_x,
                 self._obj.screen_bottom.values,
@@ -478,9 +484,9 @@ class CollectionPlots:
                     # add horizonal line to plot when minimum observation in first plot
                     # column is close to bottom of screen
                     offset = 0.1
-                    if self._obj.loc[name, "screen_bottom"] > (
-                        plot_df[cols_local[0]].dropna().min() - offset
-                    ):
+                    if GroundwaterObs in otypes and self._obj.loc[
+                        name, "screen_bottom"
+                    ] > (plot_df[cols_local[0]].dropna().min() - offset):
                         ax_obs.axhline(
                             y=self._obj.loc[name, "screen_bottom"],
                             ls="--",
@@ -497,37 +503,41 @@ class CollectionPlots:
 
             # PART 2: fancy section plot with lines along tube
 
-            # highlight filter on section plot
-            ax_section.plot(
-                [plot_x[counter]] * 2,
-                [
-                    self._obj.loc[name, "screen_top"],
-                    self._obj.loc[name, "screen_bottom"],
-                ],
-                color="k",
-                lw=3,
-                ls="-",
-            )
-
-            # highlight blind tube on section plot
-            ax_section.plot(
-                [plot_x[counter]] * 2,
-                [self._obj.loc[name, "screen_top"], self._obj.loc[name, "tube_top"]],
-                color=plot_color,
-                lw=3,
-            )
-
-            # add sandtrap when present
-            if "tube_bottom" in self._obj.columns:
+            if GroundwaterObs in otypes:
+                # highlight filter on section plot
                 ax_section.plot(
                     [plot_x[counter]] * 2,
                     [
+                        self._obj.loc[name, "screen_top"],
                         self._obj.loc[name, "screen_bottom"],
-                        self._obj.loc[name, "tube_bottom"],
+                    ],
+                    color="k",
+                    lw=3,
+                    ls="-",
+                )
+
+                # highlight blind tube on section plot
+                ax_section.plot(
+                    [plot_x[counter]] * 2,
+                    [
+                        self._obj.loc[name, "screen_top"],
+                        self._obj.loc[name, "tube_top"],
                     ],
                     color=plot_color,
                     lw=3,
                 )
+
+                # add sandtrap when present
+                if "tube_bottom" in self._obj.columns:
+                    ax_section.plot(
+                        [plot_x[counter]] * 2,
+                        [
+                            self._obj.loc[name, "screen_bottom"],
+                            self._obj.loc[name, "tube_bottom"],
+                        ],
+                        color=plot_color,
+                        lw=3,
+                    )
 
             if plot_obs:
                 # PART 3: fancy section plot with bandwith of observations
