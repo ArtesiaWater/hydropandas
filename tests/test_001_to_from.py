@@ -427,11 +427,18 @@ def test_waterinfo_from_dir():
 
 def test_waterinfo_ddlpy():
     grootheid_code = "WATHTE"
-    locatie = "SCHOONHVN"
+    locatie = ("schoonhoven",)
+    groepering_code = ("",)
+    proces_type = ("meting",)
     tmin = dt.datetime(2020, 1, 1)
     tmax = dt.datetime(2020, 1, 5)
     hpd.WaterlvlObs.from_waterinfo(
-        grootheid_code=grootheid_code, locatie=locatie, tmin=tmin, tmax=tmax
+        grootheid_code=grootheid_code,
+        groepering_code=groepering_code,
+        locatie=locatie,
+        proces_type=proces_type,
+        tmin=tmin,
+        tmax=tmax,
     )
 
 

@@ -36,6 +36,7 @@ def read_bro(
     keep_all_obs=True,
     epsg=28992,
     ignore_max_obs=False,
+    engine="hydropandas",
 ):
     """Get all the observations within an extent or within a groundwatermonitoring net.
 
@@ -64,6 +65,9 @@ def read_bro(
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
         prompt. The default is False
+    engine : str, optional
+        Select how data from the bro-database is obtained, options are 'hydropandas' or
+        'brodata' The default is 'hydropandas'.
 
     Returns
     -------
@@ -81,6 +85,7 @@ def read_bro(
         keep_all_obs=keep_all_obs,
         epsg=epsg,
         ignore_max_obs=ignore_max_obs,
+        engine=engine,
     )
 
     return oc
@@ -200,7 +205,7 @@ def read_dino(
     name=None,
     **kwargs,
 ):
-    """Read dino observations within an extent from the server or from a directory with
+    """Read dino observations from a directory with
     downloaded files.
 
     Parameters
@@ -950,7 +955,7 @@ def read_waterconnect(
         if True new locations are downloaded and stored locally (slow) otherwise a
         cached version of the locations is used. By default False
     **kwargs
-        additional keyword arguments are passed to the ObsClass.from_waterinfo()
+        additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
 
     Returns
@@ -984,6 +989,7 @@ def read_waterinfo(
     grootheid_code=None,
     groepering_code=None,
     parameter_code=None,
+    proces_type=None,
     tmin=None,
     tmax=None,
     only_metadata=False,
@@ -1007,13 +1013,15 @@ def read_waterinfo(
     ObsClass : Obs, optional
         type of Obs to read data as, by default WaterlvlObs
     locatie : str or list of str, optional
-        select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+        select only measurement with this location(s), e.g. 'schoonhoven', default is None
     grootheid_code : str or list of str, optional
         select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
     groepering_code : str or list of str, optional
         select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
     parameter_code :  str or list of str, optional
-            select only measurement with this parameter_code, e.g. 'Cl', default is None
+        select only measurement with this parameter_code, e.g. 'Cl', default is None
+    proces_type : str or list of str, optional
+        select only measurement with this proces_type, e.g. 'meting', default is None
     tmin : pd.Timestamp, str or None, optional
         start time of observations. The default is None.
     tmax : pd.Timestamp, str or None, optional
@@ -1047,6 +1055,7 @@ def read_waterinfo(
         grootheid_code=grootheid_code,
         groepering_code=groepering_code,
         parameter_code=parameter_code,
+        proces_type=proces_type,
         tmin=tmin,
         tmax=tmax,
         only_metadata=only_metadata,
@@ -1553,6 +1562,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=True,
         epsg=28992,
         ignore_max_obs=False,
+        engine="hydropandas",
     ):
         """Get all the observations within an extent or within a groundwatermonitoring
         net.
@@ -1582,6 +1592,17 @@ class ObsCollection(pd.DataFrame):
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
             prompt. The default is False
+        engine : str, optional
+            Select how data from the bro-database is obtained, options are 'hydropandas',
+            'brodata' or 'brodata_gm'. 'brodata_gm' is only available when extent is not
+            None. When engine='brodata_gm' use the dataset Grondwatermonitoring (GM) in
+            samenhang - karakteristieken, hosted by PDOK. This
+            up-to-date dataset combines well- and tube-properties. So users do not have to
+            download each individual Groundwater Monitoring Well (GMW), which speeds up the
+            request. The gm-dataset does not contain the attributes `tube_top` and
+            `ground_level`, so you need to use engine='brodata' or 'hydropandas' if you
+            need those. The Groundwater Level Dossiers (GLD) are still downloaded
+            individually. The default is True. The default is 'hydropandas'.
 
         Returns
         -------
@@ -1601,6 +1622,7 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
                 epsg=epsg,
                 ignore_max_obs=ignore_max_obs,
+                engine=engine,
             )
             meta = {}
         elif bro_id is not None:
@@ -1609,6 +1631,7 @@ class ObsCollection(pd.DataFrame):
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
+                engine=engine,
             )
             name = meta.pop("name")
         else:
@@ -2495,7 +2518,7 @@ class ObsCollection(pd.DataFrame):
         update=False,
         **kwargs,
     ):
-        """Read waterinfo measurement within an extent or from a file or directory.
+        """Read waterconnect measurement within an extent or from a file or directory.
 
         Parameters
         ----------
@@ -2522,7 +2545,7 @@ class ObsCollection(pd.DataFrame):
             if True new locations are downloaded and stored locally (slow) otherwise a
             cached version of the locations is used. By default False
         **kwargs
-            additional keyword arguments are passed to the ObsClass.from_waterinfo()
+            additional keyword arguments are passed to the ObsClass.from_waterconnect()
             method
 
         Returns
@@ -2562,6 +2585,7 @@ class ObsCollection(pd.DataFrame):
         grootheid_code=None,
         groepering_code=None,
         parameter_code=None,
+        proces_type=None,
         tmin=None,
         tmax=None,
         only_metadata=False,
@@ -2585,13 +2609,15 @@ class ObsCollection(pd.DataFrame):
         ObsClass : Obs, optional
             type of Obs to read data as, by default WaterlvlObs
         locatie : str or list of str, optional
-            select only measurement with this location(s), e.g. 'SCHOONHVN', default is None
+            select only measurement with this location(s), e.g. 'schoonhoven', default is None
         grootheid_code : str or list of str, optional
             select only measurement with this grootheid_code, e.g. 'WATHTE', default is None
         groepering_code : str or list of str, optional
             select only measurement with this groepering_code, e.g. 'GETETBRKD2', default is None
         parameter_code :  str or list of str, optional
             select only measurement with this parameter_code, e.g. 'Cl', default is None
+        proces_type : str or list of str, optional
+            select only measurement with this proces_type, e.g. 'meting', default is None
         tmin : pd.Timestamp, str or None, optional
             start time of observations. The default is None.
         tmax : pd.Timestamp, str or None, optional
@@ -2627,6 +2653,7 @@ class ObsCollection(pd.DataFrame):
                 grootheid_code=grootheid_code,
                 groepering_code=groepering_code,
                 parameter_code=parameter_code,
+                proces_type=proces_type,
                 tmin=tmin,
                 tmax=tmax,
                 only_metadata=only_metadata,
