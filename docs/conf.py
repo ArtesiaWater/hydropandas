@@ -88,13 +88,13 @@ html_theme_options = {
 
 # Add custom CSS
 html_css_files = [
-    'custom.css',
+    "custom.css",
 ]
 
 # HTML context for improved user experience
 html_context = {
     "display_github": True,
-    "github_user": "ArtesiaWater", 
+    "github_user": "ArtesiaWater",
     "github_repo": "hydropandas",
     "github_version": "master",
     "conf_py_path": "/docs/",
