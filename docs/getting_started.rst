@@ -59,7 +59,7 @@ Import hydropandas and start exploring::
 Common Use Cases
 ----------------
 
-**1. Single Time Series Analysis**
+**1. Single Time Series**
 
 Read a groundwater observation from DINO and visualize it::
 
@@ -73,7 +73,7 @@ Read a groundwater observation from DINO and visualize it::
    ax = gw['stand_m_tov_nap'].plot(title=gw.name)
    ax.set_ylabel(gw.unit)
 
-**2. Multiple Observations**
+**2. Multiple Time Series**
 
 Work with multiple observation points simultaneously::
 
