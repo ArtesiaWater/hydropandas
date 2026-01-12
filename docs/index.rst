@@ -10,39 +10,45 @@ to hydrological timeseries.
 Supported data sources
 ----------------------
 
-**🇳🇱 Dutch Sources**
-- **BRO** (Basisregistratie Ondergrond) - `Tutorial <examples/01_groundwater_observations.html>`_
-- **DINO Loket** CSV files - `Tutorial <examples/01_groundwater_observations.html>`_
-- **KNMI** weather data - `Tutorial <examples/02_knmi_observations.html>`_  
-- **Waterinfo** (RWS) - `Tutorial <examples/08_waterinfo.html>`_
-- **Lizard** platform - `Tutorial <examples/06_lizard.html>`_
-- **Matroos** system - `Tutorial <examples/11_matroos.html>`_
+**Dutch Sources**
+
+* **BRO** (Basisregistratie Ondergrond) - `Tutorial <examples/01_groundwater_observations.html>`_
+* **DINO Loket** CSV files - `Tutorial <examples/01_groundwater_observations.html>`_
+* **KNMI** weather data - `Tutorial <examples/02_knmi_observations.html>`_  
+* **Waterinfo** (RWS) - `Tutorial <examples/08_waterinfo.html>`_
+* **Lizard** platform - `Tutorial <examples/06_lizard.html>`_
+* **Matroos** system - `Tutorial <examples/11_matroos.html>`_
 
 **International Sources**
-- **Water Connect** (Australia) - `Tutorial <examples/09_waterconnect.html>`_
+
+* **Water Connect** (Australia) - `Tutorial <examples/09_waterconnect.html>`_
 
 **File Formats**
-- **FEWS PI-XML** - `Tutorial <examples/07_fews.html>`_
-- **WISKI** CSV exports
-- **Excel/CSV** files
-- **MODFLOW/IMOD** model outputs
 
-**🔗 Integration Platforms**  
-- **Pastastore** - `Tutorial <examples/03_hydropandas_and_pastas.html>`_
+* **FEWS PI-XML** - `Tutorial <examples/07_fews.html>`_
+* **WISKI** CSV exports
+* **Excel/CSV** files
+* **MODFLOW/IMOD** model outputs
+
+**Integration Platforms**
+
+* **Pastastore** - `Tutorial <examples/03_hydropandas_and_pastas.html>`_
 
 Export Capabilities
 -------------------
 
-💾 **Export Formats**
-- **Excel** (multi-sheet with metadata)
-- **GeoPackage/Shapefile** (with spatial data)
-- **JSON/CSV** (for data exchange)
-- **Pickle** (for Python workflows)
+**Export Formats**
+
+* **Excel** (multi-sheet with metadata)
+* **GeoPackage/Shapefile** (with spatial data)
+* **JSON/CSV** (for data exchange)
+* **Pickle** (for Python workflows)
 
 **Integration**
-- **geopandas** (full DataFrame compatibility)
-- **Pastas** (time series modeling)
-- **Pastastore** (bulk time series modeling)
+
+* **geopandas** (full DataFrame compatibility)
+* **Pastas** (time series modeling)
+* **Pastastore** (bulk time series modeling)
 
 See the table of contents to get started with hydropandas.
 

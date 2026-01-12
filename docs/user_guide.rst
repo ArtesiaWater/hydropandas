@@ -18,8 +18,8 @@ Overview
 Hydropandas is built around two main classes that work together to provide a powerful 
 framework for hydrological data analysis:
 
-- **Obs**: Individual time series with metadata
-- **ObsCollection**: Collections of multiple time series
+* **Obs**: Individual time series with metadata
+* **ObsCollection**: Collections of multiple time series
 
 Both classes inherit from pandas DataFrame, giving you access to all pandas functionality 
 while adding specialized methods for hydrological data.
@@ -246,7 +246,7 @@ Configuration and Settings
 
 **Getting Help**
 
-- Check the :doc:`examples gallery <examples/index>` for similar use cases
-- Search existing `GitHub Issues <https://github.com/ArtesiaWater/hydropandas/issues>`_
-- Ask questions in `GitHub Discussions <https://github.com/ArtesiaWater/hydropandas/discussions>`_
-- Contribute improvements via :doc:`contributing guide <contribute>`
+* Check the :doc:`examples gallery <examples/index>` for similar use cases
+* Search existing `GitHub Issues <https://github.com/ArtesiaWater/hydropandas/issues>`_
+* Ask questions in `GitHub Discussions <https://github.com/ArtesiaWater/hydropandas/discussions>`_
+* Contribute improvements via :doc:`contributing guide <contribute>`
