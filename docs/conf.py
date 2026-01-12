@@ -72,7 +72,6 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 #
 html_theme_options = {
-    "display_version": True,
     "prev_next_buttons_location": "both",
     "style_external_links": True,
     # Toc options
