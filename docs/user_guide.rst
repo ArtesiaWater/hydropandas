@@ -79,15 +79,15 @@ The ``ObsCollection`` Class
 The ObsCollection class manages collections of Obs objects, enabling analysis across 
 multiple measurement points simultaneously. It's particularly powerful for:
 
-- **Spatial analysis**: Compare measurements across different locations
-- **Bulk operations**: Apply operations to multiple time series at once
-- **Data management**: Organize and export large datasets efficiently
+* **Spatial analysis**: Compare measurements across different locations
+* **Bulk operations**: Apply operations to multiple time series at once
+* **Data management**: Organize and export large datasets efficiently
 
 **Best Practices**
 
-✅ **Consistent Obs Types**: Keep one observation type per collection (e.g., all GroundwaterObs)
-✅ **Logical Grouping**: Group related measurements (same region, project, or time period)  
-✅ **Metadata Management**: Ensure consistent metadata across observations
+* **Consistent Obs Types**: Keep one observation type per collection (e.g., all GroundwaterObs)
+* **Logical Grouping**: Group related measurements (same region, project, or time period)  
+* **Metadata Management**: Ensure consistent metadata across observations
 
 **Example: Working with ObsCollection**
 
@@ -122,25 +122,25 @@ Data Sources and Import Methods
 Hydropandas supports numerous data sources with specialized import methods:
 
 **Dutch Data Sources**
-- **BRO (Basisregistratie Ondergrond)**: ``read_bro()``
-- **DINO Loket**: ``read_dino()``  
-- **KNMI**: ``read_knmi()``
-- **Waterinfo (RWS)**: ``read_waterinfo()``
-- **Lizard**: ``read_lizard()``
+* **BRO (Basisregistratie Ondergrond)**: ``read_bro()``
+* **DINO Loket**: ``read_dino()``  
+* **KNMI**: ``read_knmi()``
+* **Waterinfo (RWS)**: ``read_waterinfo()``
+* **Lizard**: ``read_lizard()``
 
 **International Sources**  
-- **Water Connect (Australia)**: ``read_waterconnect()``
+* **Water Connect (Australia)**: ``read_waterconnect()``
 
 **File Formats**
-- **CSV files**: ``from_csv()``
-- **Excel files**: ``read_excel()``
-- **JSON files**: ``from_json()``
-- **FEWS PI-XML**: ``read_fews()``
-- **WISKI exports**: ``read_wiski()``
+* **CSV files**: ``from_csv()``
+* **Excel files**: ``read_excel()``
+* **JSON files**: ``from_json()``
+* **FEWS PI-XML**: ``read_fews()``
+* **WISKI exports**: ``read_wiski()``
 
 **Models**
-- **MODFLOW**: ``read_modflow()``
-- **IMOD**: ``read_imod()``
+* **MODFLOW**: ``read_modflow()``
+* **IMOD**: ``read_imod()``
 
 **Example: Reading Different Sources**
 

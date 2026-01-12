@@ -28,10 +28,11 @@ Data Sources & APIs
 **Q: Which data sources work without API keys?**
 
 A: These sources work immediately:
-- BRO (Dutch groundwater registry)
-- KNMI (Dutch weather service) 
-- Waterinfo (Dutch surface water)
-- CSV/Excel files
+
+* BRO (Dutch groundwater registry)
+* KNMI (Dutch weather service) 
+* Waterinfo (Dutch surface water)
+* CSV/Excel files
 
 **Q: How do I get API access for Lizard?**
 
@@ -164,7 +165,8 @@ If your question isn't answered here:
 4. **Report bugs**: Create a new `GitHub Issue <https://github.com/ArtesiaWater/hydropandas/issues/new>`_
 
 When asking for help, please include:
-- Your hydropandas version: ``hpd.show_versions()``
-- Complete error messages
-- Minimal code example that reproduces the issue
-- Your operating system and Python version
+
+* Your hydropandas version: ``hpd.show_versions()``
+* Complete error messages
+* Minimal code example that reproduces the issue
+* Your operating system and Python version

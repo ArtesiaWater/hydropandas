@@ -72,7 +72,7 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 #
 html_theme_options = {
-    "prev_next_buttons_location": "both",
+    "prev_next_buttons_location": "bottom",
     "style_external_links": True,
     # Toc options
     "collapse_navigation": False,

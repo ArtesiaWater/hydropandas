@@ -9,19 +9,19 @@ What is hydropandas?
 
 Hydropandas is a Python package designed specifically for working with hydrological time series data. It extends pandas DataFrame functionality with specialized methods for:
 
-- Reading data from multiple hydrological data sources
-- Managing metadata alongside time series data
-- Visualizing temporal and spatial patterns
-- Exporting data to various formats
+* Reading data from multiple hydrological data sources
+* Managing metadata alongside time series data
+* Visualizing temporal and spatial patterns
+* Exporting data to various formats
 
 Key Features
 ------------
 
-- **Multiple Data Sources**: BRO, KNMI, Lizard, Waterinfo, FEWS, and more
-- **Rich Metadata**: Store location, units, and source information with your data
-- **Spatial Analysis**: Built-in GIS capabilities with geopandas integration
-- **Interactive Visualizations**: Maps and plots for data exploration
-- **Export Options**: Excel, csv, GeoPackage, Shapefile, JSON, and more
+* **Multiple Data Sources**: BRO, KNMI, Lizard, Waterinfo, FEWS, and more
+* **Rich Metadata**: Store location, units, and source information with your data
+* **Spatial Analysis**: Built-in GIS capabilities with geopandas integration
+* **Interactive Visualizations**: Maps and plots for data exploration
+* **Export Options**: Excel, csv, GeoPackage, Shapefile, JSON, and more
 
 Installation
 ------------
@@ -73,7 +73,7 @@ Read a groundwater observation from DINO and visualize it::
    ax = gw['stand_m_tov_nap'].plot(title=gw.name)
    ax.set_ylabel(gw.unit)
 
-**2. Multiple Observations Collection**
+**2. Multiple Observations**
 
 Work with multiple observation points simultaneously::
 
@@ -119,16 +119,16 @@ Next Steps
 
 Ready to dive deeper? Check out:
 
-- :doc:`Examples gallery <examples/index>` - Comprehensive tutorials and use cases
-- :doc:`User guide <user_guide>` - Detailed explanation of core concepts  
-- :doc:`API documentation <source/modules>` - Complete reference for all functions
-- :doc:`Contributing guide <contribute>` - Help improve hydropandas
+* :doc:`Examples gallery <examples/index>` - Comprehensive tutorials and use cases
+* :doc:`User guide <user_guide>` - Detailed explanation of core concepts  
+* :doc:`API documentation <source/modules>` - Complete reference for all functions
+* :doc:`Contributing guide <contribute>` - Help improve hydropandas
 
 Need Help?
 ----------
 
-- **Found a bug?** Report it on `GitHub Issues <https://github.com/ArtesiaWater/hydropandas/issues>`_
-- **Have a question?** Start a `GitHub Discussion <https://github.com/ArtesiaWater/hydropandas/discussions>`_  
-- **Want to contribute?** See our :doc:`contribute` guide
+* **Found a bug?** Report it on `GitHub Issues <https://github.com/ArtesiaWater/hydropandas/issues>`_
+* **Have a question?** Start a `GitHub Discussion <https://github.com/ArtesiaWater/hydropandas/discussions>`_  
+* **Want to contribute?** See our :doc:`contribute` guide
 
 For more examples please see the :doc:`Examples gallery <examples/index>`.
