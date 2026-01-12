@@ -73,16 +73,32 @@ html_theme = "sphinx_rtd_theme"
 #
 html_theme_options = {
     "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    # 'style_external_links': False,
-    # 'vcs_pageview_mode': '',
-    # 'style_nav_header_background': 'white',
+    "prev_next_buttons_location": "both",
+    "style_external_links": True,
     # Toc options
     "collapse_navigation": False,
-    "sticky_navigation": False,
+    "sticky_navigation": True,
     "navigation_depth": 4,
     "includehidden": True,
     "titles_only": False,
+    # Enhanced navigation
+    "logo_only": False,
+    "display_version": True,
+}
+
+# Add custom CSS
+html_css_files = [
+    'custom.css',
+]
+
+# HTML context for improved user experience
+html_context = {
+    "display_github": True,
+    "github_user": "ArtesiaWater", 
+    "github_repo": "hydropandas",
+    "github_version": "master",
+    "conf_py_path": "/docs/",
+    "source_suffix": ".rst",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
