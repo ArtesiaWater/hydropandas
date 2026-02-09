@@ -102,11 +102,11 @@ def get_knmi_obs(
     start = start if start is None else pd.to_datetime(start)
     end = end if end is None else pd.to_datetime(end)
 
-    if (stn in (913, 967)) and (meteo_var == "RD") and settings["use_api"]:
+    if (stn in (967,)) and (meteo_var == "RD") and settings["use_api"]:
         msg = (
             f"precipitation data not available for station {stn} via the API. "
             "setting use_api to False, more info here: "
-            "https://github.com/ArtesiaWater/hydropandas/issues/245"
+            "https://github.com/ArtesiaWater/hydropandas/issues/103"
         )
         logger.warning(msg)
         settings["use_api"] = False
