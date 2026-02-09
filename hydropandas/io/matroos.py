@@ -478,7 +478,7 @@ def get_matroos_obs(
     )
 
     # remove time zone information by transforming to dutch winter time
-    df.index = pd.to_datetime(df.index, utc=True).tz_localize(None) + pd.Timedelta(
+    df.index = df.index + pd.Timedelta(
         1, unit="h"
     )
 
