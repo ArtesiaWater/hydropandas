@@ -22,7 +22,6 @@ dependencies = [
  "matplotlib",
  "tqdm",
  "requests",
- "colorama",
  "geopandas",
  "pyproj",
  "contextily",
