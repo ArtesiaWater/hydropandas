@@ -251,9 +251,9 @@ def get_zvec(x, y, gwf=None, ds=None):
     from shapely.geometry import Point
 
     if gwf and not ds:
-        ix = flopy.utils.GridIntersect(gwf.modelgrid, method="vertex")
+        ix = flopy.utils.GridIntersect(gwf.modelgrid)
         if gwf.modelgrid.grid_type == "structured":
-            res = ix.intersect(Point(x, y))
+            res = ix.intersect(Point(x, y),  )
             if len(res) > 0:
                 r, c = res["cellids"][0]
                 zvec = np.array(
@@ -614,8 +614,8 @@ class GeoAccessorObs:
             return "nan"
 
         # connect to regis netcdf
-        regis_url = "https://dinodata.nl/opendap/REGIS/REGIS.nc"
-        regis_ds = xr.open_dataset(regis_url, engine="netcdf4", decode_times=False)
+        regis_url = "https://www.dinodata.nl/opendap/REGIS/REGIS.nc"
+        regis_ds = xr.open_dataset(regis_url, decode_times=False, decode_coords="all")
 
         # rename layer in regis netcdf
         regis_ds = regis_ds.rename({"layer": "layer_old"})
