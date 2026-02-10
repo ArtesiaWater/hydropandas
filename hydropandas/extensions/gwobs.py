@@ -253,7 +253,9 @@ def get_zvec(x, y, gwf=None, ds=None):
     if gwf and not ds:
         ix = flopy.utils.GridIntersect(gwf.modelgrid)
         if gwf.modelgrid.grid_type == "structured":
-            res = ix.intersect(Point(x, y),  )
+            res = ix.intersect(
+                Point(x, y),
+            )
             if len(res) > 0:
                 r, c = res["cellids"][0]
                 zvec = np.array(
