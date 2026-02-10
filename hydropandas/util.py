@@ -219,7 +219,7 @@ class ColoredFormatter(logging.Formatter):
         """Format the specified record as text."""
 
         record.color = self.colors.get(record.levelname, "")
-        record.reset = '\x1b[0m'
+        record.reset = "\x1b[0m"
 
         return super().format(record)
 
@@ -246,11 +246,11 @@ def get_color_logger(level="INFO", logger_name=None):
         style="{",
         datefmt="%Y-%m-%d %H:%M:%S",
         colors={
-            "DEBUG": '\x1b[36m',
-            "INFO": '\x1b[32m',
-            "WARNING": '\x1b[33m',
-            "ERROR": '\x1b[31m',
-            "CRITICAL": '\x1b[31m' + '\x1b[47m' + '\x1b[1m',
+            "DEBUG": "\x1b[36m",
+            "INFO": "\x1b[32m",
+            "WARNING": "\x1b[33m",
+            "ERROR": "\x1b[31m",
+            "CRITICAL": "\x1b[31m" + "\x1b[47m" + "\x1b[1m",
         },
     )
 
