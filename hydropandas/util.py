@@ -13,7 +13,6 @@ import zipfile
 from typing import Dict, List, Optional
 
 import pandas as pd
-from colorama import Back, Fore, Style
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -220,7 +219,7 @@ class ColoredFormatter(logging.Formatter):
         """Format the specified record as text."""
 
         record.color = self.colors.get(record.levelname, "")
-        record.reset = Style.RESET_ALL
+        record.reset = "\x1b[0m"
 
         return super().format(record)
 
@@ -247,11 +246,11 @@ def get_color_logger(level="INFO", logger_name=None):
         style="{",
         datefmt="%Y-%m-%d %H:%M:%S",
         colors={
-            "DEBUG": Fore.CYAN,
-            "INFO": Fore.GREEN,
-            "WARNING": Fore.YELLOW,
-            "ERROR": Fore.RED,
-            "CRITICAL": Fore.RED + Back.WHITE + Style.BRIGHT,
+            "DEBUG": "\x1b[36m",
+            "INFO": "\x1b[32m",
+            "WARNING": "\x1b[33m",
+            "ERROR": "\x1b[31m",
+            "CRITICAL": "\x1b[31m" + "\x1b[47m" + "\x1b[1m",
         },
     )
 

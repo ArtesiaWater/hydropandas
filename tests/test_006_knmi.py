@@ -528,3 +528,44 @@ def test_rainfall_station_methods():
 
     assert precip1.equals(precip2)
     assert precip1.equals(precip3)
+
+
+def test_station_967_precipitation_api_edge_case(caplog):
+    """Test edge case: station 967 with RD (precipitation) via API.
+
+    Station 967 does not have precipitation data available via the API.
+    This test verifies that when requesting this combination, the function
+    logs a warning and automatically switches use_api to False.
+
+    Reference: https://github.com/ArtesiaWater/hydropandas/issues/103
+    """
+    start = pd.Timestamp("2010-01-01")
+    end = pd.Timestamp("2010-01-10")
+
+    # Create settings with use_api=True explicitly
+    settings = knmi._get_default_settings({"use_api": True})
+    assert settings["use_api"] is True, "Initial setting should be use_api=True"
+
+    # Capture the warning log
+    with caplog.at_level(logging.WARNING):
+        _ = knmi.get_knmi_obs(
+            stn=967,
+            meteo_var="RD",
+            start=start,
+            end=end,
+            use_api=True,
+        )
+
+    # Verify that a warning was logged about unavailable data via API
+    assert any(
+        "precipitation data not available for station 967 via the API" in record.message
+        for record in caplog.records
+        if record.levelname == "WARNING"
+    ), "Expected warning about precipitation data not available via API"
+
+    # Verify that the issue reference is in the log message
+    assert any(
+        "github.com/ArtesiaWater/hydropandas/issues/103" in record.message
+        for record in caplog.records
+        if record.levelname == "WARNING"
+    ), "Expected reference to GitHub issue #103 in warning message"

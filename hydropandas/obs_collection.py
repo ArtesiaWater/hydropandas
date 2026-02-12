@@ -418,7 +418,7 @@ def read_json(path, **kwargs):
     path : str
         full file path (including extension) of the json file.
     kwargs:
-        kwargs are passed to the pandas.read_csv function
+        kwargs are passed to the ObsCollection.from_json function
 
     Returns
     -------
