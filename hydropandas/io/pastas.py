@@ -7,7 +7,7 @@
 import logging
 import numbers
 
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from ..observation import GroundwaterObs
 
