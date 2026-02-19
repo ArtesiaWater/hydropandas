@@ -655,7 +655,7 @@ def read_lizard(
     Parameters
     ----------
     extent : list, shapefile path or None
-        get groundwater monitoring wells within this extent [xmin, ymin, xmax, ymax]
+        get groundwater monitoring wells within this extent [xmin, xmax, ymin, ymax]
         or within a predefined Polygon from a shapefile
     codes : lst of str or None
         codes of the monitoring wells
@@ -1663,7 +1663,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         extent : list, shapefile path or None
-            get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+            get groundwater monitoring wells wihtin this extent [xmin, xmax, ymin, ymax]
             or within a predefined Polygon from a shapefile
         codes : lst of str or None
             codes of the monitoring wells
