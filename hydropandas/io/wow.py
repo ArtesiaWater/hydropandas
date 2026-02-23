@@ -82,7 +82,6 @@ def get_wow_stations(
         if obs_filter not in wow_filters:
             raise ValueError(f"{obs_filter} must be one of {wow_filters}")
 
-
     url = (
         f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}"
         f"&filter={obs_filter}&date={datestr}"
@@ -95,9 +94,7 @@ def get_wow_stations(
         np.column_stack([lat_lon[:, 1], lat_lon[:, 0]]),
         columns=["x", "y"],
     )
-    stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(
-        "id", drop=False
-    )
+    stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index("id", drop=False)
 
     return stations
 
@@ -234,11 +231,8 @@ def get_wow_measurements(
     startstr = _wow_strftime(start)
     endstr = _wow_strftime(end)
     # get station measurements
-    
-    url = (
-        f"{URL_WOW_KNMI}/{stn}/export?start={startstr}"
-        f"&end={endstr}&layer={meteo_var}"
-    )
+
+    url = f"{URL_WOW_KNMI}/{stn}/export?start={startstr}&end={endstr}&layer={meteo_var}"
     meas = pd.read_csv(url, delimiter=";", index_col=["datum"])
     meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
     measurements = meas.rename(

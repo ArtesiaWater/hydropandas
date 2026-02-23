@@ -165,9 +165,7 @@ def iterparse_pi_xml(
         if element.tag.endswith("header"):
             header = {}
             for h_attr in element:
-                tag = h_attr.tag.replace(
-                    "{http://www.wldelft.nl/fews/PI}", ""
-                )
+                tag = h_attr.tag.replace("{http://www.wldelft.nl/fews/PI}", "")
 
                 if tag.startswith("locationId"):
                     logger.info(f"reading {h_attr.text}")

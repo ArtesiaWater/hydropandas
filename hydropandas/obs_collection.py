@@ -3065,13 +3065,9 @@ class ObsCollection(pd.DataFrame):
         if isinstance(key, str) and key == "all":
             keys = set().union(*[o.meta for o in out.obs.values])
             for k in keys:
-                out[k] = [
-                    o.meta.get(k, None) for o in out.obs.values
-                ]
+                out[k] = [o.meta.get(k, None) for o in out.obs.values]
         else:
-            out[key] = [
-               o.meta.get(key, None) for o in out.obs.values
-            ]
+            out[key] = [o.meta.get(key, None) for o in out.obs.values]
 
         return out
 
@@ -3160,7 +3156,13 @@ class ObsCollection(pd.DataFrame):
         # add all metadata that is equal for all observations
         kwargs = {}
         meta_att = set(otypes[0]._metadata) - {
-            "x", "y", "location", "monitoring_well", "name", "source", "meta"
+            "x",
+            "y",
+            "location",
+            "monitoring_well",
+            "name",
+            "source",
+            "meta",
         }
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
