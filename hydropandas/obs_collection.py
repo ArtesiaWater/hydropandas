@@ -16,7 +16,6 @@ from io import StringIO, TextIOWrapper
 from pathlib import Path
 from typing import List, Optional
 
-from hydropandas.io import knmi
 import numpy as np
 import pandas as pd
 
