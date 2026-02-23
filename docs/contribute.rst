@@ -53,5 +53,5 @@ For pull request we use the following guidelines (similar to the
 * Follow PEP 8 when possible. We use 
   `Ruff <https://docs.astral.sh/ruff/>`_ to ensure a consistent code
   format throughout the project.
-* We encourage backward compatability between HydroPandas versions but do not
+* We encourage backward compatibility between HydroPandas versions but do not
   ensure it (yet) because of the rapid changes to the code base.
