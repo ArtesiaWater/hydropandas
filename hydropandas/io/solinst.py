@@ -33,17 +33,17 @@ def read_solinst_file(
     # open file
     path = str(path)
     name = os.path.splitext(os.path.basename(path))[0]
-    if path.endswith(tuple([".xle", ".xml"])):
+    if path.endswith([".xle", ".xml"]):
         f = path
     elif path.endswith(".zip"):
         zf = zipfile.ZipFile(path)
-        f = zf.open("{}.xle".format(name))
+        f = zf.open(f"{name}.xle")
     else:
         raise NotImplementedError(
-            "File type '{}' not supported!".format(os.path.splitext(path)[-1])
+            f"File type '{os.path.splitext(path)[-1]}' not supported!"
         )
 
-    logger.info("reading -> {}".format(f))
+    logger.info(f"reading -> {f}")
 
     # read channel 1 data header
     df_ch1_data_header = pd.read_xml(path, xpath="/Body_xle/Ch1_data_header")

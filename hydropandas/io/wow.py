@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -29,9 +28,9 @@ wow_filters = ("wow_observations", "official_observations")
 
 def get_wow_stations(
     meteo_var: str = "rain_rate",
-    date: Optional[pd.Timestamp] = None,
-    bbox: Optional[List[float]] = None,
-    obs_filter: Optional[str] = None,
+    date: pd.Timestamp | None = None,
+    bbox: list[float] | None = None,
+    obs_filter: str | None = None,
 ) -> pd.DataFrame:
     """
     Get a DataFrame with the observation stations from WOW-KNMI.
@@ -83,24 +82,22 @@ def get_wow_stations(
         if obs_filter not in wow_filters:
             raise ValueError(f"{obs_filter} must be one of {wow_filters}")
 
-    try:
-        url = (
-            f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}"
-            f"&filter={obs_filter}&date={datestr}"
-        )
-        r = requests.get(url, timeout=120)
-        r.raise_for_status()
-        sites = r.json()["sites"]
-        lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
-        xy = pd.DataFrame(
-            np.column_stack([lat_lon[:, 1], lat_lon[:, 0]]),
-            columns=["x", "y"],
-        )
-        stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(
-            "id", drop=False
-        )
-    except requests.HTTPError as ex:
-        raise ex
+
+    url = (
+        f"{URL_WOW_KNMI}?bbox={bboxstr}&layer={meteo_var}"
+        f"&filter={obs_filter}&date={datestr}"
+    )
+    r = requests.get(url, timeout=120)
+    r.raise_for_status()
+    sites = r.json()["sites"]
+    lat_lon = np.array([x["geo"]["coordinates"] for x in sites])
+    xy = pd.DataFrame(
+        np.column_stack([lat_lon[:, 1], lat_lon[:, 0]]),
+        columns=["x", "y"],
+    )
+    stations = pd.concat([pd.DataFrame(sites), xy], axis=1).set_index(
+        "id", drop=False
+    )
 
     return stations
 
@@ -118,10 +115,10 @@ def _wow_strftime(timestamp: pd.Timestamp) -> str:
 def get_wow(
     meteo_var: str,
     stn: str,
-    xy: List[float] = None,
+    xy: list[float] | None = None,
     start: pd.Timestamp = None,
     end: pd.Timestamp = None,
-) -> Tuple[pd.DataFrame, dict]:
+) -> tuple[pd.DataFrame, dict]:
     """
     Get weather observations and metadata from a WOW-KNMI station based on the
     station name or lat, lon location
@@ -183,7 +180,7 @@ def get_wow_metadata(stn: str) -> dict:
     return metadata
 
 
-@lru_cache()
+@lru_cache
 def get_wow_measurements(
     stn: str,
     meteo_var: str,
@@ -237,21 +234,19 @@ def get_wow_measurements(
     startstr = _wow_strftime(start)
     endstr = _wow_strftime(end)
     # get station measurements
-    try:
-        url = (
-            f"{URL_WOW_KNMI}/{stn}/export?start={startstr}"
-            f"&end={endstr}&layer={meteo_var}"
-        )
-        meas = pd.read_csv(url, delimiter=";", index_col=["datum"])
-        meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
-        measurements = meas.rename(
-            columns={
-                x: meteo_vars_wow_translate[x.replace(f" [{stn}]", "")]
-                for x in meas.columns
-            }
-        )
-    except requests.HTTPError as ex:
-        raise ex
+    
+    url = (
+        f"{URL_WOW_KNMI}/{stn}/export?start={startstr}"
+        f"&end={endstr}&layer={meteo_var}"
+    )
+    meas = pd.read_csv(url, delimiter=";", index_col=["datum"])
+    meas.index = pd.DatetimeIndex(pd.to_datetime(meas.index.values), name="date")
+    measurements = meas.rename(
+        columns={
+            x: meteo_vars_wow_translate[x.replace(f" [{stn}]", "")]
+            for x in meas.columns
+        }
+    )
 
     if meteo_var == "rain_rate":
         weights = (
@@ -264,8 +259,8 @@ def get_wow_measurements(
 
 
 def get_nearest_station_xy(
-    xy: List[List[float]], stations: pd.DataFrame, ignore: List[str] = None
-) -> List[str]:
+    xy: list[list[float]], stations: pd.DataFrame, ignore: list[str] | None = None
+) -> list[str]:
     """find the stations that measure closest to the given
     longitude and latitude coordinates.
 
@@ -307,8 +302,8 @@ def get_nearest_station_df(
     stations: pd.DataFrame,
     xcol: str = "x",
     ycol: str = "y",
-    ignore: List[str] = None,
-) -> List[str]:
+    ignore: list[str] | None = None,
+) -> list[str]:
     """Find the nearest stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
 
@@ -377,9 +372,7 @@ def _latlon_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> floa
     return 12742 * np.arcsin(np.sqrt(hav))
 
 
-def _start_end_to_datetime(
-    start: Optional[str], end: Optional[str]
-) -> Tuple[pd.Timestamp]:
+def _start_end_to_datetime(start: str | None, end: str | None) -> tuple[pd.Timestamp]:
     """Convert start and endtime to datetime.
 
     Parameters

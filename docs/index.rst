@@ -30,10 +30,6 @@ Supported data sources
 * **Excel/CSV** files
 * **MODFLOW/IMOD** model outputs
 
-**Integration Platforms**
-
-* **Pastastore** - `Tutorial <examples/03_hydropandas_and_pastas.html>`_
-
 Export Capabilities
 -------------------
 
@@ -44,7 +40,7 @@ Export Capabilities
 * **JSON/CSV** (for data exchange)
 * **Pickle** (for Python workflows)
 
-**Integration**
+**Coupled Platforms**
 
 * **geopandas** (full DataFrame compatibility)
 * **Pastas** (time series modeling)

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def _read_wiski_header(f, header_sep=":", header_identifier="#", end_header_str=None):
     line = f.readline()
-    header = dict()
+    header = {}
     while header_identifier in line:
         prop, val = line.split(header_sep)
         prop = prop.strip().replace(header_identifier, "")
@@ -22,9 +22,8 @@ def _read_wiski_header(f, header_sep=":", header_identifier="#", end_header_str=
             pass
         header[prop] = val
         line = f.readline()
-        if end_header_str is not None:
-            if end_header_str in line:
-                break
+        if (end_header_str is not None) and end_header_str in line:
+            break
 
     return line, header
 
@@ -73,13 +72,13 @@ def read_wiski_file(
     metadata : dict
         A dictionary containing metadata about the data in the file.
     """
-    logger.info("reading -> {}".format(os.path.split(path)[-1]))
+    logger.info(f"reading -> {os.path.split(path)[-1]}")
 
     if translate_dic is None:
         translate_dic = {}
 
     # manually break header parse at certain point
-    if "end_header_str" in kwargs.keys():
+    if "end_header_str" in kwargs:
         end_header_str = kwargs.pop("end_header_str")
     else:
         end_header_str = None
@@ -214,20 +213,16 @@ def read_wiski_dir(
 
     if not unzip_fnames:
         raise FileNotFoundError(
-            "no files were found in '{}' that end with '{}'".format(
-                os.path.join(dirname), suffix
-            )
+            f"no files were found in '{os.path.join(dirname)}' that end with '{suffix}'"
         )
 
     # gather all obs in list
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
-        logger.info("reading {0}/{1} -> {2}".format(i + 1, len(unzip_fnames), csv))
+        logger.info(f"reading {i + 1}/{len(unzip_fnames)} -> {csv}")
         obs = ObsClass.from_wiski(os.path.join(dirname, csv), **kwargs)
 
-        if obs.metadata_available:
-            obs_list.append(obs)
-        elif keep_all_obs:
+        if obs.metadata_available or keep_all_obs:
             obs_list.append(obs)
         else:
             logger.info(f"not added to collection -> {csv}")

@@ -22,7 +22,6 @@ def test_waterlevel_observation_within_extent():
     oc = hpd.read_matroos(
         extent=extent, units="waterlevel", sources="observed", keep_all_obs=False
     )
-    oc
 
     assert not oc.empty
-    assert all([not o.empty for o in oc.obs.values])
+    assert all(not o.empty for o in oc.obs.values)
