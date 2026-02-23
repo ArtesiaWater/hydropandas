@@ -1188,10 +1188,10 @@ class ObsCollection(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = (
+    _metadata = [
         "name",
         "meta",
-    )
+    ]
 
     def __init__(self, *args, **kwargs):
         self.name = kwargs.pop("name", "")

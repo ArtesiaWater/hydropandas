@@ -96,7 +96,7 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ("name", "x", "y", "location", "meta", "filename", "source", "unit")
+    _metadata = ["name", "x", "y", "location", "meta", "filename", "source", "unit"]
 
     def __init__(self, *args, **kwargs):
         """Constructor of Obs class.
@@ -789,14 +789,14 @@ class GroundwaterObs(Obs):
 
     """
 
-    _metadata = Obs._metadata + (
+    _metadata = Obs._metadata + [
         "tube_nr",
         "screen_top",
         "screen_bottom",
         "ground_level",
         "tube_top",
         "metadata_available",
-    )
+    ]
 
     def __init__(self, *args, **kwargs):
         """Constructor for ObsCollection.
@@ -1263,11 +1263,11 @@ class WaterQualityObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + (
+    _metadata = Obs._metadata + [
         "tube_nr",
         "ground_level",
         "metadata_available",
-    )
+    ]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
@@ -1386,7 +1386,7 @@ class WaterlvlObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ("metadata_available",)
+    _metadata = Obs._metadata + ["metadata_available"]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
@@ -1550,7 +1550,7 @@ class ModelObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ("model",)
+    _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
@@ -1573,7 +1573,7 @@ class MeteoObs(Obs):
     Subclass of the Obs class
     """
 
-    _metadata = Obs._metadata + ("station", "meteo_var")
+    _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):

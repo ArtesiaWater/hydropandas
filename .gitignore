@@ -114,3 +114,10 @@ docs/examples/test*
 tests/data/excel/
 *.pklz
 docs/examples/my_obs_collection.xlsx
+docs/examples/my_gw_obs.csv
+docs/examples/my_gw_obs.json
+docs/examples/my_gw_obs.pklz
+docs/examples/my_obs_collection.json
+docs/examples/my_obs_collection.pklz
+docs/examples/my_obs_collection.xlsx
+docs/examples/my_obs_collection
