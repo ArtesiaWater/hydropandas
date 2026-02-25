@@ -176,7 +176,7 @@ def _prepare_API_input(nr_pages, url_groundwater):
     urls = []
     for page in range(nr_pages):
         true_page = page + 1  # The real page number is attached to the import thread
-        urls += [url_groundwater + "&page={}".format(true_page)]
+        urls += [url_groundwater + f"&page={true_page}"]
     return urls
 
 
@@ -460,8 +460,7 @@ def get_timeseries_uuid(
         urls = _prepare_API_input(nr_pages, base_url_with_params)
 
         # Adjust nr_threads if more threads than pages
-        if nr_threads > nr_pages:
-            nr_threads = nr_pages
+        nr_threads = min(nr_threads, nr_pages)
 
         # Download all pages in parallel using existing helper
         with ThreadPoolExecutor(max_workers=nr_threads) as executor:
@@ -541,7 +540,7 @@ def _filter_timeseries(ts_dict, datafilters):
             else:
                 raise ValueError(f"Unknown filter name: {f}")
         else:
-            raise ValueError(
+            raise TypeError(
                 "Each filter must be a string referring to a standard filter."
             )
 
@@ -987,7 +986,7 @@ def get_obs_list_from_extent(
     if isinstance(extent, (list, tuple)):
         polygon_T = extent_to_wgs84_polygon(extent)
 
-    elif isinstance(extent, str) or isinstance(extent, pathlib.PurePath):
+    elif isinstance(extent, (str, pathlib.PurePath)):
         polygon = geopandas.read_file(extent)
         # TODO: check this transformation
         polygon_T = polygon.to_crs("WGS84", "EPSG:28992").loc[0, "geometry"]
@@ -1005,19 +1004,17 @@ def get_obs_list_from_extent(
     nr_results = groundwaterstation_data["count"]
     nr_pages = math.ceil(nr_results / page_size)
 
-    logger.info("Number of monitoring wells: {}".format(nr_results))
-    logger.info("Number of pages: {}".format(nr_pages))
+    logger.info(f"Number of monitoring wells: {nr_results}")
+    logger.info(f"Number of pages: {nr_pages}")
 
     if nr_results == 0:
-        ValueError(r.json())
         logger.warning(
             "No monitoring wells found in the specified extent. "
             "Please check the extent or the organisation."
         )
-        return []
+        raise ValueError(r.json())
 
-    if nr_threads > nr_pages:
-        nr_threads = nr_pages
+    nr_threads = min(nr_threads, nr_pages)
 
     urls = _prepare_API_input(nr_pages, url_groundwaterstation_extent)
 

@@ -53,9 +53,10 @@ def _get_waterlvl_obs():
 
 
 def _obscollection_from_list():
-    o_list = []
-    for i in range(10):
-        o_list.append(_get_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i))
+
+    o_list = [
+        _get_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i) for i in range(10)
+    ]
 
     oc = hpd.ObsCollection.from_list(o_list)
 
@@ -91,13 +92,13 @@ def test_copy_obs():
     o.meta["hello"] = "world"
 
     # check deep copy attributes
-    assert "hello" not in o2.meta.keys(), "copy method failed"
+    assert "hello" not in o2.meta, "copy method failed"
 
     o3 = o.copy(deep=False)
 
     # check shallow copy attributes
     o.meta["answer"] = 42
-    assert "answer" in o3.meta.keys(), "copy method failed"
+    assert "answer" in o3.meta, "copy method failed"
 
 
 def test_returns():

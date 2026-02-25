@@ -95,9 +95,13 @@ extend-include = ["*.ipynb"]
 lint.extend-select = ["I"]
 show-fixes = true
 fix = true
+exclude = ["update_knmi_stations.py", "update_matroos.py",  "wiski.py"]
+lint.ignore = ["RET504", "DTZ005", "DTZ001", "SIM102", "SIM115", "PERF401"]
 
 [tool.ruff.lint.per-file-ignores]
 "knmi.py" = ["E712"] # see PR 239
+"observation.py" = ["RUF012"]
+"obs_collection.py" = ["RUF012"]
 
 [tool.pytest.ini_options]
 addopts = "--durations=0"

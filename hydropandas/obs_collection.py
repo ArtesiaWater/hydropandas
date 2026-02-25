@@ -14,7 +14,6 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -432,7 +431,7 @@ def read_json(path, **kwargs):
         fo = open(path, "r")
         closing = True
     else:
-        raise ValueError("path should be a string or a file object")
+        raise TypeError("path should be a string or a file object")
 
     d = json.load(fo)
     if closing:
@@ -1243,10 +1242,10 @@ class ObsCollection(pd.DataFrame):
         """
         otypes = self.obs.apply(lambda x: type(x)).unique()
         if otypes.shape[0] == 1:
-            logger.debug("inferred observation type: {}".format(otypes[0]))
+            logger.debug(f"inferred observation type: {otypes[0]}")
             return otypes
         elif otypes.shape[0] > 1:
-            logger.debug("inferred multiple otypes, types: {}".format(otypes))
+            logger.debug(f"inferred multiple otypes, types: {otypes}")
             return otypes
         else:
             raise TypeError("could not infer observation type")
@@ -1433,9 +1432,8 @@ class ObsCollection(pd.DataFrame):
         -------
         None.
         """
-        if check_consistency:
-            if not self._is_consistent():
-                raise RuntimeError("inconsistent observation collection")
+        if check_consistency and not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
             raise TypeError("Observation should be of type hydropandas.observation.Obs")
@@ -2318,14 +2316,14 @@ class ObsCollection(pd.DataFrame):
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
-                TypeError(
+                raise TypeError(
                     "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
                     "list or tuple"
                 )
         elif isinstance(ObsClasses, (list, tuple)):
             pass
         else:
-            TypeError(
+            raise TypeError(
                 "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
                 "list or tuple"
             )
@@ -3066,15 +3064,10 @@ class ObsCollection(pd.DataFrame):
         out = self.copy()
         if isinstance(key, str) and key == "all":
             keys = set().union(*[o.meta for o in out.obs.values])
-            for key in keys:
-                out[key] = [
-                    o.meta[key] if key in o.meta.keys() else None
-                    for o in out.obs.values
-                ]
+            for k in keys:
+                out[k] = [o.meta.get(k, None) for o in out.obs.values]
         else:
-            out[key] = [
-                o.meta[key] if key in o.meta.keys() else None for o in out.obs.values
-            ]
+            out[key] = [o.meta.get(key, None) for o in out.obs.values]
 
         return out
 
@@ -3112,11 +3105,11 @@ class ObsCollection(pd.DataFrame):
 
     def interpolate(
         self,
-        xy: List[List[float]],
+        xy: list[list[float]],
         kernel: str = "thin_plate_spline",
         kernel2: str = "linear",
-        epsilon: Optional[int] = None,
-        col: Optional[str] = None,
+        epsilon: int | None = None,
+        col: str | None = None,
     ):
         """Interpolation method for ObsCollections using the Scipy radial basis function
         (RBF)
@@ -3162,20 +3155,26 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otypes[0]._metadata) - set(
-            ["x", "y", "location", "monitoring_well", "name", "source", "meta"]
-        )
+        meta_att = set(otypes[0]._metadata) - {
+            "x",
+            "y",
+            "location",
+            "monitoring_well",
+            "name",
+            "source",
+            "meta",
+        }
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
 
         obs_list = []
-        for i, col in enumerate(fill_df.columns):
+        for i, coll in enumerate(fill_df.columns):
             o = otypes[0](
-                fill_df.loc[:, [col]].copy(),
+                fill_df.loc[:, [coll]].copy(),
                 x=xy[i][0],
                 y=xy[i][1],
-                name=col,
+                name=coll,
                 source=f"interpolation {self.name}",
                 meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
                 **kwargs,
