@@ -1,22 +1,23 @@
 import json
 import pathlib
-from datetime import datetime
+from datetime import date, datetime
 
 import numpy as np
+from pandas import Timestamp
 
 
 class HydropandasEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, (np.float32, np.float64)):
-            return float(obj)
-        elif isinstance(obj, pathlib.PurePath):
-            return str(obj)
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, type):
-            return f"class : {obj.__name__}"
+    def default(self, o):
+        if isinstance(o, np.integer):
+            return int(o)
+        elif isinstance(o, np.floating):
+            return float(o)
+        elif isinstance(o, (pathlib.Path, pathlib.PurePath)):
+            return str(o)
+        elif isinstance(o, (datetime, date, Timestamp)):
+            return o.isoformat()
+        elif isinstance(o, type):
+            return f"class : {o.__name__}"
 
         # Add other conversions here
-        return super().default(obj)
+        return super().default(o)

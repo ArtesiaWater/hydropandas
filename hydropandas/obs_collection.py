@@ -2206,6 +2206,8 @@ class ObsCollection(pd.DataFrame):
         elif isinstance(path, (str, os.PathLike)):
             fo = open(path, "r")
             closing = True
+        else:
+            raise TypeError("path should be a string or a file-like object")
 
         d = json.load(fo)
         if closing:
@@ -2913,10 +2915,10 @@ class ObsCollection(pd.DataFrame):
         d = {k: getattr(self, k) for k in self._metadata}
         d["obstype"] = type(self).__name__
         if self.empty:
-            d["df"] = super().to_json()
+            d["df"] = super().to_json(date_format="iso")
             d["obs_list"] = []
         else:
-            d["df"] = super().drop(columns="obs").to_json()
+            d["df"] = super().drop(columns="obs").to_json(date_format="iso")
             d["obs_list"] = [o.to_json() for o in self.obs]
 
         if path is None:
