@@ -762,7 +762,7 @@ class Obs(pd.DataFrame):
         None
         """
         d = self.to_dict()
-        d["obs"] = super().to_json()
+        d["obs"] = super().to_json(date_format="iso")
         if path is None:
             return json.dumps(d, cls=cls, **kwargs)
         else:

@@ -15,21 +15,21 @@ maintainers = [
     { name = "D.A. Brakenhoff", email = "d.brakenhoff@artesia-water.nl" },
     { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "scipy",
- "pandas",
- "matplotlib",
- "tqdm",
- "requests",
- "geopandas",
- "pyproj",
- "contextily",
- "bokeh",
- "branca",
- "folium",
- "rws-ddlpy",
- "pastastore>=1.10.2",
+    "pandas",
+    "matplotlib",
+    "tqdm",
+    "requests",
+    "geopandas",
+    "pyproj",
+    "contextily",
+    "bokeh",
+    "branca",
+    "folium",
+    "rws-ddlpy",
+    "pastastore>=1.10.2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -59,7 +59,7 @@ full = [
     "netCDF4",
     "lxml",
     "pyarrow",
-    "brodata>=0.1.4"
+    "brodata>=0.1.4",
 ]
 rtd = [
     "hydropandas[full]",
@@ -71,7 +71,7 @@ rtd = [
     "sphinx_rtd_theme",
     "Ipython",
     "nbsphinx",
-    "nbsphinx_link"
+    "nbsphinx_link",
 ]
 ruffing = ["ruff"]
 pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
@@ -95,11 +95,11 @@ extend-include = ["*.ipynb"]
 lint.extend-select = ["I"]
 show-fixes = true
 fix = true
-exclude = ["update_knmi_stations.py", "update_matroos.py",  "wiski.py"]
+exclude = ["update_knmi_stations.py", "update_matroos.py", "wiski.py"]
 lint.ignore = ["RET504", "DTZ005", "DTZ001", "SIM102", "SIM115", "PERF401"]
 
 [tool.ruff.lint.per-file-ignores]
-"knmi.py" = ["E712"] # see PR 239
+"knmi.py" = ["E712"]             # see PR 239
 "observation.py" = ["RUF012"]
 "obs_collection.py" = ["RUF012"]
 
