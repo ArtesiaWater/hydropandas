@@ -24,8 +24,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 from zipfile import ZipFile
 
-from hydropandas.observation import Obs, PrecipitationObs, EvaporationObs
-from hydropandas.obs_collection import ObsCollection
 import numpy as np
 import pandas as pd
 import requests
