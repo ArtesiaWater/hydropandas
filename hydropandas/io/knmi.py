@@ -2349,171 +2349,146 @@ def _stn_to_knmi_id(
     knmi_id = stations.loc[stations['stn_nr'] == stn_nr, 'key']
     return knmi_id
 
-def knmi_scenarios_transformed(
-        stn_nr: str,
-        years: List[str] = ['2033','2050','2100','2150'],
-        scenarios: List[str] = ['Ld','Ln','Md','Mn','Hd','Hn'],
-        tmin: pd.Timestamp = '1991-01-01',
-        tmax: pd.Timestamp = '2020-12-31',
-        evap: str = "Penman",
-        remove_na: bool = True,
-        ):
-    
-    """
+def get_knmi_scenarios_data(
+    stn_nr: str,
+    years: List[str] = None,
+    scenarios: List[str] = None,
+    tmin: Union[pd.Timestamp, str] = "1991-01-01",
+    tmax: Union[pd.Timestamp, str] = "2020-12-31",
+    evap: str = "Penman",
+    remove_na: bool = True,
+) -> Dict[str, pd.DataFrame]:
+    """Fetch and process KNMI climate scenario data for a station.
+
+    Retrieves climate scenario data from KNMI and returns a dictionary of
+    processed DataFrames with temperature, precipitation, and evaporation data.
+
     Parameters
     ----------
-    station : str
-        The number_name_province of the station.
+    stn_nr : str
+        Station number as string (e.g., "550").
     years : list, optional
         Years of climate scenario. The default is ['2033','2050','2100','2150'].
     scenarios : list, optional
-        Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'], this includes all scenario's including the original measurements .
-    tmin : pd.Timestamp, optional
-        Start of timeseries. The default is '1991-01-01'. Dates before default value are changed to default value.
-    tmax : pd.Timestamp, optional
-        End of timeseries. The default is '2020-12-31'. Dates after default value are changed to default value.
+        Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'].
+        This includes all scenarios including the original measurements.
+    tmin : pd.Timestamp or str, optional
+        Start of timeseries. The default is '1991-01-01'.
+        Dates before this value are changed to this value.
+    tmax : pd.Timestamp or str, optional
+        End of timeseries. The default is '2020-12-31'.
+        Dates after this value are changed to this value.
     evap : str, optional
-        Method for calculating evaporation. The default is "Makkink". "Penman" and "Hargreaves" are also available. 
-    remove_na: bool = True, optional
+        Method for calculating evaporation. Options are 'Makkink', 'Penman',
+        or 'Hargreaves'. The default is 'Penman'.
+    remove_na : bool, optional
         If True, values of -99.99 in the data are replaced with NaN.
-        DESCRIPTION.
+        The default is True.
 
     Returns
     -------
-    oc : TYPE
-        DESCRIPTION.
+    dict
+        Dictionary mapping scenario names to pandas DataFrames with processed
+        climate data. Each DataFrame has a datetime index and columns:
+        TG (temperature), RH (precipitation), Q (radiation), TX, TN, UG, FG,
+        and EV24 (evaporation).
 
+    Raises
+    ------
+    RuntimeError
+        If the API request fails or data cannot be retrieved.
     """
-    
-    station = _stn_to_knmi_id(stn_nr)
-    
-    tmin = max('1991-01-01', tmin)
-    tmax = min('2020-12-31', tmax)
-    
-    units = {
-        "TG": "°C",
-        "RH": "mm/day",
-        "Q": "W/m²",
-        "TX": "°C",
-        "TN": "°C",
-        "UG": "%",
-        "FG": "m/s",
-        "EV24": "mm/day"
-    }
+    if years is None:
+        years = ["2033", "2050", "2100", "2150"]
+    if scenarios is None:
+        scenarios = ["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
 
-    params = [
-        ('series_variables[scenarios][]', s) for s in scenarios
-    ] + [
-        ('series_variables[years][]', y) for y in years
-    ] + [
-        ('series_variables[station]', station), 
-        ('series_variables[date_range][]', tmin),
-        ('series_variables[date_range][]', tmax),
-        ('series_variables[climate_variables]', 'temp'),
-    ]
-        
+    # Convert timestamp strings if needed
+    tmin = str(tmin) if not isinstance(tmin, str) else tmin
+    tmax = str(tmax) if not isinstance(tmax, str) else tmax
+
+    # Limit to available date range
+    tmin = max("1991-01-01", tmin)
+    tmax = min("2020-12-31", tmax)
+
+    # Get station KNMI ID
+    station = _stn_to_knmi_id(stn_nr)
+
+    # Build request parameters
+    params = (
+        [("series_variables[scenarios][]", s) for s in scenarios]
+        + [("series_variables[years][]", y) for y in years]
+        + [
+            ("series_variables[station]", station),
+            ("series_variables[date_range][]", tmin),
+            ("series_variables[date_range][]", tmax),
+            ("series_variables[climate_variables]", "temp"),
+        ]
+    )
+
+    # Download data from KNMI API
     response = requests.get(URL_KNMI_TRANSFORMED_SERIES, params=params)
+    response.raise_for_status()
     zipped = ZipFile(BytesIO(response.content))
 
+    # Read and process raw CSV files
     dfs = {}
     for name in zipped.namelist():
-        if name.endswith(".csv"):        
+        if name.endswith(".csv"):
             base = os.path.splitext(name)[0]
             base_ext = base.split("_")[-1]
 
             if base_ext == "obs":
                 df = pd.read_csv(
                     zipped.open(name),
-                    sep=",", 
+                    sep=",",
                     skiprows=3,
-                    usecols=list(range(0,8))
-                    )
+                    usecols=list(range(0, 8)),
+                )
             else:
                 df = pd.read_csv(
                     zipped.open(name),
-                    sep=",", 
+                    sep=",",
                     skiprows=4,
-                    usecols=list(range(0,8))
-                    )
-        if remove_na == True:
-            df = df.replace(-99.99, np.nan)
-        dfs[base] = df
-                
+                    usecols=list(range(0, 8)),
+                )
+            if remove_na:
+                df = df.replace(-99.99, np.nan)
+            dfs[base] = df
+
+    # Process each DataFrame: set datetime index and calculate evaporation
     for key, df in dfs.items():
         date_col = df.columns[0]
         df[date_col] = pd.to_datetime(df[date_col], format="%Y%m%d", errors="coerce")
         df = df.set_index(date_col)
-        df.index.name = 'date'
-        
-        df.columns = ["TG", 
-                      "RH", 
-                      "Q", 
-                      "TX", 
-                      "TN", 
-                      "UG", 
-                      "FG"]
-        if evap == "Makkink":
-            df['EV24'] = makkink(df["TG"], 
-                                      df['Q']* 8.64) * 10E2
-        if evap == "Penman":
-            df['EV24'] = penman(df["TG"], 
-                                            df["TN"], 
-                                            df["TX"], 
-                                            df['Q']* 8.64, 
-                                            df['FG'], 
-                                            df['UG'], 
-                                            df.index) * 10E2
-            
-        if evap == "Hargreaves":
-            df['EV24'] = hargreaves(df["TG"], 
-                                    df["TN"], 
-                                    df["TX"], 
-                                    df.index) * 10E2
-        dfs[key] = df
-    
-    stations = get_stations("RD")
-    #oc = hpd.ObsCollection(name="KNMI-transformed-climate-series")
-    obs_list = []  
-    for key, df in dfs.items():
-        for col in df.columns:
-            meas = pd.DataFrame(index=df.index, data={"value": df[col]})
-            stn_nr = int(key.split("_")[0])
-            variable = "".join(col.split())
-            scenario = key.split("_")[-1]
-            locstring = key.split("_")[1:-1]
-            location = locstring[0].upper()
-            if variable == "RD":
-                o = PrecipitationObs(
-                    meas,
-                    name=f"{variable}_{stn_nr}_{location}_{scenario}",
-                    unit=units[variable],
-                    source=f"KNMI-Climate-Scenario_{scenario}",
-                    x = stations.iloc[stn_nr].x,
-                    y = stations.iloc[stn_nr].y,
-                    location =  location,
-                    )
-            elif variable == "EV24":
-                o = EvaporationObs(
-                    meas,
-                    name=f"{variable}_{stn_nr}_{location}_{scenario}",
-                    unit=units[variable],
-                    source=f"KNMI-Climate-Scenario_{scenario}",
-                    x = stations.iloc[stn_nr].x,
-                    y = stations.iloc[stn_nr].y,
-                    location =  location,
-                    )
-            else: 
-                o = Obs(
-                    meas,
-                    name=f"{variable}_{stn_nr}_{location}_{scenario}",
-                    unit=units[variable],
-                    source=f"KNMI-Climate-Scenario_{scenario}",
-                    x = stations.iloc[stn_nr].x,
-                    y = stations.iloc[stn_nr].y,
-                    location =  location,
-                    )
-            obs_list.append(o)
-            
-    oc = ObsCollection(obs_list)
+        df.index.name = "date"
 
-    return oc
+        df.columns = ["TG", "RH", "Q", "TX", "TN", "UG", "FG"]
+
+        # Calculate evaporation based on selected method
+        if evap == "Makkink":
+            df["EV24"] = makkink(df["TG"], df["Q"] * 8.64) * 10e2
+        elif evap == "Penman":
+            df["EV24"] = (
+                penman(
+                    df["TG"],
+                    df["TN"],
+                    df["TX"],
+                    df["Q"] * 8.64,
+                    df["FG"],
+                    df["UG"],
+                    df.index,
+                )
+                * 10e2
+            )
+        elif evap == "Hargreaves":
+            df["EV24"] = hargreaves(df["TG"], df["TN"], df["TX"], df.index) * 10e2
+        else:
+            raise ValueError(
+                f"Unknown evaporation method: {evap}. "
+                "Choose from 'Makkink', 'Penman', or 'Hargreaves'."
+            )
+
+        dfs[key] = df
+
+    return dfs

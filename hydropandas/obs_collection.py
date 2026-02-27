@@ -14,7 +14,7 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -629,6 +629,76 @@ def read_knmi(
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
+    )
+
+    return oc
+
+
+def read_knmi_scenarios(
+    stn_nr: str,
+    years: List[str] = None,
+    scenarios: List[str] = None,
+    tmin: Union[str, None] = "1991-01-01",
+    tmax: Union[str, None] = "2020-12-31",
+    evap: str = "Penman",
+    remove_na: bool = True,
+    name: str = "",
+):
+    """Get KNMI climate scenario observations for a station.
+
+    Retrieves climate scenario data from KNMI and returns an ObsCollection
+    with temperature, precipitation, and evaporation observations for different
+    climate scenarios.
+
+    Parameters
+    ----------
+    stn_nr : str
+        Station number as string (e.g., "550").
+    years : list, optional
+        Years of climate scenario. The default is ['2033','2050','2100','2150'].
+    scenarios : list, optional
+        Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'].
+        This includes all scenarios including the original measurements.
+    tmin : str or None, optional
+        Start of timeseries. The default is '1991-01-01'.
+        Dates before this value are changed to this value.
+    tmax : str or None, optional
+        End of timeseries. The default is '2020-12-31'.
+        Dates after this value are changed to this value.
+    evap : str, optional
+        Method for calculating evaporation. Options are 'Makkink', 'Penman',
+        or 'Hargreaves'. The default is 'Penman'.
+    remove_na : bool, optional
+        If True, values of -99.99 in the data are replaced with NaN.
+        The default is True.
+    name : str, optional
+        Name of the observation collection. The default is "".
+
+    Returns
+    -------
+    ObsCollection
+        Collection of climate scenario observations with temperature, precipitation,
+        and evaporation data for different scenarios.
+
+    Examples
+    --------
+    >>> oc = hpd.read_knmi_scenarios("550")
+    >>> oc = hpd.read_knmi_scenarios(
+    ...     "550",
+    ...     years=["2050", "2100"],
+    ...     scenarios=["Md", "Hd"],
+    ...     evap="Makkink"
+    ... )
+    """
+    oc = ObsCollection.from_knmi_scenarios(
+        stn_nr=stn_nr,
+        years=years,
+        scenarios=scenarios,
+        tmin=tmin,
+        tmax=tmax,
+        evap=evap,
+        remove_na=remove_na,
+        name=name,
     )
 
     return oc
@@ -2352,6 +2422,85 @@ class ObsCollection(pd.DataFrame):
         )
 
         obs_df = util._obslist_to_frame(obs_list)
+
+        return cls(obs_df, name=name, meta=meta)
+
+    @classmethod
+    def from_knmi_scenarios(
+        cls,
+        stn_nr: str,
+        years: List[str] = None,
+        scenarios: List[str] = None,
+        tmin: Union[str, None] = "1991-01-01",
+        tmax: Union[str, None] = "2020-12-31",
+        evap: str = "Penman",
+        remove_na: bool = True,
+        name: str = "",
+    ):
+        """Create ObsCollection from KNMI climate scenario data.
+
+        Retrieves climate scenario data from KNMI for a specific station and creates
+        an observation collection with temperature, precipitation, and evaporation
+        observations across different climate scenarios.
+
+        Parameters
+        ----------
+        stn_nr : str
+            Station number as string (e.g., "550").
+        years : list, optional
+            Years of climate scenario. The default is ['2033','2050','2100','2150'].
+        scenarios : list, optional
+            Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'].
+            This includes all scenarios including the original measurements.
+        tmin : str or None, optional
+            Start of timeseries. The default is '1991-01-01'.
+            Dates before this value are changed to this value.
+        tmax : str or None, optional
+            End of timeseries. The default is '2020-12-31'.
+            Dates after this value are changed to this value.
+        evap : str, optional
+            Method for calculating evaporation. Options are 'Makkink', 'Penman',
+            or 'Hargreaves'. The default is 'Penman'.
+        remove_na : bool, optional
+            If True, values of -99.99 in the data are replaced with NaN.
+            The default is True.
+        name : str, optional
+            Name of the observation collection. The default is "".
+
+        Returns
+        -------
+        ObsCollection
+            Collection with climate scenario observations.
+        """
+        from .io.knmi import get_knmi_scenarios_data
+        from .observation import obs_from_knmi_scenarios_data
+
+        # Fetch and process climate scenario data
+        dfs = get_knmi_scenarios_data(
+            stn_nr=stn_nr,
+            years=years,
+            scenarios=scenarios,
+            tmin=tmin,
+            tmax=tmax,
+            evap=evap,
+            remove_na=remove_na,
+        )
+
+        # Convert processed data to observation objects
+        obs_list = obs_from_knmi_scenarios_data(dfs)
+
+        # Create and return observation collection
+        obs_df = util._obslist_to_frame(obs_list)
+        meta = {
+            "stn_nr": stn_nr,
+            "years": years if years is not None else ["2033", "2050", "2100", "2150"],
+            "scenarios": (
+                scenarios
+                if scenarios is not None
+                else ["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
+            ),
+            "evaporation_method": evap,
+        }
 
         return cls(obs_df, name=name, meta=meta)
 

@@ -17,6 +17,7 @@ from .obs_collection import (
     read_imod,
     read_json,
     read_knmi,
+    read_knmi_scenarios,
     read_lizard,
     read_matroos,
     read_menyanthes,
