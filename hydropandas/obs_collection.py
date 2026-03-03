@@ -635,13 +635,14 @@ def read_knmi(
 
 
 def read_knmi_scenarios(
-    stn_nr: str,
+    stn: Union[int, str],
     years: List[str] = None,
     scenarios: List[str] = None,
     tmin: Union[str, None] = "1991-01-01",
     tmax: Union[str, None] = "2020-12-31",
     evap: str = "Penman",
     remove_na: bool = True,
+    meteo_vars: List[str] = None,
     name: str = "",
 ):
     """Get KNMI climate scenario observations for a station.
@@ -652,8 +653,8 @@ def read_knmi_scenarios(
 
     Parameters
     ----------
-    stn_nr : str
-        Station number as string (e.g., "550").
+    stn : int or str
+        Station number (e.g., 550 or "550").
     years : list, optional
         Years of climate scenario. The default is ['2033','2050','2100','2150'].
     scenarios : list, optional
@@ -691,13 +692,14 @@ def read_knmi_scenarios(
     ... )
     """
     oc = ObsCollection.from_knmi_scenarios(
-        stn_nr=stn_nr,
+        stn=stn,
         years=years,
         scenarios=scenarios,
         tmin=tmin,
         tmax=tmax,
         evap=evap,
         remove_na=remove_na,
+        meteo_vars=meteo_vars,
         name=name,
     )
 
@@ -2428,25 +2430,27 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_knmi_scenarios(
         cls,
-        stn_nr: str,
+        stn: Union[int, str],
         years: List[str] = None,
         scenarios: List[str] = None,
         tmin: Union[str, None] = "1991-01-01",
         tmax: Union[str, None] = "2020-12-31",
         evap: str = "Penman",
         remove_na: bool = True,
+        meteo_vars: List[str] = None,
         name: str = "",
     ):
         """Create ObsCollection from KNMI climate scenario data.
 
-        Retrieves climate scenario data from KNMI for a specific station and creates
-        an observation collection with temperature, precipitation, and evaporation
-        observations across different climate scenarios.
+        The ``stn`` argument may be provided as an integer or a string.  The data
+        are downloaded once and converted into individual observations.  By
+        default every variable present in the returned dataset is turned into an
+        Obs; a user can restrict the output by specifying ``meteo_vars``.
 
         Parameters
         ----------
-        stn_nr : str
-            Station number as string (e.g., "550").
+        stn : int or str
+            Station number (e.g., 550 or "550").
         years : list, optional
             Years of climate scenario. The default is ['2033','2050','2100','2150'].
         scenarios : list, optional
@@ -2464,6 +2468,8 @@ class ObsCollection(pd.DataFrame):
         remove_na : bool, optional
             If True, values of -99.99 in the data are replaced with NaN.
             The default is True.
+        meteo_vars : list of str, optional
+            Only variables in this list will be converted to observations.
         name : str, optional
             Name of the observation collection. The default is "".
 
@@ -2472,12 +2478,19 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             Collection with climate scenario observations.
         """
-        from .io.knmi import get_knmi_scenarios_data
-        from .observation import obs_from_knmi_scenarios_data
+        from .io.knmi import get_knmi_scenarios_data, obs_from_knmi_scenarios_data
+        from .observation import PrecipitationObs, EvaporationObs, MeteoObs
+
+        # Build mapping for variable → class
+        obs_map = {
+            "RH": PrecipitationObs,
+            "EV24": EvaporationObs,
+            "other": MeteoObs,
+        }
 
         # Fetch and process climate scenario data
         dfs = get_knmi_scenarios_data(
-            stn_nr=stn_nr,
+            stn=stn,
             years=years,
             scenarios=scenarios,
             tmin=tmin,
@@ -2487,12 +2500,14 @@ class ObsCollection(pd.DataFrame):
         )
 
         # Convert processed data to observation objects
-        obs_list = obs_from_knmi_scenarios_data(dfs)
+        obs_list = obs_from_knmi_scenarios_data(
+            dfs, obs_class_map=obs_map, meteo_vars=meteo_vars
+        )
 
         # Create and return observation collection
         obs_df = util._obslist_to_frame(obs_list)
         meta = {
-            "stn_nr": stn_nr,
+            "stn": str(stn),
             "years": years if years is not None else ["2033", "2050", "2100", "2150"],
             "scenarios": (
                 scenarios
@@ -2501,6 +2516,9 @@ class ObsCollection(pd.DataFrame):
             ),
             "evaporation_method": evap,
         }
+
+        if meteo_vars is not None:
+            meta["meteo_vars"] = meteo_vars
 
         return cls(obs_df, name=name, meta=meta)
 

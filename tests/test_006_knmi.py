@@ -432,6 +432,32 @@ def test_obslist_from_stns_single_startdate():
     )
 
 
+def test_knmi_scenarios_obs_collection_and_filter():
+    # download a small subset of scenario data for a single station
+    oc = hpd.ObsCollection.from_knmi_scenarios(
+        stn=550,
+        years=["2033"],
+        scenarios=["Mn"],
+    )
+    assert isinstance(oc, hpd.ObsCollection)
+    assert len(oc) > 0
+
+    # every observation should carry station and meteo_var metadata
+    for o in oc.obs:
+        assert o.station == "550"
+        assert hasattr(o, "meteo_var")
+
+    # apply filtering using meteo_vars argument
+    oc2 = hpd.ObsCollection.from_knmi_scenarios(
+        stn=550,
+        years=["2033"],
+        scenarios=["Mn"],
+        meteo_vars=["RH"],
+    )
+    assert len(oc2) > 0
+    assert all(o.meteo_var == "RH" for o in oc2.obs)
+
+
 def test_knmi_daily_rainfall():
     stn = 550
     meteo_var = "RD"

@@ -1975,67 +1975,22 @@ class PrecipitationObs(MeteoObs):
         )
 
 
-def obs_from_knmi_scenarios_data(dfs: Dict[str, pd.DataFrame]) -> List[Obs]:
-    """Create observation objects from KNMI climate scenario data.
 
-    Takes a dictionary of processed KNMI climate scenario DataFrames and creates
-    individual observation objects for each variable and scenario combination.
+def obs_from_knmi_scenarios_data(*args, **kwargs):
+    """Deprecated wrapper.
 
-    Parameters
-    ----------
-    dfs : dict
-        Dictionary mapping scenario names to pandas DataFrames.
-        Each DataFrame should have columns: TG, RH, Q, TX, TN, UG, FG, EV24
-        and a datetime index.
-
-    Returns
-    -------
-    list of Obs
-        List of observation objects with appropriate types (PrecipitationObs,
-        EvaporationObs, or MeteoObs) based on observed variable.
+    This function has moved to :mod:`hydropandas.io.knmi` and its signature has
+    changed to accept the observation class mapping and an optional list of
+    variables to include.  The old signature is still accepted for backward
+    compatibility but a ``DeprecationWarning`` is raised.
     """
-    from .io.knmi import get_stations
+    import warnings
 
-    units = {
-        "TG": "°C",
-        "RH": "mm/day",
-        "Q": "W/m²",
-        "TX": "°C",
-        "TN": "°C",
-        "UG": "%",
-        "FG": "m/s",
-        "EV24": "mm/day",
-    }
+    warnings.warn(
+        "obs_from_knmi_scenarios_data has moved to hydropandas.io.knmi and its"
+        " signature changed; please update your code.",
+        DeprecationWarning,
+    )
+    from .io.knmi import obs_from_knmi_scenarios_data as _new
 
-    stations = get_stations("RD")
-    obs_list = []
-
-    for key, df in dfs.items():
-        for col in df.columns:
-            meas = pd.DataFrame(index=df.index, data={"value": df[col]})
-            stn_nr = int(key.split("_")[0])
-            variable = "".join(col.split())
-            scenario = key.split("_")[-1]
-            locstring = key.split("_")[1:-1]
-            location = locstring[0].upper()
-
-            # Determine observation class based on variable
-            if variable == "RH":
-                obs_class = PrecipitationObs
-            elif variable == "EV24":
-                obs_class = EvaporationObs
-            else:
-                obs_class = MeteoObs
-
-            o = obs_class(
-                meas,
-                name=f"{variable}_{stn_nr}_{location}_{scenario}",
-                unit=units.get(variable, ""),
-                source=f"KNMI-Climate-Scenario_{scenario}",
-                x=stations.iloc[stn_nr].x,
-                y=stations.iloc[stn_nr].y,
-                location=location,
-            )
-            obs_list.append(o)
-
-    return obs_list
+    return _new(*args, **kwargs)

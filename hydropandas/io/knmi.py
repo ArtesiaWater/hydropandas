@@ -2337,18 +2337,20 @@ def hargreaves(
     return et
 
 def _stn_to_knmi_id(
-        stn_nr: str,
+        stn: Union[int, str],
     ) -> str:
+    # accept either integer or string station number
+    stn = str(stn)
     response = requests.get(URL_STATIONS)
     json_data = response.json()
     stations = pd.DataFrame(json_data["stations"])
     stations["stn_nr"] = list(dict.fromkeys([item.split('_')[0] for item in stations['key']]))
     stations.set_index(stations["stn_nr"])
-    knmi_id = stations.loc[stations['stn_nr'] == stn_nr, 'key']
+    knmi_id = stations.loc[stations['stn_nr'] == stn, 'key']
     return knmi_id
 
 def get_knmi_scenarios_data(
-    stn_nr: str,
+    stn: Union[int, str],
     years: List[str] = None,
     scenarios: List[str] = None,
     tmin: Union[pd.Timestamp, str] = "1991-01-01",
@@ -2358,13 +2360,16 @@ def get_knmi_scenarios_data(
 ) -> Dict[str, pd.DataFrame]:
     """Fetch and process KNMI climate scenario data for a station.
 
+    The station argument is accepted as an integer or string for convenience.
+    Internally it is converted to a string when interacting with the KNMI API.
+
     Retrieves climate scenario data from KNMI and returns a dictionary of
     processed DataFrames with temperature, precipitation, and evaporation data.
 
     Parameters
     ----------
-    stn_nr : str
-        Station number as string (e.g., "550").
+    stn : int or str
+        Station number (e.g., 550 or "550").
     years : list, optional
         Years of climate scenario. The default is ['2033','2050','2100','2150'].
     scenarios : list, optional
@@ -2398,6 +2403,9 @@ def get_knmi_scenarios_data(
     """
     if years is None:
         years = ["2033", "2050", "2100", "2150"]
+    # allow int input for station
+    stn = str(stn)
+
     if scenarios is None:
         scenarios = ["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
 
@@ -2410,7 +2418,7 @@ def get_knmi_scenarios_data(
     tmax = min("2020-12-31", tmax)
 
     # Get station KNMI ID
-    station = _stn_to_knmi_id(stn_nr)
+    station = _stn_to_knmi_id(stn)
 
     # Build request parameters
     params = (
@@ -2490,3 +2498,87 @@ def get_knmi_scenarios_data(
         dfs[key] = df
 
     return dfs
+
+
+
+def obs_from_knmi_scenarios_data(
+    dfs: Dict[str, pd.DataFrame],
+    obs_class_map: Dict[str, Any],
+    meteo_vars: List[str] = None,
+) -> List[Any]:
+    """Convert climate scenario dataframes into observation objects.
+
+    Parameters
+    ----------
+    dfs : dict
+        Mapping from scenario key to DataFrame returned by
+        :func:`get_knmi_scenarios_data`.
+    obs_class_map : dict
+        Dictionary mapping variable codes (e.g. ``"RH"`` or ``"EV24"``) to
+        the corresponding observation class. The map *must* contain an
+        ``"other"`` key; its value will be used for any variable not
+        explicitly listed.  (Raising a ``KeyError`` otherwise avoids a
+        dependency on :mod:`hydropandas.observation`.)
+    meteo_vars : list of str, optional
+        If provided only these meteo variables are converted to observations.
+        This allows the caller to filter away unwanted series.
+
+    Returns
+    -------
+    list
+        List of instantiated observation objects. Each object has ``station``
+        and ``meteo_var`` attributes set in addition to the usual metadata.
+    """
+    units = {
+        "TG": "°C",
+        "RH": "mm/day",
+        "Q": "W/m²",
+        "TX": "°C",
+        "TN": "°C",
+        "UG": "%",
+        "FG": "m/s",
+        "EV24": "mm/day",
+    }
+
+    stations = get_stations("RD")
+    obs_list: List[Any] = []
+
+    for key, df in dfs.items():
+        for col in df.columns:
+            # apply optional filter
+            if meteo_vars is not None and col not in meteo_vars:
+                continue
+
+            meas = pd.DataFrame(index=df.index, data={"value": df[col]})
+            stn_num = int(key.split("_")[0])
+            variable = "".join(col.split())
+            scenario = key.split("_")[-1]
+            location = key.split("_")[1].upper()
+
+            # choose observation class from the provided map; fall back to
+            # ``other`` if the specific variable isn't present.  ``other`` must
+            # be defined by the caller, otherwise we raise.
+            obs_cls = obs_class_map.get(variable)
+            if obs_cls is None:
+                if "other" in obs_class_map:
+                    obs_cls = obs_class_map["other"]
+                else:
+                    raise KeyError(
+                        "obs_class_map must contain a fallback entry 'other'"
+                        " when variable '{variable}' is not mapped."
+                    )
+
+            o = obs_cls(
+                meas,
+                name=f"{variable}_{stn_num}_{location}_{scenario}",
+                unit=units.get(variable, ""),
+                source=f"KNMI-Climate-Scenario_{scenario}",
+                x=stations.iloc[stn_num].x,
+                y=stations.iloc[stn_num].y,
+                location=location,
+                station=str(stn_num),
+                meteo_var=variable,
+            )
+            obs_list.append(o)
+
+    return obs_list
