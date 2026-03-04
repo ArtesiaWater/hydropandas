@@ -1984,7 +1984,6 @@ def obs_from_knmi_scenarios_data(*args, **kwargs):
     variables to include.  The old signature is still accepted for backward
     compatibility but a ``DeprecationWarning`` is raised.
     """
-    import warnings
 
     warnings.warn(
         "obs_from_knmi_scenarios_data has moved to hydropandas.io.knmi and its"
