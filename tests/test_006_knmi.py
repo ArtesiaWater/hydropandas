@@ -444,7 +444,7 @@ def test_knmi_scenarios_obs_collection_and_filter():
 
     # every observation should carry station and meteo_var metadata
     for o in oc.obs:
-        assert o.station == "550"
+        assert o.station == 550
         assert hasattr(o, "meteo_var")
 
     # apply filtering using meteo_vars argument

@@ -636,8 +636,8 @@ def read_knmi(
 
 def read_knmi_scenarios(
     stn: Union[int, str],
-    years: List[str] = None,
-    scenarios: List[str] = None,
+    years: Tuple[str] = ("2033", "2050", "2100", "2150"),
+    scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
     tmin: Union[str, None] = "1991-01-01",
     tmax: Union[str, None] = "2020-12-31",
     evap: str = "Penman",
@@ -655,10 +655,10 @@ def read_knmi_scenarios(
     ----------
     stn : int or str
         Station number (e.g., 550 or "550").
-    years : list, optional
-        Years of climate scenario. The default is ['2033','2050','2100','2150'].
-    scenarios : list, optional
-        Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'].
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
         This includes all scenarios including the original measurements.
     tmin : str or None, optional
         Start of timeseries. The default is '1991-01-01'.
@@ -2431,8 +2431,8 @@ class ObsCollection(pd.DataFrame):
     def from_knmi_scenarios(
         cls,
         stn: Union[int, str],
-        years: List[str] = None,
-        scenarios: List[str] = None,
+        years: Tuple[str] = ("2033", "2050", "2100", "2150"),
+        scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
         tmin: Union[str, None] = "1991-01-01",
         tmax: Union[str, None] = "2020-12-31",
         evap: str = "Penman",
@@ -2451,10 +2451,10 @@ class ObsCollection(pd.DataFrame):
         ----------
         stn : int or str
             Station number (e.g., 550 or "550").
-        years : list, optional
-            Years of climate scenario. The default is ['2033','2050','2100','2150'].
-        scenarios : list, optional
-            Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'].
+        years : tuple, optional
+            Years of climate scenario. The default is ('2033','2050','2100','2150').
+        scenarios : tuple, optional
+            Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
             This includes all scenarios including the original measurements.
         tmin : str or None, optional
             Start of timeseries. The default is '1991-01-01'.
@@ -2478,7 +2478,7 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             Collection with climate scenario observations.
         """
-        from .io.knmi import get_knmi_scenarios_data, obs_from_knmi_scenarios_data
+        from .io.knmi import get_knmi_scenarios_data, get_knmi_scenarios_obslist
         from .observation import PrecipitationObs, EvaporationObs, MeteoObs
 
         # Build mapping for variable → class
@@ -2489,8 +2489,10 @@ class ObsCollection(pd.DataFrame):
         }
 
         # Fetch and process climate scenario data
-        dfs = get_knmi_scenarios_data(
+        obs_list = get_knmi_scenarios_obslist(
             stn=stn,
+            obs_class_map=obs_map,
+            meteo_vars=meteo_vars,
             years=years,
             scenarios=scenarios,
             tmin=tmin,
@@ -2499,28 +2501,18 @@ class ObsCollection(pd.DataFrame):
             remove_na=remove_na,
         )
 
-        # Convert processed data to observation objects
-        obs_list = obs_from_knmi_scenarios_data(
-            dfs, obs_class_map=obs_map, meteo_vars=meteo_vars
-        )
-
         # Create and return observation collection
-        obs_df = util._obslist_to_frame(obs_list)
         meta = {
             "stn": str(stn),
-            "years": years if years is not None else ["2033", "2050", "2100", "2150"],
-            "scenarios": (
-                scenarios
-                if scenarios is not None
-                else ["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
-            ),
+            "years": years,
+            "scenarios": scenarios,
             "evaporation_method": evap,
         }
 
         if meteo_vars is not None:
             meta["meteo_vars"] = meteo_vars
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_list(cls, obs_list, name=""):

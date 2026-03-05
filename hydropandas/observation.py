@@ -1973,23 +1973,3 @@ class PrecipitationObs(MeteoObs):
         return super().from_wow(
             meteo_var="rain_rate", stn=stn, xy=xy, start=start, end=end
         )
-
-
-
-def obs_from_knmi_scenarios_data(*args, **kwargs):
-    """Deprecated wrapper.
-
-    This function has moved to :mod:`hydropandas.io.knmi` and its signature has
-    changed to accept the observation class mapping and an optional list of
-    variables to include.  The old signature is still accepted for backward
-    compatibility but a ``DeprecationWarning`` is raised.
-    """
-
-    warnings.warn(
-        "obs_from_knmi_scenarios_data has moved to hydropandas.io.knmi and its"
-        " signature changed; please update your code.",
-        DeprecationWarning,
-    )
-    from .io.knmi import obs_from_knmi_scenarios_data as _new
-
-    return _new(*args, **kwargs)

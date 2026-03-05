@@ -12,6 +12,10 @@ function levels:
                         7a. request_api, request_url
                         7b. parse_data
                     6b. interpret_knmi_file
+
+For knmi climate scenarios:
+1. get_knmi_scenarios_obs_list: get knmi climate scenarios for a station
+    2. get_knmi_scenarios_data: get knmi climate scenarios for a station
 """
 
 import datetime as dt
@@ -34,7 +38,10 @@ URL_DAILY_PREC = "https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen"
 URL_DAILY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
 URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
 URL_STATIONS = "https://klimaatscenarios-data.knmi.nl/api/v1/stations"
-URL_KNMI_TRANSFORMED_SERIES = "https://klimaatscenarios-data.knmi.nl/api/v1/climate-series-data.zip"
+URL_KNMI_TRANSFORMED_SERIES = (
+    "https://klimaatscenarios-data.knmi.nl/api/v1/climate-series-data.zip"
+)
+
 
 def get_knmi_obs(
     stn: Union[int, None] = None,
@@ -2336,23 +2343,35 @@ def hargreaves(
         et = x[0] + x[1] * et
     return et
 
+
 def _stn_to_knmi_id(
-        stn: Union[int, str],
-    ) -> str:
-    # accept either integer or string station number
-    stn = str(stn)
+    stn: Union[int, str],
+) -> str:
+    """get knmi_id for a station number using the URL_STATIONS
+
+    Parameters
+    ----------
+    stn : Union[int, str]
+        station number, e.g. 550 or "550"
+
+    Returns
+    -------
+    str
+        knmi_id for the station, e.g. "550_De-Bilt_utrecht" for station 550
+    """
+    stn = str(stn)  # accept either integer or string station number
     response = requests.get(URL_STATIONS)
     json_data = response.json()
-    stations = pd.DataFrame(json_data["stations"])
-    stations["stn_nr"] = list(dict.fromkeys([item.split('_')[0] for item in stations['key']]))
-    stations.set_index(stations["stn_nr"])
-    knmi_id = stations.loc[stations['stn_nr'] == stn, 'key']
+    knmi_id = [
+        d["key"] for d in json_data["stations"] if d["key"].split("_")[0] == stn
+    ][0]
     return knmi_id
+
 
 def get_knmi_scenarios_data(
     stn: Union[int, str],
-    years: List[str] = None,
-    scenarios: List[str] = None,
+    years: Tuple[str] = ("2033", "2050", "2100", "2150"),
+    scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
     tmin: Union[pd.Timestamp, str] = "1991-01-01",
     tmax: Union[pd.Timestamp, str] = "2020-12-31",
     evap: str = "Penman",
@@ -2370,10 +2389,10 @@ def get_knmi_scenarios_data(
     ----------
     stn : int or str
         Station number (e.g., 550 or "550").
-    years : list, optional
-        Years of climate scenario. The default is ['2033','2050','2100','2150'].
-    scenarios : list, optional
-        Names of climate scenario. The default is ['Ld','Ln','Md','Mn','Hd','Hn'].
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
         This includes all scenarios including the original measurements.
     tmin : pd.Timestamp or str, optional
         Start of timeseries. The default is '1991-01-01'.
@@ -2401,13 +2420,8 @@ def get_knmi_scenarios_data(
     RuntimeError
         If the API request fails or data cannot be retrieved.
     """
-    if years is None:
-        years = ["2033", "2050", "2100", "2150"]
     # allow int input for station
     stn = str(stn)
-
-    if scenarios is None:
-        scenarios = ["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
 
     # Convert timestamp strings if needed
     tmin = str(tmin) if not isinstance(tmin, str) else tmin
@@ -2460,16 +2474,26 @@ def get_knmi_scenarios_data(
                 )
             if remove_na:
                 df = df.replace(-99.99, np.nan)
+            df.columns = df.columns.str.strip()
             dfs[base] = df
 
     # Process each DataFrame: set datetime index and calculate evaporation
+    colmap = {
+        "temp": "TG",
+        "precip": "RH",
+        "radiation": "Q",
+        "max-temp": "TX",
+        "min-temp": "TN",
+        "rel-humidity": "UG",
+        "windspeed": "FG",
+    }
     for key, df in dfs.items():
         date_col = df.columns[0]
         df[date_col] = pd.to_datetime(df[date_col], format="%Y%m%d", errors="coerce")
         df = df.set_index(date_col)
         df.index.name = "date"
 
-        df.columns = ["TG", "RH", "Q", "TX", "TN", "UG", "FG"]
+        df = df.rename(columns=colmap)
 
         # Calculate evaporation based on selected method
         if evap == "Makkink":
@@ -2500,19 +2524,23 @@ def get_knmi_scenarios_data(
     return dfs
 
 
-
-def obs_from_knmi_scenarios_data(
-    dfs: Dict[str, pd.DataFrame],
+def get_knmi_scenarios_obslist(
+    stn: Union[int, str],
     obs_class_map: Dict[str, Any],
     meteo_vars: List[str] = None,
+    years: Tuple[str] = ("2033", "2050", "2100", "2150"),
+    scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    tmin: Union[str, None] = "1991-01-01",
+    tmax: Union[str, None] = "2020-12-31",
+    evap: str = "Penman",
+    remove_na: bool = True,
 ) -> List[Any]:
     """Convert climate scenario dataframes into observation objects.
 
     Parameters
     ----------
-    dfs : dict
-        Mapping from scenario key to DataFrame returned by
-        :func:`get_knmi_scenarios_data`.
+    stn : int or str
+        Station number (e.g., 550 or "550").
     obs_class_map : dict
         Dictionary mapping variable codes (e.g. ``"RH"`` or ``"EV24"``) to
         the corresponding observation class. The map *must* contain an
@@ -2522,6 +2550,23 @@ def obs_from_knmi_scenarios_data(
     meteo_vars : list of str, optional
         If provided only these meteo variables are converted to observations.
         This allows the caller to filter away unwanted series.
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+        This includes all scenarios including the original measurements.
+    tmin : str or None, optional
+        Start of timeseries. The default is '1991-01-01'.
+        Dates before this value are changed to this value.
+    tmax : str or None, optional
+        End of timeseries. The default is '2020-12-31'.
+        Dates after this value are changed to this value.
+    evap : str, optional
+        Method for calculating evaporation. Options are 'Makkink', 'Penman',
+        or 'Hargreaves'. The default is 'Penman'.
+    remove_na : bool, optional
+        If True, values of -99.99 in the data are replaced with NaN.
+        The default is True.
 
     Returns
     -------
@@ -2540,8 +2585,30 @@ def obs_from_knmi_scenarios_data(
         "EV24": "mm/day",
     }
 
+    if tmin != "1991-01-01":
+        logger.warning(
+            "tmin other than '1991-01-01' is not implemented yet for the KNMI scenarios. "
+            "This is because the API only returns data from 1991-01-01 onwards. "
+        )
+    if tmax != "2020-12-31":
+        logger.warning(
+            "tmax other than '2020-12-31' is not implemented yet for the KNMI scenarios. "
+            "This is because the API only returns data up to 2020-12-31. "
+        )
+
+    # Get measurements data
+    dfs = get_knmi_scenarios_data(
+        stn=stn,
+        years=years,
+        scenarios=scenarios,
+        tmin=tmin,
+        tmax=tmax,
+        evap=evap,
+        remove_na=remove_na,
+    )
+
     stations = get_stations("RD")
-    obs_list: List[Any] = []
+    obs_list = []
 
     for key, df in dfs.items():
         for col in df.columns:
@@ -2552,7 +2619,9 @@ def obs_from_knmi_scenarios_data(
             meas = pd.DataFrame(index=df.index, data={"value": df[col]})
             stn_num = int(key.split("_")[0])
             variable = "".join(col.split())
-            scenario = key.split("_")[-1]
+            scenario = key.split("_")[
+                -1
+            ]  # includes year and scenario name, e.g. "2033_Ld"
             location = key.split("_")[1].upper()
 
             # choose observation class from the provided map; fall back to
@@ -2573,10 +2642,10 @@ def obs_from_knmi_scenarios_data(
                 name=f"{variable}_{stn_num}_{location}_{scenario}",
                 unit=units.get(variable, ""),
                 source=f"KNMI-Climate-Scenario_{scenario}",
-                x=stations.iloc[stn_num].x,
-                y=stations.iloc[stn_num].y,
+                x=stations.loc[stn_num, "x"],
+                y=stations.loc[stn_num, "y"],
                 location=location,
-                station=str(stn_num),
+                station=stn_num,
                 meteo_var=variable,
             )
             obs_list.append(o)
