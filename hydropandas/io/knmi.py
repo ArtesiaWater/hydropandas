@@ -25,7 +25,7 @@ import warnings
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any
+from typing import List, Tuple, Dict, Any, Union
 from zipfile import ZipFile
 
 import numpy as np
@@ -2359,9 +2359,9 @@ def _stn_to_knmi_id(
     stn = str(stn)  # accept either integer or string station number
     response = requests.get(URL_STATIONS)
     json_data = response.json()
-    knmi_id = [
+    knmi_id = next(
         d["key"] for d in json_data["stations"] if d["key"].split("_")[0] == stn
-    ][0]
+    )
     return knmi_id
 
 

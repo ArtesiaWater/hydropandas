@@ -14,10 +14,7 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-<<<<<<< dev
 from typing import List, Tuple, Optional, Union
-=======
->>>>>>> dev
 
 import numpy as np
 import pandas as pd
