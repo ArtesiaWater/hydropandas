@@ -4,7 +4,6 @@ import re
 import tempfile
 from io import FileIO, TextIOWrapper
 from pathlib import Path
-from typing import Union
 from zipfile import ZipFile
 
 import numpy as np
@@ -69,7 +68,7 @@ def _read_dino_groundwater_metadata(f, line):
         "onderkant filter (cm t.o.v. nap)": "screen_bottom",
         "maaiveld (cm t.o.v. nap)": "ground_level",
     }
-    metalist = list()
+    metalist = []
     line = line.strip()
     properties = line.replace('"', "").split(",")
 
@@ -150,7 +149,7 @@ def _read_dino_groundwater_measurements(f, line):
         # Validate if titles are valid names
         validator = np.lib._iotools.NameValidator()
         titel = [s.lower() for s in validator(titel)]
-        usecols = range(0, len(titel))
+        usecols = range(len(titel))
 
         try:
             measurements = pd.read_csv(
@@ -172,7 +171,7 @@ def _read_dino_groundwater_measurements(f, line):
     return line, measurements
 
 
-def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
+def read_dino_groundwater_quality_txt(f: str | Path | FileIO):
     """Read dino groundwater quality (grondwatersamenstelling) from a dinoloket
     txt file.
 
@@ -202,7 +201,7 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
         fname = str(f.stem)
         f = f.open("r")
 
-    logger.info("reading -> {}".format(fname))
+    logger.info(f"reading -> {fname}")
 
     # LOCATIE gegevens
     line = f.readline().rstrip("\n")
@@ -275,7 +274,7 @@ def read_dino_groundwater_quality_txt(f: Union[str, Path, FileIO]):
 
 
 def read_dino_groundwater_csv(
-    f: Union[str, Path, FileIO],
+    f: str | Path | FileIO,
     to_mnap: bool = True,
     read_series: bool = True,
     remove_duplicates: bool = False,
@@ -314,7 +313,7 @@ def read_dino_groundwater_csv(
     else:
         raise TypeError("f should be of type str, Path or TextIOWrapper")
 
-    logger.info("reading -> {}".format(fname))
+    logger.info(f"reading -> {fname}")
 
     # read header
     line, header = _read_dino_groundwater_header(f)
@@ -370,12 +369,12 @@ def read_dino_groundwater_csv(
 
 
 def _read_artdino_groundwater_metadata(f, line):
-    metalist = list()
+    metalist = []
     line = line.strip()
     properties = line.split(",")
     line = f.readline()
     while line not in ["\n", "", "\r\n"]:
-        meta = dict()
+        meta = {}
         line = line.strip()
         values = line.split(",")
         for i, val in enumerate(values):
@@ -437,7 +436,7 @@ def _read_artdino_groundwater_measurements(f, line):
         # Validate if titles are valid names
         validator = np.lib._iotools.NameValidator()
         titel = [s.lower() for s in validator(titel)]
-        usecols = range(0, len(titel))
+        usecols = range(len(titel))
 
         try:
             measurements = pd.read_csv(
@@ -581,9 +580,7 @@ def read_artdino_dir(
 
     if not files:
         raise FileNotFoundError(
-            "no files were found in {} that end with {}".format(
-                os.path.join(dirname, subdir), suffix
-            )
+            f"no files were found in {os.path.join(dirname, subdir)} that end with {suffix}"
         )
 
     # read individual files
@@ -591,12 +588,10 @@ def read_artdino_dir(
     for _, file in enumerate(files):
         path = os.path.join(dirname, subdir, file)
         obs = ObsClass.from_artdino_file(path=path, **kwargs)
-        if obs.metadata_available and (not obs.empty):
-            obs_list.append(obs)
-        elif keep_all_obs:
+        if obs.metadata_available and (not obs.empty) or keep_all_obs:
             obs_list.append(obs)
         else:
-            logging.info(f"not added to collection -> {path}")
+            logger.info(f"not added to collection -> {path}")
 
     return obs_list
 
@@ -655,7 +650,7 @@ def _read_dino_waterlvl_measurements(f, line):
 
     validator = np.lib._iotools.NameValidator()
     titel = [i.lower() for i in validator(titel)]
-    usecols = range(0, len(titel))
+    usecols = range(len(titel))
 
     measurements = pd.read_csv(
         f,
@@ -675,7 +670,7 @@ def _read_dino_waterlvl_measurements(f, line):
 
 
 def read_dino_waterlvl_csv(
-    f: Union[str, Path, FileIO], to_mnap: bool = True, read_series: bool = True
+    f: str | Path | FileIO, to_mnap: bool = True, read_series: bool = True
 ):
     """Read dino waterlevel data from a dinoloket csv file.
 
@@ -696,7 +691,7 @@ def read_dino_waterlvl_csv(
         fname = f.stem
         f = f.open("r")
 
-    logger.info("reading -> {}".format(fname))
+    logger.info(f"reading -> {fname}")
 
     p_meta = re.compile(
         "Locatie,Externe aanduiding,X-coordinaat,Y-coordinaat, Startdatum, Einddatum"
@@ -733,10 +728,10 @@ def read_dino_waterlvl_csv(
 
 
 def read_dino_dir(
-    path: Union[str, Path],
+    path: str | Path,
     ObsClass,
     subdir: str = "DINO_Grondwaterstanden",
-    suffix: str = None,
+    suffix: str | None = None,
     keep_all_obs: bool = True,
     **kwargs: dict,
 ):
@@ -778,14 +773,12 @@ def read_dino_dir(
 
     obs_list = []
 
-    def get_dino_obs(f: Union[str, FileIO]):
+    def get_dino_obs(f: str | FileIO):
         obs = ObsClass.from_dino(f, **kwargs)
-        if obs.metadata_available and (not obs.empty):
-            return obs
-        elif keep_all_obs:
+        if obs.metadata_available and (not obs.empty) or keep_all_obs:
             return obs
         else:
-            logging.info(f"not added to collection -> {f.name}")
+            logger.info(f"not added to collection -> {f.name}")
             return None
 
     if path.suffix == ".zip":
@@ -793,7 +786,7 @@ def read_dino_dir(
             fnames = [x for x in zfile.namelist() if f"{subdir}/" in x]
             if suffix:
                 if "0" in suffix:
-                    raise Exception(f"Cant read dino files with _{suffix}")
+                    raise ValueError(f"Cant read dino files with _{suffix}")
                 fnames = [x for x in fnames if suffix in x]
             if len(fnames) == 0:
                 raise FileNotFoundError(
@@ -808,7 +801,7 @@ def read_dino_dir(
         subpath = path / subdir
         if suffix:
             if "0" in suffix:
-                raise Exception(f"Cant read dino files with _{suffix}")
+                raise ValueError(f"Cant read dino files with _{suffix}")
             elif "*" not in suffix:
                 suffix = f"*{suffix}"
             files = list(subpath.glob(suffix))

@@ -63,20 +63,15 @@ def get_model_layer_z(z, zvec, left=-999, right=999):
     zvec = np.sort(zvec)[::-1]
     if z in zvec:
         z += 1e-10
-    lay = int(
+
+    return int(
         np.interp(z, zvec[::-1], np.arange(len(zvec))[::-1], left=left, right=right)
     )
 
-    return lay
-
 
 def check_if_var_is_invalid(var):
-    if var is None:
-        return True
-    elif np.isnan(var):
-        return True
 
-    return False
+    return bool(var is None or np.isnan(var))
 
 
 def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
@@ -145,10 +140,9 @@ def get_modellayer_from_screen_depth(ftop, fbot, zvec, left=-999, right=999):
     nan
 
     """
-    if isinstance(zvec, np.ndarray):
-        if np.isnan(zvec).all():
-            logger.warning("vertical datum invalid returning nan")
-            return np.nan
+    if isinstance(zvec, np.ndarray) and np.isnan(zvec).all():
+        logger.warning("vertical datum invalid returning nan")
+        return np.nan
 
     zvec = np.sort(zvec)[::-1]
     ftop_invalid = check_if_var_is_invalid(ftop)
@@ -308,7 +302,7 @@ def get_zvec(x, y, gwf=None, ds=None):
             first_notna = np.nonzero(np.isfinite(np.atleast_1d(sel["top"].values)))[0][
                 0
             ]
-            if sel["top"].values.shape == tuple():
+            if sel["top"].values.shape == ():
                 top = np.atleast_1d(sel["top"].values)
             else:
                 top = np.atleast_1d(sel["top"].values[[first_notna]])
@@ -535,11 +529,7 @@ class GwObsAccessor:
 
             modellayers.append(o.gwobs.get_modellayer_modflow(gwf=gwf, ds=ds))
 
-        modellayers = pd.Series(
-            index=self._obj.index, data=modellayers, name="modellayer"
-        )
-
-        return modellayers
+        return pd.Series(index=self._obj.index, data=modellayers, name="modellayer")
 
     def get_regis_layers(self):
         """Get the regis layer per observation.
@@ -589,14 +579,13 @@ class GeoAccessorObs:
         if np.all(np.isnan(zvec)):
             return np.nan
         else:
-            modellayer = get_modellayer_from_screen_depth(
+            return get_modellayer_from_screen_depth(
                 self._obj.screen_top,
                 self._obj.screen_bottom,
                 zvec,
                 left=left,
                 right=right,
             )
-            return modellayer
 
     def get_regis_layer(self):
         """find the name of the REGIS layer based on the tube screen depth.

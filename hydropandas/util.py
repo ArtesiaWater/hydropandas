@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Created on Wed Sep 12 12:15:42 2018.
 
 @author: Artesia
@@ -10,7 +9,6 @@ import sys
 import tempfile
 import time
 import zipfile
-from typing import Dict, List, Optional
 
 import pandas as pd
 from scipy.interpolate import RBFInterpolator
@@ -71,13 +69,11 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     int
         1 of True
     """
-    if os.path.exists(dst):
-        if not force:
-            print(
-                "File not unzipped. Destination already exists. Use"
-                "'force=True' to unzip."
-            )
-            return
+    if os.path.exists(dst) and not force:
+        print(
+            "File not unzipped. Destination already exists. Use'force=True' to unzip."
+        )
+        return
     if preserve_datetime:
         zipf = zipfile.ZipFile(src, "r")
         for f in zipf.infolist():
@@ -114,9 +110,10 @@ def get_files(
     # check if unpackdir is same as file_or_dir, if same, this can cause
     # problems when the unpackdir still contains zips that will be unpacked
     # again.
-    if unpackdir is not None:
-        if os.path.normcase(unpackdir) == os.path.normcase(file_or_dir):
-            raise ValueError("Please specify a different folder to unpack files!")
+    if (unpackdir is not None) and (
+        os.path.normcase(unpackdir) == os.path.normcase(file_or_dir)
+    ):
+        raise ValueError("Please specify a different folder to unpack files!")
 
     # identify whether file_or_dir started as zip
     if str(file_or_dir).endswith(".zip"):
@@ -206,9 +203,7 @@ class ColoredFormatter(logging.Formatter):
     https://gist.github.com/joshbode/58fac7ababc700f51e2a9ecdebe563ad
     """
 
-    def __init__(
-        self, *args, colors: Optional[Dict[str, str]] = None, **kwargs
-    ) -> None:
+    def __init__(self, *args, colors: dict[str, str] | None = None, **kwargs) -> None:
         """Initialize the formatter with specified format strings."""
 
         super().__init__(*args, **kwargs)
@@ -266,7 +261,7 @@ def get_color_logger(level="INFO", logger_name=None):
     return clogger
 
 
-def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
+def oc_to_df(oc, col: str | None = None) -> pd.DataFrame:
     """Convert an observation collection to a DataFrame where every column has one
     observation.
 
@@ -295,12 +290,12 @@ def oc_to_df(oc, col: Optional[str] = None) -> pd.DataFrame:
 
 
 def interpolate(
-    xy: List[List[float]],
+    xy: list[list[float]],
     obsdf: pd.DataFrame,
     obsloc: pd.DataFrame,
     kernel: str = "thin_plate_spline",
     kernel2: str = "linear",
-    epsilon: Optional[int] = None,
+    epsilon: int | None = None,
 ) -> pd.DataFrame:
     """Interpolation method using the Scipy radial basis function (RBF)
 
@@ -334,7 +329,7 @@ def interpolate(
         at a measurement time in each row.
     """
 
-    if (kernel == "thin_plate_spline") or (kernel == "cubic"):
+    if kernel in {"thin_plate_spline", "cubic"}:
         min_val = 3
     elif kernel == "quintic":
         min_val = 6
@@ -356,9 +351,7 @@ def interpolate(
         # get stations for this date
         coor = obsloc.loc[val.index]
 
-        if len(val) >= min_val:
-            kernel = kernel
-        else:
+        if len(val) < min_val:
             kernel = kernel2
 
         # create an scipy interpolator

@@ -201,11 +201,10 @@ class StatsAccessor:
         DataFrame with stats for summer and winter
         """
 
-        df_list = []
-        for o in self._obj.obs.values:
-            df_list.append(
-                o.stats.get_seasonal_stat(col, stat, winter_months, summer_months)
-            )
+        df_list = [
+            o.stats.get_seasonal_stat(col, stat, winter_months, summer_months)
+            for o in self._obj.obs.values
+        ]
 
         return pd.concat(df_list)
 
@@ -331,8 +330,8 @@ class StatsAccessorObs:
             df = pd.DataFrame(
                 index=[self._obj.name],
                 data={
-                    "winter_{}".format(stat): [np.nan],
-                    "summer_{}".format(stat): [np.nan],
+                    f"winter_{stat}": [np.nan],
+                    f"summer_{stat}": [np.nan],
                 },
             )
             return df
@@ -353,8 +352,8 @@ class StatsAccessorObs:
         df = pd.DataFrame(
             index=[self._obj.name],
             data={
-                "winter_{}".format(stat): [winter_stat],
-                "summer_{}".format(stat): [summer_stat],
+                f"winter_{stat}": [winter_stat],
+                f"summer_{stat}": [summer_stat],
             },
         )
 

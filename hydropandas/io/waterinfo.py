@@ -107,7 +107,7 @@ def get_obs_list_from_extent(
             while new_name in onames:
                 counter += 1
                 new_name = f"{o.name} ({counter})"
-            setattr(o, "name", new_name)
+            o.name = new_name
         obs_list.append(o)
         onames.append(o.name)
 
@@ -373,7 +373,7 @@ def get_measurements_ddlpy(
     return df, meta
 
 
-@lru_cache()
+@lru_cache
 def get_locations_gdf(epsg=28992):
     """Get locations from ddlpy and return as geodataframe
 
@@ -451,10 +451,10 @@ def read_waterinfo_file(
         f = path
     elif path.endswith(".zip"):
         zf = zipfile.ZipFile(path)
-        f = zf.open("{}.csv".format(name))
+        f = zf.open(f"{name}.csv")
     else:
         raise NotImplementedError(
-            "File type '{}' not supported!".format(os.path.splitext(path)[-1])
+            f"File type '{os.path.splitext(path)[-1]}' not supported!"
         )
 
     if value_col is None:
