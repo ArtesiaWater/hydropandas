@@ -14,7 +14,6 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import List, Tuple, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -635,14 +634,14 @@ def read_knmi(
 
 
 def read_knmi_scenarios(
-    stn: Union[int, str],
-    years: Tuple[str] = ("2033", "2050", "2100", "2150"),
-    scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: Union[str, None] = "1991-01-01",
-    tmax: Union[str, None] = "2020-12-31",
+    stn: int | str,
+    years: tuple[str] = ("2033", "2050", "2100", "2150"),
+    scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    tmin: str | None = "1991-01-01",
+    tmax: str | None = "2020-12-31",
     evap: str = "Penman",
     remove_na: bool = True,
-    meteo_vars: List[str] = None,
+    meteo_vars: list[str] | None = None,
     name: str = "",
 ):
     """Get KNMI climate scenario observations for a station.
@@ -2431,14 +2430,14 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_knmi_scenarios(
         cls,
-        stn: Union[int, str],
-        years: Tuple[str] = ("2033", "2050", "2100", "2150"),
-        scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-        tmin: Union[str, None] = "1991-01-01",
-        tmax: Union[str, None] = "2020-12-31",
+        stn: int | str,
+        years: tuple[str] = ("2033", "2050", "2100", "2150"),
+        scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+        tmin: str | None = "1991-01-01",
+        tmax: str | None = "2020-12-31",
         evap: str = "Penman",
         remove_na: bool = True,
-        meteo_vars: List[str] = None,
+        meteo_vars: list[str] | None = None,
         name: str = "",
     ):
         """Create ObsCollection from KNMI climate scenario data.
@@ -2479,8 +2478,8 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             Collection with climate scenario observations.
         """
-        from .io.knmi import get_knmi_scenarios_data, get_knmi_scenarios_obslist
-        from .observation import PrecipitationObs, EvaporationObs, MeteoObs
+        from .io.knmi import get_knmi_scenarios_obslist
+        from .observation import EvaporationObs, MeteoObs, PrecipitationObs
 
         # Build mapping for variable → class
         obs_map = {

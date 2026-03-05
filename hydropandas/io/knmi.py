@@ -25,7 +25,7 @@ import warnings
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import List, Tuple, Dict, Any, Union
+from typing import Any
 from zipfile import ZipFile
 
 import numpy as np
@@ -2342,7 +2342,7 @@ def hargreaves(
 
 
 def _stn_to_knmi_id(
-    stn: Union[int, str],
+    stn: int | str,
 ) -> str:
     """get knmi_id for a station number using the URL_STATIONS
 
@@ -2366,14 +2366,14 @@ def _stn_to_knmi_id(
 
 
 def get_knmi_scenarios_data(
-    stn: Union[int, str],
-    years: Tuple[str] = ("2033", "2050", "2100", "2150"),
-    scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: Union[pd.Timestamp, str] = "1991-01-01",
-    tmax: Union[pd.Timestamp, str] = "2020-12-31",
+    stn: int | str,
+    years: tuple[str] = ("2033", "2050", "2100", "2150"),
+    scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    tmin: pd.Timestamp | str = "1991-01-01",
+    tmax: pd.Timestamp | str = "2020-12-31",
     evap: str = "Penman",
     remove_na: bool = True,
-) -> Dict[str, pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     """Fetch and process KNMI climate scenario data for a station.
 
     The station argument is accepted as an integer or string for convenience.
@@ -2460,14 +2460,14 @@ def get_knmi_scenarios_data(
                     zipped.open(name),
                     sep=",",
                     skiprows=3,
-                    usecols=list(range(0, 8)),
+                    usecols=list(range(8)),
                 )
             else:
                 df = pd.read_csv(
                     zipped.open(name),
                     sep=",",
                     skiprows=4,
-                    usecols=list(range(0, 8)),
+                    usecols=list(range(8)),
                 )
             if remove_na:
                 df = df.replace(-99.99, np.nan)
@@ -2522,16 +2522,16 @@ def get_knmi_scenarios_data(
 
 
 def get_knmi_scenarios_obslist(
-    stn: Union[int, str],
-    obs_class_map: Dict[str, Any],
-    meteo_vars: List[str] = None,
-    years: Tuple[str] = ("2033", "2050", "2100", "2150"),
-    scenarios: Tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: Union[str, None] = "1991-01-01",
-    tmax: Union[str, None] = "2020-12-31",
+    stn: int | str,
+    obs_class_map: dict[str, Any],
+    meteo_vars: list[str] | None = None,
+    years: tuple[str] = ("2033", "2050", "2100", "2150"),
+    scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    tmin: str | None = "1991-01-01",
+    tmax: str | None = "2020-12-31",
     evap: str = "Penman",
     remove_na: bool = True,
-) -> List[Any]:
+) -> list[Any]:
     """Convert climate scenario dataframes into observation objects.
 
     Parameters
