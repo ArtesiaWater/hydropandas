@@ -131,6 +131,25 @@ def test_knmi_daily_rainfall_api_values():
     )
 
 
+def test_knmi_daily_rainfall_api_values_edge_case():
+    # https://github.com/ArtesiaWater/hydropandas/issues/359
+    stn = 550
+    start = pd.Timestamp("2000-01-01 01:30")
+    end = pd.Timestamp("2000-01-04 01:30")
+    df, meta = knmi.get_daily_rainfall_api(stn=stn, start=start, end=end)
+    df2, _ = knmi.interpret_knmi_file(
+        df,
+        meta,
+        meteo_var="RD",
+        start=start,
+        end=end,
+        add_day=False,
+        add_hour=True,
+    )
+    assert df2.index[0].date() == start.date()
+
+
+
 def test_knmi_daily_rainfall_url_values():
     stn = 550
     stn_name = knmi.get_station_name(stn=stn)

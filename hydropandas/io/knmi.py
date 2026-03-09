@@ -1571,14 +1571,12 @@ def interpret_knmi_file(
     """
 
     variables = {meteo_var: meta[meteo_var]}
-    stn = None
     if not df.empty:
         unique_stn = df["STN"].unique()
         if len(unique_stn) > 1:
             raise ValueError(
                 f"Cannot handle multiple stations {unique_stn} in single file"
             )
-        stn = unique_stn[0]
 
         if add_day or add_hour:
             if add_day and add_hour:
@@ -1595,22 +1593,25 @@ def interpret_knmi_file(
             df = df.loc[~df.index.duplicated(keep="first")]
             logger.info("duplicate indices removed from RD measurements")
 
+        if df.empty:
+            return pd.DataFrame(), variables
+        
+        mdf, var = _transform_variables(df, variables)
+
         istart = (
-            df.index.get_indexer([start], method="backfill")[0]
+            mdf.index.get_indexer([start], method="backfill")[0]
             if start is not None
             else 0
         )
         iend = (
-            df.index.get_indexer([end], method="backfill")[0] if end is not None else -1
+            mdf.index.get_indexer([end], method="backfill")[0] if end is not None else -1
         )
-        iend = len(df) if iend == -1 else iend + 1
-        icol = df.columns.get_indexer([meteo_var])
-        meteo_df = df.iloc[istart:iend, icol].dropna()
+        iend = len(mdf) if iend == -1 else iend + 1
+        icol = mdf.columns.get_indexer([meteo_var])
+        meteo_df = mdf.iloc[istart:iend, icol].dropna()
 
         if not meteo_df.empty:
-            mdf, var = _transform_variables(meteo_df, variables)
-            variables["station"] = stn
-            return mdf, var
+            return meteo_df, var
 
     return pd.DataFrame(), variables
 
