@@ -1595,7 +1595,7 @@ def interpret_knmi_file(
 
         if df.empty:
             return pd.DataFrame(), variables
-        
+
         mdf, var = _transform_variables(df, variables)
 
         istart = (
@@ -1604,7 +1604,9 @@ def interpret_knmi_file(
             else 0
         )
         iend = (
-            mdf.index.get_indexer([end], method="backfill")[0] if end is not None else -1
+            mdf.index.get_indexer([end], method="backfill")[0]
+            if end is not None
+            else -1
         )
         iend = len(mdf) if iend == -1 else iend + 1
         icol = mdf.columns.get_indexer([meteo_var])

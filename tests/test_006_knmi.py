@@ -149,7 +149,6 @@ def test_knmi_daily_rainfall_api_values_edge_case():
     assert df2.index[0].date() == start.date()
 
 
-
 def test_knmi_daily_rainfall_url_values():
     stn = 550
     stn_name = knmi.get_station_name(stn=stn)
