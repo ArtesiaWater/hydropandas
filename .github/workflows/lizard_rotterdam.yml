@@ -34,10 +34,10 @@ jobs:
       PYTEST_ADDOPTS: "--color=yes"
     steps:
       - run: echo "Repo is ${{ github.event.pull_request.head.repo.full_name }}"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
           check-latest: true
