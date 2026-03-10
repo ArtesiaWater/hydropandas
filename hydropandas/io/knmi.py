@@ -2401,8 +2401,8 @@ def get_knmi_scenarios_data(
         End of timeseries. The default is '2020-12-31'.
         Dates after this value are changed to this value.
     evap : str, optional
-        Method for calculating evaporation. Options are 'Makkink', 'Penman',
-        or 'Hargreaves'. The default is 'Penman'.
+        Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+        or 'hargreaves'. The default is 'EV24'.
     remove_na : bool, optional
         If True, values of -99.99 in the data are replaced with NaN.
         The default is True.
@@ -2496,27 +2496,31 @@ def get_knmi_scenarios_data(
         df = df.rename(columns=colmap)
 
         # Calculate evaporation based on selected method
-        if evap == "Makkink":
-            df["EV24"] = makkink(df["TG"], df["Q"] * 8.64) * 10e2
-        elif evap == "Penman":
-            df["EV24"] = (
-                penman(
-                    df["TG"],
-                    df["TN"],
-                    df["TX"],
-                    df["Q"] * 8.64,
-                    df["FG"],
-                    df["UG"],
-                    df.index,
-                )
-                * 10e2
+        if evap in ("EV24", "makkink"):
+            K = df["Q"] * 8.64  # Convert from W/m² to J/cm²/day: 60*60*24/10000
+            df["EV24"] = makkink(tmean=df["TG"], K=K)
+        elif evap == "penman":
+            df["EV24"] = penman(
+                tmean=df["TG"],
+                tmin=df["TN"],
+                tmax=df["TX"],
+                K=df["Q"] * 8.64,  # Convert from W/m² to J/cm²/day
+                wind=df["FG"],
+                rh=df["UG"],
+                dates=df.index,
             )
-        elif evap == "Hargreaves":
-            df["EV24"] = hargreaves(df["TG"], df["TN"], df["TX"], df.index) * 10e2
+        elif evap == "hargreaves":
+            df["EV24"] = hargreaves(
+                tmean=df["TG"],
+                tmin=df["TN"],
+                tmax=df["TX"],
+                dates=df.index,
+                lat=meta.get("lat", 52.1),
+            )
         else:
             raise ValueError(
                 f"Unknown evaporation method: {evap}. "
-                "Choose from 'Makkink', 'Penman', or 'Hargreaves'."
+                "Choose from 'EV24', 'makkink', 'penman', or 'hargreaves'."
             )
 
         dfs[key] = df
@@ -2561,9 +2565,9 @@ def get_knmi_scenarios_obslist(
     tmax : str or None, optional
         End of timeseries. The default is '2020-12-31'.
         Dates after this value are changed to this value.
-    evap : str, optional
-        Method for calculating evaporation. Options are 'Makkink', 'Penman',
-        or 'Hargreaves'. The default is 'Penman'.
+    evap : Literal["EV24", "makkink", "penman", "hargreaves"], optional
+        Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+        or 'hargreaves'. The default is 'EV24'.
     remove_na : bool, optional
         If True, values of -99.99 in the data are replaced with NaN.
         The default is True.
