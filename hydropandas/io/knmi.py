@@ -2467,6 +2467,7 @@ def get_knmi_scenarios_data(
                 date_format="%Y%m%d",
             )
             df.columns = [column_renamed[x.strip()] for x in df.columns]
+            df.index.name = "date"
 
             if remove_na:
                 df = df.replace(-99.99, np.nan)
@@ -2598,7 +2599,7 @@ def get_knmi_scenarios_obslist(
             if meteo_vars is not None and col not in meteo_vars:
                 continue
 
-            meas = pd.DataFrame(index=df.index, data={"value": df[col]})
+            meas = pd.DataFrame(index=df.index, data={col: df[col]})
             stn_num = int(key.split("_")[0])
             variable = "".join(col.split())
             scenario = key.split("_")[
@@ -2623,12 +2624,13 @@ def get_knmi_scenarios_obslist(
                 meas,
                 name=f"{variable}_{stn_num}_{location}_{scenario}",
                 unit=units.get(variable, ""),
-                source=f"KNMI-Climate-Scenario_{scenario}",
+                source=f"KNMI-Climate-Scenario-{scenario}",
                 x=stations.loc[stn_num, "x"],
                 y=stations.loc[stn_num, "y"],
                 location=location,
                 station=stn_num,
                 meteo_var=variable,
+                meta={"scenario": scenario},
             )
             obs_list.append(o)
 
