@@ -14,6 +14,7 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
+from typing import Iterable, Literal
 
 import numpy as np
 import pandas as pd
@@ -2431,11 +2432,32 @@ class ObsCollection(pd.DataFrame):
     def from_knmi_scenarios(
         cls,
         stn: int | str,
-        years: tuple[str] = ("2033", "2050", "2100", "2150"),
-        scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-        tmin: str | None = "1991-01-01",
-        tmax: str | None = "2020-12-31",
-        evap: str = "Penman",
+        years: Iterable[Literal["2033", "2050", "2100", "2150"]] = (
+            "2033",
+            "2050",
+            "2100",
+            "2150",
+        ),
+        scenarios: Iterable[
+            Literal[
+                "Ld",
+                "Ln",
+                "Md",
+                "Mn",
+                "Hd",
+                "Hn",
+            ]
+        ] = (
+            "Ld",
+            "Ln",
+            "Md",
+            "Mn",
+            "Hd",
+            "Hn",
+        ),
+        tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
+        tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
+        evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
         remove_na: bool = True,
         meteo_vars: list[str] | None = None,
         name: str = "",
@@ -2463,8 +2485,8 @@ class ObsCollection(pd.DataFrame):
             End of timeseries. The default is '2020-12-31'.
             Dates after this value are changed to this value.
         evap : str, optional
-            Method for calculating evaporation. Options are 'Makkink', 'Penman',
-            or 'Hargreaves'. The default is 'Penman'.
+            Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+            or 'hargreaves'. The default is 'EV24'.
         remove_na : bool, optional
             If True, values of -99.99 in the data are replaced with NaN.
             The default is True.
