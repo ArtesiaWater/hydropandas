@@ -379,6 +379,7 @@ def test_fill_missing_measurements_neerslag():
         end=pd.Timestamp("1896-1-10"),
     )
     assert not df.empty, "expected filled df"
+    assert meta["station"] == 550
 
     # # maximum fill neerslagstation den Bosch
     # # loops through all neerslagstations because there is not measurement at 29-10-1885

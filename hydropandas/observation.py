@@ -20,7 +20,6 @@ import numbers
 import os
 import warnings
 from io import StringIO, TextIOWrapper
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -56,7 +55,7 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
         # read observation type
         obstype = buf.readline().split("Obs")[0] + "Obs"
 
-        assert obstype in globals().keys(), (
+        assert obstype in globals(), (
             f"cannot read a csv file from {obstype=}, this is probably because the csv file was not created with hydropandas. Try parsing using pandas.read_csv"
         )
 
@@ -120,7 +119,7 @@ class Obs(pd.DataFrame):
         self.source = kwargs.pop("source", "")
         self.unit = kwargs.pop("unit", "")
 
-        super(Obs, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
@@ -131,7 +130,7 @@ class Obs(pd.DataFrame):
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._get_meta_attr():
-            if not att == "meta":
+            if att != "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
         buf.write("\n")
 
@@ -722,7 +721,7 @@ class Obs(pd.DataFrame):
             # write metadata properties
             buf.write("-----metadata------\n")
             for att in self._get_meta_attr():
-                if not att == "meta":
+                if att != "meta":
                     buf.write(f"{att} : {getattr(self, att)} \n")
             buf.write("\n")
 
@@ -763,7 +762,7 @@ class Obs(pd.DataFrame):
         None
         """
         d = self.to_dict()
-        d["obs"] = super().to_json()
+        d["obs"] = super().to_json(date_format="iso")
         if path is None:
             return json.dumps(d, cls=cls, **kwargs)
         else:
@@ -810,7 +809,7 @@ class GroundwaterObs(Obs):
         """
         if len(args) > 0 and isinstance(args[0], Obs):
             for key in args[0]._get_meta_attr():
-                if (key in GroundwaterObs._metadata) and (key not in kwargs.keys()):
+                if (key in GroundwaterObs._metadata) and (key not in kwargs):
                     kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
@@ -920,7 +919,7 @@ class GroundwaterObs(Obs):
         tmin=None,
         tmax=None,
         type_timeseries=None,  # deprecated argument
-        which_timeseries=["hand", "diver"],  # new preferred argument
+        which_timeseries=("hand", "diver"),  # new preferred argument
         datafilters=None,
         combine_method="merge",
         only_metadata=False,
@@ -943,9 +942,9 @@ class GroundwaterObs(Obs):
             end of the observations, by default the entire serie is returned
         type_timeseries : str, optional (deprecated)
             Old keyword, use which_timeseries instead.
-        which_timeseries : list of str, optional
+        which_timeseries : tuple of str, optional
             Which timeseries to retrieve. Options: "hand", "diver", "diver_validated".
-            Defaults to ["hand", "diver"] (which should be correct for Vitens).
+            Defaults to ("hand", "diver") (which should be correct for Vitens).
         datafilters : list of strings, optional
             Methods to filter the timeseries data.
             If None (default), all measurements will be shown.
@@ -1212,10 +1211,7 @@ class GroundwaterObs(Obs):
                 metadata[oc_name] = metadata.get(pstore_name, None)
 
         metadata["source"] = "pastastore"
-        kwargs = {}
-        for key, value in metadata.items():
-            if key in cls._metadata:
-                kwargs[key] = value
+        kwargs = {key: value for key, value in metadata.items() if key in cls._metadata}
 
         return cls(data, meta=metadata, **kwargs)
 
@@ -1274,13 +1270,10 @@ class WaterQualityObs(Obs):
     ]
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in WaterQualityObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in WaterQualityObs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -1396,11 +1389,10 @@ class WaterlvlObs(Obs):
     _metadata = Obs._metadata + ["metadata_available"]
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in WaterlvlObs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in WaterlvlObs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -1561,11 +1553,10 @@ class ModelObs(Obs):
     _metadata = Obs._metadata + ["model"]
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in ModelObs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in ModelObs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
 
@@ -1585,11 +1576,10 @@ class MeteoObs(Obs):
     _metadata = Obs._metadata + ["station", "meteo_var"]
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in MeteoObs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in MeteoObs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
@@ -1696,10 +1686,10 @@ class MeteoObs(Obs):
     def from_wow(
         cls,
         meteo_var: str,
-        stn: str = None,
-        xy: List[float] = None,
-        start: Optional[pd.Timestamp] = None,
-        end: Optional[pd.Timestamp] = None,
+        stn: str | None = None,
+        xy: list[float] | None = None,
+        start: pd.Timestamp | None = None,
+        end: pd.Timestamp | None = None,
     ):
         """Get a MeteoObs timeseries from a wow.knmi.nl station.
 
@@ -1746,11 +1736,10 @@ class EvaporationObs(MeteoObs):
     """
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in EvaporationObs._metadata) and (key not in kwargs.keys()):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in EvaporationObs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
 
@@ -1837,13 +1826,10 @@ class PrecipitationObs(MeteoObs):
     """
 
     def __init__(self, *args, **kwargs):
-        if len(args) > 0:
-            if isinstance(args[0], Obs):
-                for key in args[0]._get_meta_attr():
-                    if (key in PrecipitationObs._metadata) and (
-                        key not in kwargs.keys()
-                    ):
-                        kwargs[key] = getattr(args[0], key)
+        if len(args) > 0 and isinstance(args[0], Obs):
+            for key in args[0]._get_meta_attr():
+                if (key in PrecipitationObs._metadata) and (key not in kwargs):
+                    kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
 
@@ -1948,10 +1934,10 @@ class PrecipitationObs(MeteoObs):
     @classmethod
     def from_wow(
         cls,
-        stn: str = None,
-        xy: List[float] = None,
-        start: Optional[pd.Timestamp] = None,
-        end: Optional[pd.Timestamp] = None,
+        stn: str | None = None,
+        xy: list[float] | None = None,
+        start: pd.Timestamp | None = None,
+        end: pd.Timestamp | None = None,
     ):
         """Get a PrecipitationObs timeseries from a wow.knmi.nl station.
 

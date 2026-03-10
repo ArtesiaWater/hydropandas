@@ -126,16 +126,16 @@ def get_obs_list_from_extent(
         keep_coords=False,
     )
 
-    nobs = sum([len(s) for units in download_pars.values() for s in units.values()])
+    nobs = sum(len(s) for units in download_pars.values() for s in units.values())
     logger.info(f"downloading {nobs} observations from {len(download_pars)} locations")
     logger.debug(f"download parameters {download_pars}")
 
     obs_list = []
-    for location, units in tqdm(
+    for location, unitss in tqdm(
         download_pars.items(), total=len(download_pars), desc="location"
     ):
-        for unit, sources in units.items():
-            for source in sources:
+        for unit, sourcess in unitss.items():
+            for source in sourcess:
                 logger.debug(
                     f"downloading matroos measurements for {location=}, {source=}, {unit=}, between {tmin=}, {tmax=}"
                 )
@@ -399,11 +399,11 @@ def get_matroos_obs(
     # check if location, source and unit are valid
     if validate:
         params_dic = load_parameter_metadata()
-        if location not in params_dic.keys():
+        if location not in params_dic:
             msg = f"{location} not listed in possible locations, please select location from {params_dic.keys()}"
             logger.warning(msg)
 
-        elif unit not in params_dic[location]["units"].keys():
+        elif unit not in params_dic[location]["units"]:
             msg = f"{unit} not available for {location=}, please select unit from {params_dic[location]['units'].keys()}"
             logger.warning(msg)
 

@@ -35,7 +35,6 @@ def test_obscollection_dino_to_mapgraph():
 
         gw = ttf.obscollection_dinozip_gw()
         gw.art.plot_mapgraphs(plot_ylim="min_dy")
-        return
     except ModuleNotFoundError as e:
         print(e)
 
@@ -51,7 +50,6 @@ def test_obscollection_to_map():
 
         fews_gw_prod = ttf.obscollection_fews_lowmemory()
         fews_gw_prod.art.plot_mapfig()
-        return
     except ModuleNotFoundError as e:
         print(e)
 
