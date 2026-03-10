@@ -2360,7 +2360,6 @@ def get_knmi_scenarios_data(
     tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
     tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-    remove_na: bool = True,
 ) -> dict[str, pd.DataFrame]:
     """Fetch and process KNMI climate scenario data for a station.
 
@@ -2388,9 +2387,6 @@ def get_knmi_scenarios_data(
     evap : str, optional
         Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
         or 'hargreaves'. The default is 'EV24'.
-    remove_na : bool, optional
-        If True, values of -99.99 in the data are replaced with NaN.
-        The default is True.
 
     Returns
     -------
@@ -2469,7 +2465,10 @@ def get_knmi_scenarios_data(
             df.columns = [column_renamed[x.strip()] for x in df.columns]
             df.index.name = "date"
 
-            if remove_na:
+            if -99.99 in df.values:
+                logger.info(
+                    f"Station {stn} scenario {base_ext} contains -99.99 values, replacing with NaN."
+                )
                 df = df.replace(-99.99, np.nan)
 
             # Calculate evaporation based on selected method
@@ -2517,7 +2516,6 @@ def get_knmi_scenarios_obslist(
     tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
     tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-    remove_na: bool = True,
 ) -> list[Any]:
     """Convert climate scenario dataframes into observation objects.
 
@@ -2548,9 +2546,6 @@ def get_knmi_scenarios_obslist(
     evap : Literal["EV24", "makkink", "penman", "hargreaves"], optional
         Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
         or 'hargreaves'. The default is 'EV24'.
-    remove_na : bool, optional
-        If True, values of -99.99 in the data are replaced with NaN.
-        The default is True.
 
     Returns
     -------
@@ -2578,7 +2573,6 @@ def get_knmi_scenarios_obslist(
         tmin=tmin,
         tmax=tmax,
         evap=evap,
-        remove_na=remove_na,
     )
 
     units = {

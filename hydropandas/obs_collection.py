@@ -2499,9 +2499,6 @@ class ObsCollection(pd.DataFrame):
         evap : str, optional
             Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
             or 'hargreaves'. The default is 'EV24'.
-        remove_na : bool, optional
-            If True, values of -99.99 in the data are replaced with NaN.
-            The default is True.
         meteo_vars : list of str, optional
             Only variables in this list will be converted to observations.
         name : str, optional
@@ -2532,7 +2529,6 @@ class ObsCollection(pd.DataFrame):
             tmin=tmin,
             tmax=tmax,
             evap=evap,
-            remove_na=remove_na,
         )
 
         # Create and return observation collection
