@@ -453,10 +453,10 @@ def test_knmi_scenarios_obs_collection_and_filter():
         stn=550,
         years=["2033"],
         scenarios=["Mn"],
-        meteo_vars=["RH"],
+        meteo_vars=["RD"],
     )
     assert len(oc2) > 0
-    assert all(o.meteo_var == "RH" for o in oc2.obs)
+    assert all(o.meteo_var == "RD" for o in oc2.obs)
 
 
 def test_knmi_daily_rainfall():

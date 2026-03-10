@@ -2498,6 +2498,8 @@ def get_knmi_scenarios_data(
                     f"Unknown evaporation method: {evap}. "
                     "Choose from 'EV24', 'makkink', 'penman', or 'hargreaves'."
                 )
+            # make sure RD unit is m/d, same as normal knmi data
+            df["RD"] = df["RD"].multiply(1e-3)
             dfs[base] = df
         else:
             logger.warning(f"Unexpected file in zip: {name}")
@@ -2556,12 +2558,12 @@ def get_knmi_scenarios_obslist(
         and ``meteo_var`` attributes set in addition to the usual metadata.
     """
 
-    if tmin != "1991-01-01":
+    if pd.Timestamp(tmin) != pd.Timestamp("1991-01-01"):
         logger.warning(
             "tmin other than '1991-01-01' is not implemented yet for the KNMI scenarios. "
             "This is because the API only returns data from 1991-01-01 onwards. "
         )
-    if tmax != "2020-12-31":
+    if pd.Timestamp(tmax) != pd.Timestamp("2020-12-31"):
         logger.warning(
             "tmax other than '2020-12-31' is not implemented yet for the KNMI scenarios. "
             "This is because the API only returns data up to 2020-12-31. "
@@ -2580,7 +2582,7 @@ def get_knmi_scenarios_obslist(
 
     units = {
         "TG": "°C",
-        "RH": "m/day",
+        "RD": "m/day",
         "Q": "W/m²",
         "TX": "°C",
         "TN": "°C",
