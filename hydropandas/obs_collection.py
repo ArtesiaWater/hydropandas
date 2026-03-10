@@ -14,6 +14,7 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
+from typing import Iterable, Literal
 
 import numpy as np
 import pandas as pd
@@ -628,6 +629,80 @@ def read_knmi(
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
+    )
+
+    return oc
+
+
+def read_knmi_scenarios(
+    stn: int | str,
+    years: Iterable[Literal["2033", "2050", "2100", "2150"]] = (
+        "2033",
+        "2050",
+        "2100",
+        "2150",
+    ),
+    scenarios: Iterable[Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]] = (
+        "Ld",
+        "Ln",
+        "Md",
+        "Mn",
+        "Hd",
+        "Hn",
+    ),
+    evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+    meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+    | None = None,
+    name: str = "",
+):
+    """Get KNMI climate scenario observations for a station.
+
+    Retrieves climate scenario data from KNMI and returns an ObsCollection
+    with temperature, precipitation, and evaporation observations for different
+    climate scenarios.
+
+    Parameters
+    ----------
+    stn : int or str
+        Station number (e.g., 550 or "550").
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+        This includes all scenarios including the original measurements.
+    evap : str, optional
+        Method for calculating evaporation. Options are 'EV24', 'makkink',
+        'penman', or 'hargreaves'. The default is 'EV24'.
+    meteo_vars : iterable of str or None, optional
+        Meteorological variables to include in the ObsCollection. Possible
+        variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+        If None (default), all available variables are included.
+    name : str, optional
+        Name of the observation collection. The default is "".
+
+    Returns
+    -------
+    ObsCollection
+        Collection of climate scenario observations with temperature, precipitation,
+        and evaporation data for different scenarios.
+
+    Examples
+    --------
+    >>> oc = hpd.read_knmi_scenarios("550")
+    >>> oc = hpd.read_knmi_scenarios(
+    ...     "550",
+    ...     years=["2050", "2100"],
+    ...     scenarios=["Md", "Hd"],
+    ...     evap="Makkink"
+    ... )
+    """
+    oc = ObsCollection.from_knmi_scenarios(
+        stn=stn,
+        years=years,
+        scenarios=scenarios,
+        evap=evap,
+        meteo_vars=meteo_vars,
+        name=name,
     )
 
     return oc
@@ -2354,6 +2429,95 @@ class ObsCollection(pd.DataFrame):
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
+
+    @classmethod
+    def from_knmi_scenarios(
+        cls,
+        stn: int | str,
+        years: Iterable[Literal["2033", "2050", "2100", "2150"]] = (
+            "2033",
+            "2050",
+            "2100",
+            "2150",
+        ),
+        scenarios: Iterable[Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]] = (
+            "Ld",
+            "Ln",
+            "Md",
+            "Mn",
+            "Hd",
+            "Hn",
+        ),
+        evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+        meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+        | None = None,
+        name: str = "",
+    ):
+        """Create ObsCollection from KNMI climate scenario data.
+
+        The ``stn`` argument may be provided as an integer or a string.  The data
+        are downloaded once and converted into individual observations.  By
+        default every variable present in the returned dataset is turned into an
+        Obs; a user can restrict the output by specifying ``meteo_vars``.
+
+        Parameters
+        ----------
+        stn : int or str
+            Station number (e.g., 550 or "550").
+        years : tuple, optional
+            Years of climate scenario. The default is ('2033','2050','2100','2150').
+        scenarios : tuple, optional
+            Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+            This includes all scenarios including the original measurements.
+        evap : str, optional
+            Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+            or 'hargreaves'. The default is 'EV24'.
+        meteo_vars : iterable of str or None, optional
+            Meteorological variables to include in the ObsCollection. Possible
+            variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+            If None (default), all available variables are included.
+        name : str, optional
+            Name of the observation collection. The default is "".
+
+        Returns
+        -------
+        ObsCollection
+            Collection with climate scenario observations.
+        """
+        from .io.knmi import get_knmi_scenarios_obs_list
+        from .observation import EvaporationObs, MeteoObs, PrecipitationObs
+
+        # Fetch and process climate scenario data
+        obs_list = get_knmi_scenarios_obs_list(
+            stn=stn,
+            years=years,
+            scenarios=scenarios,
+            evap=evap,
+            meteo_vars=meteo_vars,
+            ObsClass={
+                "RD": PrecipitationObs,
+                "TG": MeteoObs,
+                "Q": MeteoObs,
+                "TX": MeteoObs,
+                "TN": MeteoObs,
+                "UG": MeteoObs,
+                "FG": MeteoObs,
+                "EV24": EvaporationObs,
+            },
+        )
+
+        # Create and return observation collection
+        meta = {
+            "stn": str(stn),
+            "years": years,
+            "scenarios": scenarios,
+            "evaporation_method": evap,
+        }
+
+        if meteo_vars is not None:
+            meta["meteo_vars"] = meteo_vars
+
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_list(cls, obs_list, name=""):
