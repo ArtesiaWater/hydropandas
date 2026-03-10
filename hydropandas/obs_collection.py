@@ -651,7 +651,8 @@ def read_knmi_scenarios(
         "Hn",
     ),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-    meteo_vars: list[str] | None = None,
+    meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+    | None = None,
     name: str = "",
 ):
     """Get KNMI climate scenario observations for a station.
@@ -671,7 +672,11 @@ def read_knmi_scenarios(
         This includes all scenarios including the original measurements.
     evap : str, optional
         Method for calculating evaporation. Options are 'EV24', 'makkink',
-        'penman', or 'margreaves'. The default is 'EV24'.
+        'penman', or 'hargreaves'. The default is 'EV24'.
+    meteo_vars : iterable of str or None, optional
+        Meteorological variables to include in the ObsCollection. Possible
+        variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+        If None (default), all available variables are included.
     name : str, optional
         Name of the observation collection. The default is "".
 
@@ -2435,16 +2440,7 @@ class ObsCollection(pd.DataFrame):
             "2100",
             "2150",
         ),
-        scenarios: Iterable[
-            Literal[
-                "Ld",
-                "Ln",
-                "Md",
-                "Mn",
-                "Hd",
-                "Hn",
-            ]
-        ] = (
+        scenarios: Iterable[Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]] = (
             "Ld",
             "Ln",
             "Md",
@@ -2453,7 +2449,8 @@ class ObsCollection(pd.DataFrame):
             "Hn",
         ),
         evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-        meteo_vars: list[str] | None = None,
+        meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+        | None = None,
         name: str = "",
     ):
         """Create ObsCollection from KNMI climate scenario data.
@@ -2475,8 +2472,10 @@ class ObsCollection(pd.DataFrame):
         evap : str, optional
             Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
             or 'hargreaves'. The default is 'EV24'.
-        meteo_vars : list of str, optional
-            Only variables in this list will be converted to observations.
+        meteo_vars : iterable of str or None, optional
+            Meteorological variables to include in the ObsCollection. Possible
+            variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+            If None (default), all available variables are included.
         name : str, optional
             Name of the observation collection. The default is "".
 
@@ -2485,17 +2484,26 @@ class ObsCollection(pd.DataFrame):
         ObsCollection
             Collection with climate scenario observations.
         """
-        from .io.knmi import get_knmi_scenarios_obslist
+        from .io.knmi import get_knmi_scenarios_obs_list
         from .observation import EvaporationObs, MeteoObs, PrecipitationObs
 
         # Fetch and process climate scenario data
-        obs_list = get_knmi_scenarios_obslist(
+        obs_list = get_knmi_scenarios_obs_list(
             stn=stn,
             years=years,
             scenarios=scenarios,
             evap=evap,
             meteo_vars=meteo_vars,
-            ObsClasses=[PrecipitationObs, EvaporationObs, MeteoObs],
+            ObsClass={
+                "RD": PrecipitationObs,
+                "TG": MeteoObs,
+                "Q": MeteoObs,
+                "TX": MeteoObs,
+                "TN": MeteoObs,
+                "UG": MeteoObs,
+                "FG": MeteoObs,
+                "EV24": EvaporationObs,
+            },
         )
 
         # Create and return observation collection

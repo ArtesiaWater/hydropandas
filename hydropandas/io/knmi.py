@@ -2491,13 +2491,14 @@ def get_knmi_scenarios_data(
     return dfs
 
 
-def get_knmi_scenarios_obslist(
+def get_knmi_scenarios_obs_list(
     stn: int | str,
     years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
     scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-    meteo_vars: list[str] | None = None,
-    ObsClasses: list[Any] | None = None,
+    meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+    | None = None,
+    ObsClass: dict[str, Any] | None = None,
 ) -> list[Any]:
     """Convert climate scenario dataframes into observation objects.
 
@@ -2513,14 +2514,13 @@ def get_knmi_scenarios_obslist(
     evap : Literal["EV24", "makkink", "penman", "hargreaves"], optional
         Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
         or 'hargreaves'. The default is 'EV24'.
-    meteo_vars : list of str, optional
-        If provided only these meteo variables are converted to observations.
-        This allows the caller to filter away unwanted series.
-    ObsClasses : List[hpd.Obs]
-        List of observation classes to use for instantiating the observations. The
-        function will look for classes named "PrecipitationObs", "EvaporationObs",
-        and "MeteoObs" to map the variables to the correct class. If a variable does
-        not match "RD" or "EV24" it will be instantiated as a Meteo.
+    meteo_vars : iterable of str or None, optional
+            Meteorological variables to include in the ObsCollection. Possible
+            variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+            If None (default), all available variables are included.
+    ObsClass : dict[str, PrecipitationObs | EvaporationObs | MeteoObs]
+        Dictionary mapping variable names to observation classes. The function will
+        use these classes to instantiate the observations.
 
     Returns
     -------
@@ -2528,6 +2528,10 @@ def get_knmi_scenarios_obslist(
         List of instantiated observation objects. Each object has ``station``
         and ``meteo_var`` attributes set in addition to the usual metadata.
     """
+    if ObsClass is None:
+        raise ValueError(
+            "ObsClass must be provided to map variables to observation classes."
+        )
 
     # Get measurements data
     dfs = get_knmi_scenarios_data(
@@ -2536,27 +2540,7 @@ def get_knmi_scenarios_obslist(
         scenarios=scenarios,
         evap=evap,
     )
-    if ObsClasses is None:
-        raise ValueError(
-            "ObsClasses must be provided to map variables to observation classes."
-        )
 
-    # find PrecipitationObs, EvaporationObs and MeteoObs in ObsClasses
-    PrecipitationObs = next(
-        (cls for cls in ObsClasses if cls.__name__ == "PrecipitationObs"), None
-    )
-    EvaporationObs = next(
-        (cls for cls in ObsClasses if cls.__name__ == "EvaporationObs"), None
-    )
-    MeteoObs = next((cls for cls in ObsClasses if cls.__name__ == "MeteoObs"), None)
-    if PrecipitationObs is None or EvaporationObs is None or MeteoObs is None:
-        raise ValueError(
-            "ObsClasses must include PrecipitationObs, EvaporationObs, and MeteoObs classes."
-        )
-    obs_class_map = {
-        "RD": PrecipitationObs,
-        "EV24": EvaporationObs,
-    }
     units = {
         "TG": "°C",
         "RD": "m/day",
@@ -2567,12 +2551,17 @@ def get_knmi_scenarios_obslist(
         "FG": "m/s",
         "EV24": "m/day",
     }
+    meteo_vars = list(units) if meteo_vars is None else meteo_vars
     stations = get_stations("RD")
     obs_list = []
     for key, df in dfs.items():
         for col in df.columns:
             # apply optional filter
-            if meteo_vars is not None and col not in meteo_vars:
+            if col not in meteo_vars:
+                logger.debug(
+                    f"Skipping variable {col} as it is not in"
+                    f"the provided meteo_vars {meteo_vars} list."
+                )
                 continue
 
             meas = pd.DataFrame(index=df.index, data={col: df[col]})
@@ -2583,7 +2572,7 @@ def get_knmi_scenarios_obslist(
             ]  # includes year and scenario name, e.g. "2033_Ld"
             location = key.split("_")[1].upper()
 
-            obs_cls = obs_class_map.get(variable, MeteoObs)
+            obs_cls = ObsClass[variable]
             o = obs_cls(
                 meas,
                 name=f"{variable}_{stn_num}_{location}_{scenario}",
