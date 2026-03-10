@@ -1601,7 +1601,7 @@ def interpret_knmi_file(
             return pd.DataFrame(), variables
 
         mdf, variables = _transform_variables(df, variables)
-        variables['station'] = stn
+        variables["station"] = stn
         istart = (
             mdf.index.get_indexer([start], method="backfill")[0]
             if start is not None
