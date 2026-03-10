@@ -2490,7 +2490,7 @@ class ObsCollection(pd.DataFrame):
 
         # Build mapping for variable → class
         obs_map = {
-            "RH": PrecipitationObs,
+            "RD": PrecipitationObs,
             "EV24": EvaporationObs,
             "other": MeteoObs,
         }
