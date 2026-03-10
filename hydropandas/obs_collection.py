@@ -653,7 +653,6 @@ def read_knmi_scenarios(
     tmin: str | pd.Timestamp = pd.Timestamp("1991-01-01"),
     tmax: str | pd.Timestamp = pd.Timestamp("2020-12-31"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-    remove_na: bool = True,
     meteo_vars: list[str] | None = None,
     name: str = "",
 ):
@@ -681,9 +680,6 @@ def read_knmi_scenarios(
     evap : str, optional
         Method for calculating evaporation. Options are 'EV24', 'makkink',
         'penman', or 'margreaves'. The default is 'EV24'.
-    remove_na : bool, optional
-        If True, values of -99.99 in the data are replaced with NaN.
-        The default is True.
     name : str, optional
         Name of the observation collection. The default is "".
 
@@ -710,7 +706,6 @@ def read_knmi_scenarios(
         tmin=tmin,
         tmax=tmax,
         evap=evap,
-        remove_na=remove_na,
         meteo_vars=meteo_vars,
         name=name,
     )
@@ -2470,7 +2465,6 @@ class ObsCollection(pd.DataFrame):
         tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
         tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
         evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
-        remove_na: bool = True,
         meteo_vars: list[str] | None = None,
         name: str = "",
     ):
