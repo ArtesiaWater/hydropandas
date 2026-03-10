@@ -112,7 +112,7 @@ def create_pastastore(
             use_col = col
 
         if o.empty:
-            logger.debug(f"Did not add {o.name} to pastastore because series is empty.")
+            logger.info(f"Did not add {o.name} to pastastore because series is empty.")
             continue
 
         if kind == "oseries":
