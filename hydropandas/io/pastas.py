@@ -111,6 +111,10 @@ def create_pastastore(
         else:
             use_col = col
 
+        if o.empty:
+            logger.info(f"Did not add {o.name} to pastastore because series is empty.")
+            continue
+
         if kind == "oseries":
             pstore.conn.add_oseries(
                 o[use_col], o.name, metadata=meta, overwrite=overwrite
