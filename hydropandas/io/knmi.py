@@ -2423,13 +2423,13 @@ def get_knmi_scenarios_data(
     # allow int input for station
     stn = str(stn)
 
-    # Convert timestamp strings if needed
-    tmin = str(tmin) if not isinstance(tmin, str) else tmin
-    tmax = str(tmax) if not isinstance(tmax, str) else tmax
-
     # Limit to available date range
-    tmin = max("1991-01-01", tmin)
-    tmax = min("2020-12-31", tmax)
+    tmin = max(pd.Timestamp("1991-01-01"), pd.Timestamp(tmin))
+    tmax = min(pd.Timestamp("2020-12-31"), pd.Timestamp(tmax))
+
+    # Convert timestamp to string in the correct isoformat for the API
+    tmin = tmin.isoformat("%Y-%m-%d")
+    tmax = tmax.isoformat("%Y-%m-%d")
 
     # Get station KNMI ID
     station = _stn_to_knmi_id(stn)
