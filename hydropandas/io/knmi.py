@@ -25,7 +25,7 @@ import warnings
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable, Literal
 from zipfile import ZipFile
 
 import numpy as np
@@ -41,6 +41,9 @@ URL_STATIONS = "https://klimaatscenarios-data.knmi.nl/api/v1/stations"
 URL_KNMI_TRANSFORMED_SERIES = (
     "https://klimaatscenarios-data.knmi.nl/api/v1/climate-series-data.zip"
 )
+
+KNMI_CLIMATE_YEARS = Literal["2033", "2050", "2100", "2150"]
+KNMI_CLIMATE_SCENARIOS = Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
 
 
 def get_knmi_obs(
@@ -2367,11 +2370,11 @@ def _stn_to_knmi_id(
 
 def get_knmi_scenarios_data(
     stn: int | str,
-    years: tuple[str] = ("2033", "2050", "2100", "2150"),
-    scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: pd.Timestamp | str = "1991-01-01",
-    tmax: pd.Timestamp | str = "2020-12-31",
-    evap: str = "Penman",
+    years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
+    scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
+    tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
+    evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
     remove_na: bool = True,
 ) -> dict[str, pd.DataFrame]:
     """Fetch and process KNMI climate scenario data for a station.
@@ -2525,11 +2528,11 @@ def get_knmi_scenarios_obslist(
     stn: int | str,
     obs_class_map: dict[str, Any],
     meteo_vars: list[str] | None = None,
-    years: tuple[str] = ("2033", "2050", "2100", "2150"),
-    scenarios: tuple[str] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: str | None = "1991-01-01",
-    tmax: str | None = "2020-12-31",
-    evap: str = "Penman",
+    years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
+    scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
+    tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
+    evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
     remove_na: bool = True,
 ) -> list[Any]:
     """Convert climate scenario dataframes into observation objects.
