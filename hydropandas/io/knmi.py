@@ -2413,8 +2413,8 @@ def get_knmi_scenarios_data(
     tmax = min(pd.Timestamp("2020-12-31"), pd.Timestamp(tmax))
 
     # Convert timestamp to string in the correct isoformat for the API
-    tmin = tmin.isoformat("%Y-%m-%d")
-    tmax = tmax.isoformat("%Y-%m-%d")
+    tmin = tmin.strftime("%Y-%m-%d")
+    tmax = tmax.strftime("%Y-%m-%d")
 
     # Get station KNMI ID
     stations = get_stations_scenarios()
