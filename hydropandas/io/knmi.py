@@ -1192,10 +1192,11 @@ def _transform_variables(
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Transforms the timeseries to default units and settings.
 
-    Does 3 things:
+    Does 4 things:
         1. all values equal to -1 are converted to zero
         2. the units are changed from 0.1 mm to 1 mm.
         3. the units are changed from mm to m.
+        4. the timezone is converted from UTC to UTC+1
 
     Parameters
     ----------
@@ -1206,7 +1207,7 @@ def _transform_variables(
 
     Raises
     ------
-    NameError
+    KeyError
         if there are columns in the DataFrame and no matching key in the
         variables dictionary.
 
@@ -1217,6 +1218,8 @@ def _transform_variables(
     variables : dictionary
         description of variables in time series.
     """
+    variables = variables.copy()
+    df = df.copy()
     add_m_unit = False
     for key, value in variables.items():
         # test if key existst in data
@@ -1227,7 +1230,7 @@ def _transform_variables(
                 variables.pop(key)
                 key = "T10"
             else:
-                raise NameError(key + " does not exist in data")
+                raise KeyError(key + " does not exist in data")
 
         if "(-1 voor <0.05 mm)" in value:
             # remove -1 for precipitation smaller than <0.05 mm
@@ -1571,13 +1574,14 @@ def interpret_knmi_file(
     """
 
     variables = {meteo_var: meta[meteo_var]}
+    stn = None
     if not df.empty:
         unique_stn = df["STN"].unique()
         if len(unique_stn) > 1:
             raise ValueError(
                 f"Cannot handle multiple stations {unique_stn} in single file"
             )
-
+        stn = unique_stn[0]
         if add_day or add_hour:
             if add_day and add_hour:
                 timedelta = pd.Timedelta(1, "d") + pd.Timedelta(1, "h")
@@ -1596,8 +1600,8 @@ def interpret_knmi_file(
         if df.empty:
             return pd.DataFrame(), variables
 
-        mdf, var = _transform_variables(df, variables)
-
+        mdf, variables = _transform_variables(df, variables)
+        variables['station'] = stn
         istart = (
             mdf.index.get_indexer([start], method="backfill")[0]
             if start is not None
@@ -1613,7 +1617,7 @@ def interpret_knmi_file(
         meteo_df = mdf.iloc[istart:iend, icol].dropna()
 
         if not meteo_df.empty:
-            return meteo_df, var
+            return meteo_df, variables
 
     return pd.DataFrame(), variables
 
