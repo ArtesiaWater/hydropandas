@@ -2493,11 +2493,11 @@ def get_knmi_scenarios_data(
 
 def get_knmi_scenarios_obslist(
     stn: int | str,
-    obs_class_map: dict[str, Any],
-    meteo_vars: list[str] | None = None,
     years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
     scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+    meteo_vars: list[str] | None = None,
+    ObsClasses: list[Any] | None = None,
 ) -> list[Any]:
     """Convert climate scenario dataframes into observation objects.
 
@@ -2505,15 +2505,6 @@ def get_knmi_scenarios_obslist(
     ----------
     stn : int or str
         Station number (e.g., 550 or "550").
-    obs_class_map : dict
-        Dictionary mapping variable codes (e.g. ``"RH"`` or ``"EV24"``) to
-        the corresponding observation class. The map *must* contain an
-        ``"other"`` key; its value will be used for any variable not
-        explicitly listed.  (Raising a ``KeyError`` otherwise avoids a
-        dependency on :mod:`hydropandas.observation`.)
-    meteo_vars : list of str, optional
-        If provided only these meteo variables are converted to observations.
-        This allows the caller to filter away unwanted series.
     years : tuple, optional
         Years of climate scenario. The default is ('2033','2050','2100','2150').
     scenarios : tuple, optional
@@ -2522,6 +2513,14 @@ def get_knmi_scenarios_obslist(
     evap : Literal["EV24", "makkink", "penman", "hargreaves"], optional
         Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
         or 'hargreaves'. The default is 'EV24'.
+    meteo_vars : list of str, optional
+        If provided only these meteo variables are converted to observations.
+        This allows the caller to filter away unwanted series.
+    ObsClasses : List[hpd.Obs]
+        List of observation classes to use for instantiating the observations. The
+        function will look for classes named "PrecipitationObs", "EvaporationObs",
+        and "MeteoObs" to map the variables to the correct class. If a variable does
+        not match "RD" or "EV24" it will be instantiated as a Meteo.
 
     Returns
     -------
@@ -2537,7 +2536,27 @@ def get_knmi_scenarios_obslist(
         scenarios=scenarios,
         evap=evap,
     )
+    if ObsClasses is None:
+        raise ValueError(
+            "ObsClasses must be provided to map variables to observation classes."
+        )
 
+    # find PrecipitationObs, EvaporationObs and MeteoObs in ObsClasses
+    PrecipitationObs = next(
+        (cls for cls in ObsClasses if cls.__name__ == "PrecipitationObs"), None
+    )
+    EvaporationObs = next(
+        (cls for cls in ObsClasses if cls.__name__ == "EvaporationObs"), None
+    )
+    MeteoObs = next((cls for cls in ObsClasses if cls.__name__ == "MeteoObs"), None)
+    if PrecipitationObs is None or EvaporationObs is None or MeteoObs is None:
+        raise ValueError(
+            "ObsClasses must include PrecipitationObs, EvaporationObs, and MeteoObs classes."
+        )
+    obs_class_map = {
+        "RD": PrecipitationObs,
+        "EV24": EvaporationObs,
+    }
     units = {
         "TG": "°C",
         "RD": "m/day",
@@ -2564,19 +2583,7 @@ def get_knmi_scenarios_obslist(
             ]  # includes year and scenario name, e.g. "2033_Ld"
             location = key.split("_")[1].upper()
 
-            # choose observation class from the provided map; fall back to
-            # ``other`` if the specific variable isn't present. ``other`` must
-            # be defined by the caller, otherwise we raise.
-            obs_cls = obs_class_map.get(variable)
-            if obs_cls is None:
-                if "other" in obs_class_map:
-                    obs_cls = obs_class_map["other"]
-                else:
-                    raise KeyError(
-                        "obs_class_map must contain a fallback entry 'other'"
-                        f" when variable '{variable}' is not mapped."
-                    )
-
+            obs_cls = obs_class_map.get(variable, MeteoObs)
             o = obs_cls(
                 meas,
                 name=f"{variable}_{stn_num}_{location}_{scenario}",

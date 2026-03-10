@@ -2488,21 +2488,14 @@ class ObsCollection(pd.DataFrame):
         from .io.knmi import get_knmi_scenarios_obslist
         from .observation import EvaporationObs, MeteoObs, PrecipitationObs
 
-        # Build mapping for variable → class
-        obs_map = {
-            "RD": PrecipitationObs,
-            "EV24": EvaporationObs,
-            "other": MeteoObs,
-        }
-
         # Fetch and process climate scenario data
         obs_list = get_knmi_scenarios_obslist(
             stn=stn,
-            obs_class_map=obs_map,
-            meteo_vars=meteo_vars,
             years=years,
             scenarios=scenarios,
             evap=evap,
+            meteo_vars=meteo_vars,
+            ObsClasses=[PrecipitationObs, EvaporationObs, MeteoObs],
         )
 
         # Create and return observation collection
