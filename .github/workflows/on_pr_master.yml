@@ -43,10 +43,10 @@ jobs:
       # Lizard API key for tests that use the Lizard API
       LIZARD_ROTTERDAM_API_KEY: ${{ secrets.LIZARD_ROTTERDAM_API_KEY}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
           check-latest: true
@@ -68,4 +68,3 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
-        
