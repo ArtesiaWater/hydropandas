@@ -2344,28 +2344,13 @@ def hargreaves(
     return et
 
 
-def _stn_to_knmi_id(
-    stn: int | str,
-) -> str:
-    """get knmi_id for a station number using the URL_STATIONS
-
-    Parameters
-    ----------
-    stn : Union[int, str]
-        station number, e.g. 550 or "550"
-
-    Returns
-    -------
-    str
-        knmi_id for the station, e.g. "550_De-Bilt_utrecht" for station 550
-    """
-    stn = str(stn)  # accept either integer or string station number
+def get_stations_scenarios() -> pd.DataFrame:
+    """Get KNMI station information for climate scenarios."""
     response = requests.get(URL_STATIONS)
     json_data = response.json()
-    knmi_id = next(
-        d["key"] for d in json_data["stations"] if d["key"].split("_")[0] == stn
-    )
-    return knmi_id
+    df = pd.DataFrame(json_data["stations"])
+    df.index = df.loc[:, "key"].str.split("_").str[0].rename("stn")
+    return df
 
 
 def get_knmi_scenarios_data(
@@ -2432,7 +2417,13 @@ def get_knmi_scenarios_data(
     tmax = tmax.isoformat("%Y-%m-%d")
 
     # Get station KNMI ID
-    station = _stn_to_knmi_id(stn)
+    stations = get_stations_scenarios()
+    if stn not in stations.index:
+        raise KeyError(
+            f"Station {stn} not found in KNMI climate scenario station list."
+            "Check knmi.get_stations_scenarios() to see what stations are available."
+        )
+    station = stations.at[stn, "key"]
 
     # Build request parameters
     params = (
@@ -2452,78 +2443,64 @@ def get_knmi_scenarios_data(
     zipped = ZipFile(BytesIO(response.content))
 
     # Read and process raw CSV files
-    dfs = {}
-    for name in zipped.namelist():
-        if name.endswith(".csv"):
-            base = os.path.splitext(name)[0]
-            base_ext = base.split("_")[-1]
-
-            if base_ext == "obs":
-                df = pd.read_csv(
-                    zipped.open(name),
-                    sep=",",
-                    skiprows=3,
-                    usecols=list(range(8)),
-                )
-            else:
-                df = pd.read_csv(
-                    zipped.open(name),
-                    sep=",",
-                    skiprows=4,
-                    usecols=list(range(8)),
-                )
-            if remove_na:
-                df = df.replace(-99.99, np.nan)
-            df.columns = df.columns.str.strip()
-            dfs[base] = df
-
-    # Process each DataFrame: set datetime index and calculate evaporation
-    colmap = {
+    column_renamed = {
         "temp": "TG",
-        "precip": "RH",
+        "precip": "RD",
         "radiation": "Q",
         "max-temp": "TX",
         "min-temp": "TN",
         "rel-humidity": "UG",
         "windspeed": "FG",
     }
-    for key, df in dfs.items():
-        date_col = df.columns[0]
-        df[date_col] = pd.to_datetime(df[date_col], format="%Y%m%d", errors="coerce")
-        df = df.set_index(date_col)
-        df.index.name = "date"
-
-        df = df.rename(columns=colmap)
-
-        # Calculate evaporation based on selected method
-        if evap in ("EV24", "makkink"):
-            K = df["Q"] * 8.64  # Convert from W/m² to J/cm²/day: 60*60*24/10000
-            df["EV24"] = makkink(tmean=df["TG"], K=K)
-        elif evap == "penman":
-            df["EV24"] = penman(
-                tmean=df["TG"],
-                tmin=df["TN"],
-                tmax=df["TX"],
-                K=df["Q"] * 8.64,  # Convert from W/m² to J/cm²/day
-                wind=df["FG"],
-                rh=df["UG"],
-                dates=df.index,
+    dfs = {}
+    for name in zipped.namelist():
+        if name.endswith(".csv"):
+            base = os.path.splitext(name)[0]
+            base_ext = base.split("_")[-1]
+            df = pd.read_csv(
+                zipped.open(name),
+                sep=",",
+                skiprows=3 if base_ext == "obs" else 4,
+                usecols=list(range(8)),
+                index_col=0,
+                parse_dates=True,
+                date_format="%Y%m%d",
             )
-        elif evap == "hargreaves":
-            df["EV24"] = hargreaves(
-                tmean=df["TG"],
-                tmin=df["TN"],
-                tmax=df["TX"],
-                dates=df.index,
-                lat=meta.get("lat", 52.1),
-            )
+            df.columns = [column_renamed[x.strip()] for x in df.columns]
+
+            if remove_na:
+                df = df.replace(-99.99, np.nan)
+
+            # Calculate evaporation based on selected method
+            if evap in ("EV24", "makkink"):
+                K = df["Q"] * 8.64  # Convert from W/m² to J/cm²/day: 60*60*24/10000
+                df["EV24"] = makkink(tmean=df["TG"], K=K)
+            elif evap == "penman":
+                df["EV24"] = penman(
+                    tmean=df["TG"],
+                    tmin=df["TN"],
+                    tmax=df["TX"],
+                    K=df["Q"] * 8.64,  # Convert from W/m² to J/cm²/day
+                    wind=df["FG"],
+                    rh=df["UG"],
+                    dates=df.index,
+                )
+            elif evap == "hargreaves":
+                df["EV24"] = hargreaves(
+                    tmean=df["TG"],
+                    tmin=df["TN"],
+                    tmax=df["TX"],
+                    dates=df.index,
+                    lat=stations.at[stn, "lat"],
+                )
+            else:
+                raise ValueError(
+                    f"Unknown evaporation method: {evap}. "
+                    "Choose from 'EV24', 'makkink', 'penman', or 'hargreaves'."
+                )
+            dfs[base] = df
         else:
-            raise ValueError(
-                f"Unknown evaporation method: {evap}. "
-                "Choose from 'EV24', 'makkink', 'penman', or 'hargreaves'."
-            )
-
-        dfs[key] = df
+            logger.warning(f"Unexpected file in zip: {name}")
 
     return dfs
 
@@ -2578,16 +2555,6 @@ def get_knmi_scenarios_obslist(
         List of instantiated observation objects. Each object has ``station``
         and ``meteo_var`` attributes set in addition to the usual metadata.
     """
-    units = {
-        "TG": "°C",
-        "RH": "mm/day",
-        "Q": "W/m²",
-        "TX": "°C",
-        "TN": "°C",
-        "UG": "%",
-        "FG": "m/s",
-        "EV24": "mm/day",
-    }
 
     if tmin != "1991-01-01":
         logger.warning(
@@ -2611,9 +2578,18 @@ def get_knmi_scenarios_obslist(
         remove_na=remove_na,
     )
 
+    units = {
+        "TG": "°C",
+        "RH": "m/day",
+        "Q": "W/m²",
+        "TX": "°C",
+        "TN": "°C",
+        "UG": "%",
+        "FG": "m/s",
+        "EV24": "m/day",
+    }
     stations = get_stations("RD")
     obs_list = []
-
     for key, df in dfs.items():
         for col in df.columns:
             # apply optional filter
@@ -2629,7 +2605,7 @@ def get_knmi_scenarios_obslist(
             location = key.split("_")[1].upper()
 
             # choose observation class from the provided map; fall back to
-            # ``other`` if the specific variable isn't present.  ``other`` must
+            # ``other`` if the specific variable isn't present. ``other`` must
             # be defined by the caller, otherwise we raise.
             obs_cls = obs_class_map.get(variable)
             if obs_cls is None:
@@ -2638,7 +2614,7 @@ def get_knmi_scenarios_obslist(
                 else:
                     raise KeyError(
                         "obs_class_map must contain a fallback entry 'other'"
-                        " when variable '{variable}' is not mapped."
+                        f" when variable '{variable}' is not mapped."
                     )
 
             o = obs_cls(
