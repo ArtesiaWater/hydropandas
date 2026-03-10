@@ -2357,8 +2357,6 @@ def get_knmi_scenarios_data(
     stn: int | str,
     years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
     scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
-    tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
 ) -> dict[str, pd.DataFrame]:
     """Fetch and process KNMI climate scenario data for a station.
@@ -2378,12 +2376,6 @@ def get_knmi_scenarios_data(
     scenarios : tuple, optional
         Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
         This includes all scenarios including the original measurements.
-    tmin : pd.Timestamp or str, optional
-        Start of timeseries. The default is '1991-01-01'.
-        Dates before this value are changed to this value.
-    tmax : pd.Timestamp or str, optional
-        End of timeseries. The default is '2020-12-31'.
-        Dates after this value are changed to this value.
     evap : str, optional
         Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
         or 'hargreaves'. The default is 'EV24'.
@@ -2404,14 +2396,6 @@ def get_knmi_scenarios_data(
     # allow int input for station
     stn = str(stn)
 
-    # Limit to available date range
-    tmin = max(pd.Timestamp("1991-01-01"), pd.Timestamp(tmin))
-    tmax = min(pd.Timestamp("2020-12-31"), pd.Timestamp(tmax))
-
-    # Convert timestamp to string in the correct isoformat for the API
-    tmin = tmin.strftime("%Y-%m-%d")
-    tmax = tmax.strftime("%Y-%m-%d")
-
     # Get station KNMI ID
     stations = get_stations_scenarios()
     if stn not in stations.index:
@@ -2427,8 +2411,8 @@ def get_knmi_scenarios_data(
         + [("series_variables[years][]", y) for y in years]
         + [
             ("series_variables[station]", station),
-            ("series_variables[date_range][]", tmin),
-            ("series_variables[date_range][]", tmax),
+            ("series_variables[date_range][]", "1991-01-01"),
+            ("series_variables[date_range][]", "2020-12-31"),
             ("series_variables[climate_variables]", "temp"),
         ]
     )
@@ -2513,8 +2497,6 @@ def get_knmi_scenarios_obslist(
     meteo_vars: list[str] | None = None,
     years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
     scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
-    tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
-    tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
 ) -> list[Any]:
     """Convert climate scenario dataframes into observation objects.
@@ -2537,12 +2519,6 @@ def get_knmi_scenarios_obslist(
     scenarios : tuple, optional
         Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
         This includes all scenarios including the original measurements.
-    tmin : str or None, optional
-        Start of timeseries. The default is '1991-01-01'.
-        Dates before this value are changed to this value.
-    tmax : str or None, optional
-        End of timeseries. The default is '2020-12-31'.
-        Dates after this value are changed to this value.
     evap : Literal["EV24", "makkink", "penman", "hargreaves"], optional
         Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
         or 'hargreaves'. The default is 'EV24'.
@@ -2554,24 +2530,11 @@ def get_knmi_scenarios_obslist(
         and ``meteo_var`` attributes set in addition to the usual metadata.
     """
 
-    if pd.Timestamp(tmin) != pd.Timestamp("1991-01-01"):
-        logger.warning(
-            "tmin other than '1991-01-01' is not implemented yet for the KNMI scenarios. "
-            "This is because the API only returns data from 1991-01-01 onwards. "
-        )
-    if pd.Timestamp(tmax) != pd.Timestamp("2020-12-31"):
-        logger.warning(
-            "tmax other than '2020-12-31' is not implemented yet for the KNMI scenarios. "
-            "This is because the API only returns data up to 2020-12-31. "
-        )
-
     # Get measurements data
     dfs = get_knmi_scenarios_data(
         stn=stn,
         years=years,
         scenarios=scenarios,
-        tmin=tmin,
-        tmax=tmax,
         evap=evap,
     )
 

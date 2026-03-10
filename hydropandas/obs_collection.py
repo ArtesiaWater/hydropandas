@@ -650,8 +650,6 @@ def read_knmi_scenarios(
         "Hd",
         "Hn",
     ),
-    tmin: str | pd.Timestamp = pd.Timestamp("1991-01-01"),
-    tmax: str | pd.Timestamp = pd.Timestamp("2020-12-31"),
     evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
     meteo_vars: list[str] | None = None,
     name: str = "",
@@ -671,12 +669,6 @@ def read_knmi_scenarios(
     scenarios : tuple, optional
         Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
         This includes all scenarios including the original measurements.
-    tmin : str or None, optional
-        Start of timeseries. The default is '1991-01-01'.
-        Dates before this value are changed to this value.
-    tmax : str or None, optional
-        End of timeseries. The default is '2020-12-31'.
-        Dates after this value are changed to this value.
     evap : str, optional
         Method for calculating evaporation. Options are 'EV24', 'makkink',
         'penman', or 'margreaves'. The default is 'EV24'.
@@ -703,8 +695,6 @@ def read_knmi_scenarios(
         stn=stn,
         years=years,
         scenarios=scenarios,
-        tmin=tmin,
-        tmax=tmax,
         evap=evap,
         meteo_vars=meteo_vars,
         name=name,
@@ -2462,8 +2452,6 @@ class ObsCollection(pd.DataFrame):
             "Hd",
             "Hn",
         ),
-        tmin: pd.Timestamp | str = pd.Timestamp("1991-01-01"),
-        tmax: pd.Timestamp | str = pd.Timestamp("2020-12-31"),
         evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
         meteo_vars: list[str] | None = None,
         name: str = "",
@@ -2484,12 +2472,6 @@ class ObsCollection(pd.DataFrame):
         scenarios : tuple, optional
             Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
             This includes all scenarios including the original measurements.
-        tmin : str or None, optional
-            Start of timeseries. The default is '1991-01-01'.
-            Dates before this value are changed to this value.
-        tmax : str or None, optional
-            End of timeseries. The default is '2020-12-31'.
-            Dates after this value are changed to this value.
         evap : str, optional
             Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
             or 'hargreaves'. The default is 'EV24'.
@@ -2520,8 +2502,6 @@ class ObsCollection(pd.DataFrame):
             meteo_vars=meteo_vars,
             years=years,
             scenarios=scenarios,
-            tmin=tmin,
-            tmax=tmax,
             evap=evap,
         )
 
