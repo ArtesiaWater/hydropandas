@@ -471,6 +471,7 @@ def read_knmi(
     interval="daily",
     use_api=True,
     raise_exceptions=True,
+    progress_callback=None,
 ):
     """Get knmi observations from a list of locations or a list of stations.
 
@@ -508,6 +509,9 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
+    progress_callback : callable or None, optional
+        callback function called with (i, total) for each station processed.
+        The default is None.
     **kwargs :
         kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
@@ -629,6 +633,7 @@ def read_knmi(
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
+        progress_callback=progress_callback,
     )
 
     return oc
@@ -2319,6 +2324,7 @@ class ObsCollection(pd.DataFrame):
         interval="daily",
         use_api=True,
         raise_exceptions=True,
+        progress_callback=None,
     ):
         """Get knmi observations from a list of locations or a list of stations.
 
@@ -2370,6 +2376,9 @@ class ObsCollection(pd.DataFrame):
             online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
+        progress_callback : callable or None, optional
+            callback function called with (i, total) for each station processed.
+            The default is None.
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
         """
@@ -2424,6 +2433,7 @@ class ObsCollection(pd.DataFrame):
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
+            progress_callback=progress_callback,
         )
 
         obs_df = util._obslist_to_frame(obs_list)

@@ -1959,6 +1959,7 @@ def get_knmi_obslist(
     starts: pd.Timestamp | list[pd.Timestamp] | None = None,
     ends: pd.Timestamp | list[pd.Timestamp] | None = None,
     ObsClasses: list[Any] | None = None,
+    progress_callback=None,
     **kwargs,
 ) -> list[Any]:
     """Get a list of observations of knmi stations. Either specify a list of
@@ -1993,6 +1994,10 @@ def get_knmi_obslist(
     ObsClasses : list of type or None
         class of the observations, can be PrecipitationObs or
         EvaporationObs. The default is None.
+    progress_callback : callable or None, optional
+        callback function that is called with (i, total) for each station
+        processed, where i is the zero-based index and total is the total
+        number of stations. The default is None.
     **kwargs:
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
@@ -2076,7 +2081,9 @@ def get_knmi_obslist(
         else:
             _stns = stns
 
-        for stn in _stns:
+        for i, stn in enumerate(_stns):
+            if progress_callback is not None:
+                progress_callback(i, len(_stns))
             o = ObsClass.from_knmi(
                 meteo_var=meteo_var,
                 stn=stn,
