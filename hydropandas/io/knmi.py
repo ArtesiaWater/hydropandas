@@ -943,15 +943,22 @@ def _get_overlap_factor(
     if not valid.any():
         return 1.0, 0
 
-    ratios = (base[valid] / donor[valid]).replace([np.inf, -np.inf], np.nan).dropna()
-    if ratios.empty:
+    base_valid = base[valid].replace([np.inf, -np.inf], np.nan).dropna()
+    donor_valid = donor[valid].replace([np.inf, -np.inf], np.nan).dropna()
+    common_idx = base_valid.index.intersection(donor_valid.index)
+    if common_idx.empty:
         return 1.0, 0
 
-    factor = float(ratios.median())
+    base_sum = float(base_valid.loc[common_idx].sum())
+    donor_sum = float(donor_valid.loc[common_idx].sum())
+    if donor_sum == 0.0:
+        return 1.0, 0
+
+    factor = base_sum / donor_sum
     if not np.isfinite(factor) or (factor <= 0):
         return 1.0, 0
 
-    return factor, int(ratios.size)
+    return factor, int(common_idx.size)
 
 
 def download_knmi_data(
