@@ -451,6 +451,27 @@ def test_obslist_from_stns_single_startdate():
     )
 
 
+def test_obslist_progress_callback():
+    stns = [344, 260]  # Rotterdam en de Bilt
+    calls = []
+
+    def cb(i, total):
+        calls.append((i, total))
+
+    knmi.get_knmi_obslist(
+        stns=stns,
+        meteo_vars=["RH"],
+        starts="2010",
+        ends="2010",
+        ObsClasses=[hpd.PrecipitationObs],
+        progress_callback=cb,
+    )
+
+    assert len(calls) == len(stns)
+    assert calls[0] == (0, len(stns))
+    assert calls[-1] == (len(stns) - 1, len(stns))
+
+
 def test_knmi_scenarios_obs_collection_and_filter():
     # download a small subset of scenario data for a single station
     oc = hpd.ObsCollection.from_knmi_scenarios(
