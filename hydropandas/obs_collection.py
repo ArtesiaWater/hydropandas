@@ -468,6 +468,7 @@ def read_knmi(
     ends=None,
     ObsClasses=None,
     fill_missing_obs=False,
+    fill_missing_obs_with_factor=False,
     interval="daily",
     use_api=True,
     raise_exceptions=True,
@@ -509,6 +510,14 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
+    fill_missing_obs : bool, optional
+        if True nan values in time series are filled with nearby time series.
+        The default is False.
+    fill_missing_obs_with_factor : bool, optional
+        if True, donor-station values are scaled with an overlap-based factor
+        before filling missing values. This automatically enables
+        fill_missing_obs.
+        The default is False.
     progress_callback : callable or None, optional
         callback function called with (i, total) for each station processed.
         The default is None.
@@ -630,6 +639,7 @@ def read_knmi(
         ends=ends,
         ObsClasses=ObsClasses,
         fill_missing_obs=fill_missing_obs,
+        fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
@@ -2321,6 +2331,7 @@ class ObsCollection(pd.DataFrame):
         ends=None,
         ObsClasses=None,
         fill_missing_obs=False,
+        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
@@ -2364,6 +2375,11 @@ class ObsCollection(pd.DataFrame):
             meteo_vars.
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
+            The default is False.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
             The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
@@ -2430,6 +2446,7 @@ class ObsCollection(pd.DataFrame):
             ends=ends,
             ObsClasses=ObsClasses,
             fill_missing_obs=fill_missing_obs,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,

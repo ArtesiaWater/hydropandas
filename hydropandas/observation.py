@@ -1600,6 +1600,7 @@ class MeteoObs(Obs):
         start=None,
         end=None,
         fill_missing_obs=False,
+        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
@@ -1630,6 +1631,11 @@ class MeteoObs(Obs):
             end the data from nearby stations is used. In this case the metadata of the
             Observation is the metadata from the nearest station that has any
             measurement in the given period.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1665,6 +1671,7 @@ class MeteoObs(Obs):
             start=start,
             end=end,
             fill_missing_obs=fill_missing_obs,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
@@ -1757,6 +1764,7 @@ class EvaporationObs(MeteoObs):
         start=None,
         end=None,
         fill_missing_obs=False,
+        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
@@ -1782,6 +1790,11 @@ class EvaporationObs(MeteoObs):
             end date of observations. The default is None.
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
+            The default is False.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
             The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
@@ -1811,6 +1824,7 @@ class EvaporationObs(MeteoObs):
             start=start,
             end=end,
             fill_missing_obs=fill_missing_obs,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
@@ -1847,6 +1861,7 @@ class PrecipitationObs(MeteoObs):
         start=None,
         end=None,
         fill_missing_obs=False,
+        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
@@ -1894,6 +1909,11 @@ class PrecipitationObs(MeteoObs):
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
             The default is False.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1924,6 +1944,7 @@ class PrecipitationObs(MeteoObs):
             start=start,
             end=end,
             fill_missing_obs=fill_missing_obs,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
