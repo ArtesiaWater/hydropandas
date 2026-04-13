@@ -378,9 +378,9 @@ def _start_end_to_datetime(start: str | None, end: str | None) -> tuple[pd.Times
 
     Returns
     -------
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start time
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end time
     """
 
