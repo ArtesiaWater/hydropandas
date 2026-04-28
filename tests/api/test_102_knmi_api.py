@@ -14,7 +14,8 @@ def test_daily_rainfall_url():
         f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
     )
 
-    knmi.request_url(url)  # , fname='test.txt')
+    f = knmi.request_url(url)
+    assert "20200101" in f.read(), "date not found in response"
 
 
 def test_daily_meteo_url():
@@ -23,20 +24,23 @@ def test_daily_meteo_url():
         "/gegevens/daggegevens/etmgeg_260.zip"
     )
 
-    knmi.request_url(url)
+    f = knmi.request_url(url)
+    assert "20200101" in f.read(), "date not found in response"
 
 
 def test_daily_rainfall_api():
     params = {"vars": "RD", "stns": "550", "start": "20200101", "end": "20200131"}
-    knmi.request_api(knmi.URL_DAILY_PREC, params)
+    f = knmi.request_api(knmi.URL_DAILY_PREC, params)
+    assert params["start"] in f.read(), "Start date not found in response"
 
 
 def test_daily_meteo_api():
     params = {"vars": "RH", "stns": "260", "start": "20200101", "end": "20200131"}
-    knmi.request_api(knmi.URL_DAILY_METEO, params)
+    f = knmi.request_api(knmi.URL_DAILY_METEO, params)
+    assert params["start"] in f.read(), "Start date not found in response"
 
 
 def test_hourly_meteo_api():
     params = {"vars": "RH", "stns": "260", "start": "2020010224", "end": "2020010301"}
-
-    knmi.request_api(knmi.URL_HOURLY_METEO, params)
+    f = knmi.request_api(knmi.URL_HOURLY_METEO, params)
+    assert params["start"] in f.read(), "Start date not found in response"
