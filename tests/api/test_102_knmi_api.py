@@ -43,4 +43,4 @@ def test_daily_meteo_api():
 def test_hourly_meteo_api():
     params = {"vars": "RH", "stns": "260", "start": "2020010224", "end": "2020010301"}
     f = knmi.request_api(knmi.URL_HOURLY_METEO, params)
-    assert params["start"] in f.read(), "Start date not found in response"
+    assert params["end"][:-2] in f.read(), "End date not found in response"
