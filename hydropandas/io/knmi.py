@@ -668,7 +668,7 @@ def fill_missing_measurements(
     end: pd.Timestamp,
     settings: dict[str, Any],
     stn_name: str | None = None,
-) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """fill missing measurements in knmi data.
 
     Parameters
@@ -939,19 +939,16 @@ def _get_overlap_factor(
 
     base = overlap[("base", meteo_var)]
     donor = overlap[("donor", meteo_var)]
-    valid = donor != 0
-    if not valid.any():
-        return 1.0, 0
 
-    base_valid = base[valid].replace([np.inf, -np.inf], np.nan).dropna()
-    donor_valid = donor[valid].replace([np.inf, -np.inf], np.nan).dropna()
+    base_valid = base.replace([np.inf, -np.inf], np.nan).dropna()
+    donor_valid = donor.replace([np.inf, -np.inf], np.nan).dropna()
     common_idx = base_valid.index.intersection(donor_valid.index)
     if common_idx.empty:
         return 1.0, 0
 
     base_sum = float(base_valid.loc[common_idx].sum())
     donor_sum = float(donor_valid.loc[common_idx].sum())
-    if donor_sum == 0.0:
+    if donor_sum == 0.0 or base_sum == 0.0:
         return 1.0, 0
 
     factor = base_sum / donor_sum
