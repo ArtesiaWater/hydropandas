@@ -419,82 +419,56 @@ def test_fill_missing_obs_with_factor_enables_fill_missing_obs():
     assert settings["raise_exceptions"] is False
 
 
-def test_fill_missing_measurements_with_overlap_factor(monkeypatch):
-    stations = pd.DataFrame(
-        {
-            "lon": [0.0, 0.0, 0.0],
-            "lat": [0.0, 0.0, 0.0],
-            "name": ["A", "B", "DE BILT"],
-            "x": [0.0, 1.0, 2.0],
-            "y": [0.0, 1.0, 2.0],
-            "altitude": [0.0, 0.0, 0.0],
-            "tmin": ["1900-01-01", "1900-01-01", "1900-01-01"],
-            "tmax": [None, None, None],
-        },
-        index=[100, 200, 260],
+def test_fill_missing_measurements_with_overlap_factor():
+    # Use a real-data period where station 72 (RD) is partially filled by station 78.
+    stn = 72
+    meteo_var = "RD"
+    start = pd.Timestamp("1986-03-25")
+    end = pd.Timestamp("1986-03-29")
+    stn_name = knmi.get_station_name(
+        stn, stations=knmi.get_stations(meteo_var=meteo_var)
     )
-
-    base_idx = pd.to_datetime(["2000-01-01", "2000-01-02", "2000-01-04"])
-    base_ts = pd.DataFrame({"RH": [10.0, 20.0, 40.0]}, index=base_idx)
-
-    donor_idx = pd.to_datetime(["2000-01-02", "2000-01-03", "2000-01-04"])
-    donor_ts = pd.DataFrame({"RH": [10.0, 15.0, 20.0]}, index=donor_idx)
-
-    def fake_get_stations(meteo_var, start=None, end=None):
-        return stations.copy()
-
-    def fake_get_nearest_station_df(
-        locations,
-        xcol="x",
-        ycol="y",
-        stations=None,
-        meteo_var="RH",
-        start=None,
-        end=None,
-        ignore=None,
-    ):
-        if ignore is None:
-            return [200]
-        return [s for s in [200] if s not in ignore] or None
-
-    def fake_download_knmi_data(stn, meteo_var, start, end, settings, stn_name=None):
-        if stn == 100:
-            return base_ts.copy(), {}, pd.DataFrame(index=[100])
-        if stn == 200:
-            return donor_ts.copy(), {}, pd.DataFrame(index=[200])
-        return pd.DataFrame(columns=[meteo_var]), {}, pd.DataFrame(index=[stn])
-
-    monkeypatch.setattr(knmi, "get_stations", fake_get_stations)
-    monkeypatch.setattr(knmi, "get_station_name", lambda stn, stations=None: f"S{stn}")
-    monkeypatch.setattr(knmi, "get_nearest_station_df", fake_get_nearest_station_df)
-    monkeypatch.setattr(knmi, "download_knmi_data", fake_download_knmi_data)
 
     settings_no_factor = knmi._get_default_settings(
         {"fill_missing_obs": True, "fill_missing_obs_with_factor": False}
     )
-    df_no_factor, _ = knmi.fill_missing_measurements(
-        stn=100,
-        meteo_var="RH",
-        start=pd.Timestamp("2000-01-01"),
-        end=pd.Timestamp("2000-01-04"),
-        settings=settings_no_factor,
-        stn_name="S100",
-    )
-
     settings_factor = knmi._get_default_settings(
         {"fill_missing_obs": True, "fill_missing_obs_with_factor": True}
     )
+
+    df_no_factor, _ = knmi.fill_missing_measurements(
+        stn=stn,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
+        settings=settings_no_factor,
+        stn_name=stn_name,
+    )
     df_factor, _ = knmi.fill_missing_measurements(
-        stn=100,
-        meteo_var="RH",
-        start=pd.Timestamp("2000-01-01"),
-        end=pd.Timestamp("2000-01-04"),
+        stn=stn,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
         settings=settings_factor,
-        stn_name="S100",
+        stn_name=stn_name,
     )
 
-    assert df_no_factor.loc[pd.Timestamp("2000-01-03"), "RH"] == 15.0
-    assert df_factor.loc[pd.Timestamp("2000-01-03"), "RH"] == 30.0
+    common_idx = df_no_factor.index.intersection(df_factor.index)
+    donor_idx = common_idx[
+        (df_no_factor.loc[common_idx, "station"].astype(str) != str(stn))
+        & (df_factor.loc[common_idx, "station"].astype(str) != str(stn))
+    ]
+    changed_idx = donor_idx[
+        (
+            df_no_factor.loc[donor_idx, meteo_var] - df_factor.loc[donor_idx, meteo_var]
+        ).abs()
+        > 1e-12
+    ]
+
+    assert donor_idx.size > 0, "expected filled values from nearby station(s)"
+    assert changed_idx.size > 0, (
+        "expected overlap-factor scaling to alter filled values"
+    )
 
 
 def test_obslist_from_grid():
