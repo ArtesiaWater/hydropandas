@@ -1600,12 +1600,12 @@ class MeteoObs(Obs):
         start=None,
         end=None,
         fill_missing_obs=False,
-        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
         startdate=None,
         enddate=None,
+        fill_missing_obs_with_factor=False,
     ):
         """Get a MeteoObs timeseries from the KNMI meteo data.
 
@@ -1631,11 +1631,6 @@ class MeteoObs(Obs):
             end the data from nearby stations is used. In this case the metadata of the
             Observation is the metadata from the nearest station that has any
             measurement in the given period.
-        fill_missing_obs_with_factor : bool, optional
-            if True, donor-station values are scaled with an overlap-based factor
-            before filling missing values. This automatically enables
-            fill_missing_obs.
-            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1647,6 +1642,11 @@ class MeteoObs(Obs):
             online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
 
         Returns
         -------
@@ -1671,10 +1671,10 @@ class MeteoObs(Obs):
             start=start,
             end=end,
             fill_missing_obs=fill_missing_obs,
-            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
         return cls(
@@ -1764,12 +1764,12 @@ class EvaporationObs(MeteoObs):
         start=None,
         end=None,
         fill_missing_obs=False,
-        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
         startdate=None,
         enddate=None,
+        fill_missing_obs_with_factor=False,
     ):
         """Get an EvaporationObs timeseries from the KNMI evaporation in m.
 
@@ -1791,11 +1791,6 @@ class EvaporationObs(MeteoObs):
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
             The default is False.
-        fill_missing_obs_with_factor : bool, optional
-            if True, donor-station values are scaled with an overlap-based factor
-            before filling missing values. This automatically enables
-            fill_missing_obs.
-            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1809,6 +1804,11 @@ class EvaporationObs(MeteoObs):
             if False a text file is downloaded into a temporary directory and the
             data is read from there. Default is True since the api is back
             online (July 2021).
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
 
 
         Returns
@@ -1824,12 +1824,12 @@ class EvaporationObs(MeteoObs):
             start=start,
             end=end,
             fill_missing_obs=fill_missing_obs,
-            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
             startdate=startdate,
             enddate=enddate,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
 
@@ -1861,12 +1861,12 @@ class PrecipitationObs(MeteoObs):
         start=None,
         end=None,
         fill_missing_obs=False,
-        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
         startdate=None,
         enddate=None,
+        fill_missing_obs_with_factor=False,
     ):
         """Get a PrecipitationObs timeseries from the KNMI precipitation. The
         precipitation is the Daily precipitation amount (in 0.1 mm) (-1 for.
@@ -1909,11 +1909,6 @@ class PrecipitationObs(MeteoObs):
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
             The default is False.
-        fill_missing_obs_with_factor : bool, optional
-            if True, donor-station values are scaled with an overlap-based factor
-            before filling missing values. This automatically enables
-            fill_missing_obs.
-            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -1925,6 +1920,11 @@ class PrecipitationObs(MeteoObs):
             online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
 
         Returns
         -------

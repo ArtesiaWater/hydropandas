@@ -468,11 +468,11 @@ def read_knmi(
     ends=None,
     ObsClasses=None,
     fill_missing_obs=False,
-    fill_missing_obs_with_factor=False,
     interval="daily",
     use_api=True,
     raise_exceptions=True,
     progress_callback=None,
+    fill_missing_obs_with_factor=False,
 ):
     """Get knmi observations from a list of locations or a list of stations.
 
@@ -513,14 +513,14 @@ def read_knmi(
     fill_missing_obs : bool, optional
         if True nan values in time series are filled with nearby time series.
         The default is False.
+    progress_callback : callable or None, optional
+        callback function called with (i, total) for each station processed.
+        The default is None.
     fill_missing_obs_with_factor : bool, optional
         if True, donor-station values are scaled with an overlap-based factor
         before filling missing values. This automatically enables
         fill_missing_obs.
         The default is False.
-    progress_callback : callable or None, optional
-        callback function called with (i, total) for each station processed.
-        The default is None.
     **kwargs :
         kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
@@ -639,11 +639,11 @@ def read_knmi(
         ends=ends,
         ObsClasses=ObsClasses,
         fill_missing_obs=fill_missing_obs,
-        fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
         progress_callback=progress_callback,
+        fill_missing_obs_with_factor=fill_missing_obs_with_factor,
     )
 
     return oc
@@ -2331,11 +2331,11 @@ class ObsCollection(pd.DataFrame):
         ends=None,
         ObsClasses=None,
         fill_missing_obs=False,
-        fill_missing_obs_with_factor=False,
         interval="daily",
         use_api=True,
         raise_exceptions=True,
         progress_callback=None,
+        fill_missing_obs_with_factor=False,
     ):
         """Get knmi observations from a list of locations or a list of stations.
 
@@ -2376,11 +2376,6 @@ class ObsCollection(pd.DataFrame):
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
             The default is False.
-        fill_missing_obs_with_factor : bool, optional
-            if True, donor-station values are scaled with an overlap-based factor
-            before filling missing values. This automatically enables
-            fill_missing_obs.
-            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -2395,6 +2390,11 @@ class ObsCollection(pd.DataFrame):
         progress_callback : callable or None, optional
             callback function called with (i, total) for each station processed.
             The default is None.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
         """
@@ -2446,11 +2446,11 @@ class ObsCollection(pd.DataFrame):
             ends=ends,
             ObsClasses=ObsClasses,
             fill_missing_obs=fill_missing_obs,
-            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
             progress_callback=progress_callback,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
         obs_df = util._obslist_to_frame(obs_list)
