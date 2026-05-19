@@ -359,6 +359,67 @@ def read_fews(
     return oc
 
 
+def read_ghcn(
+    extent,
+    name="",
+    ObsClass=obs.MeteoObs,
+    elements=None,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=True,
+    epsg=4326,
+):
+    """Get GHCN (Global Historical Climatology Network) observations within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple or numpy-array
+        get GHCN stations within this extent [xmin, xmax, ymin, ymax]
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type, optional
+        class of the observations, e.g. MeteoObs or PrecipitationObs.
+        The default is MeteoObs.
+    elements : str, list of str, or None, optional
+        GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+        If None all available elements per station are downloaded.
+        Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+        are converted from 0.1 mm to m.
+        The default is None.
+    tmin : str or None, optional
+        start date of observations (e.g. '2020-01-01'). The default is None.
+    tmax : str or None, optional
+        end date of observations (e.g. '2021-12-31'). The default is None.
+    only_metadata : bool, optional
+        if True download only station metadata, significantly faster.
+        The default is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept.
+        The default is True.
+    epsg : int, optional
+        epsg code of the supplied extent. Returned observation x/y
+        coordinates are also in this CRS. The default is 4326 (WGS84).
+
+    Returns
+    -------
+    ObsCollection
+        collection of multiple point observations
+    """
+    oc = ObsCollection.from_ghcn(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        elements=elements,
+        tmin=tmin,
+        tmax=tmax,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
+    )
+    return oc
+
+
 def read_imod(
     obs_collection,
     ml,
@@ -2211,6 +2272,72 @@ class ObsCollection(pd.DataFrame):
 
         else:
             raise ValueError("either specify variables file_or_dir or xmlstring")
+
+    @classmethod
+    def from_ghcn(
+        cls,
+        extent,
+        name="",
+        ObsClass=obs.MeteoObs,
+        elements=None,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        keep_all_obs=True,
+        epsg=4326,
+    ):
+        """Get GHCN (Global Historical Climatology Network) observations within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple or numpy-array
+            get GHCN stations within this extent [xmin, xmax, ymin, ymax]
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type, optional
+            class of the observations, e.g. MeteoObs or PrecipitationObs.
+            The default is MeteoObs.
+        elements : str, list of str, or None, optional
+            GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+            If None all available elements per station are downloaded.
+            Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+            are converted from 0.1 mm to m.
+            The default is None.
+        tmin : str or None, optional
+            start date of observations (e.g. '2020-01-01'). The default is None.
+        tmax : str or None, optional
+            end date of observations (e.g. '2021-12-31'). The default is None.
+        only_metadata : bool, optional
+            if True download only station metadata, significantly faster.
+            The default is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept.
+            The default is True.
+        epsg : int, optional
+            epsg code of the supplied extent. Returned observation x/y
+            coordinates are also in this CRS. The default is 4326 (WGS84).
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io.ghcn import get_obs_list_from_extent
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = get_obs_list_from_extent(
+            extent,
+            ObsClass,
+            elements=elements,
+            tmin=tmin,
+            tmax=tmax,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            epsg=epsg,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_imod(

@@ -14,6 +14,7 @@ from .obs_collection import (
     read_dino,
     read_excel,
     read_fews,
+    read_ghcn,
     read_imod,
     read_json,
     read_knmi,
