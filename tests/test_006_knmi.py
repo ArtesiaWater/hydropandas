@@ -411,6 +411,66 @@ def test_fill_missing_measurements_neerslag():
     # assert not df.empty, "expected filled df"
 
 
+def test_fill_missing_obs_with_factor_enables_fill_missing_obs():
+    settings = knmi._get_default_settings({"fill_missing_obs_with_factor": True})
+
+    assert settings["fill_missing_obs_with_factor"] is True
+    assert settings["fill_missing_obs"] is True
+    assert settings["raise_exceptions"] is False
+
+
+def test_fill_missing_measurements_with_overlap_factor():
+    # Use a real-data period where station 72 (RD) is partially filled by station 78.
+    stn = 72
+    meteo_var = "RD"
+    start = pd.Timestamp("1986-03-25")
+    end = pd.Timestamp("1986-03-29")
+    stn_name = knmi.get_station_name(
+        stn, stations=knmi.get_stations(meteo_var=meteo_var)
+    )
+
+    settings_no_factor = knmi._get_default_settings(
+        {"fill_missing_obs": True, "fill_missing_obs_with_factor": False}
+    )
+    settings_factor = knmi._get_default_settings(
+        {"fill_missing_obs": True, "fill_missing_obs_with_factor": True}
+    )
+
+    df_no_factor, _ = knmi.fill_missing_measurements(
+        stn=stn,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
+        settings=settings_no_factor,
+        stn_name=stn_name,
+    )
+    df_factor, _ = knmi.fill_missing_measurements(
+        stn=stn,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
+        settings=settings_factor,
+        stn_name=stn_name,
+    )
+
+    common_idx = df_no_factor.index.intersection(df_factor.index)
+    donor_idx = common_idx[
+        (df_no_factor.loc[common_idx, "station"].astype(str) != str(stn))
+        & (df_factor.loc[common_idx, "station"].astype(str) != str(stn))
+    ]
+    changed_idx = donor_idx[
+        (
+            df_no_factor.loc[donor_idx, meteo_var] - df_factor.loc[donor_idx, meteo_var]
+        ).abs()
+        > 1e-12
+    ]
+
+    assert donor_idx.size > 0, "expected filled values from nearby station(s)"
+    assert changed_idx.size > 0, (
+        "expected overlap-factor scaling to alter filled values"
+    )
+
+
 def test_obslist_from_grid():
     xy = [[x, y] for x in [104150.0, 104550.0] for y in [510150.0, 510550.0]]
 
@@ -449,6 +509,27 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
+
+
+def test_obslist_progress_callback():
+    stns = [344, 260]  # Rotterdam en de Bilt
+    calls = []
+
+    def cb(i, total):
+        calls.append((i, total))
+
+    knmi.get_knmi_obslist(
+        stns=stns,
+        meteo_vars=["RH"],
+        starts="2010",
+        ends="2010",
+        ObsClasses=[hpd.PrecipitationObs],
+        progress_callback=cb,
+    )
+
+    assert len(calls) == len(stns)
+    assert calls[0] == (0, len(stns))
+    assert calls[-1] == (len(stns) - 1, len(stns))
 
 
 def test_knmi_scenarios_obs_collection_and_filter():

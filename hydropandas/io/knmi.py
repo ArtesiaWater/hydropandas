@@ -80,6 +80,11 @@ def get_knmi_obs(
             end the data from nearby stations is used. In this case the metadata of the
             Observation is the metadata from the nearest station that has any
             measurement in the given period.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -315,6 +320,11 @@ def _get_default_settings(settings=None) -> dict[str, Any]:
     The default settings are:
     fill_missing_obs = False
         nan values in time series are filled with nearby time series.
+    fill_missing_obs_with_factor = False
+        if True, and overlapping measurements exist between the current
+        series and a donor station, donor values are scaled by an overlap-
+        based factor before filling missing values. This automatically enables
+        fill_missing_obs.
     interval = 'daily'
         desired time interval for observations. Can be 'daily' or 'hourly'.
         'hourly' is only for precipitation ('RH') data from meteo stations.
@@ -341,6 +351,7 @@ def _get_default_settings(settings=None) -> dict[str, Any]:
 
     default_settings = {
         "fill_missing_obs": False,
+        "fill_missing_obs_with_factor": False,
         "interval": "daily",
         "use_api": True,
         "raise_exceptions": True,
@@ -348,6 +359,13 @@ def _get_default_settings(settings=None) -> dict[str, Any]:
 
     if settings is None:
         settings = {}
+
+    if settings.get("fill_missing_obs_with_factor", False):
+        if not settings.get("fill_missing_obs", False):
+            logger.debug(
+                "set fill_missing_obs=True because fill_missing_obs_with_factor is True"
+            )
+        settings["fill_missing_obs"] = True
 
     if "fill_missing_obs" in settings:
         if "raise_exceptions" in settings:
@@ -389,9 +407,9 @@ def get_knmi_timeseries_stn(
     settings : dict
         settings for obtaining the right time series, see _get_default_settings
         for more information
-    start : pd.TimeStamp or None, optional
+    start : pd.Timestamp or None, optional
         start date of observations. The default is None.
-    end : pd.TimeStamp or None, optional
+    end : pd.Timestamp or None, optional
         end date of observations. The default is None.
 
     Returns
@@ -429,9 +447,9 @@ def get_timeseries_stn(
     settings : dict
         settings for obtaining the right time series, see _get_default_settings
         for more information
-    start : pd.TimeStamp or None, optional
+    start : pd.Timestamp or None, optional
         start date of observations. The default is None.
-    end : pd.TimeStamp or None, optional
+    end : pd.Timestamp or None, optional
         end date of observations. The default is None.
 
     Returns
@@ -650,7 +668,7 @@ def fill_missing_measurements(
     end: pd.Timestamp,
     settings: dict[str, Any],
     stn_name: str | None = None,
-) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """fill missing measurements in knmi data.
 
     Parameters
@@ -659,9 +677,9 @@ def fill_missing_measurements(
         measurement station.
     meteo_var : str
         observation type.
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start date of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end date of observations.
     settings : dict
         settings for obtaining data.
@@ -678,6 +696,8 @@ def fill_missing_measurements(
         metadata from the originally requested station even if this station
         has no data
     """
+    use_overlap_factor = settings.get("fill_missing_obs_with_factor", False)
+
     if settings["interval"] == "hourly":
         raise NotImplementedError("cannot yet fill missing values in hourly data")
 
@@ -861,6 +881,16 @@ def fill_missing_measurements(
         else:
             # dropnans from new data
             ts_df_comp = ts_df_comp.loc[~ts_df_comp[meteo_var].isna(), :]
+            if use_overlap_factor:
+                factor, n_overlap = _get_overlap_factor(ts_df, ts_df_comp, meteo_var)
+                if factor != 1.0:
+                    ts_df_comp = ts_df_comp.copy()
+                    ts_df_comp[meteo_var] = ts_df_comp[meteo_var] * factor
+                    logger.info(
+                        f"Scale station {stn_comp} data with factor {factor:.3f} "
+                        f"based on overlap with station {stn} "
+                        f"using {n_overlap} measurements"
+                    )
             # get index of missing data in original timeseries
             missing_idx = missing.loc[missing].index
             # if any missing are in the new data, update
@@ -888,6 +918,46 @@ def fill_missing_measurements(
     return ts_df, meta
 
 
+def _get_overlap_factor(
+    ts_df: pd.DataFrame, ts_df_comp: pd.DataFrame, meteo_var: str
+) -> tuple[float, int]:
+    """Estimate scaling factor from overlap between two station series.
+
+    The returned factor scales donor-station values so they better align with
+    the current series before filling missing values.
+    """
+    if (meteo_var not in ts_df.columns) or (meteo_var not in ts_df_comp.columns):
+        return 1.0, 0
+
+    overlap = pd.concat(
+        [ts_df.loc[:, [meteo_var]], ts_df_comp.loc[:, [meteo_var]]],
+        axis=1,
+        keys=["base", "donor"],
+    ).dropna()
+    if overlap.empty:
+        return 1.0, 0
+
+    base = overlap[("base", meteo_var)]
+    donor = overlap[("donor", meteo_var)]
+
+    base_valid = base.replace([np.inf, -np.inf], np.nan).dropna()
+    donor_valid = donor.replace([np.inf, -np.inf], np.nan).dropna()
+    common_idx = base_valid.index.intersection(donor_valid.index)
+    if common_idx.empty:
+        return 1.0, 0
+
+    base_sum = float(base_valid.loc[common_idx].sum())
+    donor_sum = float(donor_valid.loc[common_idx].sum())
+    if donor_sum == 0.0 or base_sum == 0.0:
+        return 1.0, 0
+
+    factor = base_sum / donor_sum
+    if not np.isfinite(factor) or (factor <= 0):
+        return 1.0, 0
+
+    return factor, int(common_idx.size)
+
+
 def download_knmi_data(
     stn: int,
     meteo_var: str,
@@ -905,9 +975,9 @@ def download_knmi_data(
         measurement station.
     meteo_var : str
         observation type.
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start date of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end date of observations.
     settings : dict
         settings for obtaining data
@@ -1025,9 +1095,9 @@ def get_knmi_daily_rainfall_api(
     ----------
     stn : int
         station number.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Raises
@@ -1063,9 +1133,9 @@ def get_daily_rainfall_api(
     ----------
     stn : int
         station number.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Raises
@@ -1332,9 +1402,9 @@ def get_knmi_daily_meteo_api(
         station number.
     meteo_var : str
         e.g. 'EV24'.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Returns
@@ -1368,9 +1438,9 @@ def get_daily_meteo_api(
         station number.
     meteo_var : str
         e.g. 'EV24'.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Returns
@@ -1562,9 +1632,9 @@ def interpret_knmi_file(
         dictionary with meteo_var as key
     meteo_var : str
         e.g. 'EV24'.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
     add_day : boolean, optional
         add 1 day so that the timestamp is at the end of the period the data describes,
@@ -1906,9 +1976,9 @@ def _add_missing_indices(
         column to see which station is used to fill the value
     stn : int or str
         measurement station.
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start time of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end time of observations.
 
     Returns
@@ -1959,6 +2029,7 @@ def get_knmi_obslist(
     starts: pd.Timestamp | list[pd.Timestamp] | None = None,
     ends: pd.Timestamp | list[pd.Timestamp] | None = None,
     ObsClasses: list[Any] | None = None,
+    progress_callback=None,
     **kwargs,
 ) -> list[Any]:
     """Get a list of observations of knmi stations. Either specify a list of
@@ -1993,6 +2064,10 @@ def get_knmi_obslist(
     ObsClasses : list of type or None
         class of the observations, can be PrecipitationObs or
         EvaporationObs. The default is None.
+    progress_callback : callable or None, optional
+        callback function that is called with (i, total) for each station
+        processed, where i is the zero-based index and total is the total
+        number of stations. The default is None.
     **kwargs:
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
@@ -2000,6 +2075,11 @@ def get_knmi_obslist(
             end the data from nearby stations is used. In this case the metadata of the
             Observation is the metadata from the nearest station that has any
             measurement in the given period.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -2076,7 +2156,9 @@ def get_knmi_obslist(
         else:
             _stns = stns
 
-        for stn in _stns:
+        for i, stn in enumerate(_stns):
+            if progress_callback is not None:
+                progress_callback(i, len(_stns))
             o = ObsClass.from_knmi(
                 meteo_var=meteo_var,
                 stn=stn,
@@ -2106,9 +2188,9 @@ def get_evaporation(
         Choice between 'penman', 'makkink' or 'hargraves'.
     stn : str
         station number, defaults to 260 De Bilt
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start time of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end time of observations.
     settings : dict or None, optional
         settings for the time series
