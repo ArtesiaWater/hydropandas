@@ -250,6 +250,92 @@ def read_dino(
     return oc
 
 
+def read_era5(
+    extent=None,
+    name="",
+    ObsClass=obs.MeteoObs,
+    xy=None,
+    variables=("precipitation_sum",),
+    source="era5_seamless",
+    tmin=None,
+    tmax=None,
+    interval="daily",
+    only_metadata=False,
+    keep_all_obs=False,
+    epsg=4326,
+    grid_size=0.25,
+    timeout=120,
+    max_points=200,
+):
+    """Get ERA5 observations within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get ERA5 grid points within this extent [xmin, xmax, ymin, ymax]
+    xy : tuple, list or None, optional
+        single point coordinates (x, y). If provided, extent is ignored and
+        ERA5 data is downloaded for this point only.
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type, optional
+        class of the observations, e.g. MeteoObs.
+        The default is MeteoObs.
+    variables : tuple, list or str, optional
+        ERA5 variable(s) to download, default is ('precipitation_sum',)
+    source : str, optional
+        ERA5 product selection. Options are 'era5', 'era5_land',
+        'era5_hourly', and 'era5_seamless'. With 'era5_hourly', interval is
+        forced to 'hourly'. The default is 'era5_seamless'.
+    tmin : str or None, optional
+        start date of observations. If None, one month before today is used.
+    tmax : str or None, optional
+        end date of observations. If None, today is used.
+    interval : str, optional
+        one of 'daily' or 'hourly', by default 'daily'
+        Returned timestamps are in UTC and shifted to the end of each
+        aggregation period: +1 day for daily and +1 hour for hourly.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster.
+        The default is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept.
+        The default is False.
+    epsg : int, optional
+        epsg code of the supplied extent. Returned observation x/y
+        coordinates are also in this CRS. The default is 4326 (WGS84).
+    grid_size : float, optional
+        ERA5 grid sampling size in degrees, default is 0.25
+    timeout : int, optional
+        request timeout in seconds, default is 120
+    max_points : int, optional
+        maximum number of grid points to download, default is 200
+
+    Returns
+    -------
+    ObsCollection
+        collection of multiple point observations
+    """
+    oc = ObsCollection.from_era5(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        xy=xy,
+        variables=variables,
+        source=source,
+        tmin=tmin,
+        tmax=tmax,
+        interval=interval,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
+        grid_size=grid_size,
+        timeout=timeout,
+        max_points=max_points,
+    )
+    return oc
+
+
 def read_excel(path, meta_sheet_name="metadata"):
     """Create an observation collection from an excel file. The excel file should have
     the same format as excel files created with the `to_excel` method of an
@@ -359,153 +445,6 @@ def read_fews(
     return oc
 
 
-def read_ghcn(
-    extent,
-    name="",
-    ObsClass=obs.MeteoObs,
-    elements=None,
-    tmin=None,
-    tmax=None,
-    only_metadata=False,
-    keep_all_obs=True,
-    epsg=4326,
-):
-    """Get GHCN (Global Historical Climatology Network) observations within an extent.
-
-    Parameters
-    ----------
-    extent : list, tuple or numpy-array
-        get GHCN stations within this extent [xmin, xmax, ymin, ymax]
-    name : str, optional
-        name of the collection, by default ""
-    ObsClass : type, optional
-        class of the observations, e.g. MeteoObs or PrecipitationObs.
-        The default is MeteoObs.
-    elements : str, list of str, or None, optional
-        GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
-        If None all available elements per station are downloaded.
-        Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
-        are converted from 0.1 mm to m.
-        The default is None.
-    tmin : str or None, optional
-        start date of observations (e.g. '2020-01-01'). The default is None.
-    tmax : str or None, optional
-        end date of observations (e.g. '2021-12-31'). The default is None.
-    only_metadata : bool, optional
-        if True download only station metadata, significantly faster.
-        The default is False.
-    keep_all_obs : bool, optional
-        if False, only observations with measurements are kept.
-        The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
-
-    Returns
-    -------
-    ObsCollection
-        collection of multiple point observations
-    """
-    oc = ObsCollection.from_ghcn(
-        extent=extent,
-        name=name,
-        ObsClass=ObsClass,
-        elements=elements,
-        tmin=tmin,
-        tmax=tmax,
-        only_metadata=only_metadata,
-        keep_all_obs=keep_all_obs,
-        epsg=epsg,
-    )
-    return oc
-
-
-def read_era5(
-    extent=None,
-    name="",
-    ObsClass=obs.MeteoObs,
-    xy=None,
-    variables=("precipitation_sum",),
-    source="era5_seamless",
-    tmin=None,
-    tmax=None,
-    interval="daily",
-    only_metadata=False,
-    keep_all_obs=False,
-    epsg=4326,
-    grid_size=0.25,
-    timeout=120,
-    max_points=200,
-):
-    """Get ERA5 observations within an extent.
-
-    Parameters
-    ----------
-    extent : list, tuple, numpy-array or None, optional
-        get ERA5 grid points within this extent [xmin, xmax, ymin, ymax]
-    xy : tuple, list or None, optional
-        single point coordinates (x, y). If provided, extent is ignored and
-        ERA5 data is downloaded for this point only.
-    name : str, optional
-        name of the collection, by default ""
-    ObsClass : type, optional
-        class of the observations, e.g. MeteoObs.
-        The default is MeteoObs.
-    variables : tuple, list or str, optional
-        ERA5 variable(s) to download, default is ('precipitation_sum',)
-    source : str, optional
-        ERA5 product selection. Options are 'era5', 'era5_land',
-        'era5_hourly', and 'era5_seamless'. With 'era5_hourly', interval is
-        forced to 'hourly'. The default is 'era5_seamless'.
-    tmin : str or None, optional
-        start date of observations. If None, one month before today is used.
-    tmax : str or None, optional
-        end date of observations. If None, today is used.
-    interval : str, optional
-        one of 'daily' or 'hourly', by default 'daily'
-        Returned timestamps are in UTC and shifted to the end of each
-        aggregation period: +1 day for daily and +1 hour for hourly.
-    only_metadata : bool, optional
-        if True download only metadata, significantly faster.
-        The default is False.
-    keep_all_obs : bool, optional
-        if False, only observations with measurements are kept.
-        The default is False.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
-    grid_size : float, optional
-        ERA5 grid sampling size in degrees, default is 0.25
-    timeout : int, optional
-        request timeout in seconds, default is 120
-    max_points : int, optional
-        maximum number of grid points to download, default is 200
-
-    Returns
-    -------
-    ObsCollection
-        collection of multiple point observations
-    """
-    oc = ObsCollection.from_era5(
-        extent=extent,
-        name=name,
-        ObsClass=ObsClass,
-        xy=xy,
-        variables=variables,
-        source=source,
-        tmin=tmin,
-        tmax=tmax,
-        interval=interval,
-        only_metadata=only_metadata,
-        keep_all_obs=keep_all_obs,
-        epsg=epsg,
-        grid_size=grid_size,
-        timeout=timeout,
-        max_points=max_points,
-    )
-    return oc
-
-
 def read_ggmn(
     extent,
     name="",
@@ -572,6 +511,67 @@ def read_ggmn(
         max_locations=max_locations,
         max_pages=max_pages,
         timeout=timeout,
+    )
+    return oc
+
+
+def read_ghcn(
+    extent,
+    name="",
+    ObsClass=obs.MeteoObs,
+    elements=None,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=True,
+    epsg=4326,
+):
+    """Get GHCN (Global Historical Climatology Network) observations within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple or numpy-array
+        get GHCN stations within this extent [xmin, xmax, ymin, ymax]
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type, optional
+        class of the observations, e.g. MeteoObs or PrecipitationObs.
+        The default is MeteoObs.
+    elements : str, list of str, or None, optional
+        GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+        If None all available elements per station are downloaded.
+        Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+        are converted from 0.1 mm to m.
+        The default is None.
+    tmin : str or None, optional
+        start date of observations (e.g. '2020-01-01'). The default is None.
+    tmax : str or None, optional
+        end date of observations (e.g. '2021-12-31'). The default is None.
+    only_metadata : bool, optional
+        if True download only station metadata, significantly faster.
+        The default is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept.
+        The default is True.
+    epsg : int, optional
+        epsg code of the supplied extent. Returned observation x/y
+        coordinates are also in this CRS. The default is 4326 (WGS84).
+
+    Returns
+    -------
+    ObsCollection
+        collection of multiple point observations
+    """
+    oc = ObsCollection.from_ghcn(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        elements=elements,
+        tmin=tmin,
+        tmax=tmax,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
     )
     return oc
 
@@ -2320,6 +2320,97 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
+    def from_era5(
+        cls,
+        extent=None,
+        name="",
+        ObsClass=obs.MeteoObs,
+        xy=None,
+        variables=("precipitation_sum",),
+        source="era5_seamless",
+        tmin=None,
+        tmax=None,
+        interval="daily",
+        only_metadata=False,
+        keep_all_obs=False,
+        epsg=4326,
+        grid_size=0.25,
+        timeout=120,
+        max_points=200,
+    ):
+        """Get ERA5 observations within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple, numpy-array or None, optional
+            get ERA5 grid points within this extent [xmin, xmax, ymin, ymax]
+        xy : tuple, list or None, optional
+            single point coordinates (x, y). If provided, extent is ignored and
+            ERA5 data is downloaded for this point only.
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type, optional
+            class of the observations, e.g. MeteoObs.
+            The default is MeteoObs.
+        variables : tuple, list or str, optional
+            ERA5 variable(s) to download, default is ('precipitation_sum',)
+        source : str, optional
+            ERA5 product selection. Options are 'era5', 'era5_land',
+            'era5_hourly', and 'era5_seamless'. With 'era5_hourly', interval is
+            forced to 'hourly'. The default is 'era5_seamless'.
+        tmin : str or None, optional
+            start date of observations. If None, one month before today is used.
+        tmax : str or None, optional
+            end date of observations. If None, today is used.
+        interval : str, optional
+            one of 'daily' or 'hourly', by default 'daily'
+            Returned timestamps are in UTC and shifted to the end of each
+            aggregation period: +1 day for daily and +1 hour for hourly.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster.
+            The default is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept.
+            The default is False.
+        epsg : int, optional
+            epsg code of the supplied extent. Returned observation x/y
+            coordinates are also in this CRS. The default is 4326 (WGS84).
+        grid_size : float, optional
+            ERA5 grid sampling size in degrees, default is 0.25
+        timeout : int, optional
+            request timeout in seconds, default is 120
+        max_points : int, optional
+            maximum number of grid points to download, default is 200
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io.era5 import get_obs_list_from_extent
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = get_obs_list_from_extent(
+            ObsClass,
+            extent=extent,
+            xy=xy,
+            variables=variables,
+            source=source,
+            tmin=tmin,
+            tmax=tmax,
+            interval=interval,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            epsg=epsg,
+            grid_size=grid_size,
+            timeout=timeout,
+            max_points=max_points,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
+
+    @classmethod
     def from_fews_xml(
         cls,
         file_or_dir=None,
@@ -2430,163 +2521,6 @@ class ObsCollection(pd.DataFrame):
             raise ValueError("either specify variables file_or_dir or xmlstring")
 
     @classmethod
-    def from_ghcn(
-        cls,
-        extent,
-        name="",
-        ObsClass=obs.MeteoObs,
-        elements=None,
-        tmin=None,
-        tmax=None,
-        only_metadata=False,
-        keep_all_obs=True,
-        epsg=4326,
-    ):
-        """Get GHCN (Global Historical Climatology Network) observations within an extent.
-
-        Parameters
-        ----------
-        extent : list, tuple or numpy-array
-            get GHCN stations within this extent [xmin, xmax, ymin, ymax]
-        name : str, optional
-            name of the collection, by default ""
-        ObsClass : type, optional
-            class of the observations, e.g. MeteoObs or PrecipitationObs.
-            The default is MeteoObs.
-        elements : str, list of str, or None, optional
-            GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
-            If None all available elements per station are downloaded.
-            Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
-            are converted from 0.1 mm to m.
-            The default is None.
-        tmin : str or None, optional
-            start date of observations (e.g. '2020-01-01'). The default is None.
-        tmax : str or None, optional
-            end date of observations (e.g. '2021-12-31'). The default is None.
-        only_metadata : bool, optional
-            if True download only station metadata, significantly faster.
-            The default is False.
-        keep_all_obs : bool, optional
-            if False, only observations with measurements are kept.
-            The default is True.
-        epsg : int, optional
-            epsg code of the supplied extent. Returned observation x/y
-            coordinates are also in this CRS. The default is 4326 (WGS84).
-
-        Returns
-        -------
-        ObsCollection
-            ObsCollection containing data
-        """
-        from .io.ghcn import get_obs_list_from_extent
-
-        meta = {"name": name, "type": ObsClass}
-
-        obs_list = get_obs_list_from_extent(
-            extent,
-            ObsClass,
-            elements=elements,
-            tmin=tmin,
-            tmax=tmax,
-            only_metadata=only_metadata,
-            keep_all_obs=keep_all_obs,
-            epsg=epsg,
-        )
-
-        return cls(obs_list, name=name, meta=meta)
-
-    @classmethod
-    def from_era5(
-        cls,
-        extent=None,
-        name="",
-        ObsClass=obs.MeteoObs,
-        xy=None,
-        variables=("precipitation_sum",),
-        source="era5_seamless",
-        tmin=None,
-        tmax=None,
-        interval="daily",
-        only_metadata=False,
-        keep_all_obs=False,
-        epsg=4326,
-        grid_size=0.25,
-        timeout=120,
-        max_points=200,
-    ):
-        """Get ERA5 observations within an extent.
-
-        Parameters
-        ----------
-        extent : list, tuple, numpy-array or None, optional
-            get ERA5 grid points within this extent [xmin, xmax, ymin, ymax]
-        xy : tuple, list or None, optional
-            single point coordinates (x, y). If provided, extent is ignored and
-            ERA5 data is downloaded for this point only.
-        name : str, optional
-            name of the collection, by default ""
-        ObsClass : type, optional
-            class of the observations, e.g. MeteoObs.
-            The default is MeteoObs.
-        variables : tuple, list or str, optional
-            ERA5 variable(s) to download, default is ('precipitation_sum',)
-        source : str, optional
-            ERA5 product selection. Options are 'era5', 'era5_land',
-            'era5_hourly', and 'era5_seamless'. With 'era5_hourly', interval is
-            forced to 'hourly'. The default is 'era5_seamless'.
-        tmin : str or None, optional
-            start date of observations. If None, one month before today is used.
-        tmax : str or None, optional
-            end date of observations. If None, today is used.
-        interval : str, optional
-            one of 'daily' or 'hourly', by default 'daily'
-            Returned timestamps are in UTC and shifted to the end of each
-            aggregation period: +1 day for daily and +1 hour for hourly.
-        only_metadata : bool, optional
-            if True download only metadata, significantly faster.
-            The default is False.
-        keep_all_obs : bool, optional
-            if False, only observations with measurements are kept.
-            The default is False.
-        epsg : int, optional
-            epsg code of the supplied extent. Returned observation x/y
-            coordinates are also in this CRS. The default is 4326 (WGS84).
-        grid_size : float, optional
-            ERA5 grid sampling size in degrees, default is 0.25
-        timeout : int, optional
-            request timeout in seconds, default is 120
-        max_points : int, optional
-            maximum number of grid points to download, default is 200
-
-        Returns
-        -------
-        ObsCollection
-            ObsCollection containing data
-        """
-        from .io.era5 import get_obs_list_from_extent
-
-        meta = {"name": name, "type": ObsClass}
-
-        obs_list = get_obs_list_from_extent(
-            ObsClass,
-            extent=extent,
-            xy=xy,
-            variables=variables,
-            source=source,
-            tmin=tmin,
-            tmax=tmax,
-            interval=interval,
-            only_metadata=only_metadata,
-            keep_all_obs=keep_all_obs,
-            epsg=epsg,
-            grid_size=grid_size,
-            timeout=timeout,
-            max_points=max_points,
-        )
-
-        return cls(obs_list, name=name, meta=meta)
-
-    @classmethod
     def from_ggmn(
         cls,
         extent,
@@ -2657,6 +2591,72 @@ class ObsCollection(pd.DataFrame):
             max_locations=max_locations,
             max_pages=max_pages,
             timeout=timeout,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
+
+    @classmethod
+    def from_ghcn(
+        cls,
+        extent,
+        name="",
+        ObsClass=obs.MeteoObs,
+        elements=None,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        keep_all_obs=True,
+        epsg=4326,
+    ):
+        """Get GHCN (Global Historical Climatology Network) observations within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple or numpy-array
+            get GHCN stations within this extent [xmin, xmax, ymin, ymax]
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type, optional
+            class of the observations, e.g. MeteoObs or PrecipitationObs.
+            The default is MeteoObs.
+        elements : str, list of str, or None, optional
+            GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+            If None all available elements per station are downloaded.
+            Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+            are converted from 0.1 mm to m.
+            The default is None.
+        tmin : str or None, optional
+            start date of observations (e.g. '2020-01-01'). The default is None.
+        tmax : str or None, optional
+            end date of observations (e.g. '2021-12-31'). The default is None.
+        only_metadata : bool, optional
+            if True download only station metadata, significantly faster.
+            The default is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept.
+            The default is True.
+        epsg : int, optional
+            epsg code of the supplied extent. Returned observation x/y
+            coordinates are also in this CRS. The default is 4326 (WGS84).
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io.ghcn import get_obs_list_from_extent
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = get_obs_list_from_extent(
+            extent,
+            ObsClass,
+            elements=elements,
+            tmin=tmin,
+            tmax=tmax,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            epsg=epsg,
         )
 
         return cls(obs_list, name=name, meta=meta)
