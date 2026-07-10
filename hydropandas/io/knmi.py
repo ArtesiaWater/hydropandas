@@ -708,10 +708,14 @@ def fill_missing_measurements(
 
     # 1. get stations
     stations = get_stations(meteo_var=meteo_var)
+    stations = stations[(stations[["tmin", "tmax"]] != False).sum(axis=1).astype(bool)]
     if stn not in stations.index:
         logger.error(f"station {stn} does not exists or does not measure {meteo_var}")
 
     stations_period = get_stations(meteo_var=meteo_var, start=start, end=end)
+    stations_period = stations_period[
+        (stations_period[["tmin", "tmax"]] != False).sum(axis=1).astype(bool)
+    ]
     if stn_name is None:
         stn_name = get_station_name(stn=stn, stations=stations)
 
