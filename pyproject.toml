@@ -137,6 +137,16 @@ description = "run era5 tests"
 extras = ["pytesting"]
 commands = [["pytest", "tests/api/test_109_era5_api.py"]]
 
+[tool.tox.env.ggmn]
+description = "run ggmn tests"
+extras = ["pytesting"]
+commands = [["pytest", "tests/api/test_110_ggmn_api.py"]]
+
+[tool.tox.env.ghcn]
+description = "run ghcn tests"
+extras = ["pytesting"]
+commands = [["pytest", "tests/api/test_108_ghcn_api.py"]]
+
 [tool.tox.env.knmi]
 description = "run knmi tests"
 extras = ["pytesting"]
