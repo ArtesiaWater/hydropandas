@@ -87,10 +87,15 @@ class CollectionPlots:
 
             p = None
             for i, o in enumerate(oc.values):
+                if o.empty:
+                    o.meta["iplot_fname"] = None
+                    continue
+
                 if i == 10:
                     raise NotImplementedError(
                         "cannot add more than 10 lines to a single plot"
                     )
+                
                 try:
                     p = o.plots.interactive_plot(
                         savedir=savedir,
@@ -889,10 +894,10 @@ class ObsPlots:
 
             # resample data
             if plot_freq[i] is None:
-                source = ColumnDataSource(plot_df[[column, "date"]])
+                source = ColumnDataSource(plot_df[[column]])
             else:
                 source = ColumnDataSource(
-                    plot_df[[column, "date"]].resample(plot_freq[i]).first()
+                    plot_df[[column]].resample(plot_freq[i]).first()
                 )
 
             # plot data

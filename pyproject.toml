@@ -30,6 +30,7 @@ dependencies = [
         "folium",
         "rws-ddlpy",
         "pastastore>=1.10.2",
+        "openpyxl"
 ]
 classifiers = [
         "Development Status :: 4 - Beta",
@@ -130,6 +131,11 @@ commands = [
 description = "run bro tests"
 extras = ["pytesting"]
 commands = [["pytest", "tests/api/test_101_bro_api.py"]]
+
+[tool.tox.env.era5]
+description = "run era5 tests"
+extras = ["pytesting"]
+commands = [["pytest", "tests/api/test_109_era5_api.py"]]
 
 [tool.tox.env.knmi]
 description = "run knmi tests"

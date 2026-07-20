@@ -4,7 +4,6 @@ import pytest
 import hydropandas as hpd
 
 
-@pytest.mark.slow
 def test_read_era5_daily_precipitation_realworld():
     tmin = "2020-01-01"
     tmax = "2020-01-02"
@@ -28,8 +27,9 @@ def test_read_era5_daily_precipitation_realworld():
     assert o.index.min() == pd.Timestamp(tmin) + pd.Timedelta(days=1)
     assert o.index.max() == pd.Timestamp(tmax) + pd.Timedelta(days=1)
 
+test_read_era5_daily_precipitation_realworld()
 
-@pytest.mark.slow
+
 def test_read_era5_daily_precipitation_realworld_xy():
     tmin = "2020-01-01"
     tmax = "2020-01-02"
@@ -53,7 +53,6 @@ def test_read_era5_daily_precipitation_realworld_xy():
     assert o.y == 52.0
 
 
-@pytest.mark.slow
 def test_read_era5_land_daily_realworld_xy():
     oc = hpd.read_era5(
         xy=(5.0, 52.0),
@@ -74,7 +73,6 @@ def test_read_era5_land_daily_realworld_xy():
     assert o.meta.get("interval") == "daily"
 
 
-@pytest.mark.slow
 def test_read_era5_hourly_source_forces_hourly():
     tmin = "2020-01-01"
     tmax = "2020-01-01"

@@ -229,8 +229,8 @@ def get_obs_list_from_extent(
             x, y = lon, lat
 
         record_id = props.get("id")
-        name = props.get("ggis_uid") or props.get("name") or f"GGMN_{record_id}"
-
+        name = record_id
+        
         meta = {
             "record_id": record_id,
             "ggis_uid": props.get("ggis_uid"),
