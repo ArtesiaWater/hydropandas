@@ -230,7 +230,7 @@ def get_obs_list_from_extent(
 
         record_id = props.get("id")
         name = record_id
-        
+
         meta = {
             "record_id": record_id,
             "ggis_uid": props.get("ggis_uid"),

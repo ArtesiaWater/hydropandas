@@ -1,5 +1,5 @@
-
 import requests
+
 
 def test_wfs():
     GGMN_WFS_URL = "https://ggis.un-igrac.org/geoserver/wfs"
@@ -21,19 +21,19 @@ def test_wfs():
     result = r.json()
 
     assert len(result) > 1
-    assert 'properties' in result['features'][0]
+    assert "properties" in result["features"][0]
+
 
 def test_measurements():
 
-    record_id = '695507'
+    record_id = "695507"
     url = f"https://ggis.un-igrac.org/groundwater/record/{record_id}/WellLevelMeasurement/list?set=1"
-    
 
     r = requests.get(
-            url,
-            headers={"X-Requested-With": "XMLHttpRequest"},
-            timeout=120,
-        )
+        url,
+        headers={"X-Requested-With": "XMLHttpRequest"},
+        timeout=120,
+    )
     r.raise_for_status()
     result = r.json()
-    assert 'data' in result
+    assert "data" in result

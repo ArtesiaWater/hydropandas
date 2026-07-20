@@ -27,6 +27,7 @@ def test_read_era5_daily_precipitation_realworld():
     assert o.index.min() == pd.Timestamp(tmin) + pd.Timedelta(days=1)
     assert o.index.max() == pd.Timestamp(tmax) + pd.Timedelta(days=1)
 
+
 test_read_era5_daily_precipitation_realworld()
 
 

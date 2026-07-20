@@ -95,7 +95,7 @@ class CollectionPlots:
                     raise NotImplementedError(
                         "cannot add more than 10 lines to a single plot"
                     )
-                
+
                 try:
                     p = o.plots.interactive_plot(
                         savedir=savedir,

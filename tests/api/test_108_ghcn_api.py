@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def test_ghcn():
-    station_id = "SF003715790" #Utrecht
+    station_id = "SF003715790"  # Utrecht
     url = f"https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/all/{station_id}.dly"
 
     colspecs = [

@@ -1,5 +1,6 @@
 import requests
 
+
 def test_era5():
     ERA5_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
@@ -10,10 +11,10 @@ def test_era5():
         "end_date": "2021-01-02",
         "timezone": "UTC",
         "models": "era5_seamless",
-        "daily": "precipitation_sum"
+        "daily": "precipitation_sum",
     }
 
     r = requests.get(ERA5_ARCHIVE_URL, params=params, timeout=600)
 
     r.raise_for_status()
-    assert 'daily' in r.json()
+    assert "daily" in r.json()
