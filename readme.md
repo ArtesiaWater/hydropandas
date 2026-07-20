@@ -33,7 +33,7 @@ for the documentation. The "API available" column indicates current availability
 | [Lizard (Rotterdam)](https://hydropandas.readthedocs.io/en/stable/examples/06_lizard.html) | Groundwater                  | [![Lizard](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard_rotterdam.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/lizard_rotterdam.yml) | Rotterdam |
 | [Matroos](https://hydropandas.readthedocs.io/en/stable/examples/11_matroos.html) | Surface water                  | [![Matroos](https://github.com/ArtesiaWater/hydropandas/actions/workflows/matroos.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/matroos.yml) | Netherlands and neighbours |
 | [Waterconnect](https://hydropandas.readthedocs.io/en/stable/examples/09_water_connect.html) | Groundwater                  | [![Waterconnect](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterconnect.yml) | South Australia      |
-| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water quantity and quality | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml) | Netherlands          |
+| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water | [![Waterinfo](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/waterinfo.yml) | Netherlands          |
 ---
 
 Some sources also provide files readable by HydroPandas.
@@ -46,7 +46,7 @@ Some sources also provide files readable by HydroPandas.
 | [FEWS](https://hydropandas.readthedocs.io/en/stable/examples/07_fews.html) | Groundwater / surface water                  | xml          | Netherlands          |
 | [KNMI](https://hydropandas.readthedocs.io/en/stable/examples/02_knmi_observations.html) | Meteorological                 | txt          | Netherlands          |
 | [Pastastore](https://hydropandas.readthedocs.io/en/stable/examples/03_hydropandas_and_pastas.html) | Time series models                  | NA      | NA      |
-| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water quantity and quality | csv / zip          | Netherlands          |
+| [Waterinfo](https://hydropandas.readthedocs.io/en/stable/examples/08_waterinfo.html) | Surface water | csv / zip          | Netherlands          |
 | Wiski (no docs available)                | Groundwater | csv          | Netherlands          |
 ---
 ## Install
