@@ -123,6 +123,8 @@ commands = [
                 "not slow",
                 "--ignore=tests/api",
                 "--ignore=tests/notebooks",
+                "--cov=hydropands",
+                "--cov-report=json:coverage.json"
         ],
 ]
 
