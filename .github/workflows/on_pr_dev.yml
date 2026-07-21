@@ -31,8 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .
-          pip install pytest pytest-cov
+          pip install .[pytesting]
 
       - name: Run tests with coverage
         run: |
@@ -65,7 +64,7 @@ jobs:
           color: ${{ env.COLOR }}
 
 
-  lint:
+  ruff:
     runs-on: ubuntu-latest
 
     steps:

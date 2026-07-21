@@ -74,9 +74,9 @@ rtd = [
         "nbsphinx_link",
 ]
 ruffing = ["ruff"]
-pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+pytesting = ["hydropandas[full]", "pytest>=7", "pytest-cov", "pytest-sugar"]
 coveraging = ["coverage"]
-dev = ["hydropandas[ruffing,pytesting]", "tox"]
+dev = ["hydropandas[ruffing,pytesting]"]
 
 [tool.setuptools]
 include-package-data = true
