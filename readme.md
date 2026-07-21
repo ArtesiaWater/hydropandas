@@ -5,7 +5,7 @@
 [<img src="https://github.com/codespaces/badge.svg" height="20">](https://codespaces.new/ArtesiaWater/hydropandas?quickstart=1)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ArtesiaWater/3b2ba1c2b37e745109b2c7f2fdde60de/raw/hydropandas-coverage.json)](https://github.com/ArtesiaWater/hydropandas/actions)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ArtesiaWater/209527a5ce5174fef38c331283dfd056/raw/hydropandas-coverage.json)](https://github.com/ArtesiaWater/hydropandas/actions)
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/actions/workflows/on_pr_master.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/on_pr_master.yml)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 # HydroPandas
