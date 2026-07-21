@@ -47,7 +47,6 @@ def test_codes_rotterdam():
     auth = ("__key__", os.environ["LIZARD_ROTTERDAM_API_KEY"])
     oc = hpd.read_lizard(
         codes=["GMW000000036819", "GMW000000037933"],
-        type_timeseries="merge",
         organisation="rotterdam",
         auth=auth,
     )
