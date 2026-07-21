@@ -464,6 +464,16 @@ def get_timeseries_stn(
     stations = get_stations(meteo_var=meteo_var)
     stn_name = get_station_name(stn=stn, stations=stations)
 
+    if (
+        meteo_var != "RD"
+        and settings["use_api"]
+        and not stations.at[stn, "api_available"]
+    ):
+        raise ValueError(
+            f"station {stn} does not have data available via the api, "
+            "set use_api=False to download data from knmi url"
+        )
+
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
         message = (
