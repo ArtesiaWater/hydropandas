@@ -108,41 +108,11 @@ lint.ignore = ["RET504", "DTZ005", "DTZ001", "SIM102", "SIM115", "PERF401"]
 addopts = "--durations=0"
 markers = ["slow: mark test as slow."]
 
-[tool.tox.env.bro]
-description = "run bro tests"
-extras = ["pytesting"]
-commands = [["pytest", "tests/api/test_101_bro_api.py"]]
-
-[tool.tox.env.knmi]
-description = "run knmi tests"
-extras = ["pytesting"]
-commands = [["pytest", "tests/api/test_102_knmi_api.py"]]
-
-[tool.tox.env.matroos]
-description = "run matroos tests"
-extras = ["pytesting"]
-commands = [["pytest", "tests/api/test_107_matroos_api.py"]]
-
-[tool.tox.env.lizard_vitens]
-description = "run lizard vitens tests"
-extras = ["pytesting"]
-commands = [["pytest", "tests/api/test_103_lizard_api_vitens.py"]]
-
 [tool.tox.env.lizard_rotterdam]
 description = "run lizard rotterdam tests"
 extras = ["pytesting"]
 pass_env = ["LIZARD_ROTTERDAM_API_KEY"]
 commands = [["pytest", "tests/api/test_106_lizard_api_rotterdam.py"]]
-
-[tool.tox.env.waterconnect]
-description = "run waterconnect tests"
-extras = ["pytesting"]
-commands = [["pytest", "tests/api/test_104_waterconnect_api.py"]]
-
-[tool.tox.env.waterinfo]
-description = "run waterinfo tests"
-extras = ["pytesting"]
-commands = [["pytest", "tests/api/test_105_waterinfo_api.py"]]
 
 [tool.tox.env.notebooks]
 description = "run all tests with notebooks and coverage"
