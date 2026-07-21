@@ -5,9 +5,8 @@
 [<img src="https://github.com/codespaces/badge.svg" height="20">](https://codespaces.new/ArtesiaWater/hydropandas?quickstart=1)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ArtesiaWater/209527a5ce5174fef38c331283dfd056/raw/hydropandas-coverage.json)](https://github.com/ArtesiaWater/hydropandas/actions)
 [![hydropandas](https://github.com/ArtesiaWater/hydropandas/actions/workflows/on_pr_master.yml/badge.svg)](https://github.com/ArtesiaWater/hydropandas/actions/workflows/on_pr_master.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://app.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/c1b99f474bdc49b0a47e00e4e9f66c2f)](https://app.codacy.com/gh/ArtesiaWater/hydropandas/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 # HydroPandas
 
