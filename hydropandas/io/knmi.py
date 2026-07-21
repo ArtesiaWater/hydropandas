@@ -583,7 +583,19 @@ def get_stations(
     else:
         meteo_mask = stations.loc[:, meteo_var]
     stations = stations.loc[
-        meteo_mask, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"]
+        meteo_mask,
+        [
+            "lon",
+            "lat",
+            "name",
+            "wsi",
+            "x",
+            "y",
+            "altitude",
+            "tmin",
+            "tmax",
+            "api_available",
+        ],
     ]
 
     # select only stations with measurement
