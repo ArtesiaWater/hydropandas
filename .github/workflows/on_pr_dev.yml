@@ -78,7 +78,7 @@ jobs:
         uses: schneegans/dynamic-badges-action@v1.9.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
-          gistID: "3b2ba1c2b37e745109b2c7f2fdde60de"
+          gistID: "209527a5ce5174fef38c331283dfd056"
           filename: hydropandas-coverage.json
           label: Coverage
           message: ${{ env.COVERAGE }}%
