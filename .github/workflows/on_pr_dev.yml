@@ -11,7 +11,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: ${{ matrix.name }}
     env:
       # Color Output
       # Rich (pip)
@@ -37,7 +36,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest tests -m not slow --ignore=tests/api --ignore=tests/notebooks --cov=hydropandas --cov-report=json:coverage.json
+          pytest tests -m "not slow" --ignore=tests/api --ignore=tests/notebooks --cov=hydropandas --cov-report=json:coverage.json
 
       - name: Extract coverage percentage
         id: extract_cov
