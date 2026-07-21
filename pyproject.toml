@@ -67,7 +67,7 @@ rtd = [
         "requests",
         "nbconvert",
         "ipykernel",
-        "docutils<0.18",
+        "docutils",
         "sphinx_rtd_theme",
         "Ipython",
         "nbsphinx",
@@ -77,6 +77,7 @@ ruffing = ["ruff"]
 pytesting = ["hydropandas[full]", "pytest>=7", "pytest-cov", "pytest-sugar"]
 coveraging = ["coverage"]
 dev = ["hydropandas[ruffing,pytesting]"]
+bro = ["requests", "pytest"]
 
 [tool.setuptools]
 include-package-data = true
