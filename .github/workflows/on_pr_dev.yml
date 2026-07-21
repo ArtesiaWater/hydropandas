@@ -53,6 +53,27 @@ jobs:
             echo "COLOR=green" >> $GITHUB_ENV
           fi
 
+      - name: Check if secret exists
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "TOKEN IS EMPTY OR NOT ACCESSIBLE!"
+          else
+            echo "TOKEN IS SET! Character count: ${#TOKEN}"
+          fi
+        env:
+          TOKEN: ${{ secrets.GIST_TOKEN }}
+
+      - name: Inspect token format
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "Token is empty"
+          else
+            echo "Token starts with: ${TOKEN:0:4}..."
+            echo "Token ends with: ...${TOKEN:-4}"
+          fi
+        env:
+          TOKEN: ${{ secrets.GIST_TOKEN }}
+
       - name: Update Coverage Badge Gist
         uses: schneegans/dynamic-badges-action@v1.9.0
         with:
