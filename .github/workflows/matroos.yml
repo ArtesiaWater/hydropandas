@@ -15,7 +15,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Test matroos api
-    steps:
+    steps:    
+      - uses: actions/checkout@v6
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
