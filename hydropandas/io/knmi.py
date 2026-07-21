@@ -1793,7 +1793,7 @@ def get_hourly_meteo_api(
     if end is None:
         raise ValueError("An end date is required when using hourly interval")
 
-    if (end - start).days > 3652:
+    if (end - start).days > 3653:
         raise ValueError("time span for hourly data cannot be greater than 10 years")
     if (end - start).days < 1:
         raise ValueError("time span should be more than 1 day")
