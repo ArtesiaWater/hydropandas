@@ -688,6 +688,8 @@ def read_knmi(
     interval="daily",
     use_api=True,
     raise_exceptions=True,
+    progress_callback=None,
+    fill_missing_obs_with_factor=False,
 ):
     """Get knmi observations from a list of locations or a list of stations.
 
@@ -725,6 +727,17 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
+    fill_missing_obs : bool, optional
+        if True nan values in time series are filled with nearby time series.
+        The default is False.
+    progress_callback : callable or None, optional
+        callback function called with (i, total) for each station processed.
+        The default is None.
+    fill_missing_obs_with_factor : bool, optional
+        if True, donor-station values are scaled with an overlap-based factor
+        before filling missing values. This automatically enables
+        fill_missing_obs.
+        The default is False.
     **kwargs :
         kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
@@ -846,6 +859,8 @@ def read_knmi(
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
+        progress_callback=progress_callback,
+        fill_missing_obs_with_factor=fill_missing_obs_with_factor,
     )
 
     return oc
@@ -2768,6 +2783,8 @@ class ObsCollection(pd.DataFrame):
         interval="daily",
         use_api=True,
         raise_exceptions=True,
+        progress_callback=None,
+        fill_missing_obs_with_factor=False,
     ):
         """Get knmi observations from a list of locations or a list of stations.
 
@@ -2819,6 +2836,14 @@ class ObsCollection(pd.DataFrame):
             online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
+        progress_callback : callable or None, optional
+            callback function called with (i, total) for each station processed.
+            The default is None.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
         """
@@ -2873,6 +2898,8 @@ class ObsCollection(pd.DataFrame):
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
+            progress_callback=progress_callback,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
         obs_df = util._obslist_to_frame(obs_list)
