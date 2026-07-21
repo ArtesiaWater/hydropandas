@@ -107,27 +107,6 @@ lint.ignore = ["RET504", "DTZ005", "DTZ001", "SIM102", "SIM115", "PERF401"]
 addopts = "--durations=0"
 markers = ["slow: mark test as slow."]
 
-[tool.tox]
-requires = ["tox>=4"]
-env_list = ["ruff", "notebooks", "py{311,312,313,314}"]
-pass_env = ["LIZARD_ROTTERDAM_API_KEY"]
-
-[tool.tox.env_run_base]
-description = "run unit tests"
-extras = ["pytesting"]
-commands = [
-        [
-                "pytest",
-                "tests",
-                "-m",
-                "not slow",
-                "--ignore=tests/api",
-                "--ignore=tests/notebooks",
-                "--cov=hydropands",
-                "--cov-report=json:coverage.json"
-        ],
-]
-
 [tool.tox.env.bro]
 description = "run bro tests"
 extras = ["pytesting"]
@@ -180,23 +159,5 @@ commands = [
         [
                 "coverage",
                 "xml",
-        ],
-]
-
-[tool.tox.env.ruff]
-description = "run ruff checks"
-base_python = "python3.11"
-extras = ["ruffing"]
-commands = [
-        [
-                "ruff",
-                "check",
-                "--extend-select",
-                "I",
-        ],
-        [
-                "ruff",
-                "format",
-                "--check",
         ],
 ]
