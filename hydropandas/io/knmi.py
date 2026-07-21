@@ -712,9 +712,6 @@ def fill_missing_measurements(
         logger.error(f"station {stn} does not exists or does not measure {meteo_var}")
 
     stations_period = get_stations(meteo_var=meteo_var, start=start, end=end)
-    stations_period = stations_period[
-        (stations_period[["tmin", "tmax"]] != False).sum(axis=1).astype(bool)
-    ]
     if stn_name is None:
         stn_name = get_station_name(stn=stn, stations=stations)
 
