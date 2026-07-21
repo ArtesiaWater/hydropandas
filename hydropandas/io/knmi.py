@@ -708,8 +708,6 @@ def fill_missing_measurements(
 
     # 1. get stations
     stations = get_stations(meteo_var=meteo_var)
-    # TODO: Remove this check when the KNMI station data is updated with tmin and tmax for all stations, see #370
-    stations = stations[(stations[["tmin", "tmax"]] != False).sum(axis=1).astype(bool)]
     if stn not in stations.index:
         logger.error(f"station {stn} does not exists or does not measure {meteo_var}")
 
