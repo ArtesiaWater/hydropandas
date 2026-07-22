@@ -33,7 +33,7 @@ meteo_tminmax_knmi["tmax"] = [
     pd.to_datetime(x, format="%Y%m%d") if x != "gisteren" else pd.Timestamp.today() for x in meteo_tminmax_knmi["Tot en met"]
 ]
 meteo_tminmax_knmi["tmax"] = [
-    None
+    "9999-12-31"
     if (pd.Timestamp.today() - x) < pd.Timedelta(days=365)
     else x.strftime("%Y-%m-%d")
     for x in meteo_tminmax_knmi["tmax"]
@@ -133,7 +133,7 @@ tminmax = [[x[0], x[-1]] for x in prec_tminmax["Periode"].str.split(" ")]
 tmin = [pd.to_datetime(x[0], format="%Y%m%d").strftime("%Y-%m-%d") for x in tminmax]
 tmax = [pd.to_datetime(x[1], format="%Y%m%d") for x in tminmax]
 tmax = [
-    None
+    "9999-12-31"
     if (pd.Timestamp.today() - x) < pd.Timedelta(days=365)
     else x.strftime("%Y-%m-%d")
     for x in tmax
