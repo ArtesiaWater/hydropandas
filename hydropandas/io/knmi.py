@@ -464,6 +464,16 @@ def get_timeseries_stn(
     stations = get_stations(meteo_var=meteo_var)
     stn_name = get_station_name(stn=stn, stations=stations)
 
+    if (
+        meteo_var != "RD"
+        and settings["use_api"]
+        and not stations.at[stn, "api_available"]
+    ):
+        raise ValueError(
+            f"station {stn} does not have data available via the api, "
+            "set use_api=False to download data from knmi url"
+        )
+
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
         message = (
@@ -564,6 +574,8 @@ def get_stations(
 
     stations = pd.concat([mstations, pstations], axis=0)
     stations = stations.where(~stations.isna(), False)
+    stations["tmin"] = pd.to_datetime(stations["tmin"], errors="coerce")
+    stations["tmax"] = pd.to_datetime(stations["tmax"], errors="coerce")
     if meteo_var in ("makkink", "penman", "hargreaves"):
         meteo_var = "EV24"
 
@@ -572,18 +584,35 @@ def get_stations(
         meteo_mask = stations.loc[:, meteo_var].any(axis=1)
     else:
         meteo_mask = stations.loc[:, meteo_var]
+
     stations = stations.loc[
-        meteo_mask, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"]
+        meteo_mask,
+        [
+            "lon",
+            "lat",
+            "name",
+            "wsi",
+            "x",
+            "y",
+            "altitude",
+            "tmin",
+            "tmax",
+            "api_available",
+        ],
     ]
 
     # select only stations with measurement
     if start is not None or end is not None:
-        stations = _get_stations_tmin_tmax(stations, start, end)
+        stations = _get_stations_tmin_tmax(stations_df=stations, start=start, end=end)
 
     return stations
 
 
-def _get_stations_tmin_tmax(stations_df, start, end):
+def _get_stations_tmin_tmax(
+    stations_df: pd.DataFrame,
+    start: pd.Timestamp | str | None,
+    end: pd.Timestamp | str | None,
+) -> pd.DataFrame:
     """select stations within period defined by start and end.
 
     Parameters
@@ -609,20 +638,14 @@ def _get_stations_tmin_tmax(stations_df, start, end):
     if end is None:
         tmin_stns = set(stations_df.index)
     else:
-        # keep stations where tmin is unknown (=False)
-        stns_unknown_tmin = set(stations_df.loc[stations_df["tmin"] == False].index)
-        tmin_available = stations_df.loc[stations_df["tmin"] != False, "tmin"]
-        tmin_within_range = pd.to_datetime(tmin_available) < end
-        tmin_stns = set(tmin_available.loc[tmin_within_range].index) | stns_unknown_tmin
+        tmin_within_range = stations_df["tmin"] < end
+        tmin_stns = set(stations_df.loc[tmin_within_range].index)
 
     if start is None:
         tmax_stns = set(stations_df.index)
     else:
-        stns_unknown_tmax = set(stations_df.loc[stations_df["tmax"] == False].index)
-        tmax_available = stations_df.loc[stations_df["tmax"] != False, "tmax"]
-        tmax_available.loc[tmax_available.isnull()] = dt.datetime.now().date()
-        tmax_within_range = pd.to_datetime(tmax_available) > start
-        tmax_stns = set(tmax_available.loc[tmax_within_range].index) | stns_unknown_tmax
+        tmax_within_range = stations_df["tmax"] > start
+        tmax_stns = set(stations_df.loc[tmax_within_range].index)
 
     return stations_df.loc[list(tmin_stns & tmax_stns)]
 
@@ -762,7 +785,7 @@ def fill_missing_measurements(
     # 4. Change end date
     # NOTE: Assuming there is no data after the last measurement available in de Bilt.
     stn_de_bilt = 550 if meteo_var == "RD" else 260
-    first_meas_de_bilt = pd.Timestamp(stations.loc[stn_de_bilt, "tmin"])
+    first_meas_de_bilt = pd.Timestamp(stations.at[stn_de_bilt, "tmin"])
 
     # only change end if dataframe does not have measurements at the end date
     if end < first_meas_de_bilt:
@@ -1788,7 +1811,7 @@ def get_hourly_meteo_api(
     if end is None:
         raise ValueError("An end date is required when using hourly interval")
 
-    if (end - start).days > 365 * 10:
+    if (end - start).days > 3653:
         raise ValueError("time span for hourly data cannot be greater than 10 years")
     if (end - start).days < 1:
         raise ValueError("time span should be more than 1 day")
