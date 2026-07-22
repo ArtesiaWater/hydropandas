@@ -46,7 +46,7 @@ jobs:
         run: |
           pytest tests -m not slow --ignore=tests/api --ignore=tests/notebooks
 
-  notebooks_and_coverage
+  notebooks_and_coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
