@@ -76,6 +76,7 @@ rtd = [
 ]
 ruffing = ["ruff"]
 pytesting = ["hydropandas[full]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+nbtesting = ["hydropandas[pytesting]", "nbformat"]
 coveraging = ["coverage"]
 dev = ["hydropandas[ruffing,pytesting]"]
 bro = ["requests", "pytest"]
