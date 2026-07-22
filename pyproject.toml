@@ -30,6 +30,7 @@ dependencies = [
         "folium",
         "rws-ddlpy",
         "pastastore>=1.10.2",
+        "openpyxl"
 ]
 classifiers = [
         "Development Status :: 4 - Beta",
@@ -107,28 +108,3 @@ lint.ignore = ["RET504", "DTZ005", "DTZ001", "SIM102", "SIM115", "PERF401"]
 [tool.pytest.ini_options]
 addopts = "--durations=0"
 markers = ["slow: mark test as slow."]
-
-[tool.tox.env.lizard_rotterdam]
-description = "run lizard rotterdam tests"
-extras = ["pytesting"]
-pass_env = ["LIZARD_ROTTERDAM_API_KEY"]
-commands = [["pytest", "tests/api/test_106_lizard_api_rotterdam.py"]]
-
-[tool.tox.env.notebooks]
-description = "run all tests with notebooks and coverage"
-extras = ["pytesting", "coveraging"]
-pass_env = ["LIZARD_ROTTERDAM_API_KEY"]
-commands = [
-        [
-                "coverage",
-                "run",
-                "--source=hydropandas",
-                "-m",
-                "pytest",
-                "tests",
-        ],
-        [
-                "coverage",
-                "xml",
-        ],
-]
