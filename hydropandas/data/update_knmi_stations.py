@@ -7,7 +7,7 @@ import requests
 from hydropandas.io import knmi
 
 from logging import getLogger
-
+import json
 logger = getLogger(__name__)
 
 class EmptyDataFrameError(Exception):
@@ -33,7 +33,7 @@ meteo_tminmax_knmi["tmax"] = [
     pd.to_datetime(x, format="%Y%m%d") if x != "gisteren" else pd.Timestamp.today() for x in meteo_tminmax_knmi["Tot en met"]
 ]
 meteo_tminmax_knmi["tmax"] = [
-    "9999-12-31"
+    pd.Timestamp.max.strftime("%Y-%m-%d")
     if (pd.Timestamp.today() - x) < pd.Timedelta(days=365)
     else x.strftime("%Y-%m-%d")
     for x in meteo_tminmax_knmi["tmax"]
@@ -97,11 +97,12 @@ for stn in meteo_df.index:
     except requests.HTTPError as e:
         meteo_df.loc[stn, "api_available"] = False
         logger.error(f"Geen data {stn}, {e}. Setting api_available to False")
+meteo_df = meteo_df.fillna(False).drop(columns=[""])
 
 #%%
 # save meteo data variables to json
-meteo_dft = meteo_df.fillna(False).drop(columns=[""])
-meteo_dft.to_json("knmi_meteostation.json")
+meteo_dft = meteo_df.copy()
+meteo_dft.to_json("knmi_meteostation.json", orient="columns", indent=4)
 
 #%%
 # compare tminmax api, url and knmi website
@@ -133,7 +134,7 @@ tminmax = [[x[0], x[-1]] for x in prec_tminmax["Periode"].str.split(" ")]
 tmin = [pd.to_datetime(x[0], format="%Y%m%d").strftime("%Y-%m-%d") for x in tminmax]
 tmax = [pd.to_datetime(x[1], format="%Y%m%d") for x in tminmax]
 tmax = [
-    "9999-12-31"
+    pd.Timestamp.max.strftime("%Y-%m-%d")
     if (pd.Timestamp.today() - x) < pd.Timedelta(days=365)
     else x.strftime("%Y-%m-%d")
     for x in tmax
@@ -147,4 +148,4 @@ prec_dft.loc[550, "tmin"] = "1898-01-01"
 
 prec_dft.sort_index().loc[
     :, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax", "RD"]
-].to_json("knmi_neerslagstation.json")
+].to_json("knmi_neerslagstation.json", orient="columns", indent=4)
