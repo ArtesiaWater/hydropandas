@@ -85,7 +85,7 @@ jobs:
           fi
 
       - name: Update Coverage Badge Gist
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.9.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: "209527a5ce5174fef38c331283dfd056"
