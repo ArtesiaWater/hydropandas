@@ -1764,12 +1764,12 @@ class ObsCollection(pd.DataFrame):
 
             # overwrite observation in collection
             d = omerged.to_collection_dict()
-            if kwargs.get("merge_metadata", False):
-                # keep values in existing columns that are not in d
-                oc.loc[o.name, d.keys()] = d
-            else:
+            if kwargs.get("merge_metadata", True):
                 # clears existing columns that are not in d
                 oc.loc[o.name] = d
+            else:
+                # keep values in existing columns that are not in d
+                oc.loc[o.name, d.keys()] = d
 
         if not inplace:
             return oc
