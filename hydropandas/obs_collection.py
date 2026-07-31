@@ -1763,7 +1763,13 @@ class ObsCollection(pd.DataFrame):
             omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
-            oc.loc[o.name] = omerged.to_collection_dict()
+            d = omerged.to_collection_dict()
+            if kwargs.get("merge_metadata", True):
+                # clears existing columns that are not in d
+                oc.loc[o.name] = d
+            else:
+                # keep values in existing columns that are not in d
+                oc.loc[o.name, d.keys()] = d
 
         if not inplace:
             return oc
