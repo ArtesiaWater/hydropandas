@@ -646,7 +646,7 @@ class CollectionPlots:
         self,
         plot_column,
         by=None,
-        savefig=True,
+        savefig=False,
         outputdir=".",
         naming_method=None,
         units_for_well_screen_depth="mNAP",
@@ -731,7 +731,7 @@ class CollectionPlots:
             if savefig:
                 if isinstance(by, list):
                     by_name = "-".join(by)
-                    groupname = "-".join(groupname)
+                    groupname = "-".join(str(v) for v in groupname)
                 else:
                     by_name = by
                 if naming_method is None:
