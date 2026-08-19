@@ -1,5 +1,6 @@
 import json
 import pathlib
+import pyproj
 from datetime import date, datetime
 
 import numpy as np
@@ -16,6 +17,8 @@ class HydropandasEncoder(json.JSONEncoder):
             return str(o)
         elif isinstance(o, (datetime, date, Timestamp)):
             return o.isoformat()
+        elif isinstance(o, pyproj.CRS):
+            return o.to_string()
         elif isinstance(o, type):
             return f"class : {o.__name__}"
 

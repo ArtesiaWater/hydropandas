@@ -18,6 +18,7 @@ import json
 import logging
 import numbers
 import os
+import pyproj
 import warnings
 from io import StringIO, TextIOWrapper
 
@@ -89,6 +90,8 @@ class Obs(pd.DataFrame):
         source of the observation e.g. BRO or KNMI
     unit : str
         unit of the first numerical column in the observation
+    crs : str, int, pyproj.CRS or None
+        coordinate reference system of the observation
     """
 
     # temporary properties
@@ -96,7 +99,17 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ["name", "x", "y", "location", "meta", "filename", "source", "unit"]
+    _metadata = [
+        "name",
+        "x",
+        "y",
+        "location",
+        "meta",
+        "filename",
+        "source",
+        "unit",
+        "crs",
+    ]
 
     def __init__(self, *args, **kwargs):
         """Constructor of Obs class.
@@ -118,6 +131,10 @@ class Obs(pd.DataFrame):
         self.filename = kwargs.pop("filename", "")
         self.source = kwargs.pop("source", "")
         self.unit = kwargs.pop("unit", "")
+        # set crs
+        self.crs = kwargs.pop("crs", None)
+        if self.crs is not None:
+            self.crs = pyproj.CRS(self.crs)
 
         super().__init__(*args, **kwargs)
 
@@ -130,8 +147,11 @@ class Obs(pd.DataFrame):
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._get_meta_attr():
-            if att != "meta":
+            if att == "crs" and getattr(self, att) is not None:
+                buf.write(f"{att} : {getattr(self, att).to_string()} \n")
+            elif att != "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
+
         buf.write("\n")
 
         if self._info_repr():
@@ -166,6 +186,8 @@ class Obs(pd.DataFrame):
 
         metadata_dic = {key: getattr(self, key) for key in self._get_meta_attr()}
         metadata_dic.pop("meta")
+        if "crs" in metadata_dic and metadata_dic["crs"] is not None:
+            metadata_dic["crs"] = metadata_dic["crs"].to_string()
         metadata_df = pd.DataFrame(
             columns=[metadata_dic.pop("name")],
             index=metadata_dic.keys(),
