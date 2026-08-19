@@ -11,34 +11,34 @@ logging.basicConfig(level=logging.DEBUG)
 
 knmidir = Path(__file__).parent / "data" / "2023-KNMI-test"
 
-# temporary disable because not available, see #375
-# compare api calls with pre-downloaded files
-# def test_knmi_meteo_station_hourly_api_values():
-#     stn = 260
-#     start = pd.Timestamp("2000-01-01")
-#     end = pd.Timestamp("2001-01-01")
-#     df, meta = knmi.get_hourly_meteo_api(stn=stn, meteo_var="RH", start=start, end=end)
-#     df2, _ = knmi.interpret_knmi_file(
-#         df,
-#         meta=meta,
-#         meteo_var="RH",
-#         start=start,
-#         end=end,
-#         add_day=False,
-#         add_hour=True,
-#     )
-#     truth, _ = knmi.parse_data(knmidir / "uurgeg_260_1991-2000.txt")
 
-#     # check raw data
-#     pd.testing.assert_series_equal(
-#         df["RH"].loc["2000-01-01 01:00:00":"2001-01-01 00:00:00"], truth["RH"]
-#     )
-#     # check after interpretation, since interpretation converts to UTC+1,
-#     # values have shifted 1h
-#     assert (
-#         df2.loc["2000-01-01 06:00:00", "RH"] * 1e4
-#         == truth.loc["2000-01-01 05:00:00", "RH"]
-#     )
+# compare api calls with pre-downloaded files
+def test_knmi_meteo_station_hourly_api_values():
+    stn = 260
+    start = pd.Timestamp("2000-01-01")
+    end = pd.Timestamp("2001-01-01")
+    df, meta = knmi.get_hourly_meteo_api(stn=stn, meteo_var="RH", start=start, end=end)
+    df2, _ = knmi.interpret_knmi_file(
+        df,
+        meta=meta,
+        meteo_var="RH",
+        start=start,
+        end=end,
+        add_day=False,
+        add_hour=True,
+    )
+    truth, _ = knmi.parse_data(knmidir / "uurgeg_260_1991-2000.txt")
+
+    # check raw data
+    pd.testing.assert_series_equal(
+        df["RH"].loc["2000-01-01 01:00:00":"2001-01-01 00:00:00"], truth["RH"]
+    )
+    # check after interpretation, since interpretation converts to UTC+1,
+    # values have shifted 1h
+    assert (
+        df2.loc["2000-01-01 06:00:00", "RH"] * 1e4
+        == truth.loc["2000-01-01 05:00:00", "RH"]
+    )
 
 
 def test_knmi_meteo_station_daily_api_values():
