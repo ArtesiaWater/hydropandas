@@ -5,8 +5,8 @@
 User Guide  
 ==========
 
-This guide covers the core concepts and features of hydropandas. This guide 
-will help you make the most of hydropandas.
+This guide covers the core concepts and features of HydroPandas. This guide 
+will help you make the most of HydroPandas.
 
 .. contents:: Table of Contents
    :local:
@@ -15,7 +15,7 @@ will help you make the most of hydropandas.
 Overview
 --------
 
-Hydropandas is built around two main classes that work together to provide a powerful 
+HydroPandas is built around two main classes that work together to provide a powerful 
 framework for hydrological data analysis:
 
 * **Obs**: Individual time series with metadata
@@ -32,7 +32,7 @@ location. It combines your time series data with rich metadata in a single, easy
 
 **Available Obs Types**
 
-Hydropandas provides specialized Obs classes for different measurement types:
+HydroPandas provides specialized Obs classes for different measurement types:
 
 - **GroundwaterObs**: Groundwater level and quality measurements
 - **WaterlvlObs**: Surface water level measurements  
@@ -119,7 +119,7 @@ multiple measurement points simultaneously. It's particularly powerful for:
 Data Sources and Import Methods
 ------------------------------
 
-Hydropandas supports numerous data sources with specialized import methods:
+HydroPandas supports numerous data sources with specialized import methods:
 
 **Dutch Data Sources**
 * **BRO (Basisregistratie Ondergrond)**: ``read_bro()``
@@ -163,7 +163,7 @@ Advanced Features
 
 **Spatial Analysis**
 
-Hydropandas integrates seamlessly with GeoPandas for spatial analysis:
+HydroPandas integrates seamlessly with GeoPandas for spatial analysis:
 
 .. code-block:: python
 

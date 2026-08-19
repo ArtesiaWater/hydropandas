@@ -1,7 +1,7 @@
-Welcome to hydropandas's documentation!
+Welcome to HydroPandas's documentation!
 =======================================
 
-Hydropandas is a Python package for reading, analyzing and writing
+HydroPandas is a Python package for reading, analyzing and writing
 (hydrological) timeseries data. Users can store a timeseries and metadata in a
 single object. This object inherits from a pandas DataFrame, with all its
 wonderful features, and is extended with custom methods and attributes related
@@ -46,7 +46,7 @@ Export Capabilities
 * **Pastas** (time series modeling)
 * **Pastastore** (bulk time series modeling)
 
-See the table of contents to get started with hydropandas.
+See the table of contents to get started with HydroPandas.
 
 .. toctree::
    :maxdepth: 2
@@ -56,7 +56,7 @@ See the table of contents to get started with hydropandas.
    Examples gallery <examples/index>
    User guide <user_guide>
    FAQ <faq>
-   Hydropandas API-docs <source/modules>
+   HydroPandas API-docs <source/modules>
    Contribute <contribute>
 
 .. toctree::
