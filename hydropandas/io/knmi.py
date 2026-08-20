@@ -12,6 +12,10 @@ function levels:
                         7a. request_api, request_url
                         7b. parse_data
                     6b. interpret_knmi_file
+
+For knmi climate scenarios:
+1. get_knmi_scenarios_obs_list: get knmi climate scenarios for a station
+    2. get_knmi_scenarios_data: get knmi climate scenarios for a station
 """
 
 import datetime as dt
@@ -21,7 +25,7 @@ import warnings
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Iterable, Literal
 from zipfile import ZipFile
 
 import numpy as np
@@ -33,17 +37,24 @@ logger = logging.getLogger(__name__)
 URL_DAILY_PREC = "https://www.daggegevens.knmi.nl/klimatologie/monv/reeksen"
 URL_DAILY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/daggegevens"
 URL_HOURLY_METEO = "https://www.daggegevens.knmi.nl/klimatologie/uurgegevens"
+URL_STATIONS = "https://klimaatscenarios-data.knmi.nl/api/v1/stations"
+URL_KNMI_TRANSFORMED_SERIES = (
+    "https://klimaatscenarios-data.knmi.nl/api/v1/climate-series-data.zip"
+)
+
+KNMI_CLIMATE_YEARS = Literal["2033", "2050", "2100", "2150"]
+KNMI_CLIMATE_SCENARIOS = Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
 
 
 def get_knmi_obs(
-    stn: Union[int, None] = None,
-    fname: Union[str, None] = None,
-    xy: Union[List[float], Tuple[float], None] = None,
-    meteo_var: Union[str, None] = None,
-    start: Union[pd.Timestamp, str, None] = None,
-    end: Union[pd.Timestamp, str, None] = None,
+    stn: int | None = None,
+    fname: str | None = None,
+    xy: list[float] | tuple[float] | None = None,
+    meteo_var: str | None = None,
+    start: pd.Timestamp | str | None = None,
+    end: pd.Timestamp | str | None = None,
     **kwargs,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """get knmi observation from stn, fname or nearest xy coordinates.
 
     Parameters
@@ -69,6 +80,11 @@ def get_knmi_obs(
             end the data from nearby stations is used. In this case the metadata of the
             Observation is the metadata from the nearest station that has any
             measurement in the given period.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -93,9 +109,8 @@ def get_knmi_obs(
     """
     if meteo_var is None and fname is None:
         raise ValueError("To get knmi data a meteo_var should be specified")
-    elif meteo_var is not None:
-        if not isinstance(meteo_var, str):
-            raise (TypeError(f"meteo var should be string not {type(meteo_var)}"))
+    elif meteo_var is not None and not isinstance(meteo_var, str):
+        raise (TypeError(f"meteo var should be string not {type(meteo_var)}"))
 
     settings = _get_default_settings(kwargs)
 
@@ -161,10 +176,10 @@ def get_knmi_obs(
 def get_knmi_timeseries_fname(
     fname: str,
     meteo_var: str,
-    settings: Dict[str, Any],
+    settings: dict[str, Any],
     start: pd.Timestamp,
     end: pd.Timestamp,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Get a knmi time series and metadata from a file.
 
     .. deprecated:: 0.13.3
@@ -205,10 +220,10 @@ def get_knmi_timeseries_fname(
 def get_timeseries_from_file(
     fname: str,
     meteo_var: str,
-    settings: Dict[str, Any],
+    settings: dict[str, Any],
     start: pd.Timestamp,
     end: pd.Timestamp,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Get a knmi time series and metadata from a file.
 
     Parameters
@@ -297,7 +312,7 @@ def get_timeseries_from_file(
     return ts, meta
 
 
-def _get_default_settings(settings=None) -> Dict[str, Any]:
+def _get_default_settings(settings=None) -> dict[str, Any]:
     """adds the default settings to a dictinary with settings. If settings
     is None all the settings are default. If there are already settings given
     only the non-existing settings are added with their default value.
@@ -305,6 +320,11 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
     The default settings are:
     fill_missing_obs = False
         nan values in time series are filled with nearby time series.
+    fill_missing_obs_with_factor = False
+        if True, and overlapping measurements exist between the current
+        series and a donor station, donor values are scaled by an overlap-
+        based factor before filling missing values. This automatically enables
+        fill_missing_obs.
     interval = 'daily'
         desired time interval for observations. Can be 'daily' or 'hourly'.
         'hourly' is only for precipitation ('RH') data from meteo stations.
@@ -331,6 +351,7 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
 
     default_settings = {
         "fill_missing_obs": False,
+        "fill_missing_obs_with_factor": False,
         "interval": "daily",
         "use_api": True,
         "raise_exceptions": True,
@@ -339,8 +360,15 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
     if settings is None:
         settings = {}
 
-    if "fill_missing_obs" in settings.keys():
-        if "raise_exceptions" in settings.keys():
+    if settings.get("fill_missing_obs_with_factor", False):
+        if not settings.get("fill_missing_obs", False):
+            logger.debug(
+                "set fill_missing_obs=True because fill_missing_obs_with_factor is True"
+            )
+        settings["fill_missing_obs"] = True
+
+    if "fill_missing_obs" in settings:
+        if "raise_exceptions" in settings:
             if settings["fill_missing_obs"] and settings["raise_exceptions"]:
                 logger.debug(
                     "set raise_exceptions=False because fill_missing_obs is True"
@@ -350,7 +378,7 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
             settings["raise_exceptions"] = False
 
     for key, value in default_settings.items():
-        if key not in settings.keys():
+        if key not in settings:
             settings[key] = value
 
     return settings
@@ -359,10 +387,10 @@ def _get_default_settings(settings=None) -> Dict[str, Any]:
 def get_knmi_timeseries_stn(
     stn: int,
     meteo_var: str,
-    settings: Dict[str, Any],
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    settings: dict[str, Any],
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Get a knmi time series and metadata.
 
     .. deprecated:: 0.13.3
@@ -379,9 +407,9 @@ def get_knmi_timeseries_stn(
     settings : dict
         settings for obtaining the right time series, see _get_default_settings
         for more information
-    start : pd.TimeStamp or None, optional
+    start : pd.Timestamp or None, optional
         start date of observations. The default is None.
-    end : pd.TimeStamp or None, optional
+    end : pd.Timestamp or None, optional
         end date of observations. The default is None.
 
     Returns
@@ -403,10 +431,10 @@ def get_knmi_timeseries_stn(
 def get_timeseries_stn(
     stn: int,
     meteo_var: str,
-    settings: Dict[str, Any],
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    settings: dict[str, Any],
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Get a knmi time series and metadata.
 
     Parameters
@@ -419,9 +447,9 @@ def get_timeseries_stn(
     settings : dict
         settings for obtaining the right time series, see _get_default_settings
         for more information
-    start : pd.TimeStamp or None, optional
+    start : pd.Timestamp or None, optional
         start date of observations. The default is None.
-    end : pd.TimeStamp or None, optional
+    end : pd.Timestamp or None, optional
         end date of observations. The default is None.
 
     Returns
@@ -435,6 +463,16 @@ def get_timeseries_stn(
     # get station
     stations = get_stations(meteo_var=meteo_var)
     stn_name = get_station_name(stn=stn, stations=stations)
+
+    if (
+        meteo_var != "RD"
+        and settings["use_api"]
+        and not stations.at[stn, "api_available"]
+    ):
+        raise ValueError(
+            f"station {stn} does not have data available via the api, "
+            "set use_api=False to download data from knmi url"
+        )
 
     # raise error if hourly neerslag station data is requested
     if (meteo_var == "RD") and settings["interval"].startswith("hour"):
@@ -508,8 +546,8 @@ def get_timeseries_stn(
 
 def get_stations(
     meteo_var: str,
-    start: Union[pd.Timestamp, str, None] = None,
-    end: Union[pd.Timestamp, str, None] = None,
+    start: pd.Timestamp | str | None = None,
+    end: pd.Timestamp | str | None = None,
 ) -> pd.DataFrame:
     """get knmi stations from json files according to variable.
 
@@ -536,6 +574,8 @@ def get_stations(
 
     stations = pd.concat([mstations, pstations], axis=0)
     stations = stations.where(~stations.isna(), False)
+    stations["tmin"] = pd.to_datetime(stations["tmin"], errors="coerce")
+    stations["tmax"] = pd.to_datetime(stations["tmax"], errors="coerce")
     if meteo_var in ("makkink", "penman", "hargreaves"):
         meteo_var = "EV24"
 
@@ -544,18 +584,35 @@ def get_stations(
         meteo_mask = stations.loc[:, meteo_var].any(axis=1)
     else:
         meteo_mask = stations.loc[:, meteo_var]
+
     stations = stations.loc[
-        meteo_mask, ["lon", "lat", "name", "x", "y", "altitude", "tmin", "tmax"]
+        meteo_mask,
+        [
+            "lon",
+            "lat",
+            "name",
+            "wsi",
+            "x",
+            "y",
+            "altitude",
+            "tmin",
+            "tmax",
+            "api_available",
+        ],
     ]
 
     # select only stations with measurement
     if start is not None or end is not None:
-        stations = _get_stations_tmin_tmax(stations, start, end)
+        stations = _get_stations_tmin_tmax(stations_df=stations, start=start, end=end)
 
     return stations
 
 
-def _get_stations_tmin_tmax(stations_df, start, end):
+def _get_stations_tmin_tmax(
+    stations_df: pd.DataFrame,
+    start: pd.Timestamp | str | None,
+    end: pd.Timestamp | str | None,
+) -> pd.DataFrame:
     """select stations within period defined by start and end.
 
     Parameters
@@ -581,25 +638,19 @@ def _get_stations_tmin_tmax(stations_df, start, end):
     if end is None:
         tmin_stns = set(stations_df.index)
     else:
-        # keep stations where tmin is unknown (=False)
-        stns_unknown_tmin = set(stations_df.loc[stations_df["tmin"] == False].index)
-        tmin_available = stations_df.loc[stations_df["tmin"] != False, "tmin"]
-        tmin_within_range = pd.to_datetime(tmin_available) < end
-        tmin_stns = set(tmin_available.loc[tmin_within_range].index) | stns_unknown_tmin
+        tmin_within_range = stations_df["tmin"] < end
+        tmin_stns = set(stations_df.loc[tmin_within_range].index)
 
     if start is None:
         tmax_stns = set(stations_df.index)
     else:
-        stns_unknown_tmax = set(stations_df.loc[stations_df["tmax"] == False].index)
-        tmax_available = stations_df.loc[stations_df["tmax"] != False, "tmax"]
-        tmax_available.loc[tmax_available.isnull()] = dt.datetime.now().date()
-        tmax_within_range = pd.to_datetime(tmax_available) > start
-        tmax_stns = set(tmax_available.loc[tmax_within_range].index) | stns_unknown_tmax
+        tmax_within_range = stations_df["tmax"] > start
+        tmax_stns = set(stations_df.loc[tmax_within_range].index)
 
     return stations_df.loc[list(tmin_stns & tmax_stns)]
 
 
-def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> str:
+def get_station_name(stn: int, stations: pd.DataFrame | None = None) -> str:
     """Returns the station name from a KNMI station.
 
     Modifies the station name in such a way that a valid url can be obtained.
@@ -625,7 +676,7 @@ def get_station_name(stn: int, stations: Union[pd.DataFrame, None] = None) -> st
 
     stn_name = stations.at[stn, "name"]
     if isinstance(stn_name, pd.Series):
-        raise ValueError(
+        raise TypeError(
             f'station {stn} is a meteo- and a precipitation station, please indicate which one you want to use using a "meteo_var"'
         )
 
@@ -638,9 +689,9 @@ def fill_missing_measurements(
     meteo_var: str,
     start: pd.Timestamp,
     end: pd.Timestamp,
-    settings: Dict[str, Any],
-    stn_name: Union[str, None] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any], pd.DataFrame]:
+    settings: dict[str, Any],
+    stn_name: str | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """fill missing measurements in knmi data.
 
     Parameters
@@ -649,9 +700,9 @@ def fill_missing_measurements(
         measurement station.
     meteo_var : str
         observation type.
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start date of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end date of observations.
     settings : dict
         settings for obtaining data.
@@ -668,6 +719,8 @@ def fill_missing_measurements(
         metadata from the originally requested station even if this station
         has no data
     """
+    use_overlap_factor = settings.get("fill_missing_obs_with_factor", False)
+
     if settings["interval"] == "hourly":
         raise NotImplementedError("cannot yet fill missing values in hourly data")
 
@@ -732,7 +785,7 @@ def fill_missing_measurements(
     # 4. Change end date
     # NOTE: Assuming there is no data after the last measurement available in de Bilt.
     stn_de_bilt = 550 if meteo_var == "RD" else 260
-    first_meas_de_bilt = pd.Timestamp(stations.loc[stn_de_bilt, "tmin"])
+    first_meas_de_bilt = pd.Timestamp(stations.at[stn_de_bilt, "tmin"])
 
     # only change end if dataframe does not have measurements at the end date
     if end < first_meas_de_bilt:
@@ -851,6 +904,16 @@ def fill_missing_measurements(
         else:
             # dropnans from new data
             ts_df_comp = ts_df_comp.loc[~ts_df_comp[meteo_var].isna(), :]
+            if use_overlap_factor:
+                factor, n_overlap = _get_overlap_factor(ts_df, ts_df_comp, meteo_var)
+                if factor != 1.0:
+                    ts_df_comp = ts_df_comp.copy()
+                    ts_df_comp[meteo_var] = ts_df_comp[meteo_var] * factor
+                    logger.info(
+                        f"Scale station {stn_comp} data with factor {factor:.3f} "
+                        f"based on overlap with station {stn} "
+                        f"using {n_overlap} measurements"
+                    )
             # get index of missing data in original timeseries
             missing_idx = missing.loc[missing].index
             # if any missing are in the new data, update
@@ -878,14 +941,54 @@ def fill_missing_measurements(
     return ts_df, meta
 
 
+def _get_overlap_factor(
+    ts_df: pd.DataFrame, ts_df_comp: pd.DataFrame, meteo_var: str
+) -> tuple[float, int]:
+    """Estimate scaling factor from overlap between two station series.
+
+    The returned factor scales donor-station values so they better align with
+    the current series before filling missing values.
+    """
+    if (meteo_var not in ts_df.columns) or (meteo_var not in ts_df_comp.columns):
+        return 1.0, 0
+
+    overlap = pd.concat(
+        [ts_df.loc[:, [meteo_var]], ts_df_comp.loc[:, [meteo_var]]],
+        axis=1,
+        keys=["base", "donor"],
+    ).dropna()
+    if overlap.empty:
+        return 1.0, 0
+
+    base = overlap[("base", meteo_var)]
+    donor = overlap[("donor", meteo_var)]
+
+    base_valid = base.replace([np.inf, -np.inf], np.nan).dropna()
+    donor_valid = donor.replace([np.inf, -np.inf], np.nan).dropna()
+    common_idx = base_valid.index.intersection(donor_valid.index)
+    if common_idx.empty:
+        return 1.0, 0
+
+    base_sum = float(base_valid.loc[common_idx].sum())
+    donor_sum = float(donor_valid.loc[common_idx].sum())
+    if donor_sum == 0.0 or base_sum == 0.0:
+        return 1.0, 0
+
+    factor = base_sum / donor_sum
+    if not np.isfinite(factor) or (factor <= 0):
+        return 1.0, 0
+
+    return factor, int(common_idx.size)
+
+
 def download_knmi_data(
     stn: int,
     meteo_var: str,
     start: pd.Timestamp,
     end: pd.Timestamp,
-    settings: Dict[str, Any],
-    stn_name: Union[str, None] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any], pd.DataFrame]:
+    settings: dict[str, Any],
+    stn_name: str | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any], pd.DataFrame]:
     """download knmi data of a measurements station for certain observation
     type.
 
@@ -895,9 +998,9 @@ def download_knmi_data(
         measurement station.
     meteo_var : str
         observation type.
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start date of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end date of observations.
     settings : dict
         settings for obtaining data
@@ -958,12 +1061,12 @@ def download_knmi_data(
                         add_hour=True,
                     )
 
-        except (RuntimeError, requests.ConnectionError) as e:
+        except (RuntimeError, requests.ConnectionError):
             logger.warning(
                 "KNMI API failed, try setting the 'use_api' argument to 'False'"
             )
             if settings["raise_exceptions"]:
-                raise e
+                raise
             logger.info("Try non api method")
             settings = settings.copy()
             settings["use_api"] = False
@@ -993,7 +1096,7 @@ def download_knmi_data(
     except (ValueError, KeyError, pd.errors.EmptyDataError) as e:
         logger.error(f"{e} {msg}")
         if settings["raise_exceptions"]:
-            raise e
+            raise
 
     stations = get_stations(meteo_var=meteo_var).loc[[stn], :]
 
@@ -1002,9 +1105,9 @@ def download_knmi_data(
 
 def get_knmi_daily_rainfall_api(
     stn: int,
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily rainfall.
 
     .. deprecated:: 0.13.3
@@ -1015,9 +1118,9 @@ def get_knmi_daily_rainfall_api(
     ----------
     stn : int
         station number.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Raises
@@ -1041,21 +1144,21 @@ def get_knmi_daily_rainfall_api(
     return get_daily_rainfall_api(stn, start, end)
 
 
-@lru_cache()
+@lru_cache
 def get_daily_rainfall_api(
     stn: int,
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily rainfall.
 
     Parameters
     ----------
     stn : int
         station number.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Raises
@@ -1117,7 +1220,7 @@ def request_url(url: str, fname=None) -> StringIO:
 def get_knmi_daily_rainfall_url(
     stn: int,
     stn_name: str,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily rainfall.
 
     .. deprecated:: 0.13.3
@@ -1152,11 +1255,11 @@ def get_knmi_daily_rainfall_url(
     get_daily_rainfall_url(stn, stn_name)
 
 
-@lru_cache()
+@lru_cache
 def get_daily_rainfall_url(
     stn: int,
     stn_name: str,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily rainfall.
 
     Parameters
@@ -1189,14 +1292,15 @@ def get_daily_rainfall_url(
 
 
 def _transform_variables(
-    df: pd.DataFrame, variables: Dict[str, Any]
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    df: pd.DataFrame, variables: dict[str, Any]
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Transforms the timeseries to default units and settings.
 
-    Does 3 things:
+    Does 4 things:
         1. all values equal to -1 are converted to zero
         2. the units are changed from 0.1 mm to 1 mm.
         3. the units are changed from mm to m.
+        4. the timezone is converted from UTC to UTC+1
 
     Parameters
     ----------
@@ -1207,7 +1311,7 @@ def _transform_variables(
 
     Raises
     ------
-    NameError
+    KeyError
         if there are columns in the DataFrame and no matching key in the
         variables dictionary.
 
@@ -1218,17 +1322,19 @@ def _transform_variables(
     variables : dictionary
         description of variables in time series.
     """
+    variables = variables.copy()
+    df = df.copy()
     add_m_unit = False
     for key, value in variables.items():
         # test if key existst in data
         if key not in df.columns:
-            if key == "YYYYMMDD" or key == "HH":
+            if key in ["YYYYMMDD", "HH"]:
                 pass
             elif key == "T10N":
                 variables.pop(key)
                 key = "T10"
             else:
-                raise NameError(key + " does not exist in data")
+                raise KeyError(key + " does not exist in data")
 
         if "(-1 voor <0.05 mm)" in value:
             # remove -1 for precipitation smaller than <0.05 mm
@@ -1276,7 +1382,7 @@ def _transform_variables(
     return df, variables
 
 
-def request_api(url: str, params: Dict[str, str], fname=None) -> StringIO:
+def request_api(url: str, params: dict[str, str], fname=None) -> StringIO:
     """Download KNMI data from the API
 
     Parameters
@@ -1309,8 +1415,8 @@ def request_api(url: str, params: Dict[str, str], fname=None) -> StringIO:
 
 
 def get_knmi_daily_meteo_api(
-    stn, start=None, end=None, meteo_var: Union[str, None] = None
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    stn, start=None, end=None, meteo_var: str | None = None
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily meteo data.
 
     Parameters
@@ -1319,9 +1425,9 @@ def get_knmi_daily_meteo_api(
         station number.
     meteo_var : str
         e.g. 'EV24'.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Returns
@@ -1343,10 +1449,10 @@ def get_knmi_daily_meteo_api(
     return get_daily_meteo_api(stn, start, end, meteo_var)
 
 
-@lru_cache()
+@lru_cache
 def get_daily_meteo_api(
-    stn, start=None, end=None, meteo_var: Union[str, None] = None
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    stn, start=None, end=None, meteo_var: str | None = None
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily meteo data.
 
     Parameters
@@ -1355,9 +1461,9 @@ def get_daily_meteo_api(
         station number.
     meteo_var : str
         e.g. 'EV24'.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
 
     Returns
@@ -1392,7 +1498,7 @@ def get_daily_meteo_api(
     return parse_data(strio)
 
 
-def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+def get_knmi_daily_meteo_url(stn: int) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily meteo data.
 
     .. deprecated:: 0.13.3
@@ -1420,8 +1526,8 @@ def get_knmi_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     return get_daily_meteo_url(stn)
 
 
-@lru_cache()
-def get_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+@lru_cache
+def get_daily_meteo_url(stn: int) -> tuple[pd.DataFrame, dict[str, Any]]:
     """download and read knmi daily meteo data.
 
     Parameters
@@ -1446,8 +1552,8 @@ def get_daily_meteo_url(stn: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
 
 
 def parse_data(
-    path: Union[str, Path, StringIO],
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    path: str | Path | StringIO,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """read knmi daily meteo data from a file
 
     Parameters
@@ -1467,9 +1573,7 @@ def parse_data(
     data_id = "STN,"
     meta = {}
     df = None
-    if isinstance(path, os.PathLike):
-        f = open(path, "r")
-    elif isinstance(path, str):
+    if isinstance(path, (os.PathLike, str)):
         f = open(path, "r")
     elif isinstance(path, StringIO):
         f = path
@@ -1517,7 +1621,7 @@ def parse_data(
 
                 df = df.set_index(datetime)
             except pd.errors.EmptyDataError as e:
-                logger.warning(f"{str(e)}. Returning empty DataFrame.")
+                logger.warning(f"{e!s}. Returning empty DataFrame.")
                 df = pd.DataFrame()
             f.close()
 
@@ -1533,13 +1637,13 @@ def parse_data(
 
 def interpret_knmi_file(
     df: pd.DataFrame,
-    meta: Dict[str, Any],
+    meta: dict[str, Any],
     meteo_var: str,
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
     add_day: bool = False,
     add_hour: bool = True,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """interpret data from knmi by selecting meteo_var data and meta
     and transforming the variables
 
@@ -1551,9 +1655,9 @@ def interpret_knmi_file(
         dictionary with meteo_var as key
     meteo_var : str
         e.g. 'EV24'.
-    start : pd.TimeStamp or None
+    start : pd.Timestamp or None
         start time of observations.
-    end : pd.TimeStamp or None
+    end : pd.Timestamp or None
         end time of observations.
     add_day : boolean, optional
         add 1 day so that the timestamp is at the end of the period the data describes,
@@ -1582,7 +1686,6 @@ def interpret_knmi_file(
                 f"Cannot handle multiple stations {unique_stn} in single file"
             )
         stn = unique_stn[0]
-
         if add_day or add_hour:
             if add_day and add_hour:
                 timedelta = pd.Timedelta(1, "d") + pd.Timedelta(1, "h")
@@ -1598,29 +1701,34 @@ def interpret_knmi_file(
             df = df.loc[~df.index.duplicated(keep="first")]
             logger.info("duplicate indices removed from RD measurements")
 
+        if df.empty:
+            return pd.DataFrame(), variables
+
+        mdf, variables = _transform_variables(df, variables)
+        variables["station"] = stn
         istart = (
-            df.index.get_indexer([start], method="backfill")[0]
+            mdf.index.get_indexer([start], method="backfill")[0]
             if start is not None
             else 0
         )
         iend = (
-            df.index.get_indexer([end], method="backfill")[0] if end is not None else -1
+            mdf.index.get_indexer([end], method="backfill")[0]
+            if end is not None
+            else -1
         )
-        iend = len(df) if iend == -1 else iend + 1
-        icol = df.columns.get_indexer([meteo_var])
-        meteo_df = df.iloc[istart:iend, icol].dropna()
+        iend = len(mdf) if iend == -1 else iend + 1
+        icol = mdf.columns.get_indexer([meteo_var])
+        meteo_df = mdf.iloc[istart:iend, icol].dropna()
 
         if not meteo_df.empty:
-            mdf, var = _transform_variables(meteo_df, variables)
-            variables["station"] = stn
-            return mdf, var
+            return meteo_df, variables
 
     return pd.DataFrame(), variables
 
 
 def get_knmi_hourly_meteo_api(
-    stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: Union[str, None] = None
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: str | None = None
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Retrieve hourly meteorological data from the KNMI API.
 
     .. deprecated:: 0.13.3
@@ -1659,10 +1767,10 @@ def get_knmi_hourly_meteo_api(
     return get_hourly_meteo_api(stn, start, end, meteo_var)
 
 
-@lru_cache()
+@lru_cache
 def get_hourly_meteo_api(
-    stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: Union[str, None] = None
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    stn: int, start: pd.Timestamp, end: pd.Timestamp, meteo_var: str | None = None
+) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Retrieve hourly meteorological data from the KNMI API.
 
     Parameters
@@ -1703,7 +1811,7 @@ def get_hourly_meteo_api(
     if end is None:
         raise ValueError("An end date is required when using hourly interval")
 
-    if (end - start).days > 365 * 10:
+    if (end - start).days > 3653:
         raise ValueError("time span for hourly data cannot be greater than 10 years")
     if (end - start).days < 1:
         raise ValueError("time span should be more than 1 day")
@@ -1722,11 +1830,11 @@ def get_nearest_station_df(
     locations: pd.DataFrame,
     xcol: str = "x",
     ycol: str = "y",
-    stations: Union[pd.DataFrame, None] = None,
+    stations: pd.DataFrame | None = None,
     meteo_var: str = "RH",
-    start: Union[pd.Timestamp, str, None] = None,
-    end: Union[pd.Timestamp, str, None] = None,
-    ignore: Union[List[str], None] = None,
+    start: pd.Timestamp | str | None = None,
+    end: pd.Timestamp | str | None = None,
+    ignore: list[str] | None = None,
 ) -> list[int]:
     """Find the KNMI stations that measure 'meteo_var' closest to the
     coordinates in 'locations'.
@@ -1783,11 +1891,11 @@ def get_nearest_station_df(
 
 
 def get_nearest_station_xy(
-    xy: List[List[float]],
-    stations: Union[pd.DataFrame, None] = None,
+    xy: list[list[float]],
+    stations: pd.DataFrame | None = None,
     meteo_var: str = "RH",
-    ignore: Union[List[str], None] = None,
-) -> List[int]:
+    ignore: list[str] | None = None,
+) -> list[int]:
     """find the KNMI stations that measure 'meteo_var' closest to the given
     x and y coordinates.
 
@@ -1828,14 +1936,14 @@ def get_nearest_station_xy(
 
 
 def get_n_nearest_stations_xy(
-    xy: List[List[float]],
+    xy: list[list[float]],
     meteo_var: str,
-    start: Union[pd.Timestamp, str, None] = None,
-    end: Union[pd.Timestamp, str, None] = None,
+    start: pd.Timestamp | str | None = None,
+    end: pd.Timestamp | str | None = None,
     n: int = 1,
-    stations: Union[pd.DataFrame, None] = None,
-    ignore: Union[List[str], None] = None,
-) -> List[int]:
+    stations: pd.DataFrame | None = None,
+    ignore: list[str] | None = None,
+) -> list[int]:
     """Find the N nearest KNMI stations that measure variable 'meteo_var' to
     the x, y coordinates.
 
@@ -1891,9 +1999,9 @@ def _add_missing_indices(
         column to see which station is used to fill the value
     stn : int or str
         measurement station.
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start time of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end time of observations.
 
     Returns
@@ -1937,15 +2045,16 @@ def _add_missing_indices(
 
 
 def get_knmi_obslist(
-    locations: Union[pd.DataFrame, None] = None,
-    stns: Union[List[int], None] = None,
-    xy: Union[List[List[float]], None] = None,
-    meteo_vars: Tuple[str] = ("RH",),
-    starts: Union[pd.Timestamp, List[pd.Timestamp], None] = None,
-    ends: Union[pd.Timestamp, List[pd.Timestamp], None] = None,
-    ObsClasses: List[Any] = None,
+    locations: pd.DataFrame | None = None,
+    stns: list[int] | None = None,
+    xy: list[list[float]] | None = None,
+    meteo_vars: tuple[str] = ("RH",),
+    starts: pd.Timestamp | list[pd.Timestamp] | None = None,
+    ends: pd.Timestamp | list[pd.Timestamp] | None = None,
+    ObsClasses: list[Any] | None = None,
+    progress_callback=None,
     **kwargs,
-) -> List[Any]:
+) -> list[Any]:
     """Get a list of observations of knmi stations. Either specify a list of
     knmi stations (stns) or a dataframe with x, y coordinates (locations).
 
@@ -1978,6 +2087,10 @@ def get_knmi_obslist(
     ObsClasses : list of type or None
         class of the observations, can be PrecipitationObs or
         EvaporationObs. The default is None.
+    progress_callback : callable or None, optional
+        callback function that is called with (i, total) for each station
+        processed, where i is the zero-based index and total is the total
+        number of stations. The default is None.
     **kwargs:
         fill_missing_obs : bool, optional
             if True nan values in time series are filled with nearby time series.
@@ -1985,6 +2098,11 @@ def get_knmi_obslist(
             end the data from nearby stations is used. In this case the metadata of the
             Observation is the metadata from the nearest station that has any
             measurement in the given period.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         interval : str, optional
             desired time interval for observations. Options are 'daily' and
             'hourly'. The default is 'daily'.
@@ -2061,7 +2179,9 @@ def get_knmi_obslist(
         else:
             _stns = stns
 
-        for stn in _stns:
+        for i, stn in enumerate(_stns):
+            if progress_callback is not None:
+                progress_callback(i, len(_stns))
             o = ObsClass.from_knmi(
                 meteo_var=meteo_var,
                 stn=stn,
@@ -2078,9 +2198,9 @@ def get_knmi_obslist(
 def get_evaporation(
     meteo_var: str,
     stn: int = 260,
-    start: Union[pd.Timestamp, None] = None,
-    end: Union[pd.Timestamp, None] = None,
-    settings: Union[Dict[str, Any], None] = None,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+    settings: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Collect different types of (reference) evaporation
     from KNMI weather stations
@@ -2091,9 +2211,9 @@ def get_evaporation(
         Choice between 'penman', 'makkink' or 'hargraves'.
     stn : str
         station number, defaults to 260 De Bilt
-    start : pd.TimeStamp
+    start : pd.Timestamp
         start time of observations.
-    end : pd.TimeStamp
+    end : pd.Timestamp
         end time of observations.
     settings : dict or None, optional
         settings for the time series
@@ -2121,7 +2241,7 @@ def get_evaporation(
             d["TN"],
             d["TX"],
             d["TG"].index,
-            meta["lat"] if "lat" in meta else 52.1,
+            meta.get("lat", 52.1),
         ).to_frame(name=meteo_var)
     elif meteo_var == "makkink":
         d = {}
@@ -2153,8 +2273,8 @@ def get_evaporation(
             d["FG"],
             d["UG"],
             d["TG"].index,
-            meta["lat"] if "lat" in meta else 52.1,
-            meta["altitude"] if "altitude" in meta else 0.0,
+            meta.get("lat", 52.1),
+            meta.get("altitude", 0.0),
         ).to_frame(name=meteo_var)
     else:
         raise ValueError(
@@ -2206,7 +2326,7 @@ def penman(
     lat: float = 52.1,
     G: float = 0.0,
     wh: float = 10.0,
-    tdew: Union[pd.Series, None] = None,
+    tdew: pd.Series | None = None,
 ) -> pd.Series:
     """Estimate of Penman reference evaporation
     according to Allen et al 1990.
@@ -2291,7 +2411,7 @@ def hargreaves(
     tmax: pd.Series,
     dates: pd.Series,
     lat: float = 52.1,
-    x: Union[List[float], None] = None,
+    x: list[float] | None = None,
 ) -> pd.Series:
     """Estimate of Hargraves potential evaporation
     according to Allen et al. 1990.
@@ -2334,3 +2454,249 @@ def hargreaves(
     if x:
         et = x[0] + x[1] * et
     return et
+
+
+def get_stations_scenarios() -> pd.DataFrame:
+    """Get KNMI station information for climate scenarios."""
+    response = requests.get(URL_STATIONS)
+    json_data = response.json()
+    df = pd.DataFrame(json_data["stations"])
+    df.index = df.loc[:, "key"].str.split("_").str[0].rename("stn")
+    return df
+
+
+def get_knmi_scenarios_data(
+    stn: int | str,
+    years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
+    scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+) -> dict[str, pd.DataFrame]:
+    """Fetch and process KNMI climate scenario data for a station.
+
+    The station argument is accepted as an integer or string for convenience.
+    Internally it is converted to a string when interacting with the KNMI API.
+
+    Retrieves climate scenario data from KNMI and returns a dictionary of
+    processed DataFrames with temperature, precipitation, and evaporation data.
+
+    Parameters
+    ----------
+    stn : int or str
+        Station number (e.g., 550 or "550").
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+        This includes all scenarios including the original measurements.
+    evap : str, optional
+        Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+        or 'hargreaves'. The default is 'EV24'.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping scenario names to pandas DataFrames with processed
+        climate data. Each DataFrame has a datetime index and columns:
+        TG (temperature), RH (precipitation), Q (radiation), TX, TN, UG, FG,
+        and EV24 (evaporation).
+
+    Raises
+    ------
+    RuntimeError
+        If the API request fails or data cannot be retrieved.
+    """
+    # allow int input for station
+    stn = str(stn)
+
+    # Get station KNMI ID
+    stations = get_stations_scenarios()
+    if stn not in stations.index:
+        raise KeyError(
+            f"Station {stn} not found in KNMI climate scenario station list."
+            "Check knmi.get_stations_scenarios() to see what stations are available."
+        )
+    station = stations.at[stn, "key"]
+
+    # Build request parameters
+    params = (
+        [("series_variables[scenarios][]", s) for s in scenarios]
+        + [("series_variables[years][]", y) for y in years]
+        + [
+            ("series_variables[station]", station),
+            ("series_variables[date_range][]", "1991-01-01"),
+            ("series_variables[date_range][]", "2020-12-31"),
+            ("series_variables[climate_variables]", "temp"),
+        ]
+    )
+
+    # Download data from KNMI API
+    response = requests.get(URL_KNMI_TRANSFORMED_SERIES, params=params)
+    response.raise_for_status()
+    zipped = ZipFile(BytesIO(response.content))
+
+    # Read and process raw CSV files
+    column_renamed = {
+        "temp": "TG",
+        "precip": "RD",
+        "radiation": "Q",
+        "max-temp": "TX",
+        "min-temp": "TN",
+        "rel-humidity": "UG",
+        "windspeed": "FG",
+    }
+    dfs = {}
+    for name in zipped.namelist():
+        if name.endswith(".csv"):
+            base = os.path.splitext(name)[0]
+            base_ext = base.split("_")[-1]
+            df = pd.read_csv(
+                zipped.open(name),
+                sep=",",
+                skiprows=3 if base_ext == "obs" else 4,
+                usecols=list(range(8)),
+                index_col=0,
+                parse_dates=True,
+                date_format="%Y%m%d",
+            )
+            df.columns = [column_renamed[x.strip()] for x in df.columns]
+            df.index.name = "date"
+
+            if -99.99 in df.values:
+                logger.info(
+                    f"Station {stn} scenario {base_ext} contains -99.99 values, replacing with NaN."
+                )
+                df = df.replace(-99.99, np.nan)
+
+            # Calculate evaporation based on selected method
+            if evap in ("EV24", "makkink"):
+                K = df["Q"] * 8.64  # Convert from W/m² to J/cm²/day: 60*60*24/10000
+                df["EV24"] = makkink(tmean=df["TG"], K=K)
+            elif evap == "penman":
+                df["EV24"] = penman(
+                    tmean=df["TG"],
+                    tmin=df["TN"],
+                    tmax=df["TX"],
+                    K=df["Q"] * 8.64,  # Convert from W/m² to J/cm²/day
+                    wind=df["FG"],
+                    rh=df["UG"],
+                    dates=df.index,
+                )
+            elif evap == "hargreaves":
+                df["EV24"] = hargreaves(
+                    tmean=df["TG"],
+                    tmin=df["TN"],
+                    tmax=df["TX"],
+                    dates=df.index,
+                    lat=stations.at[stn, "lat"],
+                )
+            else:
+                raise ValueError(
+                    f"Unknown evaporation method: {evap}. "
+                    "Choose from 'EV24', 'makkink', 'penman', or 'hargreaves'."
+                )
+            # make sure RD unit is m/d, same as normal knmi data
+            df["RD"] = df["RD"].multiply(1e-3)
+            dfs[base] = df
+        else:
+            logger.warning(f"Unexpected file in zip: {name}")
+
+    return dfs
+
+
+def get_knmi_scenarios_obs_list(
+    stn: int | str,
+    years: Iterable[KNMI_CLIMATE_YEARS] = ("2033", "2050", "2100", "2150"),
+    scenarios: Iterable[KNMI_CLIMATE_SCENARIOS] = ("Ld", "Ln", "Md", "Mn", "Hd", "Hn"),
+    evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+    meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+    | None = None,
+    ObsClass: dict[str, Any] | None = None,
+) -> list[Any]:
+    """Convert climate scenario dataframes into observation objects.
+
+    Parameters
+    ----------
+    stn : int or str
+        Station number (e.g., 550 or "550").
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+        This includes all scenarios including the original measurements.
+    evap : Literal["EV24", "makkink", "penman", "hargreaves"], optional
+        Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+        or 'hargreaves'. The default is 'EV24'.
+    meteo_vars : iterable of str or None, optional
+            Meteorological variables to include in the ObsCollection. Possible
+            variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+            If None (default), all available variables are included.
+    ObsClass : dict[str, PrecipitationObs | EvaporationObs | MeteoObs]
+        Dictionary mapping variable names to observation classes. The function will
+        use these classes to instantiate the observations.
+
+    Returns
+    -------
+    list
+        List of instantiated observation objects. Each object has ``station``
+        and ``meteo_var`` attributes set in addition to the usual metadata.
+    """
+    if ObsClass is None:
+        raise ValueError(
+            "ObsClass must be provided to map variables to observation classes."
+        )
+
+    # Get measurements data
+    dfs = get_knmi_scenarios_data(
+        stn=stn,
+        years=years,
+        scenarios=scenarios,
+        evap=evap,
+    )
+
+    units = {
+        "TG": "°C",
+        "RD": "m/day",
+        "Q": "W/m²",
+        "TX": "°C",
+        "TN": "°C",
+        "UG": "%",
+        "FG": "m/s",
+        "EV24": "m/day",
+    }
+    meteo_vars = list(units) if meteo_vars is None else meteo_vars
+    stations = get_stations("RD")
+    obs_list = []
+    for key, df in dfs.items():
+        for col in df.columns:
+            # apply optional filter
+            if col not in meteo_vars:
+                logger.debug(
+                    f"Skipping variable {col} as it is not in"
+                    f"the provided meteo_vars {meteo_vars} list."
+                )
+                continue
+
+            meas = pd.DataFrame(index=df.index, data={col: df[col]})
+            stn_num = int(key.split("_")[0])
+            variable = "".join(col.split())
+            scenario = key.split("_")[
+                -1
+            ]  # includes year and scenario name, e.g. "2033_Ld"
+            location = key.split("_")[1].upper()
+
+            obs_cls = ObsClass[variable]
+            o = obs_cls(
+                meas,
+                name=f"{variable}_{stn_num}_{location}_{scenario}",
+                unit=units.get(variable, ""),
+                source=f"KNMI-Climate-Scenario-{scenario}",
+                x=stations.loc[stn_num, "x"],
+                y=stations.loc[stn_num, "y"],
+                location=location,
+                station=stn_num,
+                meteo_var=variable,
+                meta={"scenario": scenario},
+            )
+            obs_list.append(o)
+
+    return obs_list

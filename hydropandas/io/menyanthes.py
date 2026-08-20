@@ -113,7 +113,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
     mat = loadmat(path, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
 
     obs_list = []
-    if load_oseries and ("H" in mat.keys()):
+    if load_oseries and ("H" in mat):
         d_h = read_oseries(mat)
 
         locations = d_h.keys()
@@ -125,8 +125,8 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
             metadata["unit"] = unit
 
             df = DataFrame(metadata.pop("values"), columns=["values"])
-            for key in _rename_dic.keys():
-                if key in metadata.keys():
+            for key in _rename_dic:
+                if key in metadata:
                     metadata[_rename_dic[key]] = metadata.pop(key)
 
             meta_o = {k: metadata[k] for k in _keys_o if k in metadata}
@@ -134,7 +134,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
             o = ObsClass(df, meta=metadata, **meta_o, filename=path)
             obs_list.append(o)
 
-    if load_stresses and ("IN" in mat.keys()):
+    if load_stresses and ("IN" in mat):
         d_in = read_stresses(mat)
         stresses = d_in.keys()
         for stress in stresses:
@@ -145,8 +145,8 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
             metadata["unit"] = unit
             s = metadata.pop("values")
             df = DataFrame(s, columns=["values"])
-            for key in _rename_dic.keys():
-                if key in metadata.keys():
+            for key in _rename_dic:
+                if key in metadata:
                     metadata[_rename_dic[key]] = metadata.pop(key)
             o = ObsClass(
                 df,

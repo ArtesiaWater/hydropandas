@@ -28,6 +28,18 @@ from ..util import EPSG_28992
 logger = logging.getLogger(__name__)
 
 
+class BroDataParseError(Exception):
+    """Exception raised when Bro data cannot be parsed.
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
 def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
     """get a list of observation from a groundwater monitoring network using the
     hydropandas engine.
@@ -385,7 +397,7 @@ def measurements_from_gld(
 
     glds = tree.findall(".//ns11:GLD_O", ns)
     if len(glds) != 1:
-        raise (Exception("Only one gld supported"))
+        raise (BroDataParseError("Only one gld supported"))
     gld = glds[0]
 
     meta = {"source": "BRO"}
@@ -472,7 +484,7 @@ def get_full_metadata_from_gmw_hpd(bro_id, tube_nr):
 
     gmws = tree.findall(f".//{ns}GMW_PO")
     if len(gmws) != 1:
-        raise (Exception("Only one gmw supported"))
+        raise (BroDataParseError("Only one gmw supported"))
     gmw = gmws[0]
     meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO"}
     for child in gmw:
@@ -566,7 +578,7 @@ def get_full_metadata_from_gmw(bro_id, tube_nr, engine="hydropandas"):
     return meta
 
 
-@lru_cache()
+@lru_cache
 def _get_gmw_from_bro_id(bro_id, retries=0):
     """get a gmw object from a bro_id
 
@@ -612,10 +624,10 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
             )
             return _get_gmw_from_bro_id(bro_id, retries=retries + 1)
         elif valid == "false":
-            raise Exception(
+            raise BroDataParseError(
                 f"got invalid response for {bro_id} after trying {retries} times"
             )
-        raise (Exception("Only one gmw supported"))
+        raise (BroDataParseError("Only one gmw supported"))
     gmw = gmws[0]
 
     return gmw
@@ -895,14 +907,14 @@ def get_obs_list_from_extent(
             raise ValueError(f"invalid engine selected {engine=}")
 
         for index in gdf.index:
-            kwargs = dict(
-                name=f"{index[0]}_{index[1]}",
-                x=gdf.geometry[index].x,
-                y=gdf.geometry[index].y,
-                location=index[0],
-                tube_nr=index[1],
-                metadata_available=True,
-            )
+            kwargs = {
+                "name": f"{index[0]}_{index[1]}",
+                "x": gdf.geometry[index].x,
+                "y": gdf.geometry[index].y,
+                "location": index[0],
+                "tube_nr": index[1],
+                "metadata_available": True,
+            }
             if engine == "brodata_gm":
                 kwargs["screen_top"] = gdf.at[index, "screen_top_position"]
                 kwargs["screen_bottom"] = gdf.at[index, "screen_bottom_position"]

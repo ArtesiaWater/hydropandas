@@ -31,12 +31,11 @@ def get_tube_nrs_from_xml(tree, ns):
 
     """
     # get numbers of individual filters from XML file
-    all_tube_nrs = []
     tubes = tree.findall(
         "isgmw:sourceDocument//isgmw:GMW_Construction//isgmw:monitoringTube", ns
     )
-    for tube in tubes:
-        all_tube_nrs.append(int(tube.find("isgmw:tubeNumber", ns).text))
+
+    all_tube_nrs = [int(tube.find("isgmw:tubeNumber", ns).text) for tube in tubes]
 
     return all_tube_nrs
 

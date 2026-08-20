@@ -1,6 +1,6 @@
 .. hydropandas_API:
 
-hydropandas
+HydroPandas
 ===========
 
 Subpackages

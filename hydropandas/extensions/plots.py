@@ -87,10 +87,15 @@ class CollectionPlots:
 
             p = None
             for i, o in enumerate(oc.values):
+                if o.empty:
+                    o.meta["iplot_fname"] = None
+                    continue
+
                 if i == 10:
                     raise NotImplementedError(
                         "cannot add more than 10 lines to a single plot"
                     )
+
                 try:
                     p = o.plots.interactive_plot(
                         savedir=savedir,
@@ -203,7 +208,7 @@ class CollectionPlots:
         from folium.features import DivIcon
 
         # check for empty observations
-        if all([o.empty for o in self._obj.obs.values]):
+        if all(o.empty for o in self._obj.obs.values):
             logger.warning("all observations in the collection are empty")
             for oname in self._obj.index:
                 self._obj.set_metadata_value(
@@ -242,7 +247,7 @@ class CollectionPlots:
             legend_name = self._obj.name
 
         # add the point observations with plots to the map
-        group_name = '<span style=\\"color: {};\\">{}</span>'.format(color, legend_name)
+        group_name = f'<span style=\\"color: {color};\\">{legend_name}</span>'
         group = folium.FeatureGroup(name=group_name)
 
         if per_location:
@@ -281,7 +286,7 @@ class CollectionPlots:
                 if map_label != "":
                     if map_label in o._get_meta_attr():
                         map_label_val = getattr(o, map_label)
-                    elif map_label in o.meta.keys():
+                    elif map_label in o.meta:
                         map_label_val = o.meta[map_label]
                     else:
                         map_label_val = map_label
@@ -293,8 +298,7 @@ class CollectionPlots:
                         icon=DivIcon(
                             icon_size=(150, 36),
                             icon_anchor=(0, 0),
-                            html='<div style="font-size: %ipt">%s</div>'
-                            % (map_label_size, map_label_val),
+                            html=f'<div style="font-size: {map_label_size}pt">{map_label_val}</div>',
                         ),
                     ).add_to(group)
             else:
@@ -642,7 +646,7 @@ class CollectionPlots:
         self,
         plot_column,
         by=None,
-        savefig=True,
+        savefig=False,
         outputdir=".",
         naming_method=None,
         units_for_well_screen_depth="mNAP",
@@ -727,7 +731,7 @@ class CollectionPlots:
             if savefig:
                 if isinstance(by, list):
                     by_name = "-".join(by)
-                    groupname = "-".join(groupname)
+                    groupname = "-".join(str(v) for v in groupname)
                 else:
                     by_name = by
                 if naming_method is None:
@@ -847,9 +851,7 @@ class ObsPlots:
         plot_df = self._obj[tmin:tmax].copy()
         plot_df["date"] = plot_df.index.strftime(hoover_date_format)
         if plot_df.empty or plot_df[cols].isna().all().all():
-            raise ValueError(
-                "{} has no data between {} and {}".format(self._obj.name, tmin, tmax)
-            )
+            raise ValueError(f"{self._obj.name} has no data between {tmin} and {tmax}")
         elif len(plot_df) == 1:
             markers = ["circle"] * len(cols)
             # set xlim because there is only one measurement
@@ -886,21 +888,16 @@ class ObsPlots:
         for i, column in enumerate(cols):
             # legend name
             if add_screen_to_legend:
-                lname = "{} {} (NAP {:.2f} - {:.2f})".format(
-                    plot_legend_names[i],
-                    self._obj.name,
-                    self._obj.screen_bottom,
-                    self._obj.screen_top,
-                )
+                lname = f"{plot_legend_names[i]} {self._obj.name} (NAP {self._obj.screen_bottom:.2f} - {self._obj.screen_top:.2f})"
             else:
-                lname = "{} {}".format(plot_legend_names[i], self._obj.name)
+                lname = f"{plot_legend_names[i]} {self._obj.name}"
 
             # resample data
             if plot_freq[i] is None:
-                source = ColumnDataSource(plot_df[[column, "date"]])
+                source = ColumnDataSource(plot_df[[column]])
             else:
                 source = ColumnDataSource(
-                    plot_df[[column, "date"]].resample(plot_freq[i]).first()
+                    plot_df[[column]].resample(plot_freq[i]).first()
                 )
 
             # plot data
@@ -930,13 +927,13 @@ class ObsPlots:
                 )
             else:
                 raise NotImplementedError(
-                    "marker '{}' invalid. Only line and"
-                    "circle are currently available".format(markers[i])
+                    f"marker '{markers[i]}' invalid. Only line and"
+                    "circle are currently available"
                 )
 
             # add columns to hoover tooltips
             tooltips_p = tooltips.copy()
-            tooltips_p.append((hoover_names[i], "@{}".format(column)))
+            tooltips_p.append((hoover_names[i], f"@{column}"))
             hover = HoverTool(renderers=[plots[i]], tooltips=tooltips_p, mode="vline")
             p.add_tools(hover)
 

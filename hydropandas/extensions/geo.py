@@ -161,8 +161,7 @@ class GeoAccessor:
         def distance_nearest_point(point_gdf1, pts=pts_gdf2):
             # find the nearest point and return the corresponding Place value
             nearest_point_gdf2 = nearest_points(point_gdf1, pts_gdf2)[1]
-            distance = point_gdf1.distance(nearest_point_gdf2)
-            return distance
+            return point_gdf1.distance(nearest_point_gdf2)
 
         gdf1["nearest point"] = gdf1.apply(
             lambda row: nearest_point(row.geometry), axis=1
@@ -216,9 +215,12 @@ class GeoAccessor:
                 if multiple_geometries == "error":
                     raise ValueError(f"multiple {geometry_type}s are nearest")
                 elif multiple_geometries == "keep_all":
-                    ids = []
-                    for i_min in np.where(np.array(distances) == np.min(distances))[0]:
-                        ids.append(gdf.index[i_min])
+                    ids = [
+                        gdf.index[i_min]
+                        for i_min in np.where(np.array(distances) == np.min(distances))[
+                            0
+                        ]
+                    ]
                     gdf_obs.loc[i, f"nearest {geometry_type}"] = ", ".join(ids)
                     gdf_obs.loc[i, f"distance nearest {geometry_type}"] = np.min(
                         distances

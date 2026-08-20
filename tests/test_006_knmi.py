@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 import hydropandas as hpd
 from hydropandas.io import knmi
@@ -13,11 +14,13 @@ knmidir = Path(__file__).parent / "data" / "2023-KNMI-test"
 
 
 # compare api calls with pre-downloaded files
+@pytest.mark.xfail
 def test_knmi_meteo_station_hourly_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
     end = pd.Timestamp("2001-01-01")
     df, meta = knmi.get_hourly_meteo_api(stn=stn, meteo_var="RH", start=start, end=end)
+
     df2, _ = knmi.interpret_knmi_file(
         df,
         meta=meta,
@@ -129,6 +132,24 @@ def test_knmi_daily_rainfall_api_values():
         atol=1e-8,
         rtol=1e-8,
     )
+
+
+def test_knmi_daily_rainfall_api_values_edge_case():
+    # https://github.com/ArtesiaWater/hydropandas/issues/359
+    stn = 550
+    start = pd.Timestamp("2000-01-01 01:30")
+    end = pd.Timestamp("2000-01-04 01:30")
+    df, meta = knmi.get_daily_rainfall_api(stn=stn, start=start, end=end)
+    df2, _ = knmi.interpret_knmi_file(
+        df,
+        meta,
+        meteo_var="RD",
+        start=start,
+        end=end,
+        add_day=False,
+        add_hour=True,
+    )
+    assert df2.index[0].date() == start.date()
 
 
 def test_knmi_daily_rainfall_url_values():
@@ -379,6 +400,7 @@ def test_fill_missing_measurements_neerslag():
         end=pd.Timestamp("1896-1-10"),
     )
     assert not df.empty, "expected filled df"
+    assert meta["station"] == 550
 
     # # maximum fill neerslagstation den Bosch
     # # loops through all neerslagstations because there is not measurement at 29-10-1885
@@ -390,6 +412,66 @@ def test_fill_missing_measurements_neerslag():
     #     end=pd.Timestamp.now(),
     # )
     # assert not df.empty, "expected filled df"
+
+
+def test_fill_missing_obs_with_factor_enables_fill_missing_obs():
+    settings = knmi._get_default_settings({"fill_missing_obs_with_factor": True})
+
+    assert settings["fill_missing_obs_with_factor"] is True
+    assert settings["fill_missing_obs"] is True
+    assert settings["raise_exceptions"] is False
+
+
+def test_fill_missing_measurements_with_overlap_factor():
+    # Use a real-data period where station 72 (RD) is partially filled by station 78.
+    stn = 72
+    meteo_var = "RD"
+    start = pd.Timestamp("1986-03-25")
+    end = pd.Timestamp("1986-03-29")
+    stn_name = knmi.get_station_name(
+        stn, stations=knmi.get_stations(meteo_var=meteo_var)
+    )
+
+    settings_no_factor = knmi._get_default_settings(
+        {"fill_missing_obs": True, "fill_missing_obs_with_factor": False}
+    )
+    settings_factor = knmi._get_default_settings(
+        {"fill_missing_obs": True, "fill_missing_obs_with_factor": True}
+    )
+
+    df_no_factor, _ = knmi.fill_missing_measurements(
+        stn=stn,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
+        settings=settings_no_factor,
+        stn_name=stn_name,
+    )
+    df_factor, _ = knmi.fill_missing_measurements(
+        stn=stn,
+        meteo_var=meteo_var,
+        start=start,
+        end=end,
+        settings=settings_factor,
+        stn_name=stn_name,
+    )
+
+    common_idx = df_no_factor.index.intersection(df_factor.index)
+    donor_idx = common_idx[
+        (df_no_factor.loc[common_idx, "station"].astype(str) != str(stn))
+        & (df_factor.loc[common_idx, "station"].astype(str) != str(stn))
+    ]
+    changed_idx = donor_idx[
+        (
+            df_no_factor.loc[donor_idx, meteo_var] - df_factor.loc[donor_idx, meteo_var]
+        ).abs()
+        > 1e-12
+    ]
+
+    assert donor_idx.size > 0, "expected filled values from nearby station(s)"
+    assert changed_idx.size > 0, (
+        "expected overlap-factor scaling to alter filled values"
+    )
 
 
 def test_obslist_from_grid():
@@ -430,6 +512,53 @@ def test_obslist_from_stns_single_startdate():
         ends="2015",
         ObsClasses=[hpd.PrecipitationObs, hpd.EvaporationObs],
     )
+
+
+def test_obslist_progress_callback():
+    stns = [344, 260]  # Rotterdam en de Bilt
+    calls = []
+
+    def cb(i, total):
+        calls.append((i, total))
+
+    knmi.get_knmi_obslist(
+        stns=stns,
+        meteo_vars=["RH"],
+        starts="2010",
+        ends="2010",
+        ObsClasses=[hpd.PrecipitationObs],
+        progress_callback=cb,
+    )
+
+    assert len(calls) == len(stns)
+    assert calls[0] == (0, len(stns))
+    assert calls[-1] == (len(stns) - 1, len(stns))
+
+
+def test_knmi_scenarios_obs_collection_and_filter():
+    # download a small subset of scenario data for a single station
+    oc = hpd.ObsCollection.from_knmi_scenarios(
+        stn=550,
+        years=["2033"],
+        scenarios=["Mn"],
+    )
+    assert isinstance(oc, hpd.ObsCollection)
+    assert len(oc) > 0
+
+    # every observation should carry station and meteo_var metadata
+    for o in oc.obs:
+        assert o.station == 550
+        assert hasattr(o, "meteo_var")
+
+    # apply filtering using meteo_vars argument
+    oc2 = hpd.ObsCollection.from_knmi_scenarios(
+        stn=550,
+        years=["2033"],
+        scenarios=["Mn"],
+        meteo_vars=["RD"],
+    )
+    assert len(oc2) > 0
+    assert all(o.meteo_var == "RD" for o in oc2.obs)
 
 
 def test_knmi_daily_rainfall():

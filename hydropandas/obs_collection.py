@@ -14,7 +14,8 @@ import os
 import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import List, Optional
+from typing import Iterable, Literal
+from collections.abc import Iterable as IterableABC
 
 import numpy as np
 import pandas as pd
@@ -250,6 +251,92 @@ def read_dino(
     return oc
 
 
+def read_era5(
+    extent=None,
+    name="",
+    ObsClass=obs.MeteoObs,
+    xy=None,
+    variables=("precipitation_sum",),
+    source="era5_seamless",
+    tmin=None,
+    tmax=None,
+    interval="daily",
+    only_metadata=False,
+    keep_all_obs=False,
+    epsg=4326,
+    grid_size=0.25,
+    timeout=120,
+    max_points=200,
+):
+    """Get ERA5 observations within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple, numpy-array or None, optional
+        get ERA5 grid points within this extent [xmin, xmax, ymin, ymax]
+    xy : tuple, list or None, optional
+        single point coordinates (x, y). If provided, extent is ignored and
+        ERA5 data is downloaded for this point only.
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type, optional
+        class of the observations, e.g. MeteoObs.
+        The default is MeteoObs.
+    variables : tuple, list or str, optional
+        ERA5 variable(s) to download, default is ('precipitation_sum',)
+    source : str, optional
+        ERA5 product selection. Options are 'era5', 'era5_land',
+        'era5_hourly', and 'era5_seamless'. With 'era5_hourly', interval is
+        forced to 'hourly'. The default is 'era5_seamless'.
+    tmin : str or None, optional
+        start date of observations. If None, one month before today is used.
+    tmax : str or None, optional
+        end date of observations. If None, today is used.
+    interval : str, optional
+        one of 'daily' or 'hourly', by default 'daily'
+        Returned timestamps are in UTC and shifted to the end of each
+        aggregation period: +1 day for daily and +1 hour for hourly.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster.
+        The default is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept.
+        The default is False.
+    epsg : int, optional
+        epsg code of the supplied extent. Returned observation x/y
+        coordinates are also in this CRS. The default is 4326 (WGS84).
+    grid_size : float, optional
+        ERA5 grid sampling size in degrees, default is 0.25
+    timeout : int, optional
+        request timeout in seconds, default is 120
+    max_points : int, optional
+        maximum number of grid points to download, default is 200
+
+    Returns
+    -------
+    ObsCollection
+        collection of multiple point observations
+    """
+    oc = ObsCollection.from_era5(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        xy=xy,
+        variables=variables,
+        source=source,
+        tmin=tmin,
+        tmax=tmax,
+        interval=interval,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
+        grid_size=grid_size,
+        timeout=timeout,
+        max_points=max_points,
+    )
+    return oc
+
+
 def read_excel(path, meta_sheet_name="metadata"):
     """Create an observation collection from an excel file. The excel file should have
     the same format as excel files created with the `to_excel` method of an
@@ -359,6 +446,137 @@ def read_fews(
     return oc
 
 
+def read_ggmn(
+    extent,
+    name="",
+    ObsClass=obs.GroundwaterObs,
+    tmin=None,
+    tmax=None,
+    parameter=None,
+    only_metadata=False,
+    keep_all_obs=True,
+    epsg=4326,
+    max_locations=200,
+    max_pages=20,
+    timeout=120,
+):
+    """Get GGMN observations within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple or numpy-array
+        get GGMN locations within this extent [xmin, xmax, ymin, ymax]
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type, optional
+        class of the observations, e.g. GroundwaterObs.
+        The default is GroundwaterObs.
+    tmin : str or None, optional
+        start time of observations. The default is None.
+    tmax : str or None, optional
+        end time of observations. The default is None.
+    parameter : str, iterable of str, or None, optional
+        groundwater-level parameter name filter. Set to None (default)
+        to include all available level parameters.
+    only_metadata : bool, optional
+        if True download only metadata, significantly faster.
+        The default is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept.
+        The default is True.
+    epsg : int, optional
+        epsg code of the supplied extent. Returned observation x/y
+        coordinates are also in this CRS. The default is 4326 (WGS84).
+    max_locations : int, optional
+        maximum number of locations to download, by default 200
+    max_pages : int, optional
+        maximum number of measurement pages per location, by default 20
+    timeout : int, optional
+        request timeout in seconds, by default 120
+
+    Returns
+    -------
+    ObsCollection
+        collection of multiple point observations
+    """
+    oc = ObsCollection.from_ggmn(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        tmin=tmin,
+        tmax=tmax,
+        parameter=parameter,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
+        max_locations=max_locations,
+        max_pages=max_pages,
+        timeout=timeout,
+    )
+    return oc
+
+
+def read_ghcn(
+    extent,
+    name="",
+    ObsClass=obs.MeteoObs,
+    elements=None,
+    tmin=None,
+    tmax=None,
+    only_metadata=False,
+    keep_all_obs=True,
+    epsg=4326,
+):
+    """Get GHCN (Global Historical Climatology Network) observations within an extent.
+
+    Parameters
+    ----------
+    extent : list, tuple or numpy-array
+        get GHCN stations within this extent [xmin, xmax, ymin, ymax]
+    name : str, optional
+        name of the collection, by default ""
+    ObsClass : type, optional
+        class of the observations, e.g. MeteoObs or PrecipitationObs.
+        The default is MeteoObs.
+    elements : str, list of str, or None, optional
+        GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+        If None all available elements per station are downloaded.
+        Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+        are converted from 0.1 mm to m.
+        The default is None.
+    tmin : str or None, optional
+        start date of observations (e.g. '2020-01-01'). The default is None.
+    tmax : str or None, optional
+        end date of observations (e.g. '2021-12-31'). The default is None.
+    only_metadata : bool, optional
+        if True download only station metadata, significantly faster.
+        The default is False.
+    keep_all_obs : bool, optional
+        if False, only observations with measurements are kept.
+        The default is True.
+    epsg : int, optional
+        epsg code of the supplied extent. Returned observation x/y
+        coordinates are also in this CRS. The default is 4326 (WGS84).
+
+    Returns
+    -------
+    ObsCollection
+        collection of multiple point observations
+    """
+    oc = ObsCollection.from_ghcn(
+        extent=extent,
+        name=name,
+        ObsClass=ObsClass,
+        elements=elements,
+        tmin=tmin,
+        tmax=tmax,
+        only_metadata=only_metadata,
+        keep_all_obs=keep_all_obs,
+        epsg=epsg,
+    )
+    return oc
+
+
 def read_imod(
     obs_collection,
     ml,
@@ -432,7 +650,7 @@ def read_json(path, **kwargs):
         fo = open(path, "r")
         closing = True
     else:
-        raise ValueError("path should be a string or a file object")
+        raise TypeError("path should be a string or a file object")
 
     d = json.load(fo)
     if closing:
@@ -471,6 +689,8 @@ def read_knmi(
     interval="daily",
     use_api=True,
     raise_exceptions=True,
+    progress_callback=None,
+    fill_missing_obs_with_factor=False,
 ):
     """Get knmi observations from a list of locations or a list of stations.
 
@@ -508,6 +728,17 @@ def read_knmi(
         class of the observations, can be PrecipitationObs, EvaporationObs
         or MeteoObs. If None the type of observations is derived from the
         meteo_vars.
+    fill_missing_obs : bool, optional
+        if True nan values in time series are filled with nearby time series.
+        The default is False.
+    progress_callback : callable or None, optional
+        callback function called with (i, total) for each station processed.
+        The default is None.
+    fill_missing_obs_with_factor : bool, optional
+        if True, donor-station values are scaled with an overlap-based factor
+        before filling missing values. This automatically enables
+        fill_missing_obs.
+        The default is False.
     **kwargs :
         kwargs are passed to the hydropandas.io.knmi.get_knmi_obslist function
 
@@ -629,6 +860,82 @@ def read_knmi(
         interval=interval,
         use_api=use_api,
         raise_exceptions=raise_exceptions,
+        progress_callback=progress_callback,
+        fill_missing_obs_with_factor=fill_missing_obs_with_factor,
+    )
+
+    return oc
+
+
+def read_knmi_scenarios(
+    stn: int | str,
+    years: Iterable[Literal["2033", "2050", "2100", "2150"]] = (
+        "2033",
+        "2050",
+        "2100",
+        "2150",
+    ),
+    scenarios: Iterable[Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]] = (
+        "Ld",
+        "Ln",
+        "Md",
+        "Mn",
+        "Hd",
+        "Hn",
+    ),
+    evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+    meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+    | None = None,
+    name: str = "",
+):
+    """Get KNMI climate scenario observations for a station.
+
+    Retrieves climate scenario data from KNMI and returns an ObsCollection
+    with temperature, precipitation, and evaporation observations for different
+    climate scenarios.
+
+    Parameters
+    ----------
+    stn : int or str
+        Station number (e.g., 550 or "550").
+    years : tuple, optional
+        Years of climate scenario. The default is ('2033','2050','2100','2150').
+    scenarios : tuple, optional
+        Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+        This includes all scenarios including the original measurements.
+    evap : str, optional
+        Method for calculating evaporation. Options are 'EV24', 'makkink',
+        'penman', or 'hargreaves'. The default is 'EV24'.
+    meteo_vars : iterable of str or None, optional
+        Meteorological variables to include in the ObsCollection. Possible
+        variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+        If None (default), all available variables are included.
+    name : str, optional
+        Name of the observation collection. The default is "".
+
+    Returns
+    -------
+    ObsCollection
+        Collection of climate scenario observations with temperature, precipitation,
+        and evaporation data for different scenarios.
+
+    Examples
+    --------
+    >>> oc = hpd.read_knmi_scenarios("550")
+    >>> oc = hpd.read_knmi_scenarios(
+    ...     "550",
+    ...     years=["2050", "2100"],
+    ...     scenarios=["Md", "Hd"],
+    ...     evap="Makkink"
+    ... )
+    """
+    oc = ObsCollection.from_knmi_scenarios(
+        stn=stn,
+        years=years,
+        scenarios=scenarios,
+        evap=evap,
+        meteo_vars=meteo_vars,
+        name=name,
     )
 
     return oc
@@ -655,7 +962,7 @@ def read_lizard(
     Parameters
     ----------
     extent : list, shapefile path or None
-        get groundwater monitoring wells within this extent [xmin, ymin, xmax, ymax]
+        get groundwater monitoring wells within this extent [xmin, xmax, ymin, ymax]
         or within a predefined Polygon from a shapefile
     codes : lst of str or None
         codes of the monitoring wells
@@ -1243,10 +1550,10 @@ class ObsCollection(pd.DataFrame):
         """
         otypes = self.obs.apply(lambda x: type(x)).unique()
         if otypes.shape[0] == 1:
-            logger.debug("inferred observation type: {}".format(otypes[0]))
+            logger.debug(f"inferred observation type: {otypes[0]}")
             return otypes
         elif otypes.shape[0] > 1:
-            logger.debug("inferred multiple otypes, types: {}".format(otypes))
+            logger.debug(f"inferred multiple otypes, types: {otypes}")
             return otypes
         else:
             raise TypeError("could not infer observation type")
@@ -1433,9 +1740,8 @@ class ObsCollection(pd.DataFrame):
         -------
         None.
         """
-        if check_consistency:
-            if not self._is_consistent():
-                raise RuntimeError("inconsistent observation collection")
+        if check_consistency and not self._is_consistent():
+            raise RuntimeError("inconsistent observation collection")
 
         if not isinstance(o, obs.Obs):
             raise TypeError("Observation should be of type hydropandas.observation.Obs")
@@ -1458,7 +1764,13 @@ class ObsCollection(pd.DataFrame):
             omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
-            oc.loc[o.name] = omerged.to_collection_dict()
+            d = omerged.to_collection_dict()
+            if kwargs.get("merge_metadata", True):
+                # clears existing columns that are not in d
+                oc.loc[o.name] = d
+            else:
+                # keep values in existing columns that are not in d
+                oc.loc[o.name, d.keys()] = d
 
         if not inplace:
             return oc
@@ -1663,7 +1975,7 @@ class ObsCollection(pd.DataFrame):
         Parameters
         ----------
         extent : list, shapefile path or None
-            get groundwater monitoring wells wihtin this extent [xmin, ymin, xmax, ymax]
+            get groundwater monitoring wells wihtin this extent [xmin, xmax, ymin, ymax]
             or within a predefined Polygon from a shapefile
         codes : lst of str or None
             codes of the monitoring wells
@@ -2030,6 +2342,97 @@ class ObsCollection(pd.DataFrame):
         return cls(obs_df, name=name, meta=meta)
 
     @classmethod
+    def from_era5(
+        cls,
+        extent=None,
+        name="",
+        ObsClass=obs.MeteoObs,
+        xy=None,
+        variables=("precipitation_sum",),
+        source="era5_seamless",
+        tmin=None,
+        tmax=None,
+        interval="daily",
+        only_metadata=False,
+        keep_all_obs=False,
+        epsg=4326,
+        grid_size=0.25,
+        timeout=120,
+        max_points=200,
+    ):
+        """Get ERA5 observations within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple, numpy-array or None, optional
+            get ERA5 grid points within this extent [xmin, xmax, ymin, ymax]
+        xy : tuple, list or None, optional
+            single point coordinates (x, y). If provided, extent is ignored and
+            ERA5 data is downloaded for this point only.
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type, optional
+            class of the observations, e.g. MeteoObs.
+            The default is MeteoObs.
+        variables : tuple, list or str, optional
+            ERA5 variable(s) to download, default is ('precipitation_sum',)
+        source : str, optional
+            ERA5 product selection. Options are 'era5', 'era5_land',
+            'era5_hourly', and 'era5_seamless'. With 'era5_hourly', interval is
+            forced to 'hourly'. The default is 'era5_seamless'.
+        tmin : str or None, optional
+            start date of observations. If None, one month before today is used.
+        tmax : str or None, optional
+            end date of observations. If None, today is used.
+        interval : str, optional
+            one of 'daily' or 'hourly', by default 'daily'
+            Returned timestamps are in UTC and shifted to the end of each
+            aggregation period: +1 day for daily and +1 hour for hourly.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster.
+            The default is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept.
+            The default is False.
+        epsg : int, optional
+            epsg code of the supplied extent. Returned observation x/y
+            coordinates are also in this CRS. The default is 4326 (WGS84).
+        grid_size : float, optional
+            ERA5 grid sampling size in degrees, default is 0.25
+        timeout : int, optional
+            request timeout in seconds, default is 120
+        max_points : int, optional
+            maximum number of grid points to download, default is 200
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io.era5 import get_obs_list_from_extent
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = get_obs_list_from_extent(
+            ObsClass,
+            extent=extent,
+            xy=xy,
+            variables=variables,
+            source=source,
+            tmin=tmin,
+            tmax=tmax,
+            interval=interval,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            epsg=epsg,
+            grid_size=grid_size,
+            timeout=timeout,
+            max_points=max_points,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
+
+    @classmethod
     def from_fews_xml(
         cls,
         file_or_dir=None,
@@ -2140,6 +2543,147 @@ class ObsCollection(pd.DataFrame):
             raise ValueError("either specify variables file_or_dir or xmlstring")
 
     @classmethod
+    def from_ggmn(
+        cls,
+        extent,
+        name="",
+        ObsClass=obs.GroundwaterObs,
+        tmin=None,
+        tmax=None,
+        parameter=None,
+        only_metadata=False,
+        keep_all_obs=True,
+        epsg=4326,
+        max_locations=200,
+        max_pages=20,
+        timeout=120,
+    ):
+        """Get GGMN observations within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple or numpy-array
+            get GGMN locations within this extent [xmin, xmax, ymin, ymax]
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type, optional
+            class of the observations, e.g. GroundwaterObs.
+            The default is GroundwaterObs.
+        tmin : str or None, optional
+            start time of observations. The default is None.
+        tmax : str or None, optional
+            end time of observations. The default is None.
+        parameter : str, iterable of str, or None, optional
+            groundwater-level parameter name filter. Set to None (default)
+            to include all available level parameters.
+        only_metadata : bool, optional
+            if True download only metadata, significantly faster.
+            The default is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept.
+            The default is True.
+        epsg : int, optional
+            epsg code of the supplied extent. Returned observation x/y
+            coordinates are also in this CRS. The default is 4326 (WGS84).
+        max_locations : int, optional
+            maximum number of locations to download, by default 200
+        max_pages : int, optional
+            maximum number of measurement pages per location, by default 20
+        timeout : int, optional
+            request timeout in seconds, by default 120
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io.ggmn import get_obs_list_from_extent
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = get_obs_list_from_extent(
+            extent,
+            ObsClass,
+            tmin=tmin,
+            tmax=tmax,
+            parameter=parameter,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            epsg=epsg,
+            max_locations=max_locations,
+            max_pages=max_pages,
+            timeout=timeout,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
+
+    @classmethod
+    def from_ghcn(
+        cls,
+        extent,
+        name="",
+        ObsClass=obs.MeteoObs,
+        elements=None,
+        tmin=None,
+        tmax=None,
+        only_metadata=False,
+        keep_all_obs=True,
+        epsg=4326,
+    ):
+        """Get GHCN (Global Historical Climatology Network) observations within an extent.
+
+        Parameters
+        ----------
+        extent : list, tuple or numpy-array
+            get GHCN stations within this extent [xmin, xmax, ymin, ymax]
+        name : str, optional
+            name of the collection, by default ""
+        ObsClass : type, optional
+            class of the observations, e.g. MeteoObs or PrecipitationObs.
+            The default is MeteoObs.
+        elements : str, list of str, or None, optional
+            GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+            If None all available elements per station are downloaded.
+            Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+            are converted from 0.1 mm to m.
+            The default is None.
+        tmin : str or None, optional
+            start date of observations (e.g. '2020-01-01'). The default is None.
+        tmax : str or None, optional
+            end date of observations (e.g. '2021-12-31'). The default is None.
+        only_metadata : bool, optional
+            if True download only station metadata, significantly faster.
+            The default is False.
+        keep_all_obs : bool, optional
+            if False, only observations with measurements are kept.
+            The default is True.
+        epsg : int, optional
+            epsg code of the supplied extent. Returned observation x/y
+            coordinates are also in this CRS. The default is 4326 (WGS84).
+
+        Returns
+        -------
+        ObsCollection
+            ObsCollection containing data
+        """
+        from .io.ghcn import get_obs_list_from_extent
+
+        meta = {"name": name, "type": ObsClass}
+
+        obs_list = get_obs_list_from_extent(
+            extent,
+            ObsClass,
+            elements=elements,
+            tmin=tmin,
+            tmax=tmax,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            epsg=epsg,
+        )
+
+        return cls(obs_list, name=name, meta=meta)
+
+    @classmethod
     def from_imod(
         cls,
         obs_collection,
@@ -2208,6 +2752,8 @@ class ObsCollection(pd.DataFrame):
         elif isinstance(path, (str, os.PathLike)):
             fo = open(path, "r")
             closing = True
+        else:
+            raise TypeError("path should be a string or a file-like object")
 
         d = json.load(fo)
         if closing:
@@ -2244,6 +2790,8 @@ class ObsCollection(pd.DataFrame):
         interval="daily",
         use_api=True,
         raise_exceptions=True,
+        progress_callback=None,
+        fill_missing_obs_with_factor=False,
     ):
         """Get knmi observations from a list of locations or a list of stations.
 
@@ -2295,6 +2843,14 @@ class ObsCollection(pd.DataFrame):
             online (July 2021).
         raise_exceptions : bool, optional
             if True you get errors when no data is returned. The default is False.
+        progress_callback : callable or None, optional
+            callback function called with (i, total) for each station processed.
+            The default is None.
+        fill_missing_obs_with_factor : bool, optional
+            if True, donor-station values are scaled with an overlap-based factor
+            before filling missing values. This automatically enables
+            fill_missing_obs.
+            The default is False.
         **kwargs :
             kwargs are passed to the `hydropandas.io.knmi.get_knmi_obslist` function
         """
@@ -2318,14 +2874,14 @@ class ObsCollection(pd.DataFrame):
             ):
                 ObsClasses = [ObsClasses] * len(meteo_vars)
             else:
-                TypeError(
+                raise TypeError(
                     "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
                     "list or tuple"
                 )
         elif isinstance(ObsClasses, (list, tuple)):
             pass
         else:
-            TypeError(
+            raise TypeError(
                 "must be None, PrecipitationObs, EvaporationObs, MeteoObs, "
                 "list or tuple"
             )
@@ -2349,11 +2905,102 @@ class ObsCollection(pd.DataFrame):
             interval=interval,
             use_api=use_api,
             raise_exceptions=raise_exceptions,
+            progress_callback=progress_callback,
+            fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
         obs_df = util._obslist_to_frame(obs_list)
 
         return cls(obs_df, name=name, meta=meta)
+
+    @classmethod
+    def from_knmi_scenarios(
+        cls,
+        stn: int | str,
+        years: Iterable[Literal["2033", "2050", "2100", "2150"]] = (
+            "2033",
+            "2050",
+            "2100",
+            "2150",
+        ),
+        scenarios: Iterable[Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]] = (
+            "Ld",
+            "Ln",
+            "Md",
+            "Mn",
+            "Hd",
+            "Hn",
+        ),
+        evap: Literal["EV24", "makkink", "penman", "hargreaves"] = "EV24",
+        meteo_vars: Iterable[Literal["TG", "RD", "Q", "TX", "TN", "UG", "FG", "EV24"]]
+        | None = None,
+        name: str = "",
+    ):
+        """Create ObsCollection from KNMI climate scenario data.
+
+        The ``stn`` argument may be provided as an integer or a string.  The data
+        are downloaded once and converted into individual observations.  By
+        default every variable present in the returned dataset is turned into an
+        Obs; a user can restrict the output by specifying ``meteo_vars``.
+
+        Parameters
+        ----------
+        stn : int or str
+            Station number (e.g., 550 or "550").
+        years : tuple, optional
+            Years of climate scenario. The default is ('2033','2050','2100','2150').
+        scenarios : tuple, optional
+            Names of climate scenario. The default is ('Ld','Ln','Md','Mn','Hd','Hn').
+            This includes all scenarios including the original measurements.
+        evap : str, optional
+            Method for calculating evaporation. Options are 'EV24', 'makkink', 'penman',
+            or 'hargreaves'. The default is 'EV24'.
+        meteo_vars : iterable of str or None, optional
+            Meteorological variables to include in the ObsCollection. Possible
+            variables include 'TG', 'RD', 'Q', 'TX', 'TN', 'UG', 'FG', and 'EV24'.
+            If None (default), all available variables are included.
+        name : str, optional
+            Name of the observation collection. The default is "".
+
+        Returns
+        -------
+        ObsCollection
+            Collection with climate scenario observations.
+        """
+        from .io.knmi import get_knmi_scenarios_obs_list
+        from .observation import EvaporationObs, MeteoObs, PrecipitationObs
+
+        # Fetch and process climate scenario data
+        obs_list = get_knmi_scenarios_obs_list(
+            stn=stn,
+            years=years,
+            scenarios=scenarios,
+            evap=evap,
+            meteo_vars=meteo_vars,
+            ObsClass={
+                "RD": PrecipitationObs,
+                "TG": MeteoObs,
+                "Q": MeteoObs,
+                "TX": MeteoObs,
+                "TN": MeteoObs,
+                "UG": MeteoObs,
+                "FG": MeteoObs,
+                "EV24": EvaporationObs,
+            },
+        )
+
+        # Create and return observation collection
+        meta = {
+            "stn": str(stn),
+            "years": years,
+            "scenarios": scenarios,
+            "evaporation_method": evap,
+        }
+
+        if meteo_vars is not None:
+            meta["meteo_vars"] = meteo_vars
+
+        return cls(obs_list, name=name, meta=meta)
 
     @classmethod
     def from_list(cls, obs_list, name=""):
@@ -2915,10 +3562,10 @@ class ObsCollection(pd.DataFrame):
         d = {k: getattr(self, k) for k in self._metadata}
         d["obstype"] = type(self).__name__
         if self.empty:
-            d["df"] = super().to_json()
+            d["df"] = super().to_json(date_format="iso")
             d["obs_list"] = []
         else:
-            d["df"] = super().drop(columns="obs").to_json()
+            d["df"] = super().drop(columns="obs").to_json(date_format="iso")
             d["obs_list"] = [o.to_json() for o in self.obs]
 
         if path is None:
@@ -3056,7 +3703,9 @@ class ObsCollection(pd.DataFrame):
         ----------
         key : str, int, tuple, list, set or None, optional
             key in meta dictionary of observation object. If key is 'all', all
-            keys are added. The default is 'all'.
+            keys are added. If key is an iterable we assume it
+            contains multiple keys and all of them are added.
+            The default is 'all'.
 
         Returns
         -------
@@ -3066,15 +3715,15 @@ class ObsCollection(pd.DataFrame):
         out = self.copy()
         if isinstance(key, str) and key == "all":
             keys = set().union(*[o.meta for o in out.obs.values])
-            for key in keys:
-                out[key] = [
-                    o.meta[key] if key in o.meta.keys() else None
-                    for o in out.obs.values
-                ]
+            for k in keys:
+                out[k] = [o.meta.get(k, None) for o in out.obs.values]
+        elif isinstance(key, (str, int)):
+            out[key] = [o.meta.get(key, None) for o in out.obs.values]
+        elif isinstance(key, IterableABC):
+            for k in key:
+                out[k] = [o.meta.get(k, None) for o in out.obs.values]
         else:
-            out[key] = [
-                o.meta[key] if key in o.meta.keys() else None for o in out.obs.values
-            ]
+            out[key] = [o.meta.get(key, None) for o in out.obs.values]
 
         return out
 
@@ -3112,11 +3761,11 @@ class ObsCollection(pd.DataFrame):
 
     def interpolate(
         self,
-        xy: List[List[float]],
+        xy: list[list[float]],
         kernel: str = "thin_plate_spline",
         kernel2: str = "linear",
-        epsilon: Optional[int] = None,
-        col: Optional[str] = None,
+        epsilon: int | None = None,
+        col: str | None = None,
     ):
         """Interpolation method for ObsCollections using the Scipy radial basis function
         (RBF)
@@ -3162,20 +3811,26 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otypes[0]._metadata) - set(
-            ["x", "y", "location", "monitoring_well", "name", "source", "meta"]
-        )
+        meta_att = set(otypes[0]._metadata) - {
+            "x",
+            "y",
+            "location",
+            "monitoring_well",
+            "name",
+            "source",
+            "meta",
+        }
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():
                 kwargs[att] = self.iloc[0].loc[att]
 
         obs_list = []
-        for i, col in enumerate(fill_df.columns):
+        for i, coll in enumerate(fill_df.columns):
             o = otypes[0](
-                fill_df.loc[:, [col]].copy(),
+                fill_df.loc[:, [coll]].copy(),
                 x=xy[i][0],
                 y=xy[i][1],
-                name=col,
+                name=coll,
                 source=f"interpolation {self.name}",
                 meta={"interpolation_kernel": kernel, "interpolation_epsilon": epsilon},
                 **kwargs,

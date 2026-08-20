@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Created on Wed Sep 12 12:15:42 2018.
 
 @author: Artesia
@@ -29,7 +28,7 @@ def _get_metadata_from_obs(o):
     meta : dictionary
         meta dictionary.
     """
-    meta = dict()
+    meta = {}
     for attr_key in o._get_meta_attr():
         val = getattr(o, attr_key)
         if isinstance(val, (int, float, str, bool)):
@@ -100,17 +99,21 @@ def create_pastastore(
         pstore = pst.PastaStore(name=pstore_name, connector=conn)
 
     for o in oc.obs.values:
-        logger.debug("add to pastastore -> {}".format(o.name))
+        logger.debug(f"add to pastastore -> {o.name}")
 
         if add_metadata:
             meta = _get_metadata_from_obs(o)
         else:
-            meta = dict()
+            meta = {}
 
         if col is None:
             use_col = o._get_first_numeric_col_name()
         else:
             use_col = col
+
+        if o.empty:
+            logger.info(f"Did not add {o.name} to pastastore because series is empty.")
+            continue
 
         if kind == "oseries":
             pstore.conn.add_oseries(

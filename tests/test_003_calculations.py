@@ -122,7 +122,6 @@ def test_get_ground_level_oc():
 
         gw = ttf.obscollection_fews_lowmemory()
         gw.art.geo_get_ground_level()
-        return
     except ModuleNotFoundError as e:
         print(e)
 
@@ -133,6 +132,5 @@ def test_get_ground_level_gwobs():
 
         gw = ttf.observation_gw_dino_old()
         gw.art.geo_get_ground_level()
-        return
     except ModuleNotFoundError as e:
         print(e)

@@ -10,39 +10,40 @@ license = { file = "LICENSE" }
 readme = "readme.md"
 authors = [{ name = "Onno Ebbens", email = "o.ebbens@artesia-water.nl" }]
 maintainers = [
-    { name = "O.N. Ebbens", email = "o.ebbens@artesia-water.nl" },
-    { name = "R. Calje", email = "r.calje@artesia-water.nl" },
-    { name = "D.A. Brakenhoff", email = "d.brakenhoff@artesia-water.nl" },
-    { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
+        { name = "O.N. Ebbens", email = "o.ebbens@artesia-water.nl" },
+        { name = "R. Calje", email = "r.calje@artesia-water.nl" },
+        { name = "D.A. Brakenhoff", email = "d.brakenhoff@artesia-water.nl" },
+        { name = "M.A. Vonk", email = "m.vonk@artesia-water.nl" },
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "scipy",
- "pandas",
- "matplotlib",
- "tqdm",
- "requests",
- "geopandas",
- "pyproj",
- "contextily",
- "bokeh",
- "branca",
- "folium",
- "rws-ddlpy",
- "pastastore>=1.10.2",
+        "scipy",
+        "pandas",
+        "matplotlib",
+        "tqdm",
+        "requests",
+        "geopandas",
+        "pyproj",
+        "contextily",
+        "bokeh",
+        "branca",
+        "folium",
+        "rws-ddlpy",
+        "pastastore>=1.10.2",
+        "openpyxl"
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: Other Audience",
-    "License :: OSI Approved :: MIT License",
-    'Programming Language :: Python :: 3 :: Only',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-    'Programming Language :: Python :: 3.13',
-    "Operating System :: OS Independent",
-    'Topic :: Scientific/Engineering :: Hydrology',
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Other Audience",
+        "License :: OSI Approved :: MIT License",
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
+        "Operating System :: OS Independent",
+        'Topic :: Scientific/Engineering :: Hydrology',
 ]
 
 [project.urls]
@@ -52,31 +53,33 @@ documentation = "https://hydropandas.readthedocs.io/en/stable/"
 
 [project.optional-dependencies]
 full = [
-    "openpyxl",
-    "pastastore",
-    "flopy",
-    "xarray",
-    "netCDF4",
-    "lxml",
-    "pyarrow",
-    "brodata>=0.1.4"
+        "openpyxl",
+        "pastastore",
+        "flopy",
+        "xarray",
+        "netCDF4",
+        "lxml",
+        "pyarrow",
+        "brodata>=0.1.4",
 ]
 rtd = [
-    "hydropandas[full]",
-    "imod",
-    "requests",
-    "nbconvert",
-    "ipykernel",
-    "docutils<0.18",
-    "sphinx_rtd_theme",
-    "Ipython",
-    "nbsphinx",
-    "nbsphinx_link"
+        "hydropandas[full]",
+        "imod",
+        "requests",
+        "nbconvert",
+        "ipykernel",
+        "docutils",
+        "sphinx_rtd_theme",
+        "Ipython",
+        "nbsphinx",
+        "nbsphinx_link",
 ]
 ruffing = ["ruff"]
-pytesting = ["hydropandas[full,rtd]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+pytesting = ["hydropandas[full]", "pytest>=7", "pytest-cov", "pytest-sugar"]
+nbtesting = ["hydropandas[pytesting]", "nbformat", "nbconvert", "ipykernel"]
 coveraging = ["coverage"]
-dev = ["hydropandas[ruffing,pytesting]", "tox"]
+dev = ["hydropandas[ruffing,pytesting]"]
+bro = ["requests", "pytest"]
 
 [tool.setuptools]
 include-package-data = true
@@ -95,91 +98,14 @@ extend-include = ["*.ipynb"]
 lint.extend-select = ["I"]
 show-fixes = true
 fix = true
+exclude = ["update_knmi_stations.py", "update_matroos.py", "wiski.py"]
+lint.ignore = ["RET504", "DTZ005", "DTZ001", "SIM102", "SIM115", "PERF401"]
 
 [tool.ruff.lint.per-file-ignores]
-"knmi.py" = ["E712"] # see PR 239
+"knmi.py" = ["E712"]             # see PR 239
+"observation.py" = ["RUF012"]
+"obs_collection.py" = ["RUF012"]
 
 [tool.pytest.ini_options]
 addopts = "--durations=0"
 markers = ["slow: mark test as slow."]
-
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    passenv = LIZARD_ROTTERDAM_API_KEY
-    requires = tox>=4
-    env_list = ruff, notebooks, py{310, 311, 312, 313}
-
-    [testenv]
-    description = run unit tests
-    extras = pytesting
-    commands =
-            pytest tests -m "not slow" --ignore=tests/api --ignore=tests/notebooks
-
-    [testenv:bro]
-    description = run bro tests
-    extras = pytesting
-    commands =
-            pytest tests/api/test_101_bro_api.py
-
-    [testenv:knmi]
-    description = run knmi tests
-    extras = pytesting
-    commands =
-            pytest tests/api/test_102_knmi_api.py
-
-    [testenv:matroos]
-    description = run matroos tests
-    extras = pytesting
-    commands =
-            pytest tests/api/test_107_matroos_api.py
-
-    [testenv:lizard_vitens]
-    description = run lizard vitens tests
-    extras = pytesting
-    commands =
-            pytest tests/api/test_103_lizard_api_vitens.py
-
-    [testenv:lizard_rotterdam]
-    description = run lizard rotterdam tests
-    extras = pytesting
-    passenv = LIZARD_ROTTERDAM_API_KEY
-    commands =
-            pytest tests/api/test_106_lizard_api_rotterdam.py
-
-
-    [testenv:waterconnect]
-    description = run waterconnect tests
-    extras = pytesting
-    commands =
-            pytest tests/api/test_104_waterconnect_api.py
-
-    [testenv:waterinfo]
-    description = run waterinfo tests
-    extras = pytesting
-    commands =
-            pytest tests/api/test_105_waterinfo_api.py
-
-    [testenv:notebooks]
-    description = run all tests with notebooks and coverage
-    extras = pytesting,coveraging
-    passenv = LIZARD_ROTTERDAM_API_KEY
-    commands =
-            coverage run --source=hydropandas -m pytest tests
-            coverage xml
-
-    [testenv:ruff]
-    description = run ruff checks
-    basepython = python3.11
-    extras = ruffing
-    commands =
-            ruff check --extend-select I --preview
-            ruff format --check
-
-    [testenv:ruff_fix]
-    description = run ruff locally and fix issues
-    extras = ruffing
-    commands =
-            ruff check --extend-select I --fix
-            ruff format
-"""
