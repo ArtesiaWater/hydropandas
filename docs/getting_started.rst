@@ -2,12 +2,12 @@
 Getting Started
 ===============
 
-Welcome to hydropandas! This guide will help you get up and running quickly with hydrological time series analysis in Python.
+Welcome to HydroPandas! This guide will help you get up and running quickly with hydrological time series analysis in Python.
 
-What is hydropandas?
+What is HydroPandas?
 --------------------
 
-Hydropandas is a Python package designed specifically for working with hydrological time series data. It extends pandas DataFrame functionality with specialized methods for:
+HydroPandas is a Python package designed specifically for working with hydrological time series data. It extends pandas DataFrame functionality with specialized methods for:
 
 * Reading data from multiple hydrological data sources
 * Managing metadata alongside time series data
@@ -122,7 +122,7 @@ Ready to dive deeper? Check out:
 * :doc:`Examples gallery <examples/index>` - Comprehensive tutorials and use cases
 * :doc:`User guide <user_guide>` - Detailed explanation of core concepts  
 * :doc:`API documentation <source/modules>` - Complete reference for all functions
-* :doc:`Contributing guide <contribute>` - Help improve hydropandas
+* :doc:`Contributing guide <contribute>` - Help improve HydroPandas
 
 Need Help?
 ----------

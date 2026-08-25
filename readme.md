@@ -10,7 +10,7 @@
 [![Documentation Status](https://readthedocs.org/projects/hydropandas/badge/?version=latest)](https://hydropandas.readthedocs.io/en/latest/?badge=latest)
 # HydroPandas
 
-Hydropandas is a Python package for reading, analyzing and writing
+HydroPandas is a Python package for reading, analyzing and writing
 (hydrological) timeseries.
 
 ## Reading

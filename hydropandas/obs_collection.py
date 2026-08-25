@@ -15,6 +15,7 @@ import warnings
 from io import StringIO, TextIOWrapper
 from pathlib import Path
 from typing import Iterable, Literal
+from collections.abc import Iterable as IterableABC
 
 import numpy as np
 import pandas as pd
@@ -1763,7 +1764,13 @@ class ObsCollection(pd.DataFrame):
             omerged = o1.merge_observation(o, **kwargs)
 
             # overwrite observation in collection
-            oc.loc[o.name] = omerged.to_collection_dict()
+            d = omerged.to_collection_dict()
+            if kwargs.get("merge_metadata", True):
+                # clears existing columns that are not in d
+                oc.loc[o.name] = d
+            else:
+                # keep values in existing columns that are not in d
+                oc.loc[o.name, d.keys()] = d
 
         if not inplace:
             return oc
@@ -3696,7 +3703,9 @@ class ObsCollection(pd.DataFrame):
         ----------
         key : str, int, tuple, list, set or None, optional
             key in meta dictionary of observation object. If key is 'all', all
-            keys are added. The default is 'all'.
+            keys are added. If key is an iterable we assume it
+            contains multiple keys and all of them are added.
+            The default is 'all'.
 
         Returns
         -------
@@ -3707,6 +3716,11 @@ class ObsCollection(pd.DataFrame):
         if isinstance(key, str) and key == "all":
             keys = set().union(*[o.meta for o in out.obs.values])
             for k in keys:
+                out[k] = [o.meta.get(k, None) for o in out.obs.values]
+        elif isinstance(key, (str, int)):
+            out[key] = [o.meta.get(key, None) for o in out.obs.values]
+        elif isinstance(key, IterableABC):
+            for k in key:
                 out[k] = [o.meta.get(k, None) for o in out.obs.values]
         else:
             out[key] = [o.meta.get(key, None) for o in out.obs.values]
