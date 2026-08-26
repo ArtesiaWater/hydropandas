@@ -13,7 +13,6 @@ import numbers
 import os
 import warnings
 from collections.abc import Iterable
-from collections.abc import Iterable as IterableABC
 from io import StringIO, TextIOWrapper
 from pathlib import Path
 from typing import Literal
@@ -3804,7 +3803,7 @@ class ObsCollection(pd.DataFrame):
                 out[k] = [o.meta.get(k, None) for o in out.obs.values]
         elif isinstance(key, (str, int)):
             out[key] = [o.meta.get(key, None) for o in out.obs.values]
-        elif isinstance(key, IterableABC):
+        elif isinstance(key, Iterable):
             for k in key:
                 out[k] = [o.meta.get(k, None) for o in out.obs.values]
         else:
