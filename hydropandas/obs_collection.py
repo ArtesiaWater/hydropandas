@@ -1519,7 +1519,9 @@ class ObsCollection(pd.DataFrame):
                 crs = args[0].crs
             else:
                 if args[0].crs is not None and crs != args[0].crs:
-                    raise ValueError("crs of the observation(s) does not match the specified crs")
+                    raise ValueError(
+                        "crs of the observation(s) does not match the specified crs"
+                    )
         elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
             obs_df, crs_olist = util._obslist_to_frame(args[0])
@@ -1528,7 +1530,9 @@ class ObsCollection(pd.DataFrame):
                 crs = crs_olist
             else:
                 if crs_olist is not None and crs != crs_olist:
-                    raise ValueError("crs of the observation(s) does not match the specified crs")
+                    raise ValueError(
+                        "crs of the observation(s) does not match the specified crs"
+                    )
         elif isinstance(args[0], obs.Obs):
             logger.debug("Convert observation(s) to ObsCollection")
             obs_list = [o for o in args if isinstance(o, obs.Obs)]
@@ -1539,7 +1543,9 @@ class ObsCollection(pd.DataFrame):
                 crs = crs_olist
             else:
                 if crs_olist is not None and crs != crs_olist:
-                    raise ValueError("crs of the observation(s) does not match the specified crs")
+                    raise ValueError(
+                        "crs of the observation(s) does not match the specified crs"
+                    )
         elif isinstance(args[0], pd.DataFrame) and (
             "obs_list" in kwargs or "ObsClass" in kwargs
         ):
@@ -1569,7 +1575,7 @@ class ObsCollection(pd.DataFrame):
         """
         if isinstance(value, pyproj.CRS):
             self._crs = value
-        elif isinstance(value, (str,int)):
+        elif isinstance(value, (str, int)):
             if value == "":
                 self._crs = ""
             else:
@@ -1581,7 +1587,9 @@ class ObsCollection(pd.DataFrame):
         elif value is None or pd.isna(value):
             self._crs = ""
         else:
-            raise TypeError('invalid type for crs, please provide a pyproj.CRS object, a string or None')
+            raise TypeError(
+                "invalid type for crs, please provide a pyproj.CRS object, a string or None"
+            )
 
     @classmethod
     def _get_meta_attr(cls, ignore=()):
@@ -1598,7 +1606,7 @@ class ObsCollection(pd.DataFrame):
             set of metadata attributes
         """
 
-        return {a.lstrip('_') for a in cls._metadata if a not in ignore}
+        return {a.lstrip("_") for a in cls._metadata if a not in ignore}
 
     def _infer_otype(self):
         """Infer observation type from the obs column.
@@ -2245,12 +2253,16 @@ class ObsCollection(pd.DataFrame):
             obsclass = getattr(obs, all_metadata.pop("obs"))
             # get observation specific metadata
             metadata = {
-                k: v for (k, v) in all_metadata.items() if k in obsclass._get_meta_attr()
+                k: v
+                for (k, v) in all_metadata.items()
+                if k in obsclass._get_meta_attr()
             }
             metadata["name"] = oname
 
             extra_meta = {
-                k: v for (k, v) in all_metadata.items() if k not in obsclass._get_meta_attr()
+                k: v
+                for (k, v) in all_metadata.items()
+                if k not in obsclass._get_meta_attr()
             }
 
             o = obsclass(measurements, meta=extra_meta, **metadata)
@@ -2259,7 +2271,9 @@ class ObsCollection(pd.DataFrame):
                 crs_set.add(o.crs)
 
         if len(crs_set) > 1:
-            raise ValueError('multiple crs values in observations, an ObsCollection can only have one crs value')
+            raise ValueError(
+                "multiple crs values in observations, an ObsCollection can only have one crs value"
+            )
         crs = next(iter(crs_set), "")
         df.drop(columns=["crs"], errors="ignore", inplace=True)
 
@@ -3601,7 +3615,7 @@ class ObsCollection(pd.DataFrame):
         with pd.ExcelWriter(path) as writer:
             # replace obs column by observation type
             obseries = oc.pop("obs")
-            oc[["obs","crs"]] = [(type(o).__name__, o.crs) for o in obseries]
+            oc[["obs", "crs"]] = [(type(o).__name__, o.crs) for o in obseries]
 
             # write ObsCollection dataframe to first sheet
             super(ObsCollection, oc).to_excel(writer, sheet_name=meta_sheet_name)

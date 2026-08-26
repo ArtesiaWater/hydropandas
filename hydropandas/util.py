@@ -48,7 +48,9 @@ def _obslist_to_frame(obs_list):
         # infer crs from the observations
         crs = {c for c in obs_df.pop("crs") if c != ""}
         if len(crs) > 1:
-            raise ValueError('multiple crs values in observations, an ObsCollection can only have one crs value')
+            raise ValueError(
+                "multiple crs values in observations, an ObsCollection can only have one crs value"
+            )
         crs = next(iter(crs), "")
 
         obs_df.set_index("name", inplace=True)

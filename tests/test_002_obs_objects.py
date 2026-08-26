@@ -146,7 +146,9 @@ def test_convert_waterlvl_groundwater_obs():
     assert o_wl.location == o_gw.location, "conversion failed"
     assert o_gw.ground_level == 200, "conversion failed"
 
+
 test_convert_waterlvl_groundwater_obs()
+
 
 def test_merge_observations_same_timeseries():
     # base

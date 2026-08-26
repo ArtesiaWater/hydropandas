@@ -138,7 +138,7 @@ class Obs(pd.DataFrame):
 
         # set crs
         self.crs = crs
-    
+
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
         buf = StringIO("")
@@ -187,7 +187,7 @@ class Obs(pd.DataFrame):
 
         metadata_dic = {key: getattr(self, key) for key in self._get_meta_attr()}
         metadata_dic.pop("meta")
-        if "crs" in metadata_dic and metadata_dic["crs"] != '':
+        if "crs" in metadata_dic and metadata_dic["crs"] != "":
             metadata_dic["crs"] = metadata_dic["crs"].to_string()
         metadata_df = pd.DataFrame(
             columns=[metadata_dic.pop("name")],
@@ -253,7 +253,7 @@ class Obs(pd.DataFrame):
         """
         if isinstance(value, pyproj.CRS):
             self._crs = value
-        elif isinstance(value, (str,int)):
+        elif isinstance(value, (str, int)):
             if value == "":
                 self._crs = ""
             else:
@@ -265,8 +265,9 @@ class Obs(pd.DataFrame):
         elif value is None or pd.isna(value):
             self._crs = ""
         else:
-            raise TypeError('invalid type for crs, please provide a pyproj.CRS object, a string or None')
-
+            raise TypeError(
+                "invalid type for crs, please provide a pyproj.CRS object, a string or None"
+            )
 
     @classmethod
     def _get_meta_attr(cls, ignore=("monitoring_well",)):
@@ -283,7 +284,7 @@ class Obs(pd.DataFrame):
             set of metadata attributes
         """
 
-        return {a.lstrip('_') for a in cls._metadata if a not in ignore}
+        return {a.lstrip("_") for a in cls._metadata if a not in ignore}
 
     def _get_first_numeric_col_name(self):
         """Get the first numeric column name of the observations.
@@ -862,7 +863,7 @@ class GroundwaterObs(Obs):
             meta_self = GroundwaterObs._get_meta_attr()
             for key in (meta_arg & meta_self) - set(kwargs):
                 kwargs[key] = getattr(args[0], key)
-        
+
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
@@ -887,8 +888,6 @@ class GroundwaterObs(Obs):
     @monitoring_well.setter
     def monitoring_well(self, value):
         self.location = value
-
-    
 
     @classmethod
     def from_bro(
