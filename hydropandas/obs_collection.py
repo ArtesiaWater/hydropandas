@@ -19,6 +19,7 @@ from collections.abc import Iterable as IterableABC
 
 import numpy as np
 import pandas as pd
+import pyproj
 
 from . import observation as obs
 from . import util
@@ -1499,27 +1500,46 @@ class ObsCollection(pd.DataFrame):
     _metadata = [
         "name",
         "meta",
+        "_crs",
     ]
 
     def __init__(self, *args, **kwargs):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
-
+        crs = kwargs.pop("crs", None)
         if len(args) == 0:
             logger.debug("Create empty ObsCollection")
             super().__init__(**kwargs)
         elif isinstance(args[0], ObsCollection):
             super().__init__(*args, **kwargs)
+            # set metadata from the ObsCollection
+            self.name = args[0].name if self.name == "" else self.name
+            self.meta = args[0].meta if self.meta == {} else self.meta
+            if crs is None:
+                crs = args[0].crs
+            else:
+                if args[0].crs is not None and crs != args[0].crs:
+                    raise ValueError("crs of the observation(s) does not match the specified crs")
         elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
-            obs_df = util._obslist_to_frame(args[0])
+            obs_df, crs_olist = util._obslist_to_frame(args[0])
             super().__init__(obs_df, *args[1:], **kwargs)
+            if crs is None:
+                crs = crs_olist
+            else:
+                if crs_olist is not None and crs != crs_olist:
+                    raise ValueError("crs of the observation(s) does not match the specified crs")
         elif isinstance(args[0], obs.Obs):
             logger.debug("Convert observation(s) to ObsCollection")
             obs_list = [o for o in args if isinstance(o, obs.Obs)]
             remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
-            obs_df = util._obslist_to_frame(obs_list)
+            obs_df, crs_olist = util._obslist_to_frame(obs_list)
             super().__init__(obs_df, *remaining_args, **kwargs)
+            if crs is None:
+                crs = crs_olist
+            else:
+                if crs_olist is not None and crs != crs_olist:
+                    raise ValueError("crs of the observation(s) does not match the specified crs")
         elif isinstance(args[0], pd.DataFrame) and (
             "obs_list" in kwargs or "ObsClass" in kwargs
         ):
@@ -1532,10 +1552,53 @@ class ObsCollection(pd.DataFrame):
             super().__init__(obs_df, **kwargs)
         else:
             super().__init__(*args, **kwargs)
+        self.crs = crs
 
     @property
     def _constructor(self):
         return _obscollection_constructor_with_fallback
+
+    @property
+    def crs(self):
+        return self._crs
+
+    @crs.setter
+    def crs(self, value):
+        """Make sure crs is a pyproj.CRS object, an int or a string. If value is an int or a string,
+        try to convert it to a pyproj.CRS object. If that fails, set to an empty string
+        """
+        if isinstance(value, pyproj.CRS):
+            self._crs = value
+        elif isinstance(value, (str,int)):
+            if value == "":
+                self._crs = ""
+            else:
+                try:
+                    self._crs = pyproj.CRS.from_user_input(value)
+                except Exception as e:
+                    logger.warning(f"invalid value for crs: {value}")
+                    self._crs = ""
+        elif value is None or pd.isna(value):
+            self._crs = ""
+        else:
+            raise TypeError('invalid type for crs, please provide a pyproj.CRS object, a string or None')
+
+    @classmethod
+    def _get_meta_attr(cls, ignore=()):
+        """Get metadata attributes excluding the ones in ignore.
+
+        Parameters
+        ----------
+        ignore : tuple, optional
+            attributes to ignore, by default an empty tuple
+
+        Returns
+        -------
+        set
+            set of metadata attributes
+        """
+
+        return {a.lstrip('_') for a in cls._metadata if a not in ignore}
 
     def _infer_otype(self):
         """Infer observation type from the obs column.
@@ -1660,7 +1723,7 @@ class ObsCollection(pd.DataFrame):
         if check_individual_obs:
             for o in self.obs.values:
                 for att in o._get_meta_attr():
-                    if att not in ["name", "meta"]:
+                    if att not in ["name", "meta", "crs"]:
                         v1 = self.loc[o.name, att]
                         v2 = getattr(o, att)
                         # check if values are equal
@@ -1949,9 +2012,9 @@ class ObsCollection(pd.DataFrame):
         else:
             raise ValueError("specify bro_id or extent")
 
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_lizard(
@@ -2175,25 +2238,32 @@ class ObsCollection(pd.DataFrame):
         """
 
         df = pd.read_excel(path, meta_sheet_name, index_col=0)
-
+        obs_list, crs_set = [], set()
         for oname, row in df.iterrows():
             measurements = pd.read_excel(path, oname, index_col=0)
             all_metadata = row.to_dict()
             obsclass = getattr(obs, all_metadata.pop("obs"))
             # get observation specific metadata
             metadata = {
-                k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
+                k: v for (k, v) in all_metadata.items() if k in obsclass._get_meta_attr()
             }
             metadata["name"] = oname
 
             extra_meta = {
-                k: v for (k, v) in all_metadata.items() if k not in obsclass._metadata
+                k: v for (k, v) in all_metadata.items() if k not in obsclass._get_meta_attr()
             }
 
             o = obsclass(measurements, meta=extra_meta, **metadata)
-            df.at[oname, "obs"] = o
+            obs_list.append(o)
+            if o.crs != "":
+                crs_set.add(o.crs)
 
-        return cls(df)
+        if len(crs_set) > 1:
+            raise ValueError('multiple crs values in observations, an ObsCollection can only have one crs value')
+        crs = next(iter(crs_set), "")
+        df.drop(columns=["crs"], errors="ignore", inplace=True)
+
+        return cls(df, obs_list=obs_list, crs=crs)
 
     @classmethod
     def from_dino(
@@ -2259,8 +2329,8 @@ class ObsCollection(pd.DataFrame):
             **kwargs,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name, meta=meta)
+        obs_df, crs = util._obslist_to_frame(obs_list)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_artdino_dir(
@@ -2337,9 +2407,9 @@ class ObsCollection(pd.DataFrame):
             **kwargs,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_era5(
@@ -2522,8 +2592,8 @@ class ObsCollection(pd.DataFrame):
                 **kwargs,
             )
 
-            obs_df = util._obslist_to_frame(obs_list)
-            return cls(obs_df, name=name, meta=meta)
+            obs_df, crs = util._obslist_to_frame(obs_list)
+            return cls(obs_df, name=name, meta=meta, crs=crs)
 
         elif (file_or_dir is None) and (xmlstring is not None):
             obs_list = read_xmlstring(
@@ -2536,8 +2606,8 @@ class ObsCollection(pd.DataFrame):
                 remove_nan=remove_nan,
                 **kwargs,
             )
-            obs_df = util._obslist_to_frame(obs_list)
-            return cls(obs_df, name=name, meta=meta)
+            obs_df, crs = util._obslist_to_frame(obs_list)
+            return cls(obs_df, name=name, meta=meta, crs=crs)
 
         else:
             raise ValueError("either specify variables file_or_dir or xmlstring")
@@ -2728,8 +2798,8 @@ class ObsCollection(pd.DataFrame):
             nlay=nlay,
             exclude_layers=exclude_layers,
         )
-        obs_df = util._obslist_to_frame(mo_list)
-        return cls(obs_df, name=modelname)
+        obs_df, crs = util._obslist_to_frame(mo_list)
+        return cls(obs_df, name=modelname, crs=crs)
 
     @classmethod
     def from_json(cls, path, **kwargs):
@@ -2909,9 +2979,9 @@ class ObsCollection(pd.DataFrame):
             fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_knmi_scenarios(
@@ -3013,8 +3083,8 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the observation collection
         """
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name)
+        obs_df, crs = util._obslist_to_frame(obs_list)
+        return cls(obs_df, name=name, crs=crs)
 
     @classmethod
     def from_matroos(
@@ -3097,9 +3167,9 @@ class ObsCollection(pd.DataFrame):
         obs_list = read_file(
             path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
         )
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, meta=menyanthes_meta, name=name)
+        return cls(obs_df, meta=menyanthes_meta, name=name, crs=crs)
 
     @classmethod
     def from_modflow(
@@ -3147,9 +3217,9 @@ class ObsCollection(pd.DataFrame):
             method=method,
             exclude_layers=exclude_layers,
         )
-        obs_df = util._obslist_to_frame(mo_list)
+        obs_df, crs = util._obslist_to_frame(mo_list)
 
-        return cls(obs_df)
+        return cls(obs_df, crs=crs)
 
     @classmethod
     def from_waterconnect(
@@ -3353,9 +3423,9 @@ class ObsCollection(pd.DataFrame):
             keep_all_obs=keep_all_obs,
             **kwargs,
         )
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_pastastore(
@@ -3385,14 +3455,14 @@ class ObsCollection(pd.DataFrame):
         obs_list = pastas.read_pastastore_library(
             pstore, libname, ObsClass=ObsClass, metadata_mapping=metadata_mapping
         )
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
         meta = {
             "name": pstore.name,
             "conntype": pstore.conn.conn_type,
             "library": libname,
         }
-        return cls(obs_df, name=pstore.name, meta=meta)
+        return cls(obs_df, name=pstore.name, meta=meta, crs=crs)
 
     def get_obs(self, name=None, **kwargs):
         """get an observation object from a collection
@@ -3483,7 +3553,7 @@ class ObsCollection(pd.DataFrame):
         dict
             dictionary with metadata and observations
         """
-        d = {k: getattr(self, k) for k in self._metadata}
+        d = {k: getattr(self, k) for k in self._get_meta_attr()}
         d["df"] = super().drop(columns="obs").to_dict()
         d["obstype"] = self.__class__.__name__
         d["obs_list"] = [o.to_dict() for o in self.obs]
@@ -3531,7 +3601,7 @@ class ObsCollection(pd.DataFrame):
         with pd.ExcelWriter(path) as writer:
             # replace obs column by observation type
             obseries = oc.pop("obs")
-            oc["obs"] = [type(o).__name__ for o in obseries]
+            oc[["obs","crs"]] = [(type(o).__name__, o.crs) for o in obseries]
 
             # write ObsCollection dataframe to first sheet
             super(ObsCollection, oc).to_excel(writer, sheet_name=meta_sheet_name)
@@ -3559,7 +3629,7 @@ class ObsCollection(pd.DataFrame):
         -------
         None
         """
-        d = {k: getattr(self, k) for k in self._metadata}
+        d = {k: getattr(self, k) for k in self._get_meta_attr()}
         d["obstype"] = type(self).__name__
         if self.empty:
             d["df"] = super().to_json(date_format="iso")
@@ -3811,7 +3881,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otypes[0]._metadata) - {
+        meta_att = set(otypes[0]._get_meta_attr()) - {
             "x",
             "y",
             "location",
@@ -3819,6 +3889,7 @@ class ObsCollection(pd.DataFrame):
             "name",
             "source",
             "meta",
+            "crs",
         }
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():

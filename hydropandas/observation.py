@@ -108,7 +108,7 @@ class Obs(pd.DataFrame):
         "filename",
         "source",
         "unit",
-        "crs",
+        "_crs",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -119,9 +119,10 @@ class Obs(pd.DataFrame):
         pandas.DataFrame.
         """
         if (len(args) > 0) and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in Obs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = Obs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         self.name = kwargs.pop("name", "")
         self.x = kwargs.pop("x", np.nan)
@@ -131,13 +132,13 @@ class Obs(pd.DataFrame):
         self.filename = kwargs.pop("filename", "")
         self.source = kwargs.pop("source", "")
         self.unit = kwargs.pop("unit", "")
-        # set crs
-        self.crs = kwargs.pop("crs", None)
-        if self.crs is not None:
-            self.crs = pyproj.CRS(self.crs)
+        crs = kwargs.pop("crs", "")
 
         super().__init__(*args, **kwargs)
 
+        # set crs
+        self.crs = crs
+    
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
         buf = StringIO("")
@@ -147,7 +148,7 @@ class Obs(pd.DataFrame):
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._get_meta_attr():
-            if att == "crs" and getattr(self, att) is not None:
+            if att == "crs" and getattr(self, att) != "":
                 buf.write(f"{att} : {getattr(self, att).to_string()} \n")
             elif att != "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
@@ -186,7 +187,7 @@ class Obs(pd.DataFrame):
 
         metadata_dic = {key: getattr(self, key) for key in self._get_meta_attr()}
         metadata_dic.pop("meta")
-        if "crs" in metadata_dic and metadata_dic["crs"] is not None:
+        if "crs" in metadata_dic and metadata_dic["crs"] != '':
             metadata_dic["crs"] = metadata_dic["crs"].to_string()
         metadata_df = pd.DataFrame(
             columns=[metadata_dic.pop("name")],
@@ -241,7 +242,34 @@ class Obs(pd.DataFrame):
     def _constructor(self):
         return Obs
 
-    def _get_meta_attr(self, ignore=("monitoring_well",)):
+    @property
+    def crs(self):
+        return self._crs
+
+    @crs.setter
+    def crs(self, value):
+        """Make sure crs is a pyproj.CRS object, an int or a string. If value is an int or a string,
+        try to convert it to a pyproj.CRS object. If that fails, set to an empty string
+        """
+        if isinstance(value, pyproj.CRS):
+            self._crs = value
+        elif isinstance(value, (str,int)):
+            if value == "":
+                self._crs = ""
+            else:
+                try:
+                    self._crs = pyproj.CRS.from_user_input(value)
+                except Exception as e:
+                    logger.warning(f"invalid value for crs: {value}")
+                    self._crs = ""
+        elif value is None or pd.isna(value):
+            self._crs = ""
+        else:
+            raise TypeError('invalid type for crs, please provide a pyproj.CRS object, a string or None')
+
+
+    @classmethod
+    def _get_meta_attr(cls, ignore=("monitoring_well",)):
         """Get metadata attributes excluding the ones in ignore.
 
         Parameters
@@ -251,11 +279,11 @@ class Obs(pd.DataFrame):
 
         Returns
         -------
-        list
-            list of metadata attributes
+        set
+            set of metadata attributes
         """
 
-        return [a for a in self._metadata if a not in ignore]
+        return {a.lstrip('_') for a in cls._metadata if a not in ignore}
 
     def _get_first_numeric_col_name(self):
         """Get the first numeric column name of the observations.
@@ -830,10 +858,11 @@ class GroundwaterObs(Obs):
         for the constructor of a pandas.DataFrame.
         """
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in GroundwaterObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
-
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = GroundwaterObs._get_meta_attr()
+            for key in (meta_arg & meta_self) - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
+        
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
         self.tube_nr = kwargs.pop("tube_nr", "")
@@ -858,6 +887,8 @@ class GroundwaterObs(Obs):
     @monitoring_well.setter
     def monitoring_well(self, value):
         self.location = value
+
+    
 
     @classmethod
     def from_bro(
@@ -1293,9 +1324,10 @@ class WaterQualityObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in WaterQualityObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = WaterQualityObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -1376,8 +1408,8 @@ class WaterQualityObs(Obs):
 
         Returns
         -------
-        WaterlvlObs
-            WaterlvlObs object
+        WaterQualityObs
+            WaterQualityObs object
 
         Raises
         ------
@@ -1412,9 +1444,10 @@ class WaterlvlObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in WaterlvlObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = WaterlvlObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -1576,9 +1609,10 @@ class ModelObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in ModelObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = ModelObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
 
@@ -1599,9 +1633,10 @@ class MeteoObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in MeteoObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = MeteoObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
@@ -1766,9 +1801,10 @@ class EvaporationObs(MeteoObs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in EvaporationObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = EvaporationObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
 
@@ -1863,9 +1899,10 @@ class PrecipitationObs(MeteoObs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in PrecipitationObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = PrecipitationObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
 

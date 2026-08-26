@@ -29,25 +29,36 @@ def _obslist_to_frame(obs_list):
     Parameters
     ----------
     obs_list : list of hydropandas.*Obs
-        list containing *Obs objects that will be stored in DataFrame.
+        list containing *Obs objects that will be stored in DataFrame. All
+        observations must have the same crs value (or an empty string).
 
     Returns
     -------
     obs_df : pandas.DataFrame
         DataFrame containing all data
+    crs : pyproj.CRS
+        coordinate reference system of the observations, if available
     """
     if len(obs_list) > 0:
         obs_df = pd.DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
+
+        # infer crs from the observations
+        crs = {c for c in obs_df.pop("crs") if c != ""}
+        if len(crs) > 1:
+            raise ValueError('multiple crs values in observations, an ObsCollection can only have one crs value')
+        crs = next(iter(crs), "")
+
         obs_df.set_index("name", inplace=True)
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
         obs_df = pd.DataFrame()
+        crs = ""
 
-    return obs_df
+    return obs_df, crs
 
 
 def unzip_file(src, dst, force=False, preserve_datetime=False):

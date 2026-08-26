@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pyproj
 import pytest
 
 import hydropandas as hpd
@@ -28,6 +29,7 @@ def _get_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
         metadata_available=True,
         tube_nr=tube_nr,
         filename="",
+        crs=28992,
         meta={"info": "you can store additional information in this dictionary"},
     )
     return o
@@ -59,6 +61,16 @@ def _obscollection_from_list():
     ]
 
     oc = hpd.ObsCollection.from_list(o_list)
+
+    crs = pyproj.CRS.from_epsg(28992)
+    o_list[0].crs = crs
+    oc = hpd.ObsCollection.from_list(o_list)
+    assert oc.crs == crs
+
+    crs2 = pyproj.CRS.from_epsg(4326)
+    o_list[1].crs = crs2
+    with pytest.raises(ValueError):
+        hpd.ObsCollection.from_list(o_list)
 
     return oc
 
@@ -134,6 +146,7 @@ def test_convert_waterlvl_groundwater_obs():
     assert o_wl.location == o_gw.location, "conversion failed"
     assert o_gw.ground_level == 200, "conversion failed"
 
+test_convert_waterlvl_groundwater_obs()
 
 def test_merge_observations_same_timeseries():
     # base
