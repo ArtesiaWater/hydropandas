@@ -259,7 +259,7 @@ class Obs(pd.DataFrame):
             else:
                 try:
                     self._crs = pyproj.CRS.from_user_input(value)
-                except Exception:
+                except (pyproj.exceptions.CRSError, ValueError, TypeError):
                     logger.warning(f"invalid value for crs: {value}")
                     self._crs = ""
         elif value is None or pd.isna(value):
