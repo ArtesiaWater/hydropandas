@@ -12,10 +12,11 @@ import logging
 import numbers
 import os
 import warnings
+from collections.abc import Iterable
+from collections.abc import Iterable as IterableABC
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import Iterable, Literal
-from collections.abc import Iterable as IterableABC
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -1581,7 +1582,7 @@ class ObsCollection(pd.DataFrame):
             else:
                 try:
                     self._crs = pyproj.CRS.from_user_input(value)
-                except Exception as e:
+                except Exception:
                     logger.warning(f"invalid value for crs: {value}")
                     self._crs = ""
         elif value is None or pd.isna(value):

@@ -22,10 +22,11 @@ import datetime as dt
 import logging
 import os
 import warnings
+from collections.abc import Iterable
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 from zipfile import ZipFile
 
 import numpy as np

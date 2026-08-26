@@ -18,12 +18,12 @@ import json
 import logging
 import numbers
 import os
-import pyproj
 import warnings
 from io import StringIO, TextIOWrapper
 
 import numpy as np
 import pandas as pd
+import pyproj
 from pandas._config import get_option
 from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
@@ -259,7 +259,7 @@ class Obs(pd.DataFrame):
             else:
                 try:
                     self._crs = pyproj.CRS.from_user_input(value)
-                except Exception as e:
+                except Exception:
                     logger.warning(f"invalid value for crs: {value}")
                     self._crs = ""
         elif value is None or pd.isna(value):

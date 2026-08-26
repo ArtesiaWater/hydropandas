@@ -1,9 +1,9 @@
 import json
 import pathlib
-import pyproj
 from datetime import date, datetime
 
 import numpy as np
+import pyproj
 from pandas import Timestamp
 
 
