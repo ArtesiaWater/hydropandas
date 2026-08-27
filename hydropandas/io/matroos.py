@@ -22,7 +22,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
-from pyproj import Proj, Transformer
+import pyproj
+#from pyproj import Proj, Transformer
 from shapely.geometry import Point, box
 from tqdm import tqdm
 
@@ -366,6 +367,7 @@ def get_matroos_obs(
     tmax=None,
     only_metadata=False,
     validate=True,
+    crs=28992,
     **kwargs,
 ):
     """get observations for a certain location, source and unit between
@@ -388,6 +390,8 @@ def get_matroos_obs(
         is False.
     validate : bool, optional
         if True check if location, source and unit are valid, by default True
+    crs : int, optional
+        coordinate reference system for the observation, by default EPSG: 28992.
     **kwargs are passed to request_api function
 
     Returns
@@ -447,12 +451,16 @@ def get_matroos_obs(
         key, item = line.strip("#").split(":")
         if "Position" in key:
             lon, lat = (float(a) for a in item.strip()[1:-1].split(","))
-            proj_from = Proj("EPSG:4326")
-            proj_to = Proj(EPSG_28992)
-            transformer = Transformer.from_proj(proj_from, proj_to)
+            proj_from = pyproj.CRS(4326)
+            proj_to = pyproj.CRS(crs)
+            if proj_to == pyproj.CRS(28992): # correction for wrong RD projection in Proj database
+                transformer = pyproj.Transformer.from_proj(proj_from, pyproj.Proj(EPSG_28992))
+            else:
+                transformer = pyproj.Transformer.from_proj(proj_from, proj_to)
             xy = transformer.transform(lat, lon)
             meta["x"] = xy[0]
             meta["y"] = xy[1]
+            meta["crs"] = proj_to
         elif "Analyse time" in key:
             if "*** no data found ***" in key:
                 msg = f"no measurement data found for {location=}, {source=}, {unit=}, {tmax=}, {tmin=}. Only returning metadata"
