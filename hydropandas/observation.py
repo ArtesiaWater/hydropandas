@@ -148,7 +148,7 @@ class Obs(pd.DataFrame):
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._get_meta_attr():
-            if att == "crs" and getattr(self, att) != "":
+            if att == "crs" and isinstance(getattr(self, att), pyproj.CRS):
                 buf.write(f"{att} : {getattr(self, att).to_string()} \n")
             elif att != "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
@@ -187,7 +187,7 @@ class Obs(pd.DataFrame):
 
         metadata_dic = {key: getattr(self, key) for key in self._get_meta_attr()}
         metadata_dic.pop("meta")
-        if "crs" in metadata_dic and metadata_dic["crs"] != "":
+        if "crs" in metadata_dic and isinstance(metadata_dic["crs"], pyproj.CRS):
             metadata_dic["crs"] = metadata_dic["crs"].to_string()
         metadata_df = pd.DataFrame(
             columns=[metadata_dic.pop("name")],

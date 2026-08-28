@@ -57,12 +57,13 @@ def test_obs_list_from_extent():
     # extent = (102395, 103121, 434331, 434750)
     extent = [117800, 118300, 439700, 439800]  # 4 measurements in extent 2025-4-7
     bro.get_obs_list_from_extent(
-        extent, hpd.GroundwaterObs, tmin=None, tmax=None, crs=28992, only_metadata=True
+        extent, hpd.GroundwaterObs, tmin=None, tmax=None, crs=28992,
+        only_metadata=True
     )
 
 
 def test_groundwater_obs_from_bro_id():
-    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1)
+    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1, crs=4326)
 
 
 def test_groundwater_obs_from_bro_id_brodata():

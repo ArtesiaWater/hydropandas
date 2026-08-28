@@ -23,7 +23,7 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from ..rcparams import rcParams
-from ..util import EPSG_28992
+from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
@@ -750,14 +750,8 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr, crs):
     srsname = gmw.find("dsgmw:deliveredLocation//gmwcommon:location", ns).attrib[
         "srsName"
     ]
-    proj_from = pyproj.CRS(srsname)
-    if crs == pyproj.CRS("EPSG:28992"):
-        proj_to = pyproj.CRS(EPSG_28992)
-    else:
-        proj_to = crs
-    transformer = pyproj.Transformer.from_proj(proj_from, proj_to)
+    transformer = get_transformer28992(pyproj.CRS(srsname), crs)
     xy = transformer.transform(xy[0], xy[1])
-
     meta["x"], meta["y"] = xy
 
     # ground_level
@@ -982,12 +976,9 @@ def get_obs_list_from_extent(
                 "upperCorner": {"lat": extent[3], "lon": extent[1]},
             }
         else:
-            if pyproj.CRS(crs) == pyproj.CRS(28992):
-                transformer = pyproj.Transformer.from_crs(EPSG_28992, 4326)
-            else:
-                transformer = pyproj.Transformer.from_crs(crs, 4326)
-            lat1, lon1 = transformer.transform(extent[0], extent[2])
-            lat2, lon2 = transformer.transform(extent[1], extent[3])
+            transformer = get_transformer28992(pyproj.CRS(crs), 4326)
+            lon1, lat1 = transformer.transform(extent[0], extent[2])
+            lon2, lat2 = transformer.transform(extent[1], extent[3])
             data["area"]["boundingBox"] = {
                 "lowerCorner": {"lat": lat1, "lon": lon1},
                 "upperCorner": {"lat": lat2, "lon": lon2},

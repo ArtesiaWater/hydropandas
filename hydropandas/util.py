@@ -11,6 +11,7 @@ import time
 import zipfile
 
 import pandas as pd
+import pyproj
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,32 @@ EPSG_28992 = (
     "+no_defs"
 )
 
+
+def get_transformer28992(crs_from, crs_to, always_xy=True, **kwargs):
+    """This is simply a wrapper around pyproj.Transformer.from_crs in order
+    to handle the special case of EPSG:28992.
+
+    Parameters
+    ----------
+    crs_from : pyproj.CRS
+        source coordinate reference system.
+    crs_to : pyproj.CRS
+        target coordinate reference system.
+    **kwargs are passed to pyproj.Transformer.from_crs.
+
+    Returns
+    -------
+    pyproj.Transformer
+        transformer object to convert coordinates from crs_from to crs_to.
+    """
+    if crs_to == pyproj.CRS(28992):
+        crs_to = pyproj.CRS(EPSG_28992)
+    if crs_from == pyproj.CRS(28992):
+        crs_from = pyproj.CRS(EPSG_28992)
+
+    transformer = pyproj.Transformer.from_crs(crs_from, crs_to, always_xy=always_xy, **kwargs)
+
+    return transformer
 
 def _obslist_to_frame(obs_list):
     """Convert a list of observations to a pandas DataFrame.

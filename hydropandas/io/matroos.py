@@ -23,11 +23,10 @@ import numpy as np
 import pandas as pd
 import requests
 import pyproj
-#from pyproj import Proj, Transformer
 from shapely.geometry import Point, box
 from tqdm import tqdm
 
-from ..util import EPSG_28992
+from ..util import get_transformer28992
 
 URL = "https://noos.matroos.rws.nl/direct/get_series.php?"
 
@@ -451,16 +450,13 @@ def get_matroos_obs(
         key, item = line.strip("#").split(":")
         if "Position" in key:
             lon, lat = (float(a) for a in item.strip()[1:-1].split(","))
-            proj_from = pyproj.CRS(4326)
-            proj_to = pyproj.CRS(crs)
-            if proj_to == pyproj.CRS(28992): # correction for wrong RD projection in Proj database
-                transformer = pyproj.Transformer.from_proj(proj_from, pyproj.CRS(EPSG_28992))
-            else:
-                transformer = pyproj.Transformer.from_proj(proj_from, proj_to)
-            xy = transformer.transform(lat, lon)
+            crs_from = pyproj.CRS(4326)
+            crs_to = pyproj.CRS(crs)
+            transformer = get_transformer28992(crs_from, crs_to)
+            xy = transformer.transform(lon, lat)
             meta["x"] = xy[0]
             meta["y"] = xy[1]
-            meta["crs"] = proj_to
+            meta["crs"] = crs_to
         elif "Analyse time" in key:
             if "*** no data found ***" in key:
                 msg = f"no measurement data found for {location=}, {source=}, {unit=}, {tmax=}, {tmin=}. Only returning metadata"
