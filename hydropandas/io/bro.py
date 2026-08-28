@@ -690,7 +690,7 @@ def _brodata_gmw_to_meta(gmw, tube_nr):
         "source": "BRO",
         "x": gmw.deliveredLocation.x,
         "y": gmw.deliveredLocation.y,
-        "crs": '',
+        "crs": pyproj.CRS(28992),
         "unit": "m NAP",
         "ground_level": gmw.groundLevelPosition,
         "tube_top": gmw.monitoringTube.at[tube_nr, "tubeTopPosition"],
