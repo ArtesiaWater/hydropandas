@@ -1,11 +1,13 @@
 import html
 import logging
 import re
+import pyproj
 
 import pandas as pd
 import requests
 from pyproj import Transformer
 from tqdm import tqdm
+from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
@@ -14,19 +16,17 @@ GGMN_SITE_URL = "https://ggis.un-igrac.org"
 GGMN_LEVEL_LAYER = "groundwater:GGMN_Levels_Data"
 
 
-def _extent_to_wgs84(extent, epsg):
-    if epsg == 4326:
-        return extent[0], extent[1], extent[2], extent[3]
+def _extent_to_wgs84(extent, crs):
 
-    transformer = Transformer.from_crs(f"EPSG:{epsg}", "EPSG:4326", always_xy=True)
+    transformer = get_transformer28992(crs, pyproj.CRS(4326))
     lon_min, lat_min = transformer.transform(extent[0], extent[2])
     lon_max, lat_max = transformer.transform(extent[1], extent[3])
     return lon_min, lon_max, lat_min, lat_max
 
 
-def get_locations_within_extent(extent, epsg=4326, max_locations=200, timeout=120):
+def get_locations_within_extent(extent, crs=4326, max_locations=200, timeout=120):
     """Get GGMN monitoring locations within an extent."""
-    lon_min, lon_max, lat_min, lat_max = _extent_to_wgs84(extent, epsg)
+    lon_min, lon_max, lat_min, lat_max = _extent_to_wgs84(extent, pyproj.CRS(crs))
 
     params = {
         "service": "WFS",
@@ -160,7 +160,7 @@ def get_obs_list_from_extent(
     parameter=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=4326,
+    crs=4326,
     max_locations=200,
     max_pages=20,
     timeout=120,
@@ -184,8 +184,8 @@ def get_obs_list_from_extent(
         if True download only metadata, significantly faster. The default is False.
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept. The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
+    crs : str, int or pyproj.CRS, optional
+        crs of the supplied extent. Returned observation x/y
         coordinates are also in this CRS. The default is 4326 (WGS84).
     max_locations : int, optional
         maximum number of locations to download, by default 200
@@ -200,17 +200,18 @@ def get_obs_list_from_extent(
         list with Obs objects
     """
     features = get_locations_within_extent(
-        extent, epsg=epsg, max_locations=max_locations, timeout=timeout
+        extent, crs=crs, max_locations=max_locations, timeout=timeout
     )
 
     if not features:
         logger.warning(f"No GGMN locations found within extent {extent}")
         return []
 
-    if epsg != 4326:
-        transformer_from_wgs84 = Transformer.from_crs(
-            "EPSG:4326", f"EPSG:{epsg}", always_xy=True
-        )
+    crs = pyproj.CRS(crs)
+
+    if crs != pyproj.CRS(4326):
+        transformer_from_wgs84 = get_transformer28992(pyproj.CRS(4326),
+                                                      crs)
     else:
         transformer_from_wgs84 = None
 
@@ -241,7 +242,7 @@ def get_obs_list_from_extent(
             "y": y,
             "latitude": lat,
             "longitude": lon,
-            "epsg": epsg,
+            "crs": crs,
             "source": "GGMN",
         }
 
@@ -251,6 +252,7 @@ def get_obs_list_from_extent(
                     name=name,
                     x=x,
                     y=y,
+                    crs=crs,
                     source="GGMN",
                     unit="m",
                     meta=meta,
@@ -265,6 +267,7 @@ def get_obs_list_from_extent(
                         name=name,
                         x=x,
                         y=y,
+                        crs=crs,
                         source="GGMN",
                         unit="m",
                         meta=meta,
@@ -290,6 +293,7 @@ def get_obs_list_from_extent(
                 name=name,
                 x=x,
                 y=y,
+                crs=crs,
                 source="GGMN",
                 unit=unit or "m",
                 meta=meta,

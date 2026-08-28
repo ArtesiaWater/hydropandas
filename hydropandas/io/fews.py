@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import pyproj
 import xml.etree.ElementTree as etree
 from io import StringIO
 
@@ -25,6 +26,7 @@ def read_xml_fname(
     return_df: bool = False,
     tags: tuple[str] = ("series", "header", "event"),
     remove_nan: bool = False,
+    crs: str | int | "pyproj.CRS" | None = None,
     **kwargs: dict,  # unused
 ):
     """Read an xml filename into a list of observations objects.
@@ -62,6 +64,10 @@ def read_xml_fname(
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations, by default None
 
     Returns
     -------
@@ -82,6 +88,7 @@ def read_xml_fname(
             keep_flags=keep_flags,
             return_df=return_df,
             tags=tags,
+            crs=crs,
         )
     else:
         tree = etree.parse(fname)
@@ -92,6 +99,7 @@ def read_xml_fname(
             translate_dic=translate_dic,
             locationIds=locationIds,
             remove_nan=remove_nan,
+            crs=crs,
         )
 
     return obs_list
@@ -107,6 +115,7 @@ def iterparse_pi_xml(
     keep_flags: tuple[int] = (0, 1),
     return_df: bool = False,
     tags: tuple[str] = ("series", "header", "event"),
+    crs: str | int | "pyproj.CRS" | None = None,
 ):
     """Read a FEWS XML-file with measurements, memory efficient.
 
@@ -134,6 +143,10 @@ def iterparse_pi_xml(
         when return_events is False.
     tags : list of strings, optional
         Select the tags to be parsed. Defaults to series, header and event
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations, by default None
     return_df : bool, optional
         return a DataFame with the data, instead of two lists (default is
         False)
@@ -255,7 +268,7 @@ def iterparse_pi_xml(
                     mask = df["flag"].isin(keep_flags)
                     ts = pd.to_numeric(df.loc[mask, "value"], errors="coerce")
 
-            o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
+            o, header = _obs_from_meta(ts, header, translate_dic, ObsClass, crs)
             header_list.append(header)
             obs_list.append(o)
 
@@ -278,6 +291,7 @@ def read_xmlstring(
     locationIds: list[str] | None = None,
     low_memory: bool = True,
     remove_nan: bool = False,
+    crs: str | int | "pyproj.CRS" | None = None,
 ):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
     obtained using a fews api.
@@ -300,6 +314,10 @@ def read_xmlstring(
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations, by default None
 
     Returns
     -------
@@ -316,6 +334,7 @@ def read_xmlstring(
             translate_dic=translate_dic,
             filterdict=filterdict,
             locationIds=locationIds,
+            crs=crs,
         )
     else:
         root = etree.fromstring(xmlstring)
@@ -325,6 +344,7 @@ def read_xmlstring(
             translate_dic=translate_dic,
             locationIds=locationIds,
             remove_nan=remove_nan,
+            crs=crs,
         )
 
     return obs_list
@@ -336,6 +356,7 @@ def read_xml_root(
     translate_dic: dict[str, str] | None = None,
     locationIds: list[str] | None = None,
     remove_nan: bool = False,
+    crs: str | int | "pyproj.CRS" | None = None,
 ):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
@@ -354,6 +375,10 @@ def read_xml_root(
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations, by default None
 
     Returns
     -------
@@ -398,7 +423,7 @@ def read_xml_root(
                     ts.dropna(subset=["value"], inplace=True)
                     header["unit"] = "m NAP"
 
-            o, header = _obs_from_meta(ts, header, translate_dic, ObsClass)
+            o, header = _obs_from_meta(ts, header, translate_dic, ObsClass, crs)
             if locationIds is not None:
                 if header["location"] in locationIds:
                     obs_list.append(o)
@@ -413,6 +438,7 @@ def _obs_from_meta(
     header: dict[str, str],
     translate_dic: dict[str, str],
     ObsClass: Obs | dict[str, Obs],
+    crs: str | int | "pyproj.CRS" | None = None,
 ):
     """Internal function to convert timeseries and header into Obs objects.
 
@@ -426,6 +452,10 @@ def _obs_from_meta(
         translate dictionary.
     ObsClass: Union[Obs, Dict[str, Obs]],
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations, by default None
 
     Returns
     -------
@@ -475,6 +505,7 @@ def _obs_from_meta(
             ts,
             x=x,
             y=y,
+            crs=crs,
             unit=unit,
             meta=header,
             name=name,
@@ -491,6 +522,7 @@ def _obs_from_meta(
             ts,
             x=x,
             y=y,
+            crs=crs,
             ground_level=z,
             unit=unit,
             meta=header,
@@ -508,6 +540,7 @@ def _obs_from_meta(
             ts,
             x=x,
             y=y,
+            crs=crs,
             unit=unit,
             meta=header,
             name=name,
@@ -515,12 +548,14 @@ def _obs_from_meta(
             source="FEWS",
         )
     else:
-        o = ObsC(ts, x=x, y=y, unit=unit, meta=header, name=name, source="FEWS")
+        o = ObsC(ts, x=x, y=y, crs=crs, 
+                 unit=unit, meta=header, name=name, source="FEWS")
 
     return o, header
 
 
-def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0, version: str = "1.24"):
+def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0,
+                 version: str = "1.24"):
     """Write TimeSeries object to PI-XML file.
 
     Parameters
@@ -626,6 +661,7 @@ def read_xml_filelist(
     filterdict: dict[str, list[str]] | None = None,
     remove_nan: bool = False,
     low_memory: bool = True,
+    crs: str | int | pyproj.CRS | None = None,
     **kwargs: dict,
 ):
     """Read a list of xml files into a list of observation objects.
@@ -654,6 +690,10 @@ def read_xml_filelist(
     low_memory : bool, optional
         whether to use xml-parsing method with lower memory footprint,
         default is True
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations, by default None
 
     Returns
     -------
@@ -684,6 +724,7 @@ def read_xml_filelist(
             low_memory=low_memory,
             locationIds=locations,
             remove_nan=remove_nan,
+            crs=crs,
             **kwargs,
         )
 

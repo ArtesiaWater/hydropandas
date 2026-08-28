@@ -385,6 +385,7 @@ def read_fews(
     unpackdir=None,
     force_unpack=False,
     preserve_datetime=False,
+    crs=None,
     **kwargs,
 ):
     """Read one or several FEWS PI-XML files.
@@ -423,7 +424,11 @@ def read_fews(
         force unpack if dst already exists
     preserve_datetime : boolean, optional
         whether to preserve datetime from zip archive
-
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations.
+            
     Returns
     -------
     ObsCollection
@@ -443,6 +448,7 @@ def read_fews(
         unpackdir=unpackdir,
         force_unpack=force_unpack,
         preserve_datetime=preserve_datetime,
+        crs=crs,
         **kwargs,
     )
 
@@ -458,7 +464,7 @@ def read_ggmn(
     parameter=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=4326,
+    crs=4326,
     max_locations=200,
     max_pages=20,
     timeout=120,
@@ -487,9 +493,9 @@ def read_ggmn(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept.
         The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent, this crs is also
+        used for the observations. The default is 4326 (WGS84).
     max_locations : int, optional
         maximum number of locations to download, by default 200
     max_pages : int, optional
@@ -511,7 +517,7 @@ def read_ggmn(
         parameter=parameter,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
         max_locations=max_locations,
         max_pages=max_pages,
         timeout=timeout,
@@ -2536,6 +2542,7 @@ class ObsCollection(pd.DataFrame):
         unpackdir=None,
         force_unpack=False,
         preserve_datetime=False,
+        crs=None,
         **kwargs,
     ):
         """Read one or several FEWS PI-XML files.
@@ -2575,6 +2582,10 @@ class ObsCollection(pd.DataFrame):
             force unpack if dst already exists
         preserve_datetime : boolean, optional
             whether to preserve datetime from zip archive
+        crs : str, int, pyproj.CRS or None, optional
+            The coordinate reference system of the observations. There is no check
+            if the coordinates in the xml are actually this crs. This crs is only
+            used to set the crs attribute of the observations, by default None
 
         Returns
         -------
@@ -2608,6 +2619,7 @@ class ObsCollection(pd.DataFrame):
                 locations=locations,
                 remove_nan=remove_nan,
                 low_memory=low_memory,
+                crs=crs,
                 **kwargs,
             )
 
@@ -2623,6 +2635,7 @@ class ObsCollection(pd.DataFrame):
                 locationIds=locations,
                 low_memory=low_memory,
                 remove_nan=remove_nan,
+                crs=crs,
                 **kwargs,
             )
             obs_df, crs = util._obslist_to_frame(obs_list)
@@ -2642,7 +2655,7 @@ class ObsCollection(pd.DataFrame):
         parameter=None,
         only_metadata=False,
         keep_all_obs=True,
-        epsg=4326,
+        crs=4326,
         max_locations=200,
         max_pages=20,
         timeout=120,
@@ -2671,9 +2684,9 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : bool, optional
             if False, only observations with measurements are kept.
             The default is True.
-        epsg : int, optional
-            epsg code of the supplied extent. Returned observation x/y
-            coordinates are also in this CRS. The default is 4326 (WGS84).
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent, this crs is also
+            used for the observations. The default is 4326 (WGS84).
         max_locations : int, optional
             maximum number of locations to download, by default 200
         max_pages : int, optional
@@ -2698,7 +2711,7 @@ class ObsCollection(pd.DataFrame):
             parameter=parameter,
             only_metadata=only_metadata,
             keep_all_obs=keep_all_obs,
-            epsg=epsg,
+            crs=crs,
             max_locations=max_locations,
             max_pages=max_pages,
             timeout=timeout,
