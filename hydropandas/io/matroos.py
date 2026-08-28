@@ -454,7 +454,7 @@ def get_matroos_obs(
             proj_from = pyproj.CRS(4326)
             proj_to = pyproj.CRS(crs)
             if proj_to == pyproj.CRS(28992): # correction for wrong RD projection in Proj database
-                transformer = pyproj.Transformer.from_proj(proj_from, pyproj.Proj(EPSG_28992))
+                transformer = pyproj.Transformer.from_proj(proj_from, pyproj.CRS(EPSG_28992))
             else:
                 transformer = pyproj.Transformer.from_proj(proj_from, proj_to)
             xy = transformer.transform(lat, lon)

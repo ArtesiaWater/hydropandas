@@ -897,6 +897,7 @@ class GroundwaterObs(Obs):
         tmin="1900-01-01",
         tmax="2040-01-01",
         to_wintertime=True,
+        crs=28992,
         drop_duplicate_times=True,
         only_metadata=False,
         engine="hydropandas",
@@ -917,6 +918,9 @@ class GroundwaterObs(Obs):
         to_wintertime : bool, optional
             if True the time index is converted to Dutch winter time. The default
             is True.
+        crs : str, int, pyproj.CRS or None, optional
+            The desired coordinate reference system of the observation, if it differs from
+            the crs in BRO the coordinates are transformed, by default EPSG: 28992.
         drop_duplicate_times : bool, optional
             if True rows with a duplicate time stamp are removed keeping only the
             first row. The default is True.
@@ -941,6 +945,7 @@ class GroundwaterObs(Obs):
             tmin=tmin,
             tmax=tmax,
             to_wintertime=to_wintertime,
+            crs=crs,
             drop_duplicate_times=drop_duplicate_times,
             only_metadata=only_metadata,
             engine=engine,
@@ -952,6 +957,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            crs=meta.pop("crs"),
             location=meta.pop("location"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),

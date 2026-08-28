@@ -36,7 +36,7 @@ def read_bro(
     tmax=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=28992,
+    crs=28992,
     ignore_max_obs=False,
     engine="hydropandas",
 ):
@@ -61,8 +61,10 @@ def read_bro(
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without
         measurements
-    epsg : int, optional
-        epsg code of the extent. The default is 28992 (RD).
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in BRO the coordinates are transformed, by default
+        EPSG: 28992.
     ignore_max_obs : bool, optional
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
@@ -85,7 +87,7 @@ def read_bro(
         tmax=tmax,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
         ignore_max_obs=ignore_max_obs,
         engine=engine,
     )
@@ -1943,7 +1945,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         only_metadata=False,
         keep_all_obs=True,
-        epsg=28992,
+        crs=28992,
         ignore_max_obs=False,
         engine="hydropandas",
     ):
@@ -1969,8 +1971,10 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : boolean, optional
             add all observation points to the collection, even without
             measurements
-        epsg : int, optional
-            epsg code of the extent. The default is 28992 (RD).
+        crs : str, int, pyproj.CRS or None, optional
+            The coordinate reference system of the extent and the observations, if it
+            differs from the crs in BRO the coordinates are transformed, by default
+            EPSG: 28992.
         ignore_max_obs : bool, optional
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
@@ -2003,7 +2007,7 @@ class ObsCollection(pd.DataFrame):
                 tmax=tmax,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
-                epsg=epsg,
+                crs=crs,
                 ignore_max_obs=ignore_max_obs,
                 engine=engine,
             )
@@ -2014,6 +2018,7 @@ class ObsCollection(pd.DataFrame):
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
+                crs=crs,
                 engine=engine,
             )
             name = meta.pop("name")
