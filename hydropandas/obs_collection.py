@@ -1101,7 +1101,7 @@ def read_matroos(
 
 
 def read_menyanthes(
-    path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+    path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True, crs=28992
 ):
     """Read a Menyanthes file.
 
@@ -1118,6 +1118,8 @@ def read_menyanthes(
         if True the observations are read. The default is True.
     load_stresses : bool, optional
         if True the stresses are read. The default is True.
+    crs : str, int, pyproj.CRS or None, optional
+        coordinate reference system for the observations. By default, EPSG:28992.
 
     Returns
     -------
@@ -1131,6 +1133,7 @@ def read_menyanthes(
         ObsClass=ObsClass,
         load_oseries=load_oseries,
         load_stresses=load_stresses,
+        crs=crs,
     )
 
     return oc
@@ -3203,14 +3206,15 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_menyanthes(
-        cls, path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+        cls, path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True, crs=28992
     ):
         from .io.menyanthes import read_file
 
         menyanthes_meta = {"path": path, "type": ObsClass}
 
         obs_list = read_file(
-            path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
+            path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses,
+            crs=crs
         )
         obs_df, crs = util._obslist_to_frame(obs_list)
 

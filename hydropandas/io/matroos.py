@@ -450,9 +450,8 @@ def get_matroos_obs(
         key, item = line.strip("#").split(":")
         if "Position" in key:
             lon, lat = (float(a) for a in item.strip()[1:-1].split(","))
-            crs_from = pyproj.CRS(4326)
             crs_to = pyproj.CRS(crs)
-            transformer = get_transformer28992(crs_from, crs_to)
+            transformer = get_transformer28992(pyproj.CRS(4326), crs_to)
             xy = transformer.transform(lon, lat)
             meta["x"] = xy[0]
             meta["y"] = xy[1]
