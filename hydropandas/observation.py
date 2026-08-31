@@ -983,6 +983,7 @@ class GroundwaterObs(Obs):
         only_metadata=False,
         organisation="vitens",
         auth=None,
+        crs=28992,
     ):
         """Extracts the metadata and timeseries of a observation well from a LIZARD-API
         based on the code of a monitoring well.
@@ -1019,6 +1020,10 @@ class GroundwaterObs(Obs):
             organisation of the data. Currently only 'vitens' is officially supported.
         auth : tuple, optional
             authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent and the observations, if it
+            differs from the crs in Lizard the coordinates are transformed, by default
+            EPSG: 28992.
 
         Returns
         -------
@@ -1040,12 +1045,14 @@ class GroundwaterObs(Obs):
             only_metadata=only_metadata,
             organisation=organisation,
             auth=auth,
+            crs=crs,
         )
         return cls(
             measurements,
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            crs=meta.pop("crs"),
             location=meta.pop("location"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),

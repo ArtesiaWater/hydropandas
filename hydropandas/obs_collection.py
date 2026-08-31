@@ -964,6 +964,7 @@ def read_lizard(
     only_metadata=False,
     organisation="vitens",
     auth=None,
+    crs=28992,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
     tube numbers.
@@ -1003,6 +1004,10 @@ def read_lizard(
         organisation of the data, by default "vitens".
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in Lizard the coordinates are transformed, by default
+        EPSG: 28992.
 
     Returns
     -------
@@ -1024,6 +1029,7 @@ def read_lizard(
         only_metadata=only_metadata,
         organisation=organisation,
         auth=auth,
+        crs=crs,
     )
     return oc
 
@@ -2051,6 +2057,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         organisation="vitens",
         auth=None,
+        crs=28992,
     ):
         """Get all observations within a specified extent.
 
@@ -2089,6 +2096,10 @@ class ObsCollection(pd.DataFrame):
             organisation of the data. The default is "vitens".
         auth : tuple, optional
             authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent and the observations, if it
+            differs from the crs in Lizard the coordinates are transformed, by default
+            EPSG: 28992.
 
         Returns
         -------
@@ -2112,6 +2123,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
+                crs=crs,
             )
         elif codes is not None:
             obs_list = get_obs_list_from_codes(
@@ -2127,6 +2139,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
+                crs=crs,
             )
         else:
             raise ValueError("specify codes or extent")
