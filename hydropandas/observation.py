@@ -29,6 +29,7 @@ from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
 
 from .serialization import HydropandasEncoder
+from .util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
@@ -305,6 +306,63 @@ class Obs(pd.DataFrame):
                 return col
 
         return None
+
+    def set_crs(self, crs, if_exists='error'):
+        """Set the CRS of the observation without transforming it.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to set for the observation.
+        if_exists : {'error', 'warn', 'ignore'}, default 'error'
+            Behavior when the observation already has a CRS defined. Options are:
+            - 'error': Raise an error if a different CRS is already set.
+            - 'warn': Issue a warning if a different CRS is already set.
+            - 'ignore': Override the existing CRS without any warning or error.
+
+        Returns
+        -------
+        None
+        """
+        if isinstance(self.crs, str) and self.crs == "":
+            self.crs = crs
+        elif self.crs != pyproj.CRS(crs):
+            if if_exists == 'error':
+                raise ValueError("Observation already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override.")
+            elif if_exists == 'warn':
+                logger.warning('Observation already has a different CRS defined. Overriding it may not have the intended effect.')
+            elif if_exists == 'ignore':
+                pass
+            else:
+                raise ValueError(f"Invalid value for if_exists: {if_exists}")
+            self.crs = crs
+        else:
+            logger.warning('cannot set the crs because it is already set to the same value')
+
+    def to_crs(self, crs):
+        """Convert the observation to the specified CRS.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to convert the observation to.
+
+        Returns
+        -------
+        Obs
+            A new Obs object with the observation converted to the specified CRS.
+        """
+        if isinstance(self.crs, str) and self.crs == "":
+            raise ValueError("Observation has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first.")
+
+        if self.crs == pyproj.CRS(crs):
+            return self.copy(deep=True)
+
+        o = self.copy(deep=True)
+        transformer = get_transformer28992(self.crs, crs)
+        o.x, o.y = transformer.transform(self.x, self.y)
+        o.crs = crs
+        return o
 
     def copy(self, deep=True):
         """Create a copy of the observation.
@@ -1168,6 +1226,7 @@ class GroundwaterObs(Obs):
         verify=True,
         pumping=True,
         anomalous=True,
+        crs=7844,
         **kwargs,
     ):
         """Read data from water connect api.
@@ -1190,6 +1249,8 @@ class GroundwaterObs(Obs):
             return observations from pumping wells
         anomalous : bool, optional
             return anomalous observations
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the observations. By default, EPSG:7844.
         **kwargs
             kwargs are passed to 'get_waterconnect_obs'
 
@@ -1214,6 +1275,7 @@ class GroundwaterObs(Obs):
             verify=verify,
             pumping=pumping,
             anomalous=anomalous,
+            crs=crs,
             **kwargs,
         )
 

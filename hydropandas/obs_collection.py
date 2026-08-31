@@ -1251,6 +1251,7 @@ def read_waterconnect(
     keep_all_obs=False,
     location_gdf=None,
     update=False,
+    crs=7844,
     **kwargs,
 ):
     """Read waterconnect measurement within an extent
@@ -1279,6 +1280,8 @@ def read_waterconnect(
     update : bool, optional
         if True new locations are downloaded and stored locally (slow) otherwise a
         cached version of the locations is used. By default False
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent and observations. By default, EPSG:7844.
     **kwargs
         additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
@@ -1298,6 +1301,7 @@ def read_waterconnect(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         location_gdf=location_gdf,
+        crs=crs,
         update=update,
         **kwargs,
     )
@@ -3282,6 +3286,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=False,
         location_gdf=None,
         update=False,
+        crs=7844,
         **kwargs,
     ):
         """Read waterconnect measurement within an extent or from a file or directory.
@@ -3309,7 +3314,9 @@ class ObsCollection(pd.DataFrame):
             geodataframe with the locations of the water drill holes you want to include.
         update : bool, optional
             if True new locations are downloaded and stored locally (slow) otherwise a
-            cached version of the locations is used. By default False
+            cached version of the locations is used. By default False.
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the extent and observations. By default, EPSG:7844.
         **kwargs
             additional keyword arguments are passed to the ObsClass.from_waterconnect()
             method
@@ -3333,6 +3340,7 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
                 location_gdf=location_gdf,
                 update=update,
+                crs=crs,
                 **kwargs,
             )
         else:
@@ -3556,6 +3564,87 @@ class ObsCollection(pd.DataFrame):
             raise ValueError(
                 f"multiple observations for given conditions {selected_obs.index}"
             )
+
+    def set_crs(self, crs, if_exists='error'):
+        """Set the CRS of the ObsCollection and all individual observations without
+        transforming them.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to set for the observations.
+        if_exists : {'error', 'warn', 'ignore'}, default 'error'
+            Behavior when the ObsCollection or an Observation already has a CRS defined. Options are:
+            - 'error': Raise an error if a different CRS is already set.
+            - 'warn': Issue a warning if a different CRS is already set.
+            - 'ignore': Override the existing CRS without any warning or error.
+
+        Returns
+        -------
+        ObsCollection
+            The ObsCollection with the CRS set for all observations.
+        """
+        if isinstance(self.crs, str) and self.crs == "":
+            self.crs = crs
+        elif self.crs != pyproj.CRS(crs):
+            if if_exists == 'error':
+                raise ValueError("ObsCollection already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override.")
+            elif if_exists == 'warn':
+                logger.warning('ObsCollection already has a different CRS defined. Overriding it may not have the intended effect.')
+            elif if_exists == 'ignore':
+                pass
+            else:
+                raise ValueError(f"Invalid value for if_exists: {if_exists}")
+            self.crs = crs
+
+        # check individual observations
+        for o in self.obs:
+            if isinstance(o.crs, str) and o.crs == "":
+                logger.warning(f'Observation {o.name} has no CRS defined. Setting it to the collection CRS.')
+                o.crs = crs
+            elif o.crs != pyproj.CRS(crs):
+                if if_exists == 'error':
+                    raise ValueError("Observation already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override.")
+                elif if_exists == 'warn':
+                    logger.warning('Observation already has a different CRS defined. Overriding it may not have the intended effect.')
+                elif if_exists == 'ignore':
+                    pass
+                else:
+                    raise ValueError(f"Invalid value for if_exists: {if_exists}")
+                o.crs = crs
+    
+        return
+    
+
+    def to_crs(self, crs):
+        """Convert all observations in the collection to the specified CRS.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to convert the observations to.
+
+        Returns
+        -------
+        ObsCollection
+            A new ObsCollection with all observations converted to the specified CRS.
+        """
+        if isinstance(crs, str) and crs == "":
+            raise ValueError("ObsCollection has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first.")
+
+        obs_list = []
+        for o in self.obs:
+            if isinstance(o.crs, str) and o.crs == "":
+                o.crs = self.crs # assume crs of the collection is the crs of the observation
+            elif o.crs != self.crs:
+                raise ValueError(
+                    f"observation {o.name} has a different CRS ({o.crs}) than the collection ({self.crs})"
+                )
+
+            o = o.to_crs(crs)
+            obs_list.append(o)
+
+        return ObsCollection(obs_list, crs=crs)
 
     def to_csv(self, path, check_consistency=True, **kwargs):
         """Write all observations in the ObsCollection to csv files.
