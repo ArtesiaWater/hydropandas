@@ -46,9 +46,12 @@ def get_transformer28992(crs_from, crs_to, always_xy=True, **kwargs):
     if crs_from == pyproj.CRS(28992):
         crs_from = pyproj.CRS(EPSG_28992)
 
-    transformer = pyproj.Transformer.from_crs(crs_from, crs_to, always_xy=always_xy, **kwargs)
+    transformer = pyproj.Transformer.from_crs(
+        crs_from, crs_to, always_xy=always_xy, **kwargs
+    )
 
     return transformer
+
 
 def _obslist_to_frame(obs_list):
     """Convert a list of observations to a pandas DataFrame.
@@ -230,7 +233,7 @@ def df2gdf(df, xcol="x", ycol="y", crs=28992):
 
     gdf = GeoDataFrame(
         df.copy(),
-        geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()],
+        geometry=[Point((s[xcol], s[ycol])) for _, s in df.iterrows()],
         crs=crs,
     )
     return gdf

@@ -540,7 +540,7 @@ def get_timeseries_stn(
                 "name": f"{meteo_var}_{stn_name}_{stn}",
                 "location": stn_name,
                 "source": "KNMI",
-                "crs": pyproj.CRS(28992)
+                "crs": pyproj.CRS(28992),
             }
         )
         meta.update(variables)

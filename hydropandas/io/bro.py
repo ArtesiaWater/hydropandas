@@ -40,8 +40,9 @@ class BroDataParseError(Exception):
         super().__init__(self.message)
 
 
-def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_obs=True,
-                              crs=28992):
+def get_obs_list_from_gmn_hpd(
+    bro_id, ObsClass, only_metadata=False, keep_all_obs=True, crs=28992
+):
     """get a list of observation from a groundwater monitoring network using the
     hydropandas engine.
 
@@ -100,8 +101,7 @@ def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_ob
         tube_nr = int(tube.find("xmlns:tubeNumber", ns).text)
 
         o = ObsClass.from_bro(
-            bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata,
-            crs=crs
+            bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata, crs=crs
         )
         if o.empty:
             logger.debug(
@@ -187,7 +187,11 @@ def get_obs_list_from_gmn(
 
     elif engine == "hydropandas":
         obs_list, meta = get_obs_list_from_gmn_hpd(
-            bro_id, ObsClass, only_metadata=only_metadata, keep_all_obs=keep_all_obs, crs=crs
+            bro_id,
+            ObsClass,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            crs=crs,
         )
     else:
         raise ValueError(f"invalid engine selected {engine=}")
@@ -247,8 +251,10 @@ def get_bro_groundwater(
             gld = brodata.gld.GroundwaterLevelDossier.from_bro_id(bro_id)
             df = gld.observation.rename(columns={"value": "values"})
             meta = get_metadata_from_gmw(
-                gld.groundwaterMonitoringWell, gld.tubeNumber,
-                pyproj.CRS(crs), engine=engine
+                gld.groundwaterMonitoringWell,
+                gld.tubeNumber,
+                pyproj.CRS(crs),
+                engine=engine,
             )
         else:
             raise ValueError(f"invalid engine selected {engine=}")
@@ -276,7 +282,9 @@ def get_bro_groundwater(
 
             dfl = []
             for i, gld_id in enumerate(gld_ids):
-                df, meta_new = measurements_from_gld(gld_id, crs=pyproj.CRS(crs), **kwargs)
+                df, meta_new = measurements_from_gld(
+                    gld_id, crs=pyproj.CRS(crs), **kwargs
+                )
                 meta.update(meta_new)
                 dfl.append(df)
             df = pd.concat(dfl, axis=0).sort_index()
@@ -340,7 +348,12 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
 
 
 def measurements_from_gld(
-    bro_id, tmin=None, tmax=None, to_wintertime=True, crs=28992, drop_duplicate_times=True
+    bro_id,
+    tmin=None,
+    tmax=None,
+    to_wintertime=True,
+    crs=28992,
+    drop_duplicate_times=True,
 ):
     """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
@@ -463,8 +476,9 @@ def measurements_from_gld(
     df = df.loc[tmin:tmax]
 
     # add metadata from gmw
-    meta.update(get_metadata_from_gmw(meta["location"], meta["tube_nr"],
-                                      pyproj.CRS(crs)))
+    meta.update(
+        get_metadata_from_gmw(meta["location"], meta["tube_nr"], pyproj.CRS(crs))
+    )
 
     return df, meta
 
@@ -739,8 +753,7 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr, crs):
 
     gmw = _get_gmw_from_bro_id(bro_id)
 
-    meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO",
-            "crs": crs}
+    meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO", "crs": crs}
 
     # x and y
     xy_elem = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)

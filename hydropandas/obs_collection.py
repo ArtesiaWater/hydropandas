@@ -428,7 +428,7 @@ def read_fews(
         The coordinate reference system of the observations. There is no check
         if the coordinates in the xml are actually this crs. This crs is only
         used to set the crs attribute of the observations.
-            
+
     Returns
     -------
     ObsCollection
@@ -3210,15 +3210,24 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_menyanthes(
-        cls, path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True, crs=28992
+        cls,
+        path,
+        name="",
+        ObsClass=obs.Obs,
+        load_oseries=True,
+        load_stresses=True,
+        crs=28992,
     ):
         from .io.menyanthes import read_file
 
         menyanthes_meta = {"path": path, "type": ObsClass}
 
         obs_list = read_file(
-            path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses,
-            crs=crs
+            path,
+            ObsClass,
+            load_oseries=load_oseries,
+            load_stresses=load_stresses,
+            crs=crs,
         )
         obs_df, crs = util._obslist_to_frame(obs_list)
 
@@ -3565,7 +3574,7 @@ class ObsCollection(pd.DataFrame):
                 f"multiple observations for given conditions {selected_obs.index}"
             )
 
-    def set_crs(self, crs, if_exists='error'):
+    def set_crs(self, crs, if_exists="error"):
         """Set the CRS of the ObsCollection and all individual observations without
         transforming them.
 
@@ -3587,11 +3596,15 @@ class ObsCollection(pd.DataFrame):
         if isinstance(self.crs, str) and self.crs == "":
             self.crs = crs
         elif self.crs != pyproj.CRS(crs):
-            if if_exists == 'error':
-                raise ValueError("ObsCollection already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override.")
-            elif if_exists == 'warn':
-                logger.warning('ObsCollection already has a different CRS defined. Overriding it may not have the intended effect.')
-            elif if_exists == 'ignore':
+            if if_exists == "error":
+                raise ValueError(
+                    "ObsCollection already has a different CRS defined. Use `to_crs` to transform the coordinates to a different crs or use `set_crs` with if_exists='warn' or 'ignore' to override."
+                )
+            elif if_exists == "warn":
+                logger.warning(
+                    "ObsCollection already has a different CRS defined. Overriding it may not have the intended effect."
+                )
+            elif if_exists == "ignore":
                 pass
             else:
                 raise ValueError(f"Invalid value for if_exists: {if_exists}")
@@ -3600,21 +3613,26 @@ class ObsCollection(pd.DataFrame):
         # check individual observations
         for o in self.obs:
             if isinstance(o.crs, str) and o.crs == "":
-                logger.warning(f'Observation {o.name} has no CRS defined. Setting it to the collection CRS.')
+                logger.warning(
+                    f"Observation {o.name} has no CRS defined. Setting it to the collection CRS."
+                )
                 o.crs = crs
             elif o.crs != pyproj.CRS(crs):
-                if if_exists == 'error':
-                    raise ValueError("Observation already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override.")
-                elif if_exists == 'warn':
-                    logger.warning('Observation already has a different CRS defined. Overriding it may not have the intended effect.')
-                elif if_exists == 'ignore':
+                if if_exists == "error":
+                    raise ValueError(
+                        "Observation already has a different CRS defined. Use `to_crs` to transform the coordinates to a different crs or use `set_crs` with if_exists='warn' or 'ignore' to override."
+                    )
+                elif if_exists == "warn":
+                    logger.warning(
+                        "Observation already has a different CRS defined. Overriding it may not have the intended effect."
+                    )
+                elif if_exists == "ignore":
                     pass
                 else:
                     raise ValueError(f"Invalid value for if_exists: {if_exists}")
                 o.crs = crs
-    
+
         return
-    
 
     def to_crs(self, crs):
         """Convert all observations in the collection to the specified CRS.
@@ -3630,12 +3648,16 @@ class ObsCollection(pd.DataFrame):
             A new ObsCollection with all observations converted to the specified CRS.
         """
         if isinstance(crs, str) and crs == "":
-            raise ValueError("ObsCollection has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first.")
+            raise ValueError(
+                "ObsCollection has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first."
+            )
 
         obs_list = []
         for o in self.obs:
             if isinstance(o.crs, str) and o.crs == "":
-                o.crs = self.crs # assume crs of the collection is the crs of the observation
+                o.crs = (
+                    self.crs
+                )  # assume crs of the collection is the crs of the observation
             elif o.crs != self.crs:
                 raise ValueError(
                     f"observation {o.name} has a different CRS ({o.crs}) than the collection ({self.crs})"
@@ -3787,7 +3809,7 @@ class ObsCollection(pd.DataFrame):
 
         fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_gdf(self, xcol="x", ycol="y", crs=28992, drop_obs=True):
+    def to_gdf(self, xcol="x", ycol="y", drop_obs=True):
         """Convert ObsCollection to GeoDataFrame.
 
         Parameters
@@ -3808,7 +3830,7 @@ class ObsCollection(pd.DataFrame):
         gdf : geopandas.GeoDataFrame
         """
 
-        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=crs)
+        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=self.crs)
         if drop_obs:
             return gdf.drop(columns="obs")
         else:

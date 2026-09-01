@@ -59,7 +59,7 @@ def get_obs_list_from_extent(
         if True new locations are downloaded and stored locally (slow) otherwise a
         cached version of the locations is used. By default False
     crs : str, int or pyproj.CRS, optional
-        coordinate reference system of the extent and observations. By default, 
+        coordinate reference system of the extent and observations. By default,
         EPSG:7844.
     **kwargs
         additional keyword arguments are passed to the ObsClass.from_waterconnect()
@@ -86,7 +86,9 @@ def get_obs_list_from_extent(
         location_gdf = get_locations_within_extent(location_gdf, extent, crs)
 
     if location_gdf.empty:
-        msg = f"No water connect measurements found within extent {extent} with crs {crs}"
+        msg = (
+            f"No water connect measurements found within extent {extent} with crs {crs}"
+        )
         logger.warning(msg)
         return []
 

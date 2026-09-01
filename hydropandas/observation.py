@@ -307,7 +307,7 @@ class Obs(pd.DataFrame):
 
         return None
 
-    def set_crs(self, crs, if_exists='error'):
+    def set_crs(self, crs, if_exists="error"):
         """Set the CRS of the observation without transforming it.
 
         Parameters
@@ -327,17 +327,23 @@ class Obs(pd.DataFrame):
         if isinstance(self.crs, str) and self.crs == "":
             self.crs = crs
         elif self.crs != pyproj.CRS(crs):
-            if if_exists == 'error':
-                raise ValueError("Observation already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override.")
-            elif if_exists == 'warn':
-                logger.warning('Observation already has a different CRS defined. Overriding it may not have the intended effect.')
-            elif if_exists == 'ignore':
+            if if_exists == "error":
+                raise ValueError(
+                    "Observation already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override."
+                )
+            elif if_exists == "warn":
+                logger.warning(
+                    "Observation already has a different CRS defined. Overriding it may not have the intended effect."
+                )
+            elif if_exists == "ignore":
                 pass
             else:
                 raise ValueError(f"Invalid value for if_exists: {if_exists}")
             self.crs = crs
         else:
-            logger.warning('cannot set the crs because it is already set to the same value')
+            logger.warning(
+                "cannot set the crs because it is already set to the same value"
+            )
 
     def to_crs(self, crs):
         """Convert the observation to the specified CRS.
@@ -353,7 +359,9 @@ class Obs(pd.DataFrame):
             A new Obs object with the observation converted to the specified CRS.
         """
         if isinstance(self.crs, str) and self.crs == "":
-            raise ValueError("Observation has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first.")
+            raise ValueError(
+                "Observation has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first."
+            )
 
         if self.crs == pyproj.CRS(crs):
             return self.copy(deep=True)

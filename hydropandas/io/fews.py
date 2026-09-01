@@ -548,14 +548,14 @@ def _obs_from_meta(
             source="FEWS",
         )
     else:
-        o = ObsC(ts, x=x, y=y, crs=crs, 
-                 unit=unit, meta=header, name=name, source="FEWS")
+        o = ObsC(
+            ts, x=x, y=y, crs=crs, unit=unit, meta=header, name=name, source="FEWS"
+        )
 
     return o, header
 
 
-def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0,
-                 version: str = "1.24"):
+def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0, version: str = "1.24"):
     """Write TimeSeries object to PI-XML file.
 
     Parameters

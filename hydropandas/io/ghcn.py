@@ -20,7 +20,7 @@ _DEPTH_ELEMENTS_TO_M = {
 }
 
 
-def get_stations(extent=None, csr="EPSG:4326"):
+def get_stations(extent=None, crs="EPSG:4326"):
     url = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
     colspecs = [
         (0, 11),  # ID
@@ -50,7 +50,7 @@ def get_stations(extent=None, csr="EPSG:4326"):
     stations = stations.set_index("id")
     geometry = gpd.points_from_xy(stations["longitude"], stations["latitude"])
     stations_gdf = gpd.GeoDataFrame(stations, geometry=geometry, crs="EPSG:4326")
-    stations_gdf = stations_gdf.to_crs(csr)
+    stations_gdf = stations_gdf.to_crs(crs)
     if extent is not None:
         # Extent format is [xmin, ymin, xmax, ymax] in this function.
         polygon = box(extent[0], extent[1], extent[2], extent[3])

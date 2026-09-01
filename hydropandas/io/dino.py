@@ -713,7 +713,9 @@ def read_dino_waterlvl_csv(
                 meta["metadata_available"] = False
             meta["filename"] = fname
             meta["source"] = "dino"
-            meta["crs"] = pyproj.CRS(28992)  # assuming RD New as default CRS for dino data
+            meta["crs"] = pyproj.CRS(
+                28992
+            )  # assuming RD New as default CRS for dino data
         elif p_data.match(line):
             if read_series:
                 measurements = _read_dino_waterlvl_measurements(f, line)

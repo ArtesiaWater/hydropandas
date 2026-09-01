@@ -87,7 +87,7 @@ def extent_to_wgs84_polygon(extent, crs=28992):
     if pyproj.CRS(crs) == pyproj.CRS(4326):
         lon_min, lon_max, lat_min, lat_max = extent
     else:
-        transformer = get_transformer28992(crs,4326)
+        transformer = get_transformer28992(crs, 4326)
         lat_min, lon_min = transformer.transform(extent[0], extent[2])
         lat_max, lon_max = transformer.transform(extent[1], extent[3])
 
@@ -139,7 +139,7 @@ def get_metadata_mw_from_code(code, organisation="vitens", auth=None):
         organisation indicating URL endpoint, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
-    
+
     Raises
     ------
     ValueError
@@ -805,8 +805,9 @@ def get_lizard_groundwater(
         code, organisation=organisation, auth=auth
     )
 
-    tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr, auth=auth,
-                                      crs=crs)
+    tube_metadata = get_metadata_tube(
+        groundwaterstation_metadata, tube_nr, auth=auth, crs=crs
+    )
 
     if only_metadata:
         return pd.DataFrame(), tube_metadata
@@ -919,7 +920,7 @@ def get_obs_list_from_codes(
                         only_metadata=only_metadata,
                         organisation=organisation,
                         auth=auth,
-                        crs=crs
+                        crs=crs,
                     )
                     obs_list.append(o)
                     tubes.append(tnr)
@@ -936,7 +937,7 @@ def get_obs_list_from_codes(
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
-                crs=crs
+                crs=crs,
             )
             obs_list.append(o)
 
@@ -1019,9 +1020,11 @@ def get_obs_list_from_extent(
     elif isinstance(extent, (str, pathlib.PurePath)):
         polygon = geopandas.read_file(extent)
         if polygon.crs is None:
-            polygon.set_crs(crs, inplace=True) # assume crs is same as provided crs
+            polygon.set_crs(crs, inplace=True)  # assume crs is same as provided crs
         elif polygon.crs != pyproj.CRS(crs):
-            raise ValueError('The CRS of the provided shapefile does not match the expected CRS.')
+            raise ValueError(
+                "The CRS of the provided shapefile does not match the expected CRS."
+            )
 
         polygon_T = polygon.to_crs(epsg=4326).loc[0, "geometry"]
     else:

@@ -210,8 +210,7 @@ def get_obs_list_from_extent(
     crs = pyproj.CRS(crs)
 
     if crs != pyproj.CRS(4326):
-        transformer_from_wgs84 = get_transformer28992(pyproj.CRS(4326),
-                                                      crs)
+        transformer_from_wgs84 = get_transformer28992(pyproj.CRS(4326), crs)
     else:
         transformer_from_wgs84 = None
 
