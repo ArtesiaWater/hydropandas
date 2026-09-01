@@ -1463,6 +1463,7 @@ class WaterQualityObs(Obs):
         proces_type=None,
         tmin=None,
         tmax=None,
+        crs=28992,
         **kwargs,
     ):
         """Read data from waterinfo csv, zip or using the API.
@@ -1487,6 +1488,9 @@ class WaterQualityObs(Obs):
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
             end date of the measurements, only used if path is None, default is None
+        crs : str, int or pyproj.CRS, optional
+            desired coordinate reference system of the observation,
+            if it differs from 4326 the coordinates are transformed, default is 28992 (RD)
 
         Returns
         -------
@@ -1510,6 +1514,7 @@ class WaterQualityObs(Obs):
             proces_type=proces_type,
             tmin=tmin,
             tmax=tmax,
+            crs=crs,
             **kwargs,
         )
 
@@ -1629,6 +1634,7 @@ class WaterlvlObs(Obs):
         proces_type=None,
         tmin=None,
         tmax=None,
+        crs=28992,
         **kwargs,
     ):
         """Read data from waterinfo csv-file, zip or using the API.
@@ -1653,6 +1659,8 @@ class WaterlvlObs(Obs):
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
             end date of the measurements, only used if path is None, default is None
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the observations. The default is 28992 (RD).
 
         Returns
         -------
@@ -1676,6 +1684,7 @@ class WaterlvlObs(Obs):
             proces_type=proces_type,
             tmin=tmin,
             tmax=tmax,
+            crs=crs,
             **kwargs,
         )
 

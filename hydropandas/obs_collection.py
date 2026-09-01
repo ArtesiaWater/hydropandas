@@ -1323,7 +1323,7 @@ def read_waterinfo(
     tmax=None,
     only_metadata=False,
     keep_all_obs=False,
-    epsg=28992,
+    crs=28992,
     progressbar=True,
     location_gdf=None,
     **kwargs,
@@ -1361,8 +1361,8 @@ def read_waterinfo(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept. The default
         is True.
-    epsg : int, optional
-        epsg code of the extent. The default is 28992 (RD).
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent and observations. The default is 28992 (RD).
     progressbar : bool, optional
         show progressbar, by default True
     location_gdf : GeoDataFrame, optional
@@ -1389,7 +1389,7 @@ def read_waterinfo(
         tmax=tmax,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
         progressbar=progressbar,
         location_gdf=location_gdf,
         **kwargs,
@@ -3373,7 +3373,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         only_metadata=False,
         keep_all_obs=False,
-        epsg=28992,
+        crs=28992,
         progressbar=True,
         location_gdf=None,
         **kwargs,
@@ -3411,8 +3411,8 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : bool, optional
             if False, only observations with measurements are kept. The default
             is True.
-        epsg : int, optional
-            epsg code of the extent. The default is 28992 (RD).
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the extent and observations. The default is 28992 (RD).
         progressbar : bool, optional
             show progressbar, by default True
         location_gdf : GeoDataFrame, optional
@@ -3441,7 +3441,7 @@ class ObsCollection(pd.DataFrame):
                 tmax=tmax,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
-                epsg=epsg,
+                crs=crs,
                 location_gdf=location_gdf,
             )
         elif file_or_dir is not None:

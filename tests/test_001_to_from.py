@@ -439,6 +439,7 @@ def test_waterinfo_ddlpy():
         proces_type=proces_type,
         tmin=tmin,
         tmax=tmax,
+        crs=28992,
     )
 
 
@@ -448,7 +449,8 @@ def test_waterinfo_ddlpy_extent():
     tmax = dt.datetime(2020, 1, 2)
     extent = (110000, 125000, 429550, 449900)
     oc = hpd.read_waterinfo(
-        extent=extent, grootheid_code=grootheid_code, tmin=tmin, tmax=tmax
+        extent=extent, grootheid_code=grootheid_code,
+        tmin=tmin, tmax=tmax
     )
     assert not oc.empty
 

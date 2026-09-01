@@ -26,7 +26,6 @@ def test_read_ggmn_realworld_extent():
     assert o.y >= 52.13 and o.y <= 52.18
 
 
-
 @pytest.mark.slow
 def test_get_level_measurements_known_record_realworld():
     df, unit = ggmn.get_level_measurements(
