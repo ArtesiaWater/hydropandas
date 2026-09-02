@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -62,6 +64,10 @@ class GeoAccessor:
     def set_lat_lon(self, in_epsg="epsg:28992", out_epsg="epsg:4326", add_to_meta=True):
         """create columns with lat and lon values of the observation points.
 
+        .. deprecated:: 0.20.0
+        `set_lat_lon` will be removed in hydropandas 1.0.0, use `to_crs(4326)` to convert
+        the coordinates to latitude and longitude instead.
+
         Parameters
         ----------
         in_epsg : str, optional
@@ -76,6 +82,12 @@ class GeoAccessor:
         -------
         None.
         """
+        warnings.warn(
+        "the function 'set_lat_lon' is deprecated and will eventually be "
+        "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
+        "and longitude instead.",
+        DeprecationWarning,
+    )
 
         df_lat_lon = self._obj.geo.get_lat_lon(in_epsg, out_epsg)
         for iname in df_lat_lon.index:
@@ -89,6 +101,10 @@ class GeoAccessor:
     def get_lat_lon(self, in_epsg="epsg:28992", out_epsg="epsg:4326"):
         """get lattitude and longitude from x and y attributes.
 
+        .. deprecated:: 0.20.0
+        `get_lat_lon` will be removed in hydropandas 1.0.0, use `to_crs(4326)` to convert
+        the coordinates to latitude and longitude instead.
+
         Parameters
         ----------
         in_epsg : str, optional
@@ -101,6 +117,12 @@ class GeoAccessor:
         pandas.DataFrame
             with columns 'lat' and 'lon'
         """
+        warnings.warn(
+                "the function 'get_lat_lon' is deprecated and will eventually be "
+                "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
+                "and longitude instead.",
+                DeprecationWarning,
+            )
 
         df_lat_lon = pd.DataFrame(index=self._obj.index, columns=["lat", "lon"])
         for iname in self._obj.index:
@@ -408,6 +430,10 @@ class GeoAccessorObs:
     def get_lat_lon(self, in_epsg="epsg:28992", out_epsg="epsg:4326"):
         """get lattitude and longitude from x and y attributes.
 
+        .. deprecated:: 0.20.0
+        `get_lat_lon` will be removed in hydropandas 1.0.0, use `to_crs(4326)` to convert
+        the coordinates to latitude and longitude instead.
+
         Parameters
         ----------
         in_epsg : str, optional
@@ -419,6 +445,12 @@ class GeoAccessorObs:
         -------
         lon, lat : longitude and lattitude of x, y coordinates
         """
+        warnings.warn(
+            "the function 'get_lat_lon' is deprecated and will eventually be "
+            "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
+            "and longitude instead.",
+            DeprecationWarning,
+        )
 
         from pyproj import Transformer
 
