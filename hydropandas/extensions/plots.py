@@ -235,7 +235,7 @@ class CollectionPlots:
         
         # convert to epsg 3857
         if self._obj.crs != pyproj.CRS(3857):
-            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(3857))
+            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
             xmid, ymid = transformer.transform(xmid, ymid)
 
         # create map if no map is given
@@ -266,7 +266,7 @@ class CollectionPlots:
             x = self._obj.loc[o.name,'x']
             y = self._obj.loc[o.name,'y']
             if self._obj.crs != pyproj.CRS(3857):
-                transformer = get_transformer28992(self._obj.crs, pyproj.CRS(3857))
+                transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
                 x, y = transformer.transform(x, y)
 
             if o.meta["iplot_fname"] is not None:
