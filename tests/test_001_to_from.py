@@ -174,6 +174,7 @@ def obscollection_fews_lowmemory():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
     return oc
 
@@ -184,6 +185,7 @@ def test_obscollection_fews_highmemory():
         to_mnap=False,
         remove_nan=False,
         low_memory=False,
+        crs=28992,
     )
 
 
@@ -195,6 +197,7 @@ def test_obscollection_fews_selection():
     hpd.read_fews(
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=("MPN-N-2",),
+        crs=28992,
     )
 
 
@@ -256,6 +259,7 @@ def test_to_excel():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
 
     oc.to_excel("tests/data/excel/test.xlsx")
@@ -273,6 +277,7 @@ def test_to_csv():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
 
     oc.to_csv("tests/data/csv/test")
@@ -291,6 +296,7 @@ def test_to_json():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
 
     oc.to_json("tests/data/test.json")
