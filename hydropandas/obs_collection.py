@@ -3632,7 +3632,6 @@ class ObsCollection(pd.DataFrame):
                     raise ValueError(f"Invalid value for if_exists: {if_exists}")
                 o.crs = crs
 
-        return
 
     def to_crs(self, crs):
         """Convert all observations in the collection to the specified CRS.

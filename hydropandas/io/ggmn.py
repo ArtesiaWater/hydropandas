@@ -1,12 +1,12 @@
 import html
 import logging
 import re
-import pyproj
 
 import pandas as pd
+import pyproj
 import requests
-from pyproj import Transformer
 from tqdm import tqdm
+
 from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)

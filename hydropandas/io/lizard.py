@@ -18,8 +18,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import geopandas
 import pandas as pd
-import requests
 import pyproj
+import requests
 from shapely.geometry import Polygon
 from tqdm import tqdm
 

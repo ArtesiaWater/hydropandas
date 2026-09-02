@@ -21,7 +21,6 @@ For knmi climate scenarios:
 import datetime as dt
 import logging
 import os
-import pyproj
 import warnings
 from collections.abc import Iterable
 from functools import lru_cache
@@ -32,6 +31,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
 
 logger = logging.getLogger(__name__)

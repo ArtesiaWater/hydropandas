@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import datetime
 import logging
 import os
-import pyproj
 import xml.etree.ElementTree as etree
 from io import StringIO
 
 import numpy as np
 import pandas as pd
+import pyproj
 
 from .. import observation
 from ..observation import Obs
@@ -26,7 +28,7 @@ def read_xml_fname(
     return_df: bool = False,
     tags: tuple[str] = ("series", "header", "event"),
     remove_nan: bool = False,
-    crs: str | int | "pyproj.CRS" | None = None,
+    crs: str | int | pyproj.CRS | None = None,
     **kwargs: dict,  # unused
 ):
     """Read an xml filename into a list of observations objects.
@@ -115,7 +117,7 @@ def iterparse_pi_xml(
     keep_flags: tuple[int] = (0, 1),
     return_df: bool = False,
     tags: tuple[str] = ("series", "header", "event"),
-    crs: str | int | "pyproj.CRS" | None = None,
+    crs: str | int | pyproj.CRS | None = None,
 ):
     """Read a FEWS XML-file with measurements, memory efficient.
 
@@ -291,7 +293,7 @@ def read_xmlstring(
     locationIds: list[str] | None = None,
     low_memory: bool = True,
     remove_nan: bool = False,
-    crs: str | int | "pyproj.CRS" | None = None,
+    crs: str | int | pyproj.CRS | None = None,
 ):
     """Read xmlstring into an list of Obs objects. Xmlstrings are usually
     obtained using a fews api.
@@ -356,7 +358,7 @@ def read_xml_root(
     translate_dic: dict[str, str] | None = None,
     locationIds: list[str] | None = None,
     remove_nan: bool = False,
-    crs: str | int | "pyproj.CRS" | None = None,
+    crs: str | int | pyproj.CRS | None = None,
 ):
     """Read a FEWS XML-file with measurements, return list of ObsClass objects.
 
@@ -438,7 +440,7 @@ def _obs_from_meta(
     header: dict[str, str],
     translate_dic: dict[str, str],
     ObsClass: Obs | dict[str, Obs],
-    crs: str | int | "pyproj.CRS" | None = None,
+    crs: str | int | pyproj.CRS | None = None,
 ):
     """Internal function to convert timeseries and header into Obs objects.
 

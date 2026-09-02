@@ -1,6 +1,5 @@
 import logging
 import os
-import pyproj
 import re
 import tempfile
 from io import FileIO, TextIOWrapper
@@ -9,6 +8,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+import pyproj
 
 logger = logging.getLogger(__name__)
 

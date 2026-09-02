@@ -17,8 +17,8 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
-import requests
 import pyproj
+import requests
 from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 

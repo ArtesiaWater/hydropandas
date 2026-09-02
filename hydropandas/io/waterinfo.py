@@ -9,6 +9,7 @@ import pandas as pd
 import pyproj
 from shapely.geometry import box
 from tqdm import tqdm
+
 from ..util import EPSG_28992, get_transformer28992
 
 logger = logging.getLogger(__name__)
@@ -486,7 +487,6 @@ def read_waterinfo_file(
         dict containing metadata, returned if return_metadata is
         True, default is False
     """
-    from pyproj import Transformer
 
     name = os.path.splitext(os.path.basename(path))[0]
 
@@ -585,7 +585,6 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, crs=28992, **kw
     obs_collection : list
         list of Obs objects
     """
-    from pyproj import Transformer
 
     # Waterinfo file
     if os.path.isfile(file_or_dir):
