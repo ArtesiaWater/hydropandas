@@ -534,7 +534,7 @@ def read_ghcn(
     tmax=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=4326,
+    crs=4326,
 ):
     """Get GHCN (Global Historical Climatology Network) observations within an extent.
 
@@ -563,9 +563,9 @@ def read_ghcn(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept.
         The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent, this crs is also
+        used for the observations. The default is 4326 (WGS84).
 
     Returns
     -------
@@ -581,7 +581,7 @@ def read_ghcn(
         tmax=tmax,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
     )
     return oc
 
@@ -2750,7 +2750,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         only_metadata=False,
         keep_all_obs=True,
-        epsg=4326,
+        crs=4326,
     ):
         """Get GHCN (Global Historical Climatology Network) observations within an extent.
 
@@ -2779,9 +2779,9 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : bool, optional
             if False, only observations with measurements are kept.
             The default is True.
-        epsg : int, optional
-            epsg code of the supplied extent. Returned observation x/y
-            coordinates are also in this CRS. The default is 4326 (WGS84).
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent, this crs is also
+            used for the observations. The default is 4326 (WGS84).
 
         Returns
         -------
@@ -2800,7 +2800,7 @@ class ObsCollection(pd.DataFrame):
             tmax=tmax,
             only_metadata=only_metadata,
             keep_all_obs=keep_all_obs,
-            epsg=epsg,
+            crs=crs,
         )
 
         return cls(obs_list, name=name, meta=meta)
