@@ -83,11 +83,11 @@ class GeoAccessor:
         None.
         """
         warnings.warn(
-        "the function 'set_lat_lon' is deprecated and will eventually be "
-        "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
-        "and longitude instead.",
-        DeprecationWarning,
-    )
+            "the function 'set_lat_lon' is deprecated and will eventually be "
+            "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
+            "and longitude instead.",
+            DeprecationWarning,
+        )
 
         df_lat_lon = self._obj.geo.get_lat_lon(in_epsg, out_epsg)
         for iname in df_lat_lon.index:
@@ -118,11 +118,11 @@ class GeoAccessor:
             with columns 'lat' and 'lon'
         """
         warnings.warn(
-                "the function 'get_lat_lon' is deprecated and will eventually be "
-                "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
-                "and longitude instead.",
-                DeprecationWarning,
-            )
+            "the function 'get_lat_lon' is deprecated and will eventually be "
+            "removed, please use 'to_crs(4326)' to convert the coordinates to latitude "
+            "and longitude instead.",
+            DeprecationWarning,
+        )
 
         df_lat_lon = pd.DataFrame(index=self._obj.index, columns=["lat", "lon"])
         for iname in self._obj.index:

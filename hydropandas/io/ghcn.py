@@ -185,7 +185,7 @@ def get_obs_list_from_extent(
     # transform extent corners to WGS84 for station selection
     crs = pyproj.CRS(crs)
     if crs != pyproj.CRS(4326):
-        transformer = get_transformer28992(crs,pyproj.CRS(4326))
+        transformer = get_transformer28992(crs, pyproj.CRS(4326))
 
         lon_min, lat_min = transformer.transform(extent[0], extent[2])
         lon_max, lat_max = transformer.transform(extent[1], extent[3])
@@ -277,7 +277,7 @@ def get_obs_list_from_extent(
                 .rename(columns={"value": element})
                 .sort_index()
             )
-            
+
             meta["meteo_var"] = element
             meta["unit"] = "m" if element in _DEPTH_ELEMENTS_TO_M else "unknown"
             o = ObsClass(

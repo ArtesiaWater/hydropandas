@@ -418,13 +418,11 @@ def get_locations_gdf(crs=28992):
             gdf = gdf.to_crs(EPSG_28992)
         else:
             gdf = gdf.to_crs(crs)
-    
 
     return gdf
 
 
-def get_locations_within_extent(gdf,
-                                extent=(482.06, 306602.42, 284182.97, 637049.52)):
+def get_locations_within_extent(gdf, extent=(482.06, 306602.42, 284182.97, 637049.52)):
     """Get locations from ddlpy and return as geodataframe. Both gdf and extent
     should be in the same crs.
 
@@ -435,7 +433,7 @@ def get_locations_within_extent(gdf,
         using ddlpy
     extent : tuple, optional
         extent of the locations. The default is the extent of the Netherlands (RD).
-    
+
     Returns
     -------
     gdf : geopandas.GeoDataFrame
@@ -568,9 +566,7 @@ def read_waterinfo_file(
         return df
 
 
-def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False,
-                       crs=28992,
-                       **kwargs):
+def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, crs=28992, **kwargs):
     """Read waterinfo file or directory and extract locations and observations.
 
     Parameters
@@ -608,7 +604,6 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False,
 
     if pyproj.CRS(25831) != pyproj.CRS(crs):
         transformer = get_transformer28992(pyproj.CRS(25831), pyproj.CRS(crs))
-   
 
     for filenm in tqdm(files) if progressbar else files:
         # read file or zip

@@ -125,8 +125,8 @@ class CollectionPlots:
         add_legend=True,
         map_label="",
         map_label_size=20,
-        col_name_lat=None, #deprecated argument
-        col_name_lon=None, #deprecated argument
+        col_name_lat=None,  # deprecated argument
+        col_name_lon=None,  # deprecated argument
         zoom_start=13,
         popup_width=620,
         create_interactive_plots=True,
@@ -227,12 +227,14 @@ class CollectionPlots:
 
         # check if observation collection has lat and lon values
         if col_name_lat is not None or col_name_lon is not None:
-            logger.warning("col_name_lat and col_name_lon are deprecated, set the crs of the obscollection instead.")
+            logger.warning(
+                "col_name_lat and col_name_lon are deprecated, set the crs of the obscollection instead."
+            )
 
         # determine start location of map
-        xmid = np.mean((self._obj['x'].min(), self._obj['x'].max()))
-        ymid = np.mean((self._obj['y'].min(), self._obj['y'].max()))
-        
+        xmid = np.mean((self._obj["x"].min(), self._obj["x"].max()))
+        ymid = np.mean((self._obj["y"].min(), self._obj["y"].max()))
+
         # convert to epsg 3857
         if self._obj.crs != pyproj.CRS(3857):
             transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
@@ -263,8 +265,8 @@ class CollectionPlots:
             else:
                 o = self._obj.loc[name, "obs"]
 
-            x = self._obj.loc[o.name,'x']
-            y = self._obj.loc[o.name,'y']
+            x = self._obj.loc[o.name, "x"]
+            y = self._obj.loc[o.name, "y"]
             if self._obj.crs != pyproj.CRS(3857):
                 transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
                 x, y = transformer.transform(x, y)
@@ -278,8 +280,11 @@ class CollectionPlots:
                 )
                 popup = folium.Popup(iframe, max_width=popup_width)
 
-
-                folium.CircleMarker([y,x,],
+                folium.CircleMarker(
+                    [
+                        y,
+                        x,
+                    ],
                     icon=folium.Icon(icon="signal"),
                     fill=True,
                     color=color,
