@@ -18,10 +18,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 import geopandas
 import pandas as pd
+import pyproj
 import requests
-from pyproj import Transformer
 from shapely.geometry import Polygon
 from tqdm import tqdm
+
+from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +68,7 @@ def check_status_obs(metadata, timeseries):
     return metadata
 
 
-def extent_to_wgs84_polygon(extent):
+def extent_to_wgs84_polygon(extent, crs=28992):
     """Translates an extent (xmin, xmax, ymin, ymax) to a polygon with coordinate system
     WGS84.
 
@@ -74,15 +76,20 @@ def extent_to_wgs84_polygon(extent):
     ----------
     extent : list or tuple
         extent in epsg 28992 within which the observations are collected.
+    crs : str, int or pyproj.CRS
+        The coordinate reference system of the extent if it is not wgs84
+        the coordinates are transformed, by default EPSG: 28992.
 
     Returns
     -------
     polygon of the extent with coordinate system WGS84
     """
-    transformer = Transformer.from_crs("EPSG:28992", "WGS84")
-
-    lon_min, lat_min = transformer.transform(extent[0], extent[2])
-    lon_max, lat_max = transformer.transform(extent[1], extent[3])
+    if pyproj.CRS(crs) == pyproj.CRS(4326):
+        lon_min, lon_max, lat_min, lat_max = extent
+    else:
+        transformer = get_transformer28992(crs, 4326)
+        lat_min, lon_min = transformer.transform(extent[0], extent[2])
+        lat_max, lon_max = transformer.transform(extent[1], extent[3])
 
     poly_T = Polygon(
         [(lat_min, lon_min), (lat_max, lon_min), (lat_max, lon_max), (lat_min, lon_max)]
@@ -284,7 +291,7 @@ def _extract_timeseries_info_from_tube(mtd_tube, auth=None):
     return info
 
 
-def get_metadata_tube(metadata_mw, tube_nr, auth=None):
+def get_metadata_tube(metadata_mw, tube_nr, auth=None, crs=28992):
     """Extract the metadata for a specific tube from the monitoring well metadata.
 
     Parameters
@@ -296,6 +303,10 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         select metadata from a specific tube number
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the observation, if it
+        differs from the crs in Lizard the coordinates are transformed, by default
+        EPSG: 28992.
 
     Raises
     ------
@@ -380,9 +391,12 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None):
         }
     )
 
-    lon, lat, _ = metadata_mw["geometry"]["coordinates"]
-    transformer = Transformer.from_crs("WGS84", "EPSG:28992")
-    metadata["x"], metadata["y"] = transformer.transform(lat, lon)
+    x, y, _ = metadata_mw["geometry"]["coordinates"]
+    if pyproj.CRS(crs) != pyproj.CRS(4326):
+        transformer = get_transformer28992(4326, pyproj.CRS(crs))
+        x, y = transformer.transform(x, y)
+    metadata["x"], metadata["y"] = x, y
+    metadata["crs"] = crs
 
     # Extracts timeseries information (hand/diver UUIDs and types)
     metadata.update(_extract_timeseries_info_from_tube(mtd_tube, auth))
@@ -737,6 +751,7 @@ def get_lizard_groundwater(
     only_metadata=False,
     organisation="vitens",
     auth=None,
+    crs=28992,
 ):
     """Extracts the metadata and timeseries of an observation well from a LIZARD-API
     based on the code of a monitoring well.
@@ -773,6 +788,10 @@ def get_lizard_groundwater(
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in Lizard the coordinates are transformed, by default
+        EPSG: 28992.
 
     Returns
     -------
@@ -786,7 +805,9 @@ def get_lizard_groundwater(
         code, organisation=organisation, auth=auth
     )
 
-    tube_metadata = get_metadata_tube(groundwaterstation_metadata, tube_nr, auth=auth)
+    tube_metadata = get_metadata_tube(
+        groundwaterstation_metadata, tube_nr, auth=auth, crs=crs
+    )
 
     if only_metadata:
         return pd.DataFrame(), tube_metadata
@@ -820,6 +841,7 @@ def get_obs_list_from_codes(
     only_metadata=False,
     organisation="vitens",
     auth=None,
+    crs=28992,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
     tube numbers.
@@ -858,6 +880,10 @@ def get_obs_list_from_codes(
         organisation as used by Lizard, currently only "vitens" is officially supported.
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in Lizard the coordinates are transformed, by default
+        EPSG: 28992.
 
     Returns
     -------
@@ -894,6 +920,7 @@ def get_obs_list_from_codes(
                         only_metadata=only_metadata,
                         organisation=organisation,
                         auth=auth,
+                        crs=crs,
                     )
                     obs_list.append(o)
                     tubes.append(tnr)
@@ -910,6 +937,7 @@ def get_obs_list_from_codes(
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
+                crs=crs,
             )
             obs_list.append(o)
 
@@ -931,6 +959,7 @@ def get_obs_list_from_extent(
     nr_threads=10,
     organisation="vitens",
     auth=None,
+    crs=28992,
 ):
     """Get all observations within a specified extent.
 
@@ -975,7 +1004,9 @@ def get_obs_list_from_extent(
         number of records to retrieve per page, default is 100
     nr_threads : int, optional
         number of threads to use for the API requests, default is 10
-
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the extent (input) and the observations
+        (output), by default EPSG: 28992.
 
     Returns
     -------
@@ -984,12 +1015,18 @@ def get_obs_list_from_extent(
     """
 
     if isinstance(extent, (list, tuple)):
-        polygon_T = extent_to_wgs84_polygon(extent)
+        polygon_T = extent_to_wgs84_polygon(extent, crs=crs)
 
     elif isinstance(extent, (str, pathlib.PurePath)):
         polygon = geopandas.read_file(extent)
-        # TODO: check this transformation
-        polygon_T = polygon.to_crs("WGS84", "EPSG:28992").loc[0, "geometry"]
+        if polygon.crs is None:
+            polygon.set_crs(crs, inplace=True)  # assume crs is same as provided crs
+        elif polygon.crs != pyproj.CRS(crs):
+            raise ValueError(
+                "The CRS of the provided shapefile does not match the expected CRS."
+            )
+
+        polygon_T = polygon.to_crs(epsg=4326).loc[0, "geometry"]
     else:
         raise TypeError("Extent should be a shapefile or a list of coordinates")
 
@@ -1031,6 +1068,7 @@ def get_obs_list_from_extent(
         "only_metadata": only_metadata,
         "organisation": organisation,
         "auth": auth,
+        "crs": crs,
     }
 
     codes = []

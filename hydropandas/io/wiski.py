@@ -37,6 +37,8 @@ def read_wiski_file(
     translate_dic=None,
     tz_localize=True,
     unit="",
+    parse_dates=None,
+    dayfirst=False,
     **kwargs,
 ):
     """
@@ -57,6 +59,12 @@ def read_wiski_file(
         Whether to read the time series data from the file.
     translate_dic : dict, optional (default=None)
         A dictionary mapping header field names to the desired output names.
+    parse_dates : list of int, optional (default=None)
+        A list of column indices to parse as dates. If None, no columns will be
+        parsed as dates.
+    dayfirst : bool, optional (default=False)
+        Whether to interpret the first value in a date as the day (True) or the
+        month (False).
     tz_localize : bool, optional (default=True)
         Whether to localize the datetime index to the machine's timezone.
     unit : str, optional (default="")
@@ -87,7 +95,9 @@ def read_wiski_file(
     with open(path, "r") as f:
         if header_sep is None:
             line, header = _read_wiski_header(
-                f, end_header_str=end_header_str, header_identifier=header_identifier
+                f,
+                end_header_str=end_header_str,
+                header_identifier=header_identifier
             )
         else:
             line, header = _read_wiski_header(
@@ -123,8 +133,17 @@ def read_wiski_file(
                 **kwargs,
             )
 
-            if tz_localize:
-                data.index = data.index.tz_localize(None)
+            if parse_dates is not None:
+                if len(parse_dates) == 1:
+                    col = data.columns[parse_dates[0]]
+                    data.index = pd.to_datetime(data.pop(col), dayfirst=dayfirst)
+                elif len(parse_dates) == 2:
+                    col1, col2 = data.columns[parse_dates[0]], data.columns[parse_dates[1]]
+                    data.index = pd.to_datetime(data.pop(col1) + ' ' + data.pop(col2),
+                                                dayfirst=dayfirst)
+
+                if tz_localize:
+                    data.index = data.index.tz_localize(None)
 
             # convert Value to float
             col = [icol for icol in data.columns if icol.lower().startswith("value")][0]

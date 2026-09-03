@@ -4,10 +4,12 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pyproj
 from matplotlib.gridspec import GridSpec
 from tqdm import tqdm
 
 from ..observation import GroundwaterObs
+from ..util import get_transformer28992
 from . import accessor
 
 logger = logging.getLogger(__name__)
@@ -123,8 +125,8 @@ class CollectionPlots:
         add_legend=True,
         map_label="",
         map_label_size=20,
-        col_name_lat="lat",
-        col_name_lon="lon",
+        col_name_lat=None,  # deprecated argument
+        col_name_lon=None,  # deprecated argument
         zoom_start=13,
         popup_width=620,
         create_interactive_plots=True,
@@ -170,11 +172,10 @@ class CollectionPlots:
             A label is only added if map_label is not ''. The default is ''.
         map_label_size : int, optional
             label size of the map_label in pt.
-        col_name_lat : str, optional
-            name of the column in the obs_collection dic with the lat values
-            of the observation points
-        col_name_lon : str, optional
-            see col_name_lat
+        col_name_lat : str, optional (deprecated)
+            deprecated, set the crs of the obscollection instead.
+        col_name_lon : str, optional (deprecated)
+            deprecated, set the crs of the obscollection instead.
         zoom_start : int, optional
             start zoom level of the folium ma
         create_interactive_plots : boolean, optional
@@ -225,22 +226,23 @@ class CollectionPlots:
             )
 
         # check if observation collection has lat and lon values
-        if (col_name_lat not in self._obj.columns) and (
-            col_name_lon not in self._obj.columns
-        ):
-            self._obj.geo.set_lat_lon()
+        if col_name_lat is not None or col_name_lon is not None:
+            logger.warning(
+                "col_name_lat and col_name_lon are deprecated, set the crs of the obscollection instead."
+            )
 
         # determine start location of map
-        northing = np.mean(
-            (self._obj[col_name_lat].min(), self._obj[col_name_lat].max())
-        )
-        easting = np.mean(
-            (self._obj[col_name_lon].min(), self._obj[col_name_lon].max())
-        )
+        xmid = np.mean((self._obj["x"].min(), self._obj["x"].max()))
+        ymid = np.mean((self._obj["y"].min(), self._obj["y"].max()))
+
+        # convert to epsg 3857
+        if self._obj.crs != pyproj.CRS(3857):
+            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
+            xmid, ymid = transformer.transform(xmid, ymid)
 
         # create map if no map is given
         if m is None:
-            m = folium.Map([northing, easting], zoom_start=zoom_start, tiles=tiles)
+            m = folium.Map([ymid, xmid], zoom_start=zoom_start, tiles=tiles)
 
         # get oc name if no legend name is given
         if legend_name is None:
@@ -263,6 +265,12 @@ class CollectionPlots:
             else:
                 o = self._obj.loc[name, "obs"]
 
+            x = self._obj.loc[o.name, "x"]
+            y = self._obj.loc[o.name, "y"]
+            if self._obj.crs != pyproj.CRS(3857):
+                transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
+                x, y = transformer.transform(x, y)
+
             if o.meta["iplot_fname"] is not None:
                 with open(o.meta["iplot_fname"], "r") as f:
                     bokeh_html = f.read()
@@ -274,8 +282,8 @@ class CollectionPlots:
 
                 folium.CircleMarker(
                     [
-                        self._obj.loc[o.name, col_name_lat],
-                        self._obj.loc[o.name, col_name_lon],
+                        y,
+                        x,
                     ],
                     icon=folium.Icon(icon="signal"),
                     fill=True,
@@ -292,8 +300,8 @@ class CollectionPlots:
                         map_label_val = map_label
                     folium.map.Marker(
                         [
-                            self._obj.loc[name, col_name_lat],
-                            self._obj.loc[name, col_name_lon],
+                            y,
+                            x,
                         ],
                         icon=DivIcon(
                             icon_size=(150, 36),
@@ -305,8 +313,8 @@ class CollectionPlots:
                 logger.info(f"no iplot available for {o.name}")
                 folium.CircleMarker(
                     [
-                        self._obj.loc[o.name, col_name_lat],
-                        self._obj.loc[o.name, col_name_lon],
+                        y,
+                        x,
                     ],
                     icon=folium.Icon(icon="signal"),
                     fill=True,

@@ -21,12 +21,12 @@ from typing import Literal
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
-from pyproj import Proj, Transformer
 from shapely.geometry import Point, box
 from tqdm import tqdm
 
-from ..util import EPSG_28992
+from ..util import get_transformer28992
 
 URL = "https://noos.matroos.rws.nl/direct/get_series.php?"
 
@@ -366,6 +366,7 @@ def get_matroos_obs(
     tmax=None,
     only_metadata=False,
     validate=True,
+    crs=28992,
     **kwargs,
 ):
     """get observations for a certain location, source and unit between
@@ -388,6 +389,8 @@ def get_matroos_obs(
         is False.
     validate : bool, optional
         if True check if location, source and unit are valid, by default True
+    crs : int, optional
+        coordinate reference system for the observation, by default EPSG: 28992.
     **kwargs are passed to request_api function
 
     Returns
@@ -447,12 +450,12 @@ def get_matroos_obs(
         key, item = line.strip("#").split(":")
         if "Position" in key:
             lon, lat = (float(a) for a in item.strip()[1:-1].split(","))
-            proj_from = Proj("EPSG:4326")
-            proj_to = Proj(EPSG_28992)
-            transformer = Transformer.from_proj(proj_from, proj_to)
-            xy = transformer.transform(lat, lon)
+            crs_to = pyproj.CRS(crs)
+            transformer = get_transformer28992(pyproj.CRS(4326), crs_to)
+            xy = transformer.transform(lon, lat)
             meta["x"] = xy[0]
             meta["y"] = xy[1]
+            meta["crs"] = crs_to
         elif "Analyse time" in key:
             if "*** no data found ***" in key:
                 msg = f"no measurement data found for {location=}, {source=}, {unit=}, {tmax=}, {tmin=}. Only returning metadata"

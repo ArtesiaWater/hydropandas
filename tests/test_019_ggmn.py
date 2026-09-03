@@ -9,7 +9,7 @@ def test_read_ggmn_realworld_extent():
     # Small extent around central Netherlands with known GGMN locations.
     oc = hpd.read_ggmn(
         extent=[5.03, 5.08, 52.13, 52.18],
-        epsg=4326,
+        crs=4326,
         tmin="2024-01-01",
         tmax="2026-12-31",
         max_locations=1,

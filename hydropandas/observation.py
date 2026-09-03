@@ -23,11 +23,13 @@ from io import StringIO, TextIOWrapper
 
 import numpy as np
 import pandas as pd
+import pyproj
 from pandas._config import get_option
 from pandas.api.types import is_numeric_dtype
 from pandas.io.formats import console
 
 from .serialization import HydropandasEncoder
+from .util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +91,8 @@ class Obs(pd.DataFrame):
         source of the observation e.g. BRO or KNMI
     unit : str
         unit of the first numerical column in the observation
+    crs : str, int, pyproj.CRS or None
+        coordinate reference system of the observation
     """
 
     # temporary properties
@@ -96,7 +100,17 @@ class Obs(pd.DataFrame):
     _internal_names_set = set(_internal_names)
 
     # normal properties
-    _metadata = ["name", "x", "y", "location", "meta", "filename", "source", "unit"]
+    _metadata = [
+        "name",
+        "x",
+        "y",
+        "location",
+        "meta",
+        "filename",
+        "source",
+        "unit",
+        "_crs",
+    ]
 
     def __init__(self, *args, **kwargs):
         """Constructor of Obs class.
@@ -106,9 +120,10 @@ class Obs(pd.DataFrame):
         pandas.DataFrame.
         """
         if (len(args) > 0) and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in Obs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = Obs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         self.name = kwargs.pop("name", "")
         self.x = kwargs.pop("x", np.nan)
@@ -118,8 +133,12 @@ class Obs(pd.DataFrame):
         self.filename = kwargs.pop("filename", "")
         self.source = kwargs.pop("source", "")
         self.unit = kwargs.pop("unit", "")
+        crs = kwargs.pop("crs", "")
 
         super().__init__(*args, **kwargs)
+
+        # set crs
+        self.crs = crs
 
     def __repr__(self) -> str:
         """Return a string representation for a particular Observation."""
@@ -130,8 +149,11 @@ class Obs(pd.DataFrame):
         # write metadata properties
         buf.write("-----metadata------\n")
         for att in self._get_meta_attr():
-            if att != "meta":
+            if att == "crs" and isinstance(getattr(self, att), pyproj.CRS):
+                buf.write(f"{att} : {getattr(self, att).to_string()} \n")
+            elif att != "meta":
                 buf.write(f"{att} : {getattr(self, att)} \n")
+
         buf.write("\n")
 
         if self._info_repr():
@@ -166,6 +188,8 @@ class Obs(pd.DataFrame):
 
         metadata_dic = {key: getattr(self, key) for key in self._get_meta_attr()}
         metadata_dic.pop("meta")
+        if "crs" in metadata_dic and isinstance(metadata_dic["crs"], pyproj.CRS):
+            metadata_dic["crs"] = metadata_dic["crs"].to_string()
         metadata_df = pd.DataFrame(
             columns=[metadata_dic.pop("name")],
             index=metadata_dic.keys(),
@@ -219,7 +243,35 @@ class Obs(pd.DataFrame):
     def _constructor(self):
         return Obs
 
-    def _get_meta_attr(self, ignore=("monitoring_well",)):
+    @property
+    def crs(self):
+        return self._crs
+
+    @crs.setter
+    def crs(self, value):
+        """Make sure crs is a pyproj.CRS object, an int or a string. If value is an int or a string,
+        try to convert it to a pyproj.CRS object. If that fails, set to an empty string
+        """
+        if isinstance(value, pyproj.CRS):
+            self._crs = value
+        elif isinstance(value, (str, int)):
+            if value == "":
+                self._crs = ""
+            else:
+                try:
+                    self._crs = pyproj.CRS.from_user_input(value)
+                except (pyproj.exceptions.CRSError, ValueError, TypeError):
+                    logger.warning(f"invalid value for crs: {value}")
+                    self._crs = ""
+        elif value is None or pd.isna(value):
+            self._crs = ""
+        else:
+            raise TypeError(
+                "invalid type for crs, please provide a pyproj.CRS object, a string or None"
+            )
+
+    @classmethod
+    def _get_meta_attr(cls, ignore=("monitoring_well",)):
         """Get metadata attributes excluding the ones in ignore.
 
         Parameters
@@ -229,11 +281,11 @@ class Obs(pd.DataFrame):
 
         Returns
         -------
-        list
-            list of metadata attributes
+        set
+            set of metadata attributes
         """
 
-        return [a for a in self._metadata if a not in ignore]
+        return {a.lstrip("_") for a in cls._metadata if a not in ignore}
 
     def _get_first_numeric_col_name(self):
         """Get the first numeric column name of the observations.
@@ -254,6 +306,71 @@ class Obs(pd.DataFrame):
                 return col
 
         return None
+
+    def set_crs(self, crs, if_exists="error"):
+        """Set the CRS of the observation without transforming it.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to set for the observation.
+        if_exists : {'error', 'warn', 'ignore'}, default 'error'
+            Behavior when the observation already has a CRS defined. Options are:
+            - 'error': Raise an error if a different CRS is already set.
+            - 'warn': Issue a warning if a different CRS is already set.
+            - 'ignore': Override the existing CRS without any warning or error.
+
+        Returns
+        -------
+        None
+        """
+        if isinstance(self.crs, str) and self.crs == "":
+            self.crs = crs
+        elif self.crs != pyproj.CRS(crs):
+            if if_exists == "error":
+                raise ValueError(
+                    "Observation already has a different CRS defined. Use `set_crs` with if_exists='warn' or 'ignore' to override."
+                )
+            elif if_exists == "warn":
+                logger.warning(
+                    "Observation already has a different CRS defined. Overriding it may not have the intended effect."
+                )
+            elif if_exists == "ignore":
+                pass
+            else:
+                raise ValueError(f"Invalid value for if_exists: {if_exists}")
+            self.crs = crs
+        else:
+            logger.warning(
+                "cannot set the crs because it is already set to the same value"
+            )
+
+    def to_crs(self, crs):
+        """Convert the observation to the specified CRS.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to convert the observation to.
+
+        Returns
+        -------
+        Obs
+            A new Obs object with the observation converted to the specified CRS.
+        """
+        if isinstance(self.crs, str) and self.crs == "":
+            raise ValueError(
+                "Observation has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first."
+            )
+
+        if self.crs == pyproj.CRS(crs):
+            return self.copy(deep=True)
+
+        o = self.copy(deep=True)
+        transformer = get_transformer28992(self.crs, crs)
+        o.x, o.y = transformer.transform(self.x, self.y)
+        o.crs = crs
+        return o
 
     def copy(self, deep=True):
         """Create a copy of the observation.
@@ -808,9 +925,10 @@ class GroundwaterObs(Obs):
         for the constructor of a pandas.DataFrame.
         """
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in GroundwaterObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = GroundwaterObs._get_meta_attr()
+            for key in (meta_arg & meta_self) - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -845,6 +963,7 @@ class GroundwaterObs(Obs):
         tmin="1900-01-01",
         tmax="2040-01-01",
         to_wintertime=True,
+        crs=28992,
         drop_duplicate_times=True,
         only_metadata=False,
         engine="hydropandas",
@@ -865,6 +984,9 @@ class GroundwaterObs(Obs):
         to_wintertime : bool, optional
             if True the time index is converted to Dutch winter time. The default
             is True.
+        crs : str, int, pyproj.CRS or None, optional
+            The desired coordinate reference system of the observation, if it differs from
+            the crs in BRO the coordinates are transformed, by default EPSG: 28992.
         drop_duplicate_times : bool, optional
             if True rows with a duplicate time stamp are removed keeping only the
             first row. The default is True.
@@ -889,6 +1011,7 @@ class GroundwaterObs(Obs):
             tmin=tmin,
             tmax=tmax,
             to_wintertime=to_wintertime,
+            crs=crs,
             drop_duplicate_times=drop_duplicate_times,
             only_metadata=only_metadata,
             engine=engine,
@@ -900,6 +1023,7 @@ class GroundwaterObs(Obs):
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            crs=meta.pop("crs"),
             location=meta.pop("location"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
@@ -925,6 +1049,7 @@ class GroundwaterObs(Obs):
         only_metadata=False,
         organisation="vitens",
         auth=None,
+        crs=28992,
     ):
         """Extracts the metadata and timeseries of a observation well from a LIZARD-API
         based on the code of a monitoring well.
@@ -961,6 +1086,10 @@ class GroundwaterObs(Obs):
             organisation of the data. Currently only 'vitens' is officially supported.
         auth : tuple, optional
             authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent and the observations, if it
+            differs from the crs in Lizard the coordinates are transformed, by default
+            EPSG: 28992.
 
         Returns
         -------
@@ -982,12 +1111,14 @@ class GroundwaterObs(Obs):
             only_metadata=only_metadata,
             organisation=organisation,
             auth=auth,
+            crs=crs,
         )
         return cls(
             measurements,
             name=meta.pop("name"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            crs=meta.pop("crs"),
             location=meta.pop("location"),
             source=meta.pop("source"),
             unit=meta.pop("unit"),
@@ -1103,6 +1234,7 @@ class GroundwaterObs(Obs):
         verify=True,
         pumping=True,
         anomalous=True,
+        crs=7844,
         **kwargs,
     ):
         """Read data from water connect api.
@@ -1125,6 +1257,8 @@ class GroundwaterObs(Obs):
             return observations from pumping wells
         anomalous : bool, optional
             return anomalous observations
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the observations. By default, EPSG:7844.
         **kwargs
             kwargs are passed to 'get_waterconnect_obs'
 
@@ -1149,6 +1283,7 @@ class GroundwaterObs(Obs):
             verify=verify,
             pumping=pumping,
             anomalous=anomalous,
+            crs=crs,
             **kwargs,
         )
 
@@ -1271,9 +1406,10 @@ class WaterQualityObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in WaterQualityObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = WaterQualityObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -1327,6 +1463,7 @@ class WaterQualityObs(Obs):
         proces_type=None,
         tmin=None,
         tmax=None,
+        crs=28992,
         **kwargs,
     ):
         """Read data from waterinfo csv, zip or using the API.
@@ -1351,11 +1488,14 @@ class WaterQualityObs(Obs):
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
             end date of the measurements, only used if path is None, default is None
+        crs : str, int or pyproj.CRS, optional
+            desired coordinate reference system of the observation,
+            if it differs from 4326 the coordinates are transformed, default is 28992 (RD)
 
         Returns
         -------
-        WaterlvlObs
-            WaterlvlObs object
+        WaterQualityObs
+            WaterQualityObs object
 
         Raises
         ------
@@ -1374,6 +1514,7 @@ class WaterQualityObs(Obs):
             proces_type=proces_type,
             tmin=tmin,
             tmax=tmax,
+            crs=crs,
             **kwargs,
         )
 
@@ -1390,9 +1531,10 @@ class WaterlvlObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in WaterlvlObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = WaterlvlObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
             self.monitoring_well = kwargs.pop("monitoring_well", "")
@@ -1474,6 +1616,7 @@ class WaterlvlObs(Obs):
             name=metadata.pop("name"),
             x=metadata.pop("x"),
             y=metadata.pop("y"),
+            crs=metadata.pop("crs"),
             location=metadata.pop("location"),
             source=metadata.pop("source"),
             meta=metadata,
@@ -1491,6 +1634,7 @@ class WaterlvlObs(Obs):
         proces_type=None,
         tmin=None,
         tmax=None,
+        crs=28992,
         **kwargs,
     ):
         """Read data from waterinfo csv-file, zip or using the API.
@@ -1515,6 +1659,8 @@ class WaterlvlObs(Obs):
             start date of the measurements, only used if path is None, default is None
         tmax : pd.Timestamp or str, optional
             end date of the measurements, only used if path is None, default is None
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the observations. The default is 28992 (RD).
 
         Returns
         -------
@@ -1538,6 +1684,7 @@ class WaterlvlObs(Obs):
             proces_type=proces_type,
             tmin=tmin,
             tmax=tmax,
+            crs=crs,
             **kwargs,
         )
 
@@ -1554,9 +1701,10 @@ class ModelObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in ModelObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = ModelObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         self.model = kwargs.pop("model", "")
 
@@ -1577,9 +1725,10 @@ class MeteoObs(Obs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in MeteoObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = MeteoObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         self.station = kwargs.pop("station", np.nan)
         self.meteo_var = kwargs.pop("meteo_var", "")
@@ -1683,6 +1832,8 @@ class MeteoObs(Obs):
             station=meta.pop("station"),
             x=meta.pop("x"),
             y=meta.pop("y"),
+            crs=meta.pop("crs"),
+            location=meta.pop("location"),
             name=meta.pop("name"),
             source=meta.pop("source"),
             unit=meta.pop("unit") if "unit" in meta else "",
@@ -1744,9 +1895,10 @@ class EvaporationObs(MeteoObs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in EvaporationObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = EvaporationObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
 
@@ -1841,9 +1993,10 @@ class PrecipitationObs(MeteoObs):
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
-            for key in args[0]._get_meta_attr():
-                if (key in PrecipitationObs._metadata) and (key not in kwargs):
-                    kwargs[key] = getattr(args[0], key)
+            meta_arg = args[0]._get_meta_attr()
+            meta_self = PrecipitationObs._get_meta_attr()
+            for key in meta_arg & meta_self - set(kwargs):
+                kwargs[key] = getattr(args[0], key)
 
         super().__init__(*args, **kwargs)
 

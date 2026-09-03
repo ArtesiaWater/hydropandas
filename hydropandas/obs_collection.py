@@ -12,13 +12,14 @@ import logging
 import numbers
 import os
 import warnings
+from collections.abc import Iterable
 from io import StringIO, TextIOWrapper
 from pathlib import Path
-from typing import Iterable, Literal
-from collections.abc import Iterable as IterableABC
+from typing import Literal
 
 import numpy as np
 import pandas as pd
+import pyproj
 
 from . import observation as obs
 from . import util
@@ -35,7 +36,7 @@ def read_bro(
     tmax=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=28992,
+    crs=28992,
     ignore_max_obs=False,
     engine="hydropandas",
 ):
@@ -60,8 +61,10 @@ def read_bro(
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without
         measurements
-    epsg : int, optional
-        epsg code of the extent. The default is 28992 (RD).
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in BRO the coordinates are transformed, by default
+        EPSG: 28992.
     ignore_max_obs : bool, optional
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
@@ -84,7 +87,7 @@ def read_bro(
         tmax=tmax,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
         ignore_max_obs=ignore_max_obs,
         engine=engine,
     )
@@ -382,6 +385,7 @@ def read_fews(
     unpackdir=None,
     force_unpack=False,
     preserve_datetime=False,
+    crs=None,
     **kwargs,
 ):
     """Read one or several FEWS PI-XML files.
@@ -420,6 +424,10 @@ def read_fews(
         force unpack if dst already exists
     preserve_datetime : boolean, optional
         whether to preserve datetime from zip archive
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the observations. There is no check
+        if the coordinates in the xml are actually this crs. This crs is only
+        used to set the crs attribute of the observations.
 
     Returns
     -------
@@ -440,6 +448,7 @@ def read_fews(
         unpackdir=unpackdir,
         force_unpack=force_unpack,
         preserve_datetime=preserve_datetime,
+        crs=crs,
         **kwargs,
     )
 
@@ -455,7 +464,7 @@ def read_ggmn(
     parameter=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=4326,
+    crs=4326,
     max_locations=200,
     max_pages=20,
     timeout=120,
@@ -484,9 +493,9 @@ def read_ggmn(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept.
         The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent, this crs is also
+        used for the observations. The default is 4326 (WGS84).
     max_locations : int, optional
         maximum number of locations to download, by default 200
     max_pages : int, optional
@@ -508,7 +517,7 @@ def read_ggmn(
         parameter=parameter,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
         max_locations=max_locations,
         max_pages=max_pages,
         timeout=timeout,
@@ -525,7 +534,7 @@ def read_ghcn(
     tmax=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=4326,
+    crs=4326,
 ):
     """Get GHCN (Global Historical Climatology Network) observations within an extent.
 
@@ -554,9 +563,9 @@ def read_ghcn(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept.
         The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent, this crs is also
+        used for the observations. The default is 4326 (WGS84).
 
     Returns
     -------
@@ -572,7 +581,7 @@ def read_ghcn(
         tmax=tmax,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
     )
     return oc
 
@@ -955,6 +964,7 @@ def read_lizard(
     only_metadata=False,
     organisation="vitens",
     auth=None,
+    crs=28992,
 ):
     """Get all observations from a list of codes of the monitoring wells and a list of
     tube numbers.
@@ -994,6 +1004,10 @@ def read_lizard(
         organisation of the data, by default "vitens".
     auth : tuple, optional
         authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in Lizard the coordinates are transformed, by default
+        EPSG: 28992.
 
     Returns
     -------
@@ -1015,6 +1029,7 @@ def read_lizard(
         only_metadata=only_metadata,
         organisation=organisation,
         auth=auth,
+        crs=crs,
     )
     return oc
 
@@ -1086,7 +1101,7 @@ def read_matroos(
 
 
 def read_menyanthes(
-    path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+    path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True, crs=28992
 ):
     """Read a Menyanthes file.
 
@@ -1103,6 +1118,8 @@ def read_menyanthes(
         if True the observations are read. The default is True.
     load_stresses : bool, optional
         if True the stresses are read. The default is True.
+    crs : str, int, pyproj.CRS or None, optional
+        coordinate reference system for the observations. By default, EPSG:28992.
 
     Returns
     -------
@@ -1116,6 +1133,7 @@ def read_menyanthes(
         ObsClass=ObsClass,
         load_oseries=load_oseries,
         load_stresses=load_stresses,
+        crs=crs,
     )
 
     return oc
@@ -1233,6 +1251,7 @@ def read_waterconnect(
     keep_all_obs=False,
     location_gdf=None,
     update=False,
+    crs=7844,
     **kwargs,
 ):
     """Read waterconnect measurement within an extent
@@ -1261,6 +1280,8 @@ def read_waterconnect(
     update : bool, optional
         if True new locations are downloaded and stored locally (slow) otherwise a
         cached version of the locations is used. By default False
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent and observations. By default, EPSG:7844.
     **kwargs
         additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
@@ -1280,6 +1301,7 @@ def read_waterconnect(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         location_gdf=location_gdf,
+        crs=crs,
         update=update,
         **kwargs,
     )
@@ -1301,7 +1323,7 @@ def read_waterinfo(
     tmax=None,
     only_metadata=False,
     keep_all_obs=False,
-    epsg=28992,
+    crs=28992,
     progressbar=True,
     location_gdf=None,
     **kwargs,
@@ -1339,8 +1361,8 @@ def read_waterinfo(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept. The default
         is True.
-    epsg : int, optional
-        epsg code of the extent. The default is 28992 (RD).
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent and observations. The default is 28992 (RD).
     progressbar : bool, optional
         show progressbar, by default True
     location_gdf : GeoDataFrame, optional
@@ -1367,7 +1389,7 @@ def read_waterinfo(
         tmax=tmax,
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
-        epsg=epsg,
+        crs=crs,
         progressbar=progressbar,
         location_gdf=location_gdf,
         **kwargs,
@@ -1499,27 +1521,52 @@ class ObsCollection(pd.DataFrame):
     _metadata = [
         "name",
         "meta",
+        "_crs",
     ]
 
     def __init__(self, *args, **kwargs):
         self.name = kwargs.pop("name", "")
         self.meta = kwargs.pop("meta", {})
-
+        crs = kwargs.pop("crs", None)
         if len(args) == 0:
             logger.debug("Create empty ObsCollection")
             super().__init__(**kwargs)
         elif isinstance(args[0], ObsCollection):
             super().__init__(*args, **kwargs)
+            # set metadata from the ObsCollection
+            self.name = args[0].name if self.name == "" else self.name
+            self.meta = args[0].meta if self.meta == {} else self.meta
+            if crs is None:
+                crs = args[0].crs
+            else:
+                if args[0].crs is not None and crs != args[0].crs:
+                    raise ValueError(
+                        "crs of the observation(s) does not match the specified crs"
+                    )
         elif isinstance(args[0], (list, tuple)):
             logger.debug("Convert list of observations to ObsCollection")
-            obs_df = util._obslist_to_frame(args[0])
+            obs_df, crs_olist = util._obslist_to_frame(args[0])
             super().__init__(obs_df, *args[1:], **kwargs)
+            if crs is None:
+                crs = crs_olist
+            else:
+                if crs_olist is not None and crs != crs_olist:
+                    raise ValueError(
+                        "crs of the observation(s) does not match the specified crs"
+                    )
         elif isinstance(args[0], obs.Obs):
             logger.debug("Convert observation(s) to ObsCollection")
             obs_list = [o for o in args if isinstance(o, obs.Obs)]
             remaining_args = [o for o in args if not isinstance(o, obs.Obs)]
-            obs_df = util._obslist_to_frame(obs_list)
+            obs_df, crs_olist = util._obslist_to_frame(obs_list)
             super().__init__(obs_df, *remaining_args, **kwargs)
+            if crs is None:
+                crs = crs_olist
+            else:
+                if crs_olist is not None and crs != crs_olist:
+                    raise ValueError(
+                        "crs of the observation(s) does not match the specified crs"
+                    )
         elif isinstance(args[0], pd.DataFrame) and (
             "obs_list" in kwargs or "ObsClass" in kwargs
         ):
@@ -1532,10 +1579,55 @@ class ObsCollection(pd.DataFrame):
             super().__init__(obs_df, **kwargs)
         else:
             super().__init__(*args, **kwargs)
+        self.crs = crs
 
     @property
     def _constructor(self):
         return _obscollection_constructor_with_fallback
+
+    @property
+    def crs(self):
+        return self._crs
+
+    @crs.setter
+    def crs(self, value):
+        """Make sure crs is a pyproj.CRS object, an int or a string. If value is an int or a string,
+        try to convert it to a pyproj.CRS object. If that fails, set to an empty string
+        """
+        if isinstance(value, pyproj.CRS):
+            self._crs = value
+        elif isinstance(value, (str, int)):
+            if value == "":
+                self._crs = ""
+            else:
+                try:
+                    self._crs = pyproj.CRS.from_user_input(value)
+                except (pyproj.exceptions.CRSError, ValueError, TypeError):
+                    logger.warning(f"invalid value for crs: {value}")
+                    self._crs = ""
+        elif value is None or pd.isna(value):
+            self._crs = ""
+        else:
+            raise TypeError(
+                "invalid type for crs, please provide a pyproj.CRS object, a string or None"
+            )
+
+    @classmethod
+    def _get_meta_attr(cls, ignore=()):
+        """Get metadata attributes excluding the ones in ignore.
+
+        Parameters
+        ----------
+        ignore : tuple, optional
+            attributes to ignore, by default an empty tuple
+
+        Returns
+        -------
+        set
+            set of metadata attributes
+        """
+
+        return {a.lstrip("_") for a in cls._metadata if a not in ignore}
 
     def _infer_otype(self):
         """Infer observation type from the obs column.
@@ -1660,7 +1752,7 @@ class ObsCollection(pd.DataFrame):
         if check_individual_obs:
             for o in self.obs.values:
                 for att in o._get_meta_attr():
-                    if att not in ["name", "meta"]:
+                    if att not in ["name", "meta", "crs"]:
                         v1 = self.loc[o.name, att]
                         v2 = getattr(o, att)
                         # check if values are equal
@@ -1872,7 +1964,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         only_metadata=False,
         keep_all_obs=True,
-        epsg=28992,
+        crs=28992,
         ignore_max_obs=False,
         engine="hydropandas",
     ):
@@ -1898,8 +1990,10 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : boolean, optional
             add all observation points to the collection, even without
             measurements
-        epsg : int, optional
-            epsg code of the extent. The default is 28992 (RD).
+        crs : str, int, pyproj.CRS or None, optional
+            The coordinate reference system of the extent and the observations, if it
+            differs from the crs in BRO the coordinates are transformed, by default
+            EPSG: 28992.
         ignore_max_obs : bool, optional
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
@@ -1932,7 +2026,7 @@ class ObsCollection(pd.DataFrame):
                 tmax=tmax,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
-                epsg=epsg,
+                crs=crs,
                 ignore_max_obs=ignore_max_obs,
                 engine=engine,
             )
@@ -1943,15 +2037,16 @@ class ObsCollection(pd.DataFrame):
                 obs.GroundwaterObs,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
+                crs=crs,
                 engine=engine,
             )
             name = meta.pop("name")
         else:
             raise ValueError("specify bro_id or extent")
 
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_lizard(
@@ -1969,6 +2064,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         organisation="vitens",
         auth=None,
+        crs=28992,
     ):
         """Get all observations within a specified extent.
 
@@ -2007,6 +2103,10 @@ class ObsCollection(pd.DataFrame):
             organisation of the data. The default is "vitens".
         auth : tuple, optional
             authentication credentials for the API request, e.g.: ("__key__", your_api_key)
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent and the observations, if it
+            differs from the crs in Lizard the coordinates are transformed, by default
+            EPSG: 28992.
 
         Returns
         -------
@@ -2030,6 +2130,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
+                crs=crs,
             )
         elif codes is not None:
             obs_list = get_obs_list_from_codes(
@@ -2045,6 +2146,7 @@ class ObsCollection(pd.DataFrame):
                 only_metadata=only_metadata,
                 organisation=organisation,
                 auth=auth,
+                crs=crs,
             )
         else:
             raise ValueError("specify codes or extent")
@@ -2175,25 +2277,38 @@ class ObsCollection(pd.DataFrame):
         """
 
         df = pd.read_excel(path, meta_sheet_name, index_col=0)
-
+        obs_list, crs_set = [], set()
         for oname, row in df.iterrows():
             measurements = pd.read_excel(path, oname, index_col=0)
             all_metadata = row.to_dict()
             obsclass = getattr(obs, all_metadata.pop("obs"))
             # get observation specific metadata
             metadata = {
-                k: v for (k, v) in all_metadata.items() if k in obsclass._metadata
+                k: v
+                for (k, v) in all_metadata.items()
+                if k in obsclass._get_meta_attr()
             }
             metadata["name"] = oname
 
             extra_meta = {
-                k: v for (k, v) in all_metadata.items() if k not in obsclass._metadata
+                k: v
+                for (k, v) in all_metadata.items()
+                if k not in obsclass._get_meta_attr()
             }
 
             o = obsclass(measurements, meta=extra_meta, **metadata)
-            df.at[oname, "obs"] = o
+            obs_list.append(o)
+            if o.crs != "":
+                crs_set.add(o.crs)
 
-        return cls(df)
+        if len(crs_set) > 1:
+            raise ValueError(
+                "multiple crs values in observations, an ObsCollection can only have one crs value"
+            )
+        crs = next(iter(crs_set), "")
+        df.drop(columns=["crs"], errors="ignore", inplace=True)
+
+        return cls(df, obs_list=obs_list, crs=crs)
 
     @classmethod
     def from_dino(
@@ -2259,8 +2374,8 @@ class ObsCollection(pd.DataFrame):
             **kwargs,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name, meta=meta)
+        obs_df, crs = util._obslist_to_frame(obs_list)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_artdino_dir(
@@ -2337,9 +2452,9 @@ class ObsCollection(pd.DataFrame):
             **kwargs,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_era5(
@@ -2447,6 +2562,7 @@ class ObsCollection(pd.DataFrame):
         unpackdir=None,
         force_unpack=False,
         preserve_datetime=False,
+        crs=None,
         **kwargs,
     ):
         """Read one or several FEWS PI-XML files.
@@ -2486,6 +2602,10 @@ class ObsCollection(pd.DataFrame):
             force unpack if dst already exists
         preserve_datetime : boolean, optional
             whether to preserve datetime from zip archive
+        crs : str, int, pyproj.CRS or None, optional
+            The coordinate reference system of the observations. There is no check
+            if the coordinates in the xml are actually this crs. This crs is only
+            used to set the crs attribute of the observations, by default None
 
         Returns
         -------
@@ -2519,11 +2639,12 @@ class ObsCollection(pd.DataFrame):
                 locations=locations,
                 remove_nan=remove_nan,
                 low_memory=low_memory,
+                crs=crs,
                 **kwargs,
             )
 
-            obs_df = util._obslist_to_frame(obs_list)
-            return cls(obs_df, name=name, meta=meta)
+            obs_df, crs = util._obslist_to_frame(obs_list)
+            return cls(obs_df, name=name, meta=meta, crs=crs)
 
         elif (file_or_dir is None) and (xmlstring is not None):
             obs_list = read_xmlstring(
@@ -2534,10 +2655,11 @@ class ObsCollection(pd.DataFrame):
                 locationIds=locations,
                 low_memory=low_memory,
                 remove_nan=remove_nan,
+                crs=crs,
                 **kwargs,
             )
-            obs_df = util._obslist_to_frame(obs_list)
-            return cls(obs_df, name=name, meta=meta)
+            obs_df, crs = util._obslist_to_frame(obs_list)
+            return cls(obs_df, name=name, meta=meta, crs=crs)
 
         else:
             raise ValueError("either specify variables file_or_dir or xmlstring")
@@ -2553,7 +2675,7 @@ class ObsCollection(pd.DataFrame):
         parameter=None,
         only_metadata=False,
         keep_all_obs=True,
-        epsg=4326,
+        crs=4326,
         max_locations=200,
         max_pages=20,
         timeout=120,
@@ -2582,9 +2704,9 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : bool, optional
             if False, only observations with measurements are kept.
             The default is True.
-        epsg : int, optional
-            epsg code of the supplied extent. Returned observation x/y
-            coordinates are also in this CRS. The default is 4326 (WGS84).
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent, this crs is also
+            used for the observations. The default is 4326 (WGS84).
         max_locations : int, optional
             maximum number of locations to download, by default 200
         max_pages : int, optional
@@ -2609,7 +2731,7 @@ class ObsCollection(pd.DataFrame):
             parameter=parameter,
             only_metadata=only_metadata,
             keep_all_obs=keep_all_obs,
-            epsg=epsg,
+            crs=crs,
             max_locations=max_locations,
             max_pages=max_pages,
             timeout=timeout,
@@ -2628,7 +2750,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         only_metadata=False,
         keep_all_obs=True,
-        epsg=4326,
+        crs=4326,
     ):
         """Get GHCN (Global Historical Climatology Network) observations within an extent.
 
@@ -2657,9 +2779,9 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : bool, optional
             if False, only observations with measurements are kept.
             The default is True.
-        epsg : int, optional
-            epsg code of the supplied extent. Returned observation x/y
-            coordinates are also in this CRS. The default is 4326 (WGS84).
+        crs : str, int or pyproj.CRS, optional
+            The coordinate reference system of the extent, this crs is also
+            used for the observations. The default is 4326 (WGS84).
 
         Returns
         -------
@@ -2678,7 +2800,7 @@ class ObsCollection(pd.DataFrame):
             tmax=tmax,
             only_metadata=only_metadata,
             keep_all_obs=keep_all_obs,
-            epsg=epsg,
+            crs=crs,
         )
 
         return cls(obs_list, name=name, meta=meta)
@@ -2728,8 +2850,8 @@ class ObsCollection(pd.DataFrame):
             nlay=nlay,
             exclude_layers=exclude_layers,
         )
-        obs_df = util._obslist_to_frame(mo_list)
-        return cls(obs_df, name=modelname)
+        obs_df, crs = util._obslist_to_frame(mo_list)
+        return cls(obs_df, name=modelname, crs=crs)
 
     @classmethod
     def from_json(cls, path, **kwargs):
@@ -2909,9 +3031,9 @@ class ObsCollection(pd.DataFrame):
             fill_missing_obs_with_factor=fill_missing_obs_with_factor,
         )
 
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_knmi_scenarios(
@@ -3013,8 +3135,8 @@ class ObsCollection(pd.DataFrame):
         name : str, optional
             name of the observation collection
         """
-        obs_df = util._obslist_to_frame(obs_list)
-        return cls(obs_df, name=name)
+        obs_df, crs = util._obslist_to_frame(obs_list)
+        return cls(obs_df, name=name, crs=crs)
 
     @classmethod
     def from_matroos(
@@ -3088,18 +3210,28 @@ class ObsCollection(pd.DataFrame):
 
     @classmethod
     def from_menyanthes(
-        cls, path, name="", ObsClass=obs.Obs, load_oseries=True, load_stresses=True
+        cls,
+        path,
+        name="",
+        ObsClass=obs.Obs,
+        load_oseries=True,
+        load_stresses=True,
+        crs=28992,
     ):
         from .io.menyanthes import read_file
 
         menyanthes_meta = {"path": path, "type": ObsClass}
 
         obs_list = read_file(
-            path, ObsClass, load_oseries=load_oseries, load_stresses=load_stresses
+            path,
+            ObsClass,
+            load_oseries=load_oseries,
+            load_stresses=load_stresses,
+            crs=crs,
         )
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, meta=menyanthes_meta, name=name)
+        return cls(obs_df, meta=menyanthes_meta, name=name, crs=crs)
 
     @classmethod
     def from_modflow(
@@ -3147,9 +3279,9 @@ class ObsCollection(pd.DataFrame):
             method=method,
             exclude_layers=exclude_layers,
         )
-        obs_df = util._obslist_to_frame(mo_list)
+        obs_df, crs = util._obslist_to_frame(mo_list)
 
-        return cls(obs_df)
+        return cls(obs_df, crs=crs)
 
     @classmethod
     def from_waterconnect(
@@ -3163,6 +3295,7 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs=False,
         location_gdf=None,
         update=False,
+        crs=7844,
         **kwargs,
     ):
         """Read waterconnect measurement within an extent or from a file or directory.
@@ -3190,7 +3323,9 @@ class ObsCollection(pd.DataFrame):
             geodataframe with the locations of the water drill holes you want to include.
         update : bool, optional
             if True new locations are downloaded and stored locally (slow) otherwise a
-            cached version of the locations is used. By default False
+            cached version of the locations is used. By default False.
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the extent and observations. By default, EPSG:7844.
         **kwargs
             additional keyword arguments are passed to the ObsClass.from_waterconnect()
             method
@@ -3214,6 +3349,7 @@ class ObsCollection(pd.DataFrame):
                 keep_all_obs=keep_all_obs,
                 location_gdf=location_gdf,
                 update=update,
+                crs=crs,
                 **kwargs,
             )
         else:
@@ -3237,7 +3373,7 @@ class ObsCollection(pd.DataFrame):
         tmax=None,
         only_metadata=False,
         keep_all_obs=False,
-        epsg=28992,
+        crs=28992,
         progressbar=True,
         location_gdf=None,
         **kwargs,
@@ -3275,8 +3411,8 @@ class ObsCollection(pd.DataFrame):
         keep_all_obs : bool, optional
             if False, only observations with measurements are kept. The default
             is True.
-        epsg : int, optional
-            epsg code of the extent. The default is 28992 (RD).
+        crs : str, int or pyproj.CRS, optional
+            coordinate reference system of the extent and observations. The default is 28992 (RD).
         progressbar : bool, optional
             show progressbar, by default True
         location_gdf : GeoDataFrame, optional
@@ -3305,7 +3441,7 @@ class ObsCollection(pd.DataFrame):
                 tmax=tmax,
                 only_metadata=only_metadata,
                 keep_all_obs=keep_all_obs,
-                epsg=epsg,
+                crs=crs,
                 location_gdf=location_gdf,
             )
         elif file_or_dir is not None:
@@ -3353,9 +3489,9 @@ class ObsCollection(pd.DataFrame):
             keep_all_obs=keep_all_obs,
             **kwargs,
         )
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
-        return cls(obs_df, name=name, meta=meta)
+        return cls(obs_df, name=name, meta=meta, crs=crs)
 
     @classmethod
     def from_pastastore(
@@ -3385,14 +3521,14 @@ class ObsCollection(pd.DataFrame):
         obs_list = pastas.read_pastastore_library(
             pstore, libname, ObsClass=ObsClass, metadata_mapping=metadata_mapping
         )
-        obs_df = util._obslist_to_frame(obs_list)
+        obs_df, crs = util._obslist_to_frame(obs_list)
 
         meta = {
             "name": pstore.name,
             "conntype": pstore.conn.conn_type,
             "library": libname,
         }
-        return cls(obs_df, name=pstore.name, meta=meta)
+        return cls(obs_df, name=pstore.name, meta=meta, crs=crs)
 
     def get_obs(self, name=None, **kwargs):
         """get an observation object from a collection
@@ -3437,6 +3573,98 @@ class ObsCollection(pd.DataFrame):
             raise ValueError(
                 f"multiple observations for given conditions {selected_obs.index}"
             )
+
+    def set_crs(self, crs, if_exists="error"):
+        """Set the CRS of the ObsCollection and all individual observations without
+        transforming them.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to set for the observations.
+        if_exists : {'error', 'warn', 'ignore'}, default 'error'
+            Behavior when the ObsCollection or an Observation already has a CRS defined. Options are:
+            - 'error': Raise an error if a different CRS is already set.
+            - 'warn': Issue a warning if a different CRS is already set.
+            - 'ignore': Override the existing CRS without any warning or error.
+
+        Returns
+        -------
+        ObsCollection
+            The ObsCollection with the CRS set for all observations.
+        """
+        if isinstance(self.crs, str) and self.crs == "":
+            self.crs = crs
+        elif self.crs != pyproj.CRS(crs):
+            if if_exists == "error":
+                raise ValueError(
+                    "ObsCollection already has a different CRS defined. Use `to_crs` to transform the coordinates to a different crs or use `set_crs` with if_exists='warn' or 'ignore' to override."
+                )
+            elif if_exists == "warn":
+                logger.warning(
+                    "ObsCollection already has a different CRS defined. Overriding it may not have the intended effect."
+                )
+            elif if_exists == "ignore":
+                pass
+            else:
+                raise ValueError(f"Invalid value for if_exists: {if_exists}")
+            self.crs = crs
+
+        # check individual observations
+        for o in self.obs:
+            if isinstance(o.crs, str) and o.crs == "":
+                logger.warning(
+                    f"Observation {o.name} has no CRS defined. Setting it to the collection CRS."
+                )
+                o.crs = crs
+            elif o.crs != pyproj.CRS(crs):
+                if if_exists == "error":
+                    raise ValueError(
+                        "Observation already has a different CRS defined. Use `to_crs` to transform the coordinates to a different crs or use `set_crs` with if_exists='warn' or 'ignore' to override."
+                    )
+                elif if_exists == "warn":
+                    logger.warning(
+                        "Observation already has a different CRS defined. Overriding it may not have the intended effect."
+                    )
+                elif if_exists == "ignore":
+                    pass
+                else:
+                    raise ValueError(f"Invalid value for if_exists: {if_exists}")
+                o.crs = crs
+
+    def to_crs(self, crs):
+        """Convert all observations in the collection to the specified CRS.
+
+        Parameters
+        ----------
+        crs : str, int or pyproj.CRS
+            coordinate reference system to convert the observations to.
+
+        Returns
+        -------
+        ObsCollection
+            A new ObsCollection with all observations converted to the specified CRS.
+        """
+        if isinstance(crs, str) and crs == "":
+            raise ValueError(
+                "ObsCollection has no crs defined thus the crs cannot be changed. Use `set_crs` to define a CRS first."
+            )
+
+        obs_list = []
+        for o in self.obs:
+            if isinstance(o.crs, str) and o.crs == "":
+                o.crs = (
+                    self.crs
+                )  # assume crs of the collection is the crs of the observation
+            elif o.crs != self.crs:
+                raise ValueError(
+                    f"observation {o.name} has a different CRS ({o.crs}) than the collection ({self.crs})"
+                )
+
+            o = o.to_crs(crs)
+            obs_list.append(o)
+
+        return ObsCollection(obs_list, crs=crs)
 
     def to_csv(self, path, check_consistency=True, **kwargs):
         """Write all observations in the ObsCollection to csv files.
@@ -3483,7 +3711,7 @@ class ObsCollection(pd.DataFrame):
         dict
             dictionary with metadata and observations
         """
-        d = {k: getattr(self, k) for k in self._metadata}
+        d = {k: getattr(self, k) for k in self._get_meta_attr()}
         d["df"] = super().drop(columns="obs").to_dict()
         d["obstype"] = self.__class__.__name__
         d["obs_list"] = [o.to_dict() for o in self.obs]
@@ -3531,7 +3759,7 @@ class ObsCollection(pd.DataFrame):
         with pd.ExcelWriter(path) as writer:
             # replace obs column by observation type
             obseries = oc.pop("obs")
-            oc["obs"] = [type(o).__name__ for o in obseries]
+            oc[["obs", "crs"]] = [(type(o).__name__, o.crs) for o in obseries]
 
             # write ObsCollection dataframe to first sheet
             super(ObsCollection, oc).to_excel(writer, sheet_name=meta_sheet_name)
@@ -3559,7 +3787,7 @@ class ObsCollection(pd.DataFrame):
         -------
         None
         """
-        d = {k: getattr(self, k) for k in self._metadata}
+        d = {k: getattr(self, k) for k in self._get_meta_attr()}
         d["obstype"] = type(self).__name__
         if self.empty:
             d["df"] = super().to_json(date_format="iso")
@@ -3579,7 +3807,7 @@ class ObsCollection(pd.DataFrame):
 
         fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_gdf(self, xcol="x", ycol="y", crs=28992, drop_obs=True):
+    def to_gdf(self, xcol="x", ycol="y", drop_obs=True, custom_crs_28992=False):
         """Convert ObsCollection to GeoDataFrame.
 
         Parameters
@@ -3594,13 +3822,20 @@ class ObsCollection(pd.DataFrame):
             drop the column with observations. Useful for basic geodataframe
             manipulations that require JSON serializable columns. The default
             is True.
+        custom_crs_28992 : bool, optional
+            if True, use a custom definition for EPSG:28992 instead of the default one.
+            In some cases the default EPSG:28992 definition gives incorrect results
+            when converting to another crs, so a custom definition may be necessary.
+            The default is False.
 
         Returns
         -------
         gdf : geopandas.GeoDataFrame
         """
 
-        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=crs)
+        gdf = util.df2gdf(
+            self, xcol=xcol, ycol=ycol, crs=self.crs, custom_crs_28992=custom_crs_28992
+        )
         if drop_obs:
             return gdf.drop(columns="obs")
         else:
@@ -3658,22 +3893,29 @@ class ObsCollection(pd.DataFrame):
 
         return pstore
 
-    def to_shapefile(self, path, xcol="x", ycol="y"):
+    def to_shapefile(self, path, xcol="x", ycol="y", custom_crs_28992=False):
         """Save ObsCollection as shapefile.
 
         Parameters
         ----------
         path : str
-            filename of shapefile (.shp) or geopackage (.gpkg). A geopackage
+            filepath of shapefile (.shp) or geopackage (.gpkg). A geopackage
             has the advantage that column names will not be truncated.
         xcol : str
             column name with x values
         ycol : str
             column name with y values
+        custom_crs_28992 : bool, optional
+            if True, use a custom definition for EPSG:28992 instead of the default one.
+            In some cases the default EPSG:28992 definition gives incorrect results
+            when converting to another crs, so a custom definition may be necessary.
+            The default is False.
         """
         from geopandas.array import GeometryDtype
 
-        gdf = util.df2gdf(self, xcol, ycol)
+        gdf = util.df2gdf(
+            self, xcol, ycol, crs=self.crs, custom_crs_28992=custom_crs_28992
+        )
 
         # remove obs column
         if "obs" in gdf.columns:
@@ -3719,7 +3961,7 @@ class ObsCollection(pd.DataFrame):
                 out[k] = [o.meta.get(k, None) for o in out.obs.values]
         elif isinstance(key, (str, int)):
             out[key] = [o.meta.get(key, None) for o in out.obs.values]
-        elif isinstance(key, IterableABC):
+        elif isinstance(key, Iterable):
             for k in key:
                 out[k] = [o.meta.get(k, None) for o in out.obs.values]
         else:
@@ -3811,7 +4053,7 @@ class ObsCollection(pd.DataFrame):
 
         # add all metadata that is equal for all observations
         kwargs = {}
-        meta_att = set(otypes[0]._metadata) - {
+        meta_att = set(otypes[0]._get_meta_attr()) - {
             "x",
             "y",
             "location",
@@ -3819,6 +4061,7 @@ class ObsCollection(pd.DataFrame):
             "name",
             "source",
             "meta",
+            "crs",
         }
         for att in meta_att:
             if (self.loc[:, att] == self.iloc[0].loc[att]).all():

@@ -22,14 +22,16 @@ import datetime as dt
 import logging
 import os
 import warnings
+from collections.abc import Iterable
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
 
 logger = logging.getLogger(__name__)
@@ -306,6 +308,7 @@ def get_timeseries_from_file(
             "location": stn_name,
             "source": "KNMI",
             "filename": fname,
+            "crs": pyproj.CRS(28992),
         }
     )
 
@@ -537,6 +540,7 @@ def get_timeseries_stn(
                 "name": f"{meteo_var}_{stn_name}_{stn}",
                 "location": stn_name,
                 "source": "KNMI",
+                "crs": pyproj.CRS(28992),
             }
         )
         meta.update(variables)
@@ -745,6 +749,7 @@ def fill_missing_measurements(
             "name": f"{meteo_var}_{stn_name}_{stn}",
             "location": stn_name,
             "source": "KNMI",
+            "crs": pyproj.CRS(28992),
         }
     )
 
@@ -2286,6 +2291,7 @@ def get_evaporation(
     meta["name"] = f"{meteo_var}_{stn_name}_{stn}"
     meta["location"] = stn_name
     meta["unit"] = "m"
+    meta["crs"] = pyproj.CRS(28992)
 
     return et, meta
 
@@ -2690,6 +2696,7 @@ def get_knmi_scenarios_obs_list(
                 name=f"{variable}_{stn_num}_{location}_{scenario}",
                 unit=units.get(variable, ""),
                 source=f"KNMI-Climate-Scenario-{scenario}",
+                crs=pyproj.CRS(28992),
                 x=stations.loc[stn_num, "x"],
                 y=stations.loc[stn_num, "y"],
                 location=location,

@@ -8,6 +8,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+import pyproj
 
 logger = logging.getLogger(__name__)
 
@@ -264,6 +265,7 @@ def read_dino_groundwater_quality_txt(f: str | Path | FileIO):
         "name": locatie["NITG-nr"],
         "x": locatie["X-coord"],
         "y": locatie["Y-coord"],
+        "crs": pyproj.CRS(28992),  # assuming RD New as default CRS for dino data
     }
     try:
         meta["ground_level"] = locatie["Maaiveldhoogte (m tov NAP)"]
@@ -334,6 +336,7 @@ def read_dino_groundwater_csv(
         logger.warning(f"could not read metadata -> {fname}")
     meta["filename"] = fname
     meta["source"] = "dino"
+    meta["crs"] = pyproj.CRS(28992)  # assuming RD New as default CRS for dino data
 
     # read measurements
     if read_series:
@@ -495,6 +498,7 @@ def read_artdino_groundwater_csv(path, to_mnap=True, read_series=True):
 
         meta["filename"] = path
         meta["source"] = "dino"
+        meta["crs"] = pyproj.CRS(28992)  # assuming RD New as default CRS for dino data
 
         # read measurements
         if read_series:
@@ -709,6 +713,9 @@ def read_dino_waterlvl_csv(
                 meta["metadata_available"] = False
             meta["filename"] = fname
             meta["source"] = "dino"
+            meta["crs"] = pyproj.CRS(
+                28992
+            )  # assuming RD New as default CRS for dino data
         elif p_data.match(line):
             if read_series:
                 measurements = _read_dino_waterlvl_measurements(f, line)

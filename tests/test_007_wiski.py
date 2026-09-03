@@ -14,10 +14,8 @@ def test_read_wiski_csv() -> None:
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
-        verbose=True,
-        parse_dates={"datetime": [0, 1]},
+        parse_dates=[0, 1],
         dayfirst=True,
-        index_col=["datetime"],
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
@@ -30,10 +28,8 @@ def test_read_wiski_csv2() -> None:
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
-        verbose=True,
-        parse_dates={"datetime": [0, 1]},
+        parse_dates=[0, 1],
         dayfirst=True,
-        index_col=["datetime"],
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
 
@@ -45,8 +41,7 @@ def test_read_wiski_zip() -> None:
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
-        parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
+        parse_dates=[0, 1],
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
         dayfirst=True,
     )
@@ -58,6 +53,5 @@ def test_rijnenijssel_wiski_format() -> None:
         header_sep=";",
         end_header_str="#Timestamp",
         parse_dates=[0],
-        index_col=[0],
         tz_localize=False,
     )
