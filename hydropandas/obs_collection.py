@@ -3833,7 +3833,9 @@ class ObsCollection(pd.DataFrame):
         gdf : geopandas.GeoDataFrame
         """
 
-        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=self.crs, custom_crs_28992=custom_crs_28992)
+        gdf = util.df2gdf(
+            self, xcol=xcol, ycol=ycol, crs=self.crs, custom_crs_28992=custom_crs_28992
+        )
         if drop_obs:
             return gdf.drop(columns="obs")
         else:
@@ -3911,7 +3913,9 @@ class ObsCollection(pd.DataFrame):
         """
         from geopandas.array import GeometryDtype
 
-        gdf = util.df2gdf(self, xcol, ycol, crs=self.crs, custom_crs_28992=custom_crs_28992)
+        gdf = util.df2gdf(
+            self, xcol, ycol, crs=self.crs, custom_crs_28992=custom_crs_28992
+        )
 
         # remove obs column
         if "obs" in gdf.columns:
