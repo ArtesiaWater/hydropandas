@@ -209,7 +209,7 @@ def get_files(
     return dirname, unzip_fnames
 
 
-def df2gdf(df, xcol="x", ycol="y", crs=28992):
+def df2gdf(df, xcol="x", ycol="y", crs=28992, custom_crs_28992=False):
     """Create a GeoDataFrame from a DataFrame with xy points.
 
     Parameters
@@ -222,6 +222,11 @@ def df2gdf(df, xcol="x", ycol="y", crs=28992):
         column name with y values. The default is  'x'.
     crs : int, optional
         coordinate reference system, by default 28992 (RD new).
+    custom_crs_28992 : bool, optional
+        if True, use a custom definition for EPSG:28992 instead of the default one.
+        In some cases the default EPSG:28992 definition gives incorrect results
+        when converting to another crs, so a custom definition may be necessary.
+        The default is False.
 
     Returns
     -------
@@ -230,6 +235,9 @@ def df2gdf(df, xcol="x", ycol="y", crs=28992):
     """
     from geopandas import GeoDataFrame
     from shapely.geometry import Point
+
+    if pyproj.CRS(crs) == pyproj.CRS(28992) and custom_crs_28992:
+        crs = pyproj.CRS(EPSG_28992)
 
     gdf = GeoDataFrame(
         df.copy(),

@@ -3807,7 +3807,7 @@ class ObsCollection(pd.DataFrame):
 
         fews.write_pi_xml(self, fname, timezone=timezone, version=version)
 
-    def to_gdf(self, xcol="x", ycol="y", drop_obs=True):
+    def to_gdf(self, xcol="x", ycol="y", drop_obs=True, custom_crs_28992=False):
         """Convert ObsCollection to GeoDataFrame.
 
         Parameters
@@ -3822,13 +3822,18 @@ class ObsCollection(pd.DataFrame):
             drop the column with observations. Useful for basic geodataframe
             manipulations that require JSON serializable columns. The default
             is True.
+        custom_crs_28992 : bool, optional
+            if True, use a custom definition for EPSG:28992 instead of the default one.
+            In some cases the default EPSG:28992 definition gives incorrect results
+            when converting to another crs, so a custom definition may be necessary.
+            The default is False.
 
         Returns
         -------
         gdf : geopandas.GeoDataFrame
         """
 
-        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=self.crs)
+        gdf = util.df2gdf(self, xcol=xcol, ycol=ycol, crs=self.crs, custom_crs_28992=custom_crs_28992)
         if drop_obs:
             return gdf.drop(columns="obs")
         else:
@@ -3886,22 +3891,27 @@ class ObsCollection(pd.DataFrame):
 
         return pstore
 
-    def to_shapefile(self, path, xcol="x", ycol="y"):
+    def to_shapefile(self, path, xcol="x", ycol="y", custom_crs_28992=False):
         """Save ObsCollection as shapefile.
 
         Parameters
         ----------
         path : str
-            filename of shapefile (.shp) or geopackage (.gpkg). A geopackage
+            filepath of shapefile (.shp) or geopackage (.gpkg). A geopackage
             has the advantage that column names will not be truncated.
         xcol : str
             column name with x values
         ycol : str
             column name with y values
+        custom_crs_28992 : bool, optional
+            if True, use a custom definition for EPSG:28992 instead of the default one.
+            In some cases the default EPSG:28992 definition gives incorrect results
+            when converting to another crs, so a custom definition may be necessary.
+            The default is False.
         """
         from geopandas.array import GeometryDtype
 
-        gdf = util.df2gdf(self, xcol, ycol)
+        gdf = util.df2gdf(self, xcol, ycol, crs=self.crs, custom_crs_28992=custom_crs_28992)
 
         # remove obs column
         if "obs" in gdf.columns:
