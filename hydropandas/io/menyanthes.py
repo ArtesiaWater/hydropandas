@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import numpy as np
 from pandas import DataFrame, Series, Timedelta, Timestamp
@@ -50,7 +50,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True, crs=28992):
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         Full path of the Menyanthes file (.men) to read.
     ObsClass : GroundwaterObs or WaterlvlObs
         Class of observation object to create.
@@ -110,7 +110,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True, crs=28992):
         unit = ""
 
     # Check if file is present
-    if not (os.path.isfile(path)):
+    if not Path(path).is_file():
         print("Could not find file ", path)
 
     mat = loadmat(path, struct_as_record=False, squeeze_me=True, chars_as_strings=True)

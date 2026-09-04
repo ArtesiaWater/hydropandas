@@ -330,7 +330,7 @@ def request_api(location, unit, source, tmin, tmax, timeout=600, fname=None):
         end of requested time series, format '%Y%m%d%H%M' e.g. '202505100110'
     timeout : int, optional
         timeout for request in seconds, by default 600
-    fname : str, optional
+    fname : str or pathlib.Path, optional
         filename to save result of request in text format, by default None
 
     Returns

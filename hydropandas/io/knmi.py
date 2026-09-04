@@ -63,7 +63,7 @@ def get_knmi_obs(
     ----------
     stn : int, str or None, optional
         measurement station e.g. 829. The default is None.
-    fname : str, path object, file-like object or None, optional
+    fname : str, pathlib.Path, file-like object or None, optional
         filename of a knmi file. The default is None.
     xy : list, tuple or None, optional
         RD coördinates of a location in the Netherlands. The station nearest
@@ -190,7 +190,7 @@ def get_knmi_timeseries_fname(
 
     Parameters
     ----------
-    fname : str
+    fname : str or pathlib.Path
         filename of the knmi file.
     meteo_var : str
         observation type e.g. "RH" or "EV24". See list with all options in the
@@ -230,7 +230,7 @@ def get_timeseries_from_file(
 
     Parameters
     ----------
-    fname : str
+    fname : str or pathlib.Path
         filename of the knmi file.
     meteo_var : str
         observation type e.g. "RH" or "EV24". See list with all options in the
@@ -569,12 +569,10 @@ def get_stations(
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = Path(__file__).resolve().parent
 
-    mstations = pd.read_json(os.path.join(dir_path, "../data/knmi_meteostation.json"))
-    pstations = pd.read_json(
-        os.path.join(dir_path, "../data/knmi_neerslagstation.json")
-    )
+    mstations = pd.read_json(dir_path / "../data/knmi_meteostation.json")
+    pstations = pd.read_json(dir_path / "../data/knmi_neerslagstation.json")
 
     stations = pd.concat([mstations, pstations], axis=0)
     stations = stations.where(~stations.isna(), False)
@@ -1198,7 +1196,7 @@ def request_url(url: str, fname=None) -> StringIO:
     ----------
     stn : int
         station number.
-    fname : str or None, optional
+    fname : str, pathlib.Path or None, optional
         filename to save the data to, only used if not None. The default is None.
 
     Returns
@@ -1396,7 +1394,7 @@ def request_api(url: str, params: dict[str, str], fname=None) -> StringIO:
         URL to parse the request to
     params : Dict[str, str]
         Dictionary with parameters that are parsed to the request get
-    fname : str or None, optional
+    fname : str, pathlib.Path or None, optional
         filename to save the data to only used if not None, by default None
 
     Returns
@@ -2553,7 +2551,7 @@ def get_knmi_scenarios_data(
     dfs = {}
     for name in zipped.namelist():
         if name.endswith(".csv"):
-            base = os.path.splitext(name)[0]
+            base = Path(name).stem
             base_ext = base.split("_")[-1]
             df = pd.read_csv(
                 zipped.open(name),
