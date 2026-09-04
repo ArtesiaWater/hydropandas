@@ -237,7 +237,7 @@ def test_obscollection_wiskizip_gw():
 def test_to_pastastore():
     dino_gw = obscollection_dinozip_gw()
     # drop duplicate
-    dino_gw.drop("B22D0155-001", inplace=True)
+    dino_gw.drop(["B22D0155-001", "B02H0092-001", "B02H1007-001"], inplace=True)
     pstore = dino_gw.to_pastastore()
     # export to zip for read test
     pstore.to_zip("test_pastastore.zip")
