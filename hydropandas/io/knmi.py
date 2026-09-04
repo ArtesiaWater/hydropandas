@@ -47,9 +47,7 @@ URL_CDN_DAILY_PREC = (
     "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
     "gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
 )
-URL_CDN_DAILY_METEO = (
-    "https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/daggegevens/etmgeg_{stn}.zip"
-)
+URL_CDN_DAILY_METEO = "https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/daggegevens/etmgeg_{stn}.zip"
 
 KNMI_CLIMATE_YEARS = Literal["2033", "2050", "2100", "2150"]
 KNMI_CLIMATE_SCENARIOS = Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
