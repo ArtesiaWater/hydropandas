@@ -31,4 +31,4 @@ jobs:
 
       - name: Run test
         run: |
-          pytest tests/api/test_110_ggmn_api.py
+          pytest tests/api/test_109_ggmn_api.py

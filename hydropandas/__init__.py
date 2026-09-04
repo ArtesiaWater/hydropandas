@@ -12,7 +12,6 @@ from .obs_collection import (
     read_bronhouderportaal_bro,
     read_csv,
     read_dino,
-    read_era5,
     read_excel,
     read_fews,
     read_ggmn,
