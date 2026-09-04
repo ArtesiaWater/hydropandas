@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 DH_zip_url = (
     "https://www.waterconnect.sa.gov.au/Content/Downloads/DEW/WATER_Drillholes_shp.zip"
 )
+WATERLEVEL_DOWNLOAD_URL = (
+    "https://www.waterconnect.sa.gov.au/_layouts/15/dfw.sharepoint.wdd/"
+    "WDDDMS.ashx/GetWaterLevelDownload?bulkOutput=CSV"
+)
 
 
 def get_obs_list_from_extent(
@@ -412,7 +416,7 @@ def request_api(
     StringIO
 
     """
-    url = "https://www.waterconnect.sa.gov.au/_layouts/15/dfw.sharepoint.wdd/WDDDMS.ashx/GetWaterLevelDownload?bulkOutput=CSV"
+    url = WATERLEVEL_DOWNLOAD_URL
     json_data = {"DHNOs": [dh_no], "Pumping": pumping, "Anomalous": anomalous}
     r = requests.post(
         url, verify=verify, data={"exportdata": json.dumps(json_data)}, timeout=60

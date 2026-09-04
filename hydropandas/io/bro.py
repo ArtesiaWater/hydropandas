@@ -27,6 +27,13 @@ from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
+BRO_BASE_URL = "https://publiek.broservices.nl"
+BRO_GMN_URL = BRO_BASE_URL + "/gm/gmn/v1/objects/{bro_id}"
+BRO_GMW_RELATIONS_URL = BRO_BASE_URL + "/gm/v1/gmw-relations/{bro_id}"
+BRO_GLD_URL = BRO_BASE_URL + "/gm/gld/v1/objects/{bro_id}"
+BRO_GMW_URL = BRO_BASE_URL + "/gm/gmw/v1/objects/{bro_id}"
+BRO_GMW_SEARCH_URL = BRO_BASE_URL + "/gm/gmw/v1/characteristics/searches?"
+
 
 class BroDataParseError(Exception):
     """Exception raised when Bro data cannot be parsed.
@@ -75,7 +82,7 @@ def get_obs_list_from_gmn_hpd(
         metadata of the groundwater monitoring net.
 
     """
-    url = f"https://publiek.broservices.nl/gm/gmn/v1/objects/{bro_id}"
+    url = BRO_GMN_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     if req.status_code > 200:
@@ -320,7 +327,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     if not bro_id.startswith("GMW"):
         raise ValueError("bro id should start with GMW")
 
-    url = f"https://publiek.broservices.nl/gm/v1/gmw-relations/{bro_id}"
+    url = BRO_GMW_RELATIONS_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     if req.status_code > 200:
@@ -396,7 +403,7 @@ def measurements_from_gld(
     if not bro_id.startswith("GLD"):
         raise ValueError("can only get observations if bro id starts with GLD")
 
-    url = "https://publiek.broservices.nl/gm/gld/v1/objects/{}"
+    url = BRO_GLD_URL
     params = {}
     if tmin is not None:
         tmin = pd.to_datetime(tmin)
@@ -409,7 +416,7 @@ def measurements_from_gld(
     s = requests.Session()
     retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429])
     s.mount("https://", HTTPAdapter(max_retries=retries))
-    req = s.get(url.format(bro_id), params=params)
+    req = s.get(url.format(bro_id=bro_id), params=params)
 
     if req.status_code > 200:
         req.raise_for_status()
@@ -506,7 +513,7 @@ def get_full_metadata_from_gmw_hpd(bro_id, tube_nr):
     if not bro_id.startswith("GMW"):
         raise ValueError("can only get metadata if bro id starts with GMW")
 
-    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    url = BRO_GMW_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     # read results
@@ -640,7 +647,7 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
         "gml": "http://www.opengis.net/gml/3.2",
     }
 
-    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    url = BRO_GMW_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     # read results
@@ -970,7 +977,7 @@ def get_obs_list_from_extent(
         return obs_list
 
     elif engine == "hydropandas":
-        url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
+        url = BRO_GMW_SEARCH_URL
 
         data = {}
         if tmin is None or tmax is None:

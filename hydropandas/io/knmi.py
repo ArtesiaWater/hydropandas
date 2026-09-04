@@ -43,6 +43,13 @@ URL_STATIONS = "https://klimaatscenarios-data.knmi.nl/api/v1/stations"
 URL_KNMI_TRANSFORMED_SERIES = (
     "https://klimaatscenarios-data.knmi.nl/api/v1/climate-series-data.zip"
 )
+URL_CDN_DAILY_PREC = (
+    "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
+    "gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
+)
+URL_CDN_DAILY_METEO = (
+    "https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/daggegevens/etmgeg_{stn}.zip"
+)
 
 KNMI_CLIMATE_YEARS = Literal["2033", "2050", "2100", "2150"]
 KNMI_CLIMATE_SCENARIOS = Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
@@ -1287,10 +1294,7 @@ def get_daily_rainfall_url(
         additional information about the variables
     """
     stn = f"{stn:03d}"  # make sure there are leading zeros
-    url = (
-        "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
-        f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
-    )
+    url = URL_CDN_DAILY_PREC.format(stn_name=stn_name, stn=stn)
 
     strio = request_url(url)
     return parse_data(strio)
@@ -1547,10 +1551,7 @@ def get_daily_meteo_url(stn: int) -> tuple[pd.DataFrame, dict[str, Any]]:
     meta : dictionary
         additional information about the variables
     """
-    url = (
-        "https://cdn.knmi.nl/knmi/map/page/klimatologie"
-        f"/gegevens/daggegevens/etmgeg_{stn}.zip"
-    )
+    url = URL_CDN_DAILY_METEO.format(stn=stn)
 
     strio = request_url(url)
     return parse_data(strio)
@@ -1955,7 +1956,7 @@ def get_n_nearest_stations_xy(
     Parameters
     ----------
     xy : list, tuple or numpy.array of int or float
-        sinlge pair of xy coordinates. e.g. (150_000., 400_000.)
+        single pair of xy coordinates. e.g. (150_000., 400_000.)
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
     start : str, datetime or None, optional
