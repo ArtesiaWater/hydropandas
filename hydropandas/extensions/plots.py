@@ -759,9 +759,7 @@ class CollectionPlots:
                         f"{'-'.join(group[naming_method].unique().tolist())}.png"
                     )
 
-                f.savefig(
-                    Path(outputdir) / filename, bbox_inches="tight", dpi=150
-                )
+                f.savefig(Path(outputdir) / filename, bbox_inches="tight", dpi=150)
                 plt.close(f)
             else:
                 axes.append(ax)

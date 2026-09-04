@@ -211,9 +211,7 @@ class Obs(pd.DataFrame):
                 "</i> Observations</button>\n"
             )
 
-            with open(
-                Path(__file__).parent / "static/style.css", "r"
-            ) as fo:
+            with open(Path(__file__).parent / "static/style.css", "r") as fo:
                 css_arrow = fo.read()
 
             metadata = metadata.replace(
@@ -223,9 +221,7 @@ class Obs(pd.DataFrame):
                 "<div>\n<style scoped>", '<div  style="display: none;">\n<style scoped>'
             )
 
-            with open(
-                Path(__file__).parent / "static/js_collapse.html", "r"
-            ) as fo:
+            with open(Path(__file__).parent / "static/js_collapse.html", "r") as fo:
                 js_collapse_button = fo.read()
 
             return (
