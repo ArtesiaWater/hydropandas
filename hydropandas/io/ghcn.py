@@ -11,6 +11,9 @@ from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
+GHCN_STATIONS_URL = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
+GHCN_DAILY_URL = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/all/{station_id}.dly"
+
 # GHCN daily depth-like elements are reported in 0.1 mm. Convert to m.
 _DEPTH_ELEMENTS_TO_M = {
     "PRCP",
@@ -36,7 +39,7 @@ def get_stations(extent=None):
     GeoDataFrame
         GeoDataFrame containing the GHCN stations within the specified extent.
     """
-    url = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
+    url = GHCN_STATIONS_URL
     colspecs = [
         (0, 11),  # ID
         (12, 20),  # LATITUDE
@@ -101,7 +104,7 @@ def get_station_data(station_id, element=None, start_date=None, end_date=None):
     Timestamps are shifted by +1 day so the index represents the end of the
     daily period, consistent with KNMI daily indexing in hydropandas.
     """
-    url = f"https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/all/{station_id}.dly"
+    url = GHCN_DAILY_URL.format(station_id=station_id)
     colspecs = [
         (0, 11),  # ID
         (11, 15),  # YEAR
