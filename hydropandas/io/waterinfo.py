@@ -1,7 +1,7 @@
 import logging
-import os
 import zipfile
 from functools import lru_cache
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
@@ -139,7 +139,7 @@ def get_waterinfo_obs(
 
     Parameters
     ----------
-    path : str, optional
+    path : str or pathlib.Path, optional
         path to waterinfo file (.zip or .csv), default is None
     location_gdf : geopandas.GeoDataFrame, optional
         geodataframe with locations, default is None
@@ -461,7 +461,7 @@ def read_waterinfo_file(
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         path to waterinfo file (.zip or .csv)
     index_cols : list of str, optional
         columns to use as index, default is ["WAARNEMINGDATUM", "WAARNEMINGTIJD (MET/CET)"]
@@ -488,17 +488,16 @@ def read_waterinfo_file(
         True, default is False
     """
 
-    name = os.path.splitext(os.path.basename(path))[0]
+    path = Path(path)
+    name = path.stem
 
-    if path.endswith(".csv"):
+    if path.suffix == ".csv":
         f = path
-    elif path.endswith(".zip"):
+    elif path.suffix == ".zip":
         zf = zipfile.ZipFile(path)
         f = zf.open(f"{name}.csv")
     else:
-        raise NotImplementedError(
-            f"File type '{os.path.splitext(path)[-1]}' not supported!"
-        )
+        raise NotImplementedError(f"File type '{path.suffix}' not supported!")
 
     if value_col is None:
         value_col = "NUMERIEKEWAARDE"
@@ -571,7 +570,7 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, crs=28992, **kw
 
     Parameters
     ----------
-    file_or_dir : str
+    file_or_dir : str or pathlib.Path
         path to file or directory
     ObsClass: Obs type
         type of Obs to store data in
@@ -587,11 +586,12 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, crs=28992, **kw
     """
 
     # Waterinfo file
-    if os.path.isfile(file_or_dir):
+    file_or_dir = Path(file_or_dir)
+    if file_or_dir.is_file():
         files = [file_or_dir]
     # directory with waterinfo files (zips or csvs)
-    elif os.path.isdir(file_or_dir):
-        files = [os.path.join(file_or_dir, f) for f in sorted(os.listdir(file_or_dir))]
+    elif file_or_dir.is_dir():
+        files = sorted(file_or_dir.iterdir())
     else:
         raise NotImplementedError("Provide path to file or directory!")
 

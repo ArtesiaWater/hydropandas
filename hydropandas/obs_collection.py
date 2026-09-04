@@ -103,7 +103,7 @@ def read_bronhouderportaal_bro(dirname, full_meta=False, add_to_df=False):
 
     Parameters
     ----------
-    dirname : str
+    dirname : str, pathlib.Path
         name of directory that holds XML files
     full_meta : bool, optional
         process not only the standard metadata to ObsCollection
@@ -135,8 +135,8 @@ def read_csv(path, parse_dates=True, index_col=0, **kwargs):
 
     Parameters
     ----------
-    path : str
-        directory with csv files, a .zip file with csv files or a single csv file.
+    path : str or pathlib.Path
+        directory that contains csv files, a .zip file with csv files or a single csv file.
     parse_dates : bool, optional
         whether to parse the dates when reading the csv files. The default is True.
     index_col : int, optional
@@ -214,7 +214,7 @@ def read_dino(
 
     Parameters
     ----------
-    dirname : str, optional
+    dirname : str, pathlib.Path, optional
         directory name, can be a .zip file or the parent directory
         of subdir
     ObsClass : type
@@ -341,13 +341,13 @@ def read_era5(
 
 
 def read_excel(path, meta_sheet_name="metadata"):
-    """Create an observation collection from an excel file. The excel file should have
+    """Read an observation collection from an excel file. The excel file should have
     the same format as excel files created with the `to_excel` method of an
     ObsCollection.
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         full file path (including extension) of the excel file.
     meta_sheet_name : str, optional
         sheetname with metadata. The default is "metadata".
@@ -392,7 +392,7 @@ def read_fews(
 
     Parameters
     ----------
-    file_or_dir :  str
+    file_or_dir :  str or pathlib.Path
         zip, xml or directory with zips or xml files to read
     xmlstring : str or None
         string with xml data, only used if file_or_dir is None. Default is
@@ -418,7 +418,7 @@ def read_fews(
     remove_nan : boolean, optional
         remove nan values from measurements, flag information about the
         nan values is also lost, only used if low_memory=False
-    unpackdir : str
+    unpackdir : str or pathlib.Path
         destination directory to unzip file if file_or_dir is a .zip
     force_unpack : boolean, optional
         force unpack if dst already exists
@@ -608,7 +608,7 @@ def read_imod(
         imod runfile object
     mtime : list of datetimes
         datetimes corresponding to the model periods
-    model_ws : str
+    model_ws : str or pathlib.Path
         model workspace with imod model
     nlay : int, optional
         number of layers if None the number of layers from ml is used.
@@ -642,7 +642,7 @@ def read_json(path, **kwargs):
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         full file path (including extension) of the json file.
     kwargs:
         kwargs are passed to the ObsCollection.from_json function
@@ -1107,7 +1107,7 @@ def read_menyanthes(
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         full path of the .men file.
     name : str, optional
         name of the observation collection. The default is "".
@@ -1200,7 +1200,7 @@ def read_pickle(
 
     Parameters
     ----------
-    filepath_or_buffer : str, path object, or file-like object
+    filepath_or_buffer : str, pathlib.Path, or file-like object
         String, path object (implementing ``os.PathLike[str]``), or file-like
         object implementing a binary ``readlines()`` function.
 
@@ -1332,7 +1332,7 @@ def read_waterinfo(
 
     Parameters
     ----------
-    file_or_dir : str or None, optional
+    file_or_dir : str, pathlib.Path or None, optional
         path to file or directory. Files can be .csv or .zip
     extent : list, tuple, numpy-array or None, optional
         get waterinfo measurements within this extent
@@ -1412,13 +1412,13 @@ def read_wiski(
 
     Parameters
     ----------
-    dirname : str
+    dirname : str or pathlib.Path
         path of the zipfile with wiski data.
     ObsClass : type, optional
         type of Obs. The default is GroundwaterObs.
     suffix : str, optional
         extension of filenames to read. The default is ".csv".
-    unpackdir : str or None, optional
+    unpackdir : str, pathlib.Path or None, optional
         directory to unpack zipped directory. The default is None.
     force_unpack : bool, optional
         force unzip, by default False.
@@ -2163,8 +2163,8 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        dirname : str
-            name of dirname that holds XML files
+        dirname : str, pathlib.Path
+            name of the directory that contains XML files
         full_meta : bool , optional
             process all metadata. The default is False.
 
@@ -2256,7 +2256,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             full file path (including extension) of the excel file.
         meta_sheet_name : str, optional
             sheetname with metadata. The default is "metadata".
@@ -2326,7 +2326,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        dirname : str, optional
+        dirname : str, pathlib.Path, optional
             directory name, can be a .zip file or the parent directory
             of subdir
         ObsClass : type
@@ -2380,7 +2380,7 @@ class ObsCollection(pd.DataFrame):
     @classmethod
     def from_artdino_dir(
         cls,
-        dirname=None,
+        dirname,
         ObsClass=obs.GroundwaterObs,
         subdir="csv",
         suffix=".csv",
@@ -2395,9 +2395,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        extent : list, optional
-            get dinodata online within this extent [xmin, xmax, ymin, ymax]
-        dirname : str, optional
+        dirname : str or pathlib.Path
             directory name, can be a .zip file or the parent directory of subdir
         ObsClass : type
             class of the observations, e.g. GroundwaterObs or WaterlvlObs
@@ -2405,7 +2403,7 @@ class ObsCollection(pd.DataFrame):
             subdirectory of dirname with data files
         suffix : str
             suffix of files in subdir that will be read
-        unpackdir : str
+        unpackdir : str or pathlib.Path
             destination directory of the unzipped file
         force_unpack : boolean, optional
             force unpack if dst already exists
@@ -2569,7 +2567,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        file_or_dir :  str
+        file_or_dir :  str or pathlib.Path
             zip, xml or directory with zips or xml files to read
         xmlstring : str or None
             string with xml data, only used if file_or_dir is None. Default is
@@ -2596,7 +2594,7 @@ class ObsCollection(pd.DataFrame):
         remove_nan : boolean, optional
             remove nan values from measurements, flag information about the
             nan values is also lost, only used if low_memory=False
-        unpackdir : str
+        unpackdir : str or pathlib.Path
             destination directory to unzip file if path is a .zip
         force_unpack : boolean, optional
             force unpack if dst already exists
@@ -2646,7 +2644,7 @@ class ObsCollection(pd.DataFrame):
             obs_df, crs = util._obslist_to_frame(obs_list)
             return cls(obs_df, name=name, meta=meta, crs=crs)
 
-        elif (file_or_dir is None) and (xmlstring is not None):
+        elif xmlstring is not None:
             obs_list = read_xmlstring(
                 xmlstring,
                 ObsClass,
@@ -2829,7 +2827,7 @@ class ObsCollection(pd.DataFrame):
             imod runfile object
         mtime : list of datetimes
             datetimes corresponding to the model periods
-        model_ws : str
+        model_ws : str or pathlib.Path
             model workspace with imod model
         nlay : int, optional
             number of layers if None the number of layers from ml is used.
@@ -2861,7 +2859,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             full file path (including extension) of the json file.
 
         Returns
@@ -3382,7 +3380,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        file_or_dir : str
+        file_or_dir : str, pathlib.Path or None, optional
             path to file or directory. Files can be .csv or .zip
         extent : list, tuple, numpy-array or None, optional
             get waterinfo measurements within this extent
@@ -3671,7 +3669,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             directory to which the csv files will be written.
         check_consistency : bool, optional
             If True the consistency of the collection is checked. If set to False the csv file(s) may be unreadable by hydropandas. The
@@ -3725,7 +3723,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             full path of xlsx file.
         meta_sheet_name : str, optional
             sheetname with metadata. The default is "metadata".
@@ -3898,7 +3896,7 @@ class ObsCollection(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             filepath of shapefile (.shp) or geopackage (.gpkg). A geopackage
             has the advantage that column names will not be truncated.
         xcol : str

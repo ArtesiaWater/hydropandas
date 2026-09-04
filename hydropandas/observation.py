@@ -20,6 +20,7 @@ import numbers
 import os
 import warnings
 from io import StringIO, TextIOWrapper
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -39,7 +40,7 @@ def read_csv_obs(path, parse_dates=True, index_col=0, **kwargs):
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         path of the csv file
     parse_dates : bool, optional
         whether to parse the dates when reading the csv file. The default is True.
@@ -211,7 +212,7 @@ class Obs(pd.DataFrame):
             )
 
             with open(
-                os.path.join(os.path.dirname(__file__), "static/style.css"), "r"
+                Path(__file__).parent / "static/style.css", "r"
             ) as fo:
                 css_arrow = fo.read()
 
@@ -223,7 +224,7 @@ class Obs(pd.DataFrame):
             )
 
             with open(
-                os.path.join(os.path.dirname(__file__), "static/js_collapse.html"), "r"
+                Path(__file__).parent / "static/js_collapse.html", "r"
             ) as fo:
                 js_collapse_button = fo.read()
 
@@ -416,7 +417,7 @@ class Obs(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             path of the csv file
         parse_dates : bool, optional
             whether to parse the dates when reading the csv file. The default is True.
@@ -524,7 +525,7 @@ class Obs(pd.DataFrame):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             path of the JSON file
         **kwargs
             keyword arguments passed to pd.read_json for reading the timeseries
@@ -815,7 +816,7 @@ class Obs(pd.DataFrame):
 
         Parameters
         ----------
-        path : str or path object
+        path : str or pathlib.Path
             String, path object (implementing os.PathLike[str]), or file-like
             object implementing a write() function.
         **kwargs
@@ -1143,7 +1144,7 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             filepath of XML file.
         tube_nr : int
             tube number.
@@ -1192,7 +1193,7 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        path : str, optional
+        path : str or pathlib.Path, optional
             path of dino csv file
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_groundwater_csv
@@ -1211,7 +1212,7 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        path : str, optional
+        path : str or pathlib.Path, optional
             path of dino csv filename
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io._dino.read_dino_groundwater_csv
@@ -1295,7 +1296,7 @@ class GroundwaterObs(Obs):
 
         Parameters:
         -----------
-        path : str
+        path : str or pathlib.Path
             The path of the file to be read.
         sep : str, optional (default=";")
             The delimiter used to separate fields in the file.
@@ -1365,7 +1366,7 @@ class GroundwaterObs(Obs):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             path to file (file can zip or xle)
 
         """
@@ -1439,7 +1440,7 @@ class WaterQualityObs(Obs):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             path of dino txt filename
         kwargs : key-word arguments
             these arguments are passed to
@@ -1470,7 +1471,7 @@ class WaterQualityObs(Obs):
 
         Parameters
         ----------
-        path : str, optional
+        path : str or pathlib.Path, optional
             path to file (file can zip or csv)
         location_gdf : geopandas.GeoDataFrame, optional
             geodataframe with locations, only used if path is None, default is None
@@ -1562,7 +1563,7 @@ class WaterlvlObs(Obs):
 
         Parameters
         ----------
-        path : str
+        path : str or pathlib.Path
             path of dino csv filename
         kwargs : key-word arguments
             these arguments are passed to hydropandas.io.dino.read_dino_waterlvl_csv
@@ -1641,7 +1642,7 @@ class WaterlvlObs(Obs):
 
         Parameters
         ----------
-        path : str, optional
+        path : str or pathlib.Path, optional
             path to file (file can zip or csv)
         location_gdf : geopandas.GeoDataFrame, optional
             geodataframe with locations, only used if path is None, default is None
@@ -1765,7 +1766,7 @@ class MeteoObs(Obs):
             variables see the hydropandas.read_knmi function.
         stn : int, str or None, optional
             measurement station e.g. 829. The default is None.
-        fname : str, path object, file-like object or None, optional
+        fname : str, pathlib.Path, file-like object or None, optional
             filename of a knmi file. The default is None.
         xy : list, tuple or None, optional
             RD coördinates of a location in the Netherlands. The station nearest
@@ -1931,7 +1932,7 @@ class EvaporationObs(MeteoObs):
             meteo variable should be "EV24".
         stn : int, str or None, optional
             measurement station e.g. 829. The default is None.
-        fname : str, path object, file-like object or None, optional
+        fname : str, pathlib.Path, file-like object or None, optional
             filename of a knmi file. The default is None.
         xy : list, tuple or None, optional
             RD coördinates of a location in the Netherlands. The station nearest
@@ -2050,7 +2051,7 @@ class PrecipitationObs(MeteoObs):
             a meteo station. The default is "RH".
         stn : int, str or None, optional
             measurement station e.g. 829. The default is None.
-        fname : str, path object, file-like object or None, optional
+        fname : str, pathlib.Path, file-like object or None, optional
             filename of a knmi file. The default is None.
         xy : list, tuple or None, optional
             RD coördinates of a location in the Netherlands. The station nearest

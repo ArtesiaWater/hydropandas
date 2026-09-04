@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import datetime
 import logging
-import os
 import xml.etree.ElementTree as etree
 from io import StringIO
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ def read_xml_fname(
 
     Parameters
     ----------
-    fname : str
+    fname : str or pathlib.Path
         full path to file
     ObsClass: Union[Obs, Dict[str, Obs]]
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
@@ -123,7 +123,7 @@ def iterparse_pi_xml(
 
     Parameters
     ----------
-    fname : str
+    fname : str or pathlib.Path
         full path to file
     ObsClass: Union[Obs, Dict[str, Obs]],
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
@@ -557,15 +557,16 @@ def _obs_from_meta(
     return o, header
 
 
-def write_pi_xml(obs_coll, fname: str, timezone: float = 1.0, version: str = "1.24"):
+def write_pi_xml(obs_coll, fname, timezone: float = 1.0, version: str = "1.24"):
     """Write TimeSeries object to PI-XML file.
 
     Parameters
     ----------
-    fname: path
+    fname: str or pathlib.Path
         path to XML file
     """
 
+    fname = str(fname)
     assert fname.endswith(".xml"), "Output file should have '.xml' extension!"
 
     # first line of XML file
@@ -715,7 +716,7 @@ def read_xml_filelist(
         if directory is None:
             fullpath = ixml
         else:
-            fullpath = os.path.join(directory, ixml)
+            fullpath = Path(directory) / ixml
 
         # read xml fname
         obs_list += read_xml_fname(

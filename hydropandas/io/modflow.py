@@ -1,6 +1,6 @@
 import logging
-import os
 import warnings
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
@@ -34,7 +34,7 @@ def read_imod_results(
         imod runfile object
     mtime : list of datetimes
         datetimes corresponding to the model periods
-    model_ws : str
+    model_ws : str or pathlib.Path
         model workspace with imod model
     nlay : int, optional
         number of layers if None the number of layers from ml is used.
@@ -69,9 +69,7 @@ def read_imod_results(
         # loop over timesteps
         for t, date in enumerate(mtime):
             head_idf = "head_{}_l{}.idf".format(date.strftime("%Y%m%d"), m + 1)
-            fname = os.path.join(
-                model_ws, runfile.data["OUTPUTDIRECTORY"], "head", head_idf
-            )
+            fname = Path(model_ws) / runfile.data["OUTPUTDIRECTORY"] / "head" / head_idf
 
             logger.info(f"read {fname}")
             ihds, _attrs = imod.idf.read(fname)

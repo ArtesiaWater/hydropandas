@@ -49,8 +49,8 @@ def get_obs_list_from_dir(
 
     Parameters
     ----------
-    dirname : str
-        name of directory with XML files
+    dirname : str, pathlib.Path
+        name of the directory that contains XML files
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
     full_meta : bool, optional
@@ -118,7 +118,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
 
     Parameters
     ----------
-    path_xml : pathlib.WindowsPath
+    path_xml : str or pathlib.Path
         path of groundwater monitoring well XML file.
     tube_nr : int
         tube number you want metadata for.
@@ -136,7 +136,7 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
         dictionary with metadata.
 
     """
-    if not isinstance(path_xml, pathlib.WindowsPath):
+    if not isinstance(path_xml, pathlib.Path):
         try:
             path_xml = pathlib.Path(path_xml)
         except ValueError:

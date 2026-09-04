@@ -1,6 +1,6 @@
 import logging
-import os
 import zipfile
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ def read_solinst_file(
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         path to Solinst file (.xle)
     transform_coords : boolean
         convert coordinates from WGS84 to RD
@@ -31,17 +31,15 @@ def read_solinst_file(
     """
 
     # open file
-    path = str(path)
-    name = os.path.splitext(os.path.basename(path))[0]
-    if path.endswith((".xle", ".xml")):
+    path = Path(path)
+    name = path.stem
+    if path.suffix in (".xle", ".xml"):
         f = path
-    elif path.endswith(".zip"):
+    elif path.suffix == ".zip":
         zf = zipfile.ZipFile(path)
         f = zf.open(f"{name}.xle")
     else:
-        raise NotImplementedError(
-            f"File type '{os.path.splitext(path)[-1]}' not supported!"
-        )
+        raise NotImplementedError(f"File type '{path.suffix}' not supported!")
 
     logger.info(f"reading -> {f}")
 

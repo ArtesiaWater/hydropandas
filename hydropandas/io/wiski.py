@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ def read_wiski_file(
 
     Parameters:
     -----------
-    path : str
+    path : str or pathlib.Path
         The path of the file to be read.
     sep : str, optional (default=";")
         The delimiter used to separate fields in the file.
@@ -80,7 +80,7 @@ def read_wiski_file(
     metadata : dict
         A dictionary containing metadata about the data in the file.
     """
-    logger.info(f"reading -> {os.path.split(path)[-1]}")
+    logger.info(f"reading -> {Path(path).name}")
 
     if translate_dic is None:
         translate_dic = {}
@@ -188,14 +188,14 @@ def read_wiski_dir(
 
     Parameters
     ----------
-    dirname : str
+    dirname : str or pathlib.Path
         The path of the directory containing the WISKI CSV files.
     ObsClass : object, optional
         The observation class to use for creating observation objects. Default
         is None.
     suffix : str, optional
         The file extension of the WISKI CSV files. Default is ".csv".
-    unpackdir : str, optional
+    unpackdir : str or pathlib.Path, optional
         The directory to which the files should be unpacked. Default is None.
     force_unpack : bool, optional
         If True, forces the files to be unpacked even if they are already in the
@@ -232,14 +232,14 @@ def read_wiski_dir(
 
     if not unzip_fnames:
         raise FileNotFoundError(
-            f"no files were found in '{os.path.join(dirname)}' that end with '{suffix}'"
+            f"no files were found in '{Path(dirname)}' that end with '{suffix}'"
         )
 
     # gather all obs in list
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
         logger.info(f"reading {i + 1}/{len(unzip_fnames)} -> {csv}")
-        obs = ObsClass.from_wiski(os.path.join(dirname, csv), **kwargs)
+        obs = ObsClass.from_wiski(Path(dirname) / csv, **kwargs)
 
         if obs.metadata_available or keep_all_obs:
             obs_list.append(obs)

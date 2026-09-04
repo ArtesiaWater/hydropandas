@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,7 +39,7 @@ class CollectionPlots:
 
         Parameters
         ----------
-        savedir : str
+        savedir : str or pathlib.Path
             directory used for the folium map and bokeh plots
         tmin : dt.datetime, optional
             start date for timeseries plot
@@ -147,13 +147,13 @@ class CollectionPlots:
 
         Parameters
         ----------
-        plot_dir : str
+        plot_dir : str or pathlib.Path
             directory used for the folium map and bokeh plots
         m : folium.Map, str, optional
             current map to add observations too, if None a new map is created
         tiles : str, optional
             background tiles, default is openstreetmap
-        fname : str, optional
+        fname : str or pathlib.Path, optional
             name of the folium map
         per_location : bool, optional
             if True plot multiple observations at the same location in one
@@ -330,11 +330,13 @@ class CollectionPlots:
         # save map
         # filename and path
         if fname is not None:
+            fname = str(fname)
             if not fname.endswith(".html"):
                 fname = fname + ".html"
-            if not os.path.exists(plot_dir):
-                os.mkdir(plot_dir)
-            m.save(os.path.join(plot_dir, fname))
+            plot_dir = Path(plot_dir)
+            if not plot_dir.exists():
+                plot_dir.mkdir()
+            m.save(plot_dir / fname)
 
         return m
 
@@ -673,7 +675,7 @@ class CollectionPlots:
             columns ["x", "y"].
         savefig : bool, optional
             save figures, by default True, if False returns axes handles to plots.
-        outputdir : str, optional
+        outputdir : str or pathlib.Path, optional
             path to output directory, by default the current directory (".")
         naming_method : str, optional
             method to determine file names for plots, default is None, which uses the
@@ -758,7 +760,7 @@ class CollectionPlots:
                     )
 
                 f.savefig(
-                    os.path.join(outputdir, filename), bbox_inches="tight", dpi=150
+                    Path(outputdir) / filename, bbox_inches="tight", dpi=150
                 )
                 plt.close(f)
             else:
@@ -799,7 +801,7 @@ class ObsPlots:
 
         Parameters
         ----------
-        savedir : str, optional
+        savedir : str or pathlib.Path, optional
             directory used for the folium map and bokeh plots
         cols : tuple of str or None, optional
             the columns of the observation to plot. The first numeric column
@@ -954,11 +956,10 @@ class ObsPlots:
 
         # save plot
         if savedir is not None:
-            if not os.path.isdir(savedir):
-                os.makedirs(savedir)
-            self._obj.meta["iplot_fname"] = os.path.join(
-                savedir, str(self._obj.name) + ".html"
-            )
+            savedir = Path(savedir)
+            if not savedir.is_dir():
+                savedir.mkdir(parents=True)
+            self._obj.meta["iplot_fname"] = savedir / f"{self._obj.name}.html"
             save(p, self._obj.meta["iplot_fname"], resources=CDN, title=self._obj.name)
 
         if return_filename:

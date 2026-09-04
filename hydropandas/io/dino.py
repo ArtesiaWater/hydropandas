@@ -1,5 +1,4 @@
 import logging
-import os
 import re
 import tempfile
 from io import FileIO, TextIOWrapper
@@ -195,7 +194,7 @@ def read_dino_groundwater_quality_txt(f: str | Path | FileIO):
     if isinstance(f, str):
         fname = f
     else:
-        fname = f.name.split(os.sep)[-1]
+        fname = Path(f.name).name
     if isinstance(f, (str, Path)):
         if isinstance(f, str):
             f = Path(f)
@@ -467,7 +466,7 @@ def read_artdino_groundwater_csv(path, to_mnap=True, read_series=True):
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         path to csv file
     to_mnap : boolean, optional
         if True a column with 'stand_m_tov_nap' is added to the dataframe
@@ -480,7 +479,7 @@ def read_artdino_groundwater_csv(path, to_mnap=True, read_series=True):
     meta : dict
         dictionary with metadata
     """
-    logger.info(f"reading -> {os.path.split(path)[-1]}")
+    logger.info(f"reading -> {Path(path).name}")
 
     with open(path, "r") as f:
         # read header
@@ -538,7 +537,7 @@ def read_artdino_dir(
 
     Parameters
     ----------
-    dirname : str
+    dirname : str or pathlib.Path
         directory name, can be a .zip file or the parent directory of subdir
     ObsClass : type
         class of the observations, e.g. GroundwaterObs or WaterlvlObs
@@ -546,7 +545,7 @@ def read_artdino_dir(
         subdirectory of dirname with data files
     suffix : str
         suffix of files in subdir that will be read
-    unpackdir : str
+    unpackdir : str or pathlib.Path
         destination directory of the unzipped file
     force_unpack : boolean, optional
         force unpack if dst already exists
@@ -566,6 +565,8 @@ def read_artdino_dir(
 
     from ..util import unzip_file
 
+    dirname = str(dirname)
+
     # unzip dir
     if dirname.endswith(".zip"):
         zipf = dirname
@@ -578,19 +579,20 @@ def read_artdino_dir(
         )
 
     # read filenames
-    files = os.listdir(os.path.join(dirname, subdir))
+    subpath = Path(dirname) / subdir
+    files = [f.name for f in subpath.iterdir()]
     if suffix:
         files = [file for file in files if file.endswith(suffix)]
 
     if not files:
         raise FileNotFoundError(
-            f"no files were found in {os.path.join(dirname, subdir)} that end with {suffix}"
+            f"no files were found in {subpath} that end with {suffix}"
         )
 
     # read individual files
     obs_list = []
     for _, file in enumerate(files):
-        path = os.path.join(dirname, subdir, file)
+        path = subpath / file
         obs = ObsClass.from_artdino_file(path=path, **kwargs)
         if obs.metadata_available and (not obs.empty) or keep_all_obs:
             obs_list.append(obs)
