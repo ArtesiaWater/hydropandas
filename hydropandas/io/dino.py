@@ -587,7 +587,7 @@ def read_artdino_dir(
     for _, file in enumerate(files):
         path = subpath / file
         obs = ObsClass.from_artdino_file(path=path, **kwargs)
-        if (not obs.name == "unknown") and (not obs.empty) or keep_all_obs:
+        if (obs.name != "unknown") and (not obs.empty) or keep_all_obs:
             obs_list.append(obs)
         else:
             logger.info(f"not added to collection -> {path}")
@@ -773,7 +773,7 @@ def read_dino_dir(
 
     def get_dino_obs(f: str | FileIO):
         obs = ObsClass.from_dino(f, **kwargs)
-        if (not obs.name == "unknown") and (not obs.empty) or keep_all_obs:
+        if (obs.name != "unknown") and (not obs.empty) or keep_all_obs:
             return obs
         else:
             logger.info(f"not added to collection -> {f.name}")
