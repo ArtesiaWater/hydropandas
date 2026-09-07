@@ -897,8 +897,8 @@ class GroundwaterObs(Obs):
 
     Notes
     -----
-    In hydropandas version 0.13.0 the 'monitoring_well' attribute was removed and
-    replaced by the 'location' attribute
+    The 'monitoring_well' attribute was deprecated in pandas version 0.13.0 and removed
+    in version 0.20.0. Please use the 'location' attribute instead.
 
     In hydropandas version 0.20.0 the 'metadata_available' attribute was removed.
 
@@ -929,7 +929,9 @@ class GroundwaterObs(Obs):
                 kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
-            self.monitoring_well = kwargs.pop("monitoring_well", "")
+            raise AttributeError(
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+            )
         metadata_available = None
         if "metadata_available" in kwargs:
             metadata_available = kwargs.pop("metadata_available")
@@ -951,13 +953,9 @@ class GroundwaterObs(Obs):
 
     @property
     def monitoring_well(self):
-        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
-        warnings.warn(msg, FutureWarning)
-        return self.location
-
-    @monitoring_well.setter
-    def monitoring_well(self, value):
-        self.location = value
+        raise AttributeError(
+                        "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+                    )
 
     @property
     def metadata_available(self):
@@ -1426,7 +1424,9 @@ class WaterQualityObs(Obs):
                 kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
-            self.monitoring_well = kwargs.pop("monitoring_well", "")
+            raise AttributeError(
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+            )
         metadata_available = None
         if "metadata_available" in kwargs:
             metadata_available = kwargs.pop("metadata_available")
@@ -1444,13 +1444,9 @@ class WaterQualityObs(Obs):
 
     @property
     def monitoring_well(self):
-        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
-        warnings.warn(msg, FutureWarning)
-        return self.location
-
-    @monitoring_well.setter
-    def monitoring_well(self, value):
-        self.location = value
+        raise AttributeError(
+                        "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+                    )
 
     @property
     def metadata_available(self):
@@ -1570,7 +1566,9 @@ class WaterlvlObs(Obs):
                 kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
-            self.monitoring_well = kwargs.pop("monitoring_well", "")
+            raise AttributeError(
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+            )
         metadata_available = None
         if "metadata_available" in kwargs:
             metadata_available = kwargs.pop("metadata_available")
@@ -1586,13 +1584,9 @@ class WaterlvlObs(Obs):
 
     @property
     def monitoring_well(self):
-        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
-        warnings.warn(msg, FutureWarning)
-        return self.location
-
-    @monitoring_well.setter
-    def monitoring_well(self, value):
-        self.location = value
+        raise AttributeError(
+                        "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+                    )
 
     @property
     def metadata_available(self):

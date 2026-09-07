@@ -336,7 +336,7 @@ class GwObsAccessor:
 
         This method is useful for groundwater observations. If two or more
         observation points are close to each other they will be seen as one
-        monitoring_well with multiple tubes. The tube_nr is based on the
+        location with multiple tubes. The tube_nr is based on the
         'screen_bottom' attribute of the observations in such a way that
         the deepest tube has the highest tube number.
 

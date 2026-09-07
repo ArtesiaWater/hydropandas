@@ -3878,7 +3878,6 @@ class ObsCollection(pd.DataFrame):
             "x",
             "y",
             "location",
-            "monitoring_well",
             "name",
             "source",
             "meta",
