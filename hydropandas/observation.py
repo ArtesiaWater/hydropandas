@@ -910,7 +910,7 @@ class GroundwaterObs(Obs):
         "screen_bottom",
         "ground_level",
         "tube_top",
-        "_metadata_available"
+        "_metadata_available",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -946,7 +946,6 @@ class GroundwaterObs(Obs):
         if metadata_available is not None:
             self.metadata_available = metadata_available
 
-
     @property
     def _constructor(self):
         return GroundwaterObs
@@ -954,8 +953,8 @@ class GroundwaterObs(Obs):
     @property
     def monitoring_well(self):
         raise AttributeError(
-                        "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
-                    )
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+        )
 
     @property
     def metadata_available(self):
@@ -1445,8 +1444,8 @@ class WaterQualityObs(Obs):
     @property
     def monitoring_well(self):
         raise AttributeError(
-                        "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
-                    )
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+        )
 
     @property
     def metadata_available(self):
@@ -1585,8 +1584,8 @@ class WaterlvlObs(Obs):
     @property
     def monitoring_well(self):
         raise AttributeError(
-                        "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
-                    )
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+        )
 
     @property
     def metadata_available(self):
