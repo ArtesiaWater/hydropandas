@@ -9,7 +9,7 @@ import hydropandas as hpd
 def test_read_ghcn_extent_prcp_rd():
     oc = hpd.read_ghcn(
         extent=[100000, 120000, 450000, 470000],
-        epsg=28992,
+        crs=28992,
         elements="PRCP",
         tmin="2020",
         tmax="2021",

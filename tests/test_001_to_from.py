@@ -212,8 +212,7 @@ def test_observation_wiskicsv_gw():
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
-        parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
+        parse_dates=[0, 1],
         dayfirst=True,
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
@@ -228,8 +227,7 @@ def test_obscollection_wiskizip_gw():
         header_sep=":",
         dayfirst=True,
         header_identifier=":",
-        parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
+        parse_dates=[0, 1],
     )
 
 

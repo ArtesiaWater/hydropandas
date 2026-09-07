@@ -1690,11 +1690,11 @@ def interpret_knmi_file(
         stn = unique_stn[0]
         if add_day or add_hour:
             if add_day and add_hour:
-                timedelta = pd.Timedelta(1, "d") + pd.Timedelta(1, "h")
+                timedelta = pd.Timedelta(1, "D") + pd.Timedelta(1, "h")
             elif add_hour:
                 timedelta = pd.Timedelta(1, "h")
             else:
-                timedelta = pd.Timedelta(1, "d")
+                timedelta = pd.Timedelta(1, "D")
 
             df = df.copy()
             df.index = df.index + timedelta
