@@ -3637,8 +3637,6 @@ class ObsCollection(pd.DataFrame):
             column name with x values
         ycol : str
             column name with y values
-        crs : int, optional
-            coordinate reference system, by default 28992 (RD new).
         drop_obs : bool, optional
             drop the column with observations. Useful for basic geodataframe
             manipulations that require JSON serializable columns. The default
