@@ -131,6 +131,5 @@ def read_solinst_file(
     meta["name"] = name
     meta["location"] = name
     meta["unit"] = series_ch1_data_header.Unit.lower()
-    meta["metadata_available"] = True
 
     return df, meta

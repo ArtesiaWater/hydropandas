@@ -26,7 +26,6 @@ def _get_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
         tube_top=ground_level - 0.2,
         screen_bottom=ground_level - 10.0,
         screen_top=ground_level - 9.0,
-        metadata_available=True,
         tube_nr=tube_nr,
         filename="",
         crs=28992,

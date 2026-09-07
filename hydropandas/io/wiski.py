@@ -241,7 +241,7 @@ def read_wiski_dir(
         logger.info(f"reading {i + 1}/{len(unzip_fnames)} -> {csv}")
         obs = ObsClass.from_wiski(Path(dirname) / csv, **kwargs)
 
-        if obs.metadata_available or keep_all_obs:
+        if (not obs.empty) or keep_all_obs:
             obs_list.append(obs)
         else:
             logger.info(f"not added to collection -> {csv}")

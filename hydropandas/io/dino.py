@@ -55,7 +55,7 @@ def _read_dino_groundwater_referencelvl(f, line):
 
 def _read_dino_groundwater_metadata(f, line):
     if "Peildatum" in line:
-        return line, {"metadata_available": False}, {}
+        return line, {}, {}
 
     _translate_dic_float = {
         "x-coordinaat": "x",
@@ -121,7 +121,6 @@ def _read_dino_groundwater_metadata(f, line):
 
         obs_att = meta_tsi.copy()
         obs_att["name"] = f"{obs_att['location']}-{int(obs_att['tube_nr']):03d}"
-        obs_att["metadata_available"] = True
     else:
         # no metadata
         obs_att = {}
@@ -134,7 +133,7 @@ def _read_dino_groundwater_metadata(f, line):
         obs_att["ground_level"] = np.nan
         obs_att["screen_top"] = np.nan
         obs_att["screen_bottom"] = np.nan
-        obs_att["metadata_available"] = False
+        logger.warning(f"could not read metadata -> {f.name}")
 
     return line, obs_att, meta_ts
 
@@ -331,8 +330,6 @@ def read_dino_groundwater_csv(
     # read metadata
     line, meta, meta_ts = _read_dino_groundwater_metadata(f, line)
     line = _read_empty(f, line)
-    if not meta["metadata_available"]:
-        logger.warning(f"could not read metadata -> {fname}")
     meta["filename"] = fname
     meta["source"] = "dino"
     meta["crs"] = pyproj.CRS(28992)  # assuming RD New as default CRS for dino data
@@ -411,7 +408,6 @@ def _read_artdino_groundwater_metadata(f, line):
             meta["screen_bottom"] = np.nan
         else:
             meta["screen_bottom"] = float(onderkant_filter) / 100
-        meta["metadata_available"] = True
     else:
         # no metadata
         meta["location"] = ""
@@ -423,7 +419,7 @@ def _read_artdino_groundwater_metadata(f, line):
         meta["ground_level"] = np.nan
         meta["screen_top"] = np.nan
         meta["screen_bottom"] = np.nan
-        meta["metadata_available"] = False
+        logger.warning(f"could not read metadata -> {f.name}")
 
     return line, meta
 
@@ -491,9 +487,6 @@ def read_artdino_groundwater_csv(path, to_mnap=True, read_series=True):
         # read metadata
         line, meta = _read_artdino_groundwater_metadata(f, line)
         line = _read_empty(f, line)
-
-        if not meta["metadata_available"]:
-            logger.warning(f"could not read metadata -> {path}")
 
         meta["filename"] = path
         meta["source"] = "dino"
@@ -594,7 +587,7 @@ def read_artdino_dir(
     for _, file in enumerate(files):
         path = subpath / file
         obs = ObsClass.from_artdino_file(path=path, **kwargs)
-        if obs.metadata_available and (not obs.empty) or keep_all_obs:
+        if (not obs.empty) or keep_all_obs:
             obs_list.append(obs)
         else:
             logger.info(f"not added to collection -> {path}")
@@ -709,10 +702,6 @@ def read_dino_waterlvl_csv(
         line = f.readline()
         if p_meta.match(line):
             meta = _read_dino_waterlvl_metadata(f, line)
-            if meta:
-                meta["metadata_available"] = True
-            else:
-                meta["metadata_available"] = False
             meta["filename"] = fname
             meta["source"] = "dino"
             meta["crs"] = pyproj.CRS(
@@ -784,7 +773,7 @@ def read_dino_dir(
 
     def get_dino_obs(f: str | FileIO):
         obs = ObsClass.from_dino(f, **kwargs)
-        if obs.metadata_available and (not obs.empty) or keep_all_obs:
+        if (not obs.empty) or keep_all_obs:
             return obs
         else:
             logger.info(f"not added to collection -> {f.name}")

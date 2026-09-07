@@ -90,7 +90,6 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True, crs=28992):
             "unit",
             "location",
             "tube_nr",
-            "metadata_available",
             "ground_level",
             "tube_top",
             "screen_top",
@@ -123,7 +122,6 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True, crs=28992):
         for location in locations:
             metadata = d_h[location]
             metadata["crs"] = crs
-            metadata["metadata_available"] = True
             metadata["source"] = "Menyanthes"
             metadata["unit"] = unit
 
@@ -143,7 +141,6 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True, crs=28992):
         for stress in stresses:
             metadata = d_in[stress]
             metadata["crs"] = crs
-            metadata["metadata_available"] = True
             metadata["source"] = "Menyanthes"
             metadata["unit"] = unit
             s = metadata.pop("values")
