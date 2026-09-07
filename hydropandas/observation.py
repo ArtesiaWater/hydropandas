@@ -897,7 +897,7 @@ class GroundwaterObs(Obs):
 
     Notes
     -----
-    The 'monitoring_well' attribute was deprecated in pandas version 0.13.0 and removed
+    The 'monitoring_well' attribute was deprecated in hydropandas version 0.13.0 and removed
     in version 0.20.0. Please use the 'location' attribute instead.
 
     In hydropandas version 0.20.0 the 'metadata_available' attribute was removed.
@@ -930,7 +930,7 @@ class GroundwaterObs(Obs):
 
         if "monitoring_well" in kwargs:
             raise AttributeError(
-                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0, please use the 'location' attribute instead."
             )
         metadata_available = None
         if "metadata_available" in kwargs:
@@ -943,8 +943,7 @@ class GroundwaterObs(Obs):
 
         super().__init__(*args, **kwargs)
 
-        if metadata_available is not None:
-            self.metadata_available = metadata_available
+        self._metadata_available = metadata_available
 
     @property
     def _constructor(self):
@@ -953,7 +952,7 @@ class GroundwaterObs(Obs):
     @property
     def monitoring_well(self):
         raise AttributeError(
-            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0, please use the 'location' attribute instead."
         )
 
     @property
@@ -1434,8 +1433,7 @@ class WaterQualityObs(Obs):
 
         super().__init__(*args, **kwargs)
 
-        if metadata_available is not None:
-            self._metadata_available = metadata_available
+        self._metadata_available = metadata_available
 
     @property
     def _constructor(self):
@@ -1574,8 +1572,7 @@ class WaterlvlObs(Obs):
 
         super().__init__(*args, **kwargs)
 
-        if metadata_available is not None:
-            self.metadata_available = metadata_available
+        self._metadata_available = metadata_available
 
     @property
     def _constructor(self):

@@ -204,7 +204,7 @@ def read_wiski_dir(
         If True, preserves the original modification times of the files when
         unpacking them. Default is False.
     keep_all_obs : bool, optional
-        If True, keeps all observation objects even if they have no metadata
+        If True, keeps all observation objects even if they have no measurements
         available. Default is True.
     **kwargs
         Additional keyword arguments to pass to the `from_wiski` method of the
