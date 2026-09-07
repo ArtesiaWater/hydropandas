@@ -394,6 +394,4 @@ def get_metadata_from_gmw(path_xml, tube_nr, full_meta=False):
     ):
         meta["tube_bottom"] = round(meta["screen_bottom"] - sedimentSumpLength, 2)
 
-    meta["metadata_available"] = True
-
     return meta

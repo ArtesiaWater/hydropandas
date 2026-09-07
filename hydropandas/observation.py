@@ -268,13 +268,13 @@ class Obs(pd.DataFrame):
             )
 
     @classmethod
-    def _get_meta_attr(cls, ignore=("monitoring_well",)):
+    def _get_meta_attr(cls, ignore=("monitoring_well", "_metadata_available")):
         """Get metadata attributes excluding the ones in ignore.
 
         Parameters
         ----------
         ignore : tuple, optional
-            attributes to ignore, by default ('monitoring_well',)
+            attributes to ignore, by default ('monitoring_well', '_metadata_available')
 
         Returns
         -------
@@ -893,13 +893,14 @@ class GroundwaterObs(Obs):
     - screen_bottom: bottom of the filter in m above date (NAP)
     - ground_level: surface level in m above date (NAP) (maaiveld in Dutch)
     - tube_top: top of the tube in m above date (NAP)
-    - metadata_available: boolean indicating if metadata is available for
-      the measurement point.
 
-    Note
-    ----
-    In hydropandas version 0.13.0 the 'monitoring_well' attribute was removed and
-    replaced by the 'location' attribute
+
+    Notes
+    -----
+    The 'monitoring_well' attribute was deprecated in hydropandas version 0.13.0 and removed
+    in version 0.20.0. Please use the 'location' attribute instead.
+
+    In hydropandas version 0.20.0 the 'metadata_available' attribute was removed.
 
     """
 
@@ -909,7 +910,7 @@ class GroundwaterObs(Obs):
         "screen_bottom",
         "ground_level",
         "tube_top",
-        "metadata_available",
+        "_metadata_available",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -928,15 +929,21 @@ class GroundwaterObs(Obs):
                 kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
-            self.monitoring_well = kwargs.pop("monitoring_well", "")
+            raise AttributeError(
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0, please use the 'location' attribute instead."
+            )
+        metadata_available = None
+        if "metadata_available" in kwargs:
+            metadata_available = kwargs.pop("metadata_available")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
         self.tube_top = kwargs.pop("tube_top", np.nan)
         self.screen_top = kwargs.pop("screen_top", np.nan)
         self.screen_bottom = kwargs.pop("screen_bottom", np.nan)
-        self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super().__init__(*args, **kwargs)
+
+        self._metadata_available = metadata_available
 
     @property
     def _constructor(self):
@@ -944,13 +951,19 @@ class GroundwaterObs(Obs):
 
     @property
     def monitoring_well(self):
-        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
-        warnings.warn(msg, FutureWarning)
-        return self.location
+        raise AttributeError(
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0, please use the 'location' attribute instead."
+        )
 
-    @monitoring_well.setter
-    def monitoring_well(self, value):
-        self.location = value
+    @property
+    def metadata_available(self):
+        msg = "The 'metadata_available' attribute is deprecated and will be removed in hydropandas version 0.23.0."
+        warnings.warn(msg, FutureWarning)
+        return self._metadata_available
+
+    @metadata_available.setter
+    def metadata_available(self, value):
+        self._metadata_available = value
 
     @classmethod
     def from_bro(
@@ -1027,7 +1040,6 @@ class GroundwaterObs(Obs):
             screen_bottom=meta.pop("screen_bottom"),
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
-            metadata_available=meta.pop("metadata_available"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
         )
@@ -1122,7 +1134,6 @@ class GroundwaterObs(Obs):
             screen_bottom=meta.pop("screen_bottom"),
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
-            metadata_available=meta.pop("metadata_available"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
             meta=meta,
@@ -1173,7 +1184,6 @@ class GroundwaterObs(Obs):
             screen_bottom=meta.pop("screen_bottom"),
             screen_top=meta.pop("screen_top"),
             ground_level=meta.pop("ground_level"),
-            metadata_available=meta.pop("metadata_available"),
             tube_nr=meta.pop("tube_nr"),
             tube_top=meta.pop("tube_top"),
             meta=meta,
@@ -1383,7 +1393,6 @@ class GroundwaterObs(Obs):
             screen_bottom=screen_bottom,
             screen_top=screen_top,
             ground_level=ground_level,
-            metadata_available=meta.pop("metadata_available"),
             tube_nr=tube_nr,
             tube_top=tube_top,
         )
@@ -1393,12 +1402,16 @@ class WaterQualityObs(Obs):
     """Class for water quality ((grond)watersamenstelling) point observations.
 
     Subclass of the Obs class
+
+    Note
+    ----
+    In hydropandas version 0.20.0 the 'metadata_available' attribute was removed.
     """
 
     _metadata = Obs._metadata + [
         "tube_nr",
         "ground_level",
-        "metadata_available",
+        "_metadata_available",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -1409,12 +1422,18 @@ class WaterQualityObs(Obs):
                 kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
-            self.monitoring_well = kwargs.pop("monitoring_well", "")
+            raise AttributeError(
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+            )
+        metadata_available = None
+        if "metadata_available" in kwargs:
+            metadata_available = kwargs.pop("metadata_available")
         self.tube_nr = kwargs.pop("tube_nr", "")
         self.ground_level = kwargs.pop("ground_level", np.nan)
-        self.metadata_available = kwargs.pop("metadata_available", np.nan)
 
         super().__init__(*args, **kwargs)
+
+        self._metadata_available = metadata_available
 
     @property
     def _constructor(self):
@@ -1422,13 +1441,19 @@ class WaterQualityObs(Obs):
 
     @property
     def monitoring_well(self):
-        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
-        warnings.warn(msg, FutureWarning)
-        return self.location
+        raise AttributeError(
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+        )
 
-    @monitoring_well.setter
-    def monitoring_well(self, value):
-        self.location = value
+    @property
+    def metadata_available(self):
+        msg = "The 'metadata_available' attribute is deprecated and will be removed in hydropandas version 0.23.0."
+        warnings.warn(msg, FutureWarning)
+        return self._metadata_available
+
+    @metadata_available.setter
+    def metadata_available(self, value):
+        self._metadata_available = value
 
     @classmethod
     def from_dino(cls, path, **kwargs):
@@ -1522,9 +1547,13 @@ class WaterlvlObs(Obs):
     """Class for water level point observations.
 
     Subclass of the Obs class
+
+    Note
+    ----
+    In hydropandas version 0.20.0 the 'metadata_available' attribute was removed.
     """
 
-    _metadata = Obs._metadata + ["metadata_available"]
+    _metadata = Obs._metadata + ["_metadata_available"]
 
     def __init__(self, *args, **kwargs):
         if len(args) > 0 and isinstance(args[0], Obs):
@@ -1534,10 +1563,16 @@ class WaterlvlObs(Obs):
                 kwargs[key] = getattr(args[0], key)
 
         if "monitoring_well" in kwargs:
-            self.monitoring_well = kwargs.pop("monitoring_well", "")
-        self.metadata_available = kwargs.pop("metadata_available", np.nan)
+            raise AttributeError(
+                "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0. Please use the 'location' attribute instead."
+            )
+        metadata_available = None
+        if "metadata_available" in kwargs:
+            metadata_available = kwargs.pop("metadata_available")
 
         super().__init__(*args, **kwargs)
+
+        self._metadata_available = metadata_available
 
     @property
     def _constructor(self):
@@ -1545,13 +1580,19 @@ class WaterlvlObs(Obs):
 
     @property
     def monitoring_well(self):
-        msg = "The 'monitoring_well' attribute is deprecated and will be removed in hydropandas version 0.14.0., please use the 'location' attribute instead."
-        warnings.warn(msg, FutureWarning)
-        return self.location
+        raise AttributeError(
+            "The 'monitoring_well' attribute was removed in hydropandas version 0.20.0., please use the 'location' attribute instead."
+        )
 
-    @monitoring_well.setter
-    def monitoring_well(self, value):
-        self.location = value
+    @property
+    def metadata_available(self):
+        msg = "The 'metadata_available' attribute is deprecated and will be removed in hydropandas version 0.23.0."
+        warnings.warn(msg, FutureWarning)
+        return self._metadata_available
+
+    @metadata_available.setter
+    def metadata_available(self, value):
+        self._metadata_available = value
 
     @classmethod
     def from_dino(cls, path, **kwargs):

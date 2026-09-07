@@ -333,7 +333,6 @@ def get_metadata_tube(metadata_mw, tube_nr, auth=None, crs=28992):
         "source": "lizard",
         "organisation": metadata_mw["organisation"],
         "unit": "m NAP",
-        "metadata_available": True,
         "status": None,
     }
 

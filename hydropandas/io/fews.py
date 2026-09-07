@@ -483,11 +483,6 @@ def _obs_from_meta(
     else:
         unit = np.nan
 
-    if np.isnan(x) or np.isnan(y):
-        metadata_available = False
-    else:
-        metadata_available = True
-
     if "parameterId" in header:
         parid = header["parameterId"]
         name = header["location"] + "_" + parid
@@ -512,7 +507,6 @@ def _obs_from_meta(
             meta=header,
             name=name,
             location=header["location"],
-            metadata_available=metadata_available,
             source="FEWS",
         )
     elif ObsC in (observation.GroundwaterObs,):
@@ -530,7 +524,6 @@ def _obs_from_meta(
             meta=header,
             name=name,
             location=header["location"],
-            metadata_available=metadata_available,
             source="FEWS",
         )
     elif ObsC in (

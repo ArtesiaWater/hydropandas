@@ -717,7 +717,6 @@ def _brodata_gmw_to_meta(gmw, tube_nr):
         "tube_top": gmw.monitoringTube.at[tube_nr, "tubeTopPosition"],
         "screen_top": gmw.monitoringTube.at[tube_nr, "screenTopPosition"],
         "screen_bottom": gmw.monitoringTube.at[tube_nr, "screenBottomPosition"],
-        "metadata_available": True,
     }
     return meta
 
@@ -807,8 +806,6 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr, crs):
     okf = tube.find("dsgmw:screen//dsgmw:screenBottomPosition", ns)
     if okf.attrib["uom"] == "m":
         meta["screen_bottom"] = float(okf.text)
-
-    meta["metadata_available"] = True
 
     return meta
 
@@ -958,7 +955,6 @@ def get_obs_list_from_extent(
                 "y": gdf.geometry[index].y,
                 "location": index[0],
                 "tube_nr": index[1],
-                "metadata_available": True,
             }
             if engine == "brodata_gm":
                 kwargs["screen_top"] = gdf.at[index, "screen_top_position"]
