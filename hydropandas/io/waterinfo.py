@@ -1,13 +1,16 @@
 import logging
-import os
 import zipfile
 from functools import lru_cache
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pyproj
 from shapely.geometry import box
 from tqdm import tqdm
+
+from ..util import EPSG_28992, get_transformer28992
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ def get_obs_list_from_extent(
     tmax=None,
     only_metadata=False,
     keep_all_obs=False,
-    epsg=28992,
+    crs=28992,
     location_gdf=None,
 ):
     """Get observations within a specific extent and optionally for a specific location
@@ -57,8 +60,8 @@ def get_obs_list_from_extent(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept. The default
         is True.
-    epsg : int, optional
-        epsg code of the extent. The default is 28992 (RD).
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent. The default is 28992 (RD).
     location_gdf : GeoDataFrame, optional
         geodataframe with the locations of the measurements you want to include. If
         location_gdf is provided the provided extent and epgs will be ignored.
@@ -70,7 +73,7 @@ def get_obs_list_from_extent(
 
     """
     if location_gdf is None:
-        gdf = get_locations_gdf(epsg=epsg)
+        gdf = get_locations_gdf(crs)
         gdf = get_locations_within_extent(gdf, extent=extent)
     else:
         gdf = location_gdf
@@ -78,6 +81,11 @@ def get_obs_list_from_extent(
             msg = f"No waterinfo measurements found within extent {extent}"
             logger.warning(msg)
             return []
+        if gdf.crs != pyproj.CRS(crs):
+            if pyproj.CRS(crs) == pyproj.CRS(28992):
+                gdf = gdf.to_crs(EPSG_28992)
+            else:
+                gdf = gdf.to_crs(crs)
 
     gdf = _select_location(
         gdf, locatie, grootheid_code, groepering_code, parameter_code, proces_type
@@ -94,7 +102,7 @@ def get_obs_list_from_extent(
     onames = []
     for _, row in gdf.iterrows():
         if only_metadata:
-            meta = _get_metadata_from_series(row)
+            meta = _get_metadata_from_series(row, crs=crs)
             o = ObsClass(meta=meta, **meta)
         else:
             o = ObsClass.from_waterinfo(location_gdf=row, tmin=tmin, tmax=tmax)
@@ -124,13 +132,14 @@ def get_waterinfo_obs(
     proces_type=None,
     tmin=None,
     tmax=None,
+    crs=28992,
     **kwargs,
 ):
     """Get waterinfo observations from a file or ddlpy
 
     Parameters
     ----------
-    path : str, optional
+    path : str or pathlib.Path, optional
         path to waterinfo file (.zip or .csv), default is None
     location_gdf : geopandas.GeoDataFrame, optional
         geodataframe with locations, default is None
@@ -148,6 +157,9 @@ def get_waterinfo_obs(
         start date of the measurements, default is None
     tmax : pd.Timestamp, optional
         end date of the measurements, default is None
+    crs : str, int or pyproj.CRS, optional
+        desired coordinate reference system of the observation,
+        if it differs from 25831 the coordinates are transformed, default is 28992 (RD)
 
     Returns
     -------
@@ -158,7 +170,7 @@ def get_waterinfo_obs(
     """
 
     if path is not None:
-        df, meta = read_waterinfo_file(path, **kwargs)
+        df, meta = read_waterinfo_file(path, crs=crs, **kwargs)
     else:
         df, meta = get_measurements_ddlpy(
             location_gdf,
@@ -174,13 +186,15 @@ def get_waterinfo_obs(
     return df, meta
 
 
-def _get_metadata_from_series(selected):
+def _get_metadata_from_series(selected, crs):
     """Get metadata from a series with location information
 
     Parameters
     ----------
     selected : pandas.Series
         series with location information
+    crs : str, int or pyproj.CRS
+        coordinate reference system of the location
 
     Returns
     -------
@@ -197,6 +211,7 @@ def _get_metadata_from_series(selected):
         "unit": unit,
         "x": p.x,
         "y": p.y,
+        "crs": crs,
         "source": "waterinfo (ddlpy)",
         "location": d.pop("Naam"),
         "meta": d,
@@ -275,6 +290,7 @@ def get_measurements_ddlpy(
     proces_type=None,
     tmin=None,
     tmax=None,
+    crs=28992,
 ):
     """Get measurements from ddlpy for a specific location and grootheid_code
 
@@ -296,6 +312,9 @@ def get_measurements_ddlpy(
         start date of the measurements, default is 2025-01-01
     tmax : pd.Timestamp, optional
         end date of the measurements, default is now
+    crs : str, int or pyproj.CRS, optional
+        desired coordinate reference system of the observation,
+        if it differs from 25831 the coordinates are transformed, default is 28992
 
     Returns
     -------
@@ -317,7 +336,7 @@ def get_measurements_ddlpy(
         tmax = pd.to_datetime(tmax)
 
     if location_gdf is None:
-        location_gdf = get_locations_gdf()
+        location_gdf = get_locations_gdf(crs=crs)
 
     if isinstance(location_gdf, pd.Series):
         selected = location_gdf
@@ -369,19 +388,25 @@ def get_measurements_ddlpy(
             1, unit="h"
         )
 
-    meta = _get_metadata_from_series(selected)
+    meta = _get_metadata_from_series(selected, crs)
     return df, meta
 
 
 @lru_cache
-def get_locations_gdf(epsg=28992):
+def get_locations_gdf(crs=28992):
     """Get locations from ddlpy and return as geodataframe
+
+    Parameters
+    ----------
+    crs : str, int or pyproj.CRS
+        coordinate reference system for the returned geodataframe. The
+        default is 28992 (RD).
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-        geodataframe with locations. This dataframe is needed to obtain measurements
-        using ddlpy
+        geodataframe with locations. This dataframe is needed to obtain
+        measurements using ddlpy.
     """
 
     import ddlpy
@@ -389,13 +414,18 @@ def get_locations_gdf(epsg=28992):
     locations = ddlpy.locations()
     geometries = gpd.points_from_xy(locations["Lon"], locations["Lat"])
     gdf = gpd.GeoDataFrame(locations, geometry=geometries, crs=4326)
-    gdf.to_crs(epsg, inplace=True)
+    if gdf.crs != pyproj.CRS(crs):
+        if pyproj.CRS(crs) == pyproj.CRS(28992):
+            gdf = gdf.to_crs(EPSG_28992)
+        else:
+            gdf = gdf.to_crs(crs)
 
     return gdf
 
 
 def get_locations_within_extent(gdf, extent=(482.06, 306602.42, 284182.97, 637049.52)):
-    """Get locations from ddlpy and return as geodataframe
+    """Get locations from ddlpy and return as geodataframe. Both gdf and extent
+    should be in the same crs.
 
     Parameters
     ----------
@@ -411,7 +441,6 @@ def get_locations_within_extent(gdf, extent=(482.06, 306602.42, 284182.97, 63704
         geodataframe with locations. This dataframe is needed to obtain measurements
         using ddlpy
     """
-
     polygon_ext = box(*tuple(np.array(extent)[[0, 2, 1, 3]]))
     gdf = gdf.loc[gdf.within(polygon_ext)]
 
@@ -426,14 +455,29 @@ def read_waterinfo_file(
     location_col=None,
     xcol=None,
     ycol=None,
-    transform_coords=True,
+    crs=28992,
 ):
     """Read waterinfo file (CSV or zip)
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         path to waterinfo file (.zip or .csv)
+    index_cols : list of str, optional
+        columns to use as index, default is ["WAARNEMINGDATUM", "WAARNEMINGTIJD (MET/CET)"]
+    return_metadata : bool, optional
+        if True return metadata, default is True
+    value_col : str, optional
+        name of the column containing the measurement values, default is "NUMERIEKEWAARDE"
+    location_col : str, optional
+        name of the column containing the location identifiers, default is "MEETPUNT_IDENTIFICATIE"
+    xcol : str, optional
+        name of the column containing the x coordinates, default is "X"
+    ycol : str, optional
+        name of the column containing the y coordinates, default is "Y"
+    crs : str, int or pyproj.CRS, optional
+        desired coordinate reference system of the observation,
+        if it differs from 25831 the coordinates are transformed, default is 28992 (RD).
 
     Returns
     -------
@@ -443,19 +487,17 @@ def read_waterinfo_file(
         dict containing metadata, returned if return_metadata is
         True, default is False
     """
-    from pyproj import Transformer
 
-    name = os.path.splitext(os.path.basename(path))[0]
+    path = Path(path)
+    name = path.stem
 
-    if path.endswith(".csv"):
+    if path.suffix == ".csv":
         f = path
-    elif path.endswith(".zip"):
+    elif path.suffix == ".zip":
         zf = zipfile.ZipFile(path)
         f = zf.open(f"{name}.csv")
     else:
-        raise NotImplementedError(
-            f"File type '{os.path.splitext(path)[-1]}' not supported!"
-        )
+        raise NotImplementedError(f"File type '{path.suffix}' not supported!")
 
     if value_col is None:
         value_col = "NUMERIEKEWAARDE"
@@ -505,9 +547,8 @@ def read_waterinfo_file(
             )
 
         metadata = {}
-
-        if transform_coords:
-            transformer = Transformer.from_crs("epsg:25831", "epsg:28992")
+        if pyproj.CRS(25831) != pyproj.CRS(crs):
+            transformer = get_transformer28992(pyproj.CRS(25831), pyproj.CRS(crs))
             x, y = transformer.transform(df[xcol].iloc[-1], df[ycol].iloc[-1])
         else:
             x = df[xcol].iloc[-1] / 100.0
@@ -515,6 +556,7 @@ def read_waterinfo_file(
         metadata["name"] = df[location_col].iloc[-1]
         metadata["x"] = x
         metadata["y"] = y
+        metadata["crs"] = crs
         metadata["filename"] = f
         metadata["source"] = "waterinfo"
 
@@ -523,31 +565,33 @@ def read_waterinfo_file(
         return df
 
 
-def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
+def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, crs=28992, **kwargs):
     """Read waterinfo file or directory and extract locations and observations.
 
     Parameters
     ----------
-    file_or_dir : str
+    file_or_dir : str or pathlib.Path
         path to file or directory
     ObsClass: Obs type
         type of Obs to store data in
     progressbar : bool, optional
         show progressbar if True, default is False
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the observations. The default is 28992 (RD).
 
     Returns
     -------
     obs_collection : list
         list of Obs objects
     """
-    from pyproj import Transformer
 
     # Waterinfo file
-    if os.path.isfile(file_or_dir):
+    file_or_dir = Path(file_or_dir)
+    if file_or_dir.is_file():
         files = [file_or_dir]
     # directory with waterinfo files (zips or csvs)
-    elif os.path.isdir(file_or_dir):
-        files = [os.path.join(file_or_dir, f) for f in sorted(os.listdir(file_or_dir))]
+    elif file_or_dir.is_dir():
+        files = sorted(file_or_dir.iterdir())
     else:
         raise NotImplementedError("Provide path to file or directory!")
 
@@ -557,7 +601,8 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
     metadata = {}
     obs_collection = []
 
-    transformer = Transformer.from_crs("epsg:25831", "epsg:28992")
+    if pyproj.CRS(25831) != pyproj.CRS(crs):
+        transformer = get_transformer28992(pyproj.CRS(25831), pyproj.CRS(crs))
 
     for filenm in tqdm(files) if progressbar else files:
         # read file or zip
@@ -575,6 +620,7 @@ def read_waterinfo_obs(file_or_dir, ObsClass, progressbar=False, **kwargs):
                 "name": stn,
                 "x": x,
                 "y": y,
+                "crs": crs,
                 "filename": filenm,
                 "source": "waterinfo",
             }

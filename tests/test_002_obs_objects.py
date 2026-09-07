@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pyproj
 import pytest
 
 import hydropandas as hpd
@@ -25,9 +26,9 @@ def _get_groundwater_obs(name="groundwaterobs_001", tube_nr=2):
         tube_top=ground_level - 0.2,
         screen_bottom=ground_level - 10.0,
         screen_top=ground_level - 9.0,
-        metadata_available=True,
         tube_nr=tube_nr,
         filename="",
+        crs=28992,
         meta={"info": "you can store additional information in this dictionary"},
     )
     return o
@@ -233,3 +234,44 @@ def test_get_obs():
     # no observations
     with pytest.raises(ValueError):
         oc.get_obs(location="I do not exist")
+
+
+def test_crs_obs():
+    o = _get_groundwater_obs(name="groundwaterobs_010", tube_nr=10)
+    crs = pyproj.CRS(4326)
+    o.set_crs(crs, "ignore")
+    assert o.crs == crs, "CRS not set correctly"
+
+    o.x, o.y = 12.34, 56.78  # lon, lat
+    o2 = o.to_crs(28992)
+    assert o2.crs == pyproj.CRS(28992), "CRS not transformed correctly"
+    assert (o2.x > o.x) and (o2.y > o.y), "Coordinates not transformed correctly"
+
+
+def test_crs_oc():
+
+    o_list = [
+        _get_groundwater_obs(name=f"groundwaterobs_00{i}", tube_nr=i) for i in range(10)
+    ]
+
+    # when all observations have the same CRS, the ObsCollection should adopt that CRS
+    oc = hpd.ObsCollection.from_list(o_list)
+    assert oc.obs.values[0].crs == oc.crs, (
+        "CRS of observation does not match CRS of collection"
+    )
+
+    # converting the ObsCollection to a different CRS
+    oc_new = oc.to_crs(4326)
+    assert oc_new.crs == pyproj.CRS(4326), "CRS of collection not transformed correctly"
+    for o in oc_new.obs:
+        assert o.crs == pyproj.CRS(4326), "CRS of observation not transformed correctly"
+
+    # when the observations have different CRS, creating an ObsCollection should raise a ValueError
+    crs2 = pyproj.CRS(4326)
+    o_list[1].crs = crs2
+    with pytest.raises(ValueError):
+        hpd.ObsCollection.from_list(o_list)
+
+    # setting a CRS for the ObsCollection should raise an error if there is already a crs defined
+    with pytest.raises(ValueError):
+        oc.set_crs(pyproj.CRS(4326))

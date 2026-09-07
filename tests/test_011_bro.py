@@ -1,5 +1,7 @@
 import logging
 
+import pyproj
+
 import hydropandas as hpd
 from hydropandas.io import bro
 
@@ -9,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 def test_metadata():
     # single observation
     bro_id = "GMW000000036287"
-    bro.get_metadata_from_gmw(bro_id, 1)
+    bro.get_metadata_from_gmw(bro_id, 1, crs=pyproj.CRS(28992))
 
 
 def test_metadata_full():
@@ -56,12 +58,12 @@ def test_obs_list_from_extent():
     # extent = (102395, 103121, 434331, 434750)
     extent = [117800, 118300, 439700, 439800]  # 4 measurements in extent 2025-4-7
     bro.get_obs_list_from_extent(
-        extent, hpd.GroundwaterObs, tmin=None, tmax=None, epsg=28992, only_metadata=True
+        extent, hpd.GroundwaterObs, tmin=None, tmax=None, crs=28992, only_metadata=True
     )
 
 
 def test_groundwater_obs_from_bro_id():
-    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1)
+    hpd.GroundwaterObs.from_bro("GMW000000030953", tube_nr=1, crs=4326)
 
 
 def test_groundwater_obs_from_bro_id_brodata():

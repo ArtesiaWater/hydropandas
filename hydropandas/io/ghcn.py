@@ -3,11 +3,16 @@ import logging
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
+import pyproj
 from shapely.geometry import box
 from tqdm import tqdm
 
+from ..util import get_transformer28992
+
 logger = logging.getLogger(__name__)
+
+GHCN_STATIONS_URL = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
+GHCN_DAILY_URL = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/all/{station_id}.dly"
 
 # GHCN daily depth-like elements are reported in 0.1 mm. Convert to m.
 _DEPTH_ELEMENTS_TO_M = {
@@ -20,8 +25,21 @@ _DEPTH_ELEMENTS_TO_M = {
 }
 
 
-def get_stations(extent=None, csr="EPSG:4326"):
-    url = "https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
+def get_stations(extent=None):
+    """Get GHCN stations within a specific extent.
+
+    Parameters
+    ----------
+    extent : list, tuple or numpy-array, optional
+        get GHCN stations within this extent [xmin, xmax, ymin, ymax]. Coordinates should
+        be in WGS84 (EPSG:4326). The default is None.
+
+    Returns
+    -------
+    GeoDataFrame
+        GeoDataFrame containing the GHCN stations within the specified extent.
+    """
+    url = GHCN_STATIONS_URL
     colspecs = [
         (0, 11),  # ID
         (12, 20),  # LATITUDE
@@ -50,10 +68,9 @@ def get_stations(extent=None, csr="EPSG:4326"):
     stations = stations.set_index("id")
     geometry = gpd.points_from_xy(stations["longitude"], stations["latitude"])
     stations_gdf = gpd.GeoDataFrame(stations, geometry=geometry, crs="EPSG:4326")
-    stations_gdf = stations_gdf.to_crs(csr)
     if extent is not None:
         # Extent format is [xmin, ymin, xmax, ymax] in this function.
-        polygon = box(extent[0], extent[1], extent[2], extent[3])
+        polygon = box(extent[0], extent[2], extent[1], extent[3])
         stations_gdf = stations_gdf[stations_gdf.intersects(polygon)]
 
     return stations_gdf
@@ -62,12 +79,32 @@ def get_stations(extent=None, csr="EPSG:4326"):
 def get_station_data(station_id, element=None, start_date=None, end_date=None):
     """Get daily GHCN data for one station.
 
+    Parameters
+    ----------
+    station_id : str
+        GHCN station ID for which to download the data.
+    element : str, list of str, or None, optional
+        GHCN element(s) to download (e.g. 'PRCP', 'TMAX', 'TMIN').
+        If None all available elements per station are downloaded.
+        Depth-like elements (e.g. PRCP, SNOW, SNWD, WESD, WESF, EVAP)
+        are converted from 0.1 mm to m.
+        The default is None.
+    start_date : str or None, optional
+        start date of observations (e.g. '2020-01-01'). The default is None.
+    end_date : str or None, optional
+        end date of observations (e.g. '2021-12-31'). The default is None.
+
+    Returns
+    -------
+    DataFrame
+        DataFrame containing the daily GHCN data for the specified station and element(s).
+
     Notes
     -----
     Timestamps are shifted by +1 day so the index represents the end of the
     daily period, consistent with KNMI daily indexing in hydropandas.
     """
-    url = f"https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/all/{station_id}.dly"
+    url = GHCN_DAILY_URL.format(station_id=station_id)
     colspecs = [
         (0, 11),  # ID
         (11, 15),  # YEAR
@@ -113,7 +150,7 @@ def get_obs_list_from_extent(
     tmax=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=4326,
+    crs=4326,
 ):
     """Get GHCN observations within a specific extent.
 
@@ -139,9 +176,9 @@ def get_obs_list_from_extent(
     keep_all_obs : bool, optional
         if False, only observations with measurements are kept.
         The default is True.
-    epsg : int, optional
-        epsg code of the supplied extent. Returned observation x/y
-        coordinates are also in this CRS. The default is 4326 (WGS84).
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the extent, this crs is also
+        used for the observations. The default is 4326 (WGS84).
 
     Returns
     -------
@@ -149,24 +186,21 @@ def get_obs_list_from_extent(
         list with Obs objects
     """
     # transform extent corners to WGS84 for station selection
-    if epsg != 4326:
-        transformer_to_wgs84 = Transformer.from_crs(
-            f"EPSG:{epsg}", "EPSG:4326", always_xy=True
-        )
-        lon_min, lat_min = transformer_to_wgs84.transform(extent[0], extent[2])
-        lon_max, lat_max = transformer_to_wgs84.transform(extent[1], extent[3])
-        transformer_from_wgs84 = Transformer.from_crs(
-            "EPSG:4326", f"EPSG:{epsg}", always_xy=True
-        )
+    crs = pyproj.CRS(crs)
+    if crs != pyproj.CRS(4326):
+        transformer = get_transformer28992(crs, pyproj.CRS(4326))
+
+        lon_min, lat_min = transformer.transform(extent[0], extent[2])
+        lon_max, lat_max = transformer.transform(extent[1], extent[3])
+
+        transformer_from_wgs84 = get_transformer28992(pyproj.CRS(4326), crs)
     else:
         # standard hydropandas extent: [xmin, xmax, ymin, ymax]
         lon_min, lon_max = extent[0], extent[1]
         lat_min, lat_max = extent[2], extent[3]
         transformer_from_wgs84 = None
 
-    # get_stations uses [minx, miny, maxx, maxy] format
-    extent_wgs84 = [lon_min, lat_min, lon_max, lat_max]
-    stations_gdf = get_stations(extent=extent_wgs84, csr="EPSG:4326")
+    stations_gdf = get_stations(extent=[lon_min, lon_max, lat_min, lat_max])
 
     if stations_gdf.empty:
         logger.warning(f"No GHCN stations found within extent {extent}")
@@ -196,7 +230,7 @@ def get_obs_list_from_extent(
             "longitude": lon,
             "x": x,
             "y": y,
-            "epsg": epsg,
+            "crs": crs,
         }
 
         if only_metadata:
@@ -206,6 +240,7 @@ def get_obs_list_from_extent(
                 y=y,
                 station=station_id,
                 source="GHCN",
+                crs=crs,
                 meta=meta,
             )
             obs_list.append(o)
@@ -228,6 +263,7 @@ def get_obs_list_from_extent(
                     y=y,
                     station=station_id,
                     source="GHCN",
+                    crs=crs,
                     meta=meta,
                 )
                 obs_list.append(o)
@@ -244,19 +280,20 @@ def get_obs_list_from_extent(
                 .rename(columns={"value": element})
                 .sort_index()
             )
-            obs_meta = dict(meta)
-            obs_meta["meteo_var"] = element
-            obs_meta["unit"] = "m" if element in _DEPTH_ELEMENTS_TO_M else "unknown"
+
+            meta["meteo_var"] = element
+            meta["unit"] = "m" if element in _DEPTH_ELEMENTS_TO_M else "unknown"
             o = ObsClass(
                 ts,
                 name=f"{station_id}_{element}",
                 x=x,
                 y=y,
+                crs=crs,
                 station=station_id,
                 meteo_var=element,
                 source="GHCN",
-                unit=obs_meta["unit"],
-                meta=obs_meta,
+                unit=meta["unit"],
+                meta=meta,
             )
             obs_list.append(o)
 

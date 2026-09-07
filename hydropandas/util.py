@@ -9,8 +9,10 @@ import sys
 import tempfile
 import time
 import zipfile
+from pathlib import Path
 
 import pandas as pd
+import pyproj
 from scipy.interpolate import RBFInterpolator
 
 logger = logging.getLogger(__name__)
@@ -23,31 +25,73 @@ EPSG_28992 = (
 )
 
 
+def get_transformer28992(crs_from, crs_to, always_xy=True, **kwargs):
+    """This is simply a wrapper around pyproj.Transformer.from_crs in order
+    to handle the special case of EPSG:28992.
+
+    Parameters
+    ----------
+    crs_from : pyproj.CRS
+        source coordinate reference system.
+    crs_to : pyproj.CRS
+        target coordinate reference system.
+    **kwargs are passed to pyproj.Transformer.from_crs.
+
+    Returns
+    -------
+    pyproj.Transformer
+        transformer object to convert coordinates from crs_from to crs_to.
+    """
+    if crs_to == pyproj.CRS(28992):
+        crs_to = pyproj.CRS(EPSG_28992)
+    if crs_from == pyproj.CRS(28992):
+        crs_from = pyproj.CRS(EPSG_28992)
+
+    transformer = pyproj.Transformer.from_crs(
+        crs_from, crs_to, always_xy=always_xy, **kwargs
+    )
+
+    return transformer
+
+
 def _obslist_to_frame(obs_list):
     """Convert a list of observations to a pandas DataFrame.
 
     Parameters
     ----------
     obs_list : list of hydropandas.*Obs
-        list containing *Obs objects that will be stored in DataFrame.
+        list containing *Obs objects that will be stored in DataFrame. All
+        observations must have the same crs value (or an empty string).
 
     Returns
     -------
     obs_df : pandas.DataFrame
         DataFrame containing all data
+    crs : pyproj.CRS
+        coordinate reference system of the observations, if available
     """
     if len(obs_list) > 0:
         obs_df = pd.DataFrame(
             [o.to_collection_dict() for o in obs_list],
             columns=obs_list[0].to_collection_dict().keys(),
         )
+
+        # infer crs from the observations
+        crs = {c for c in obs_df.pop("crs") if c != ""}
+        if len(crs) > 1:
+            raise ValueError(
+                "multiple crs values in observations, an ObsCollection can only have one crs value"
+            )
+        crs = next(iter(crs), "")
+
         obs_df.set_index("name", inplace=True)
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:
         obs_df = pd.DataFrame()
+        crs = ""
 
-    return obs_df
+    return obs_df, crs
 
 
 def unzip_file(src, dst, force=False, preserve_datetime=False):
@@ -55,9 +99,9 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
 
     Parameters
     ----------
-    src : str
+    src : str or pathlib.Path
         source zip file
-    dst : str
+    dst : str or pathlib.Path
         destination directory
     force : boolean, optional
         force unpack if dst already exists
@@ -69,7 +113,8 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
     int
         1 of True
     """
-    if os.path.exists(dst) and not force:
+    dst = Path(dst)
+    if dst.exists() and not force:
         print(
             "File not unzipped. Destination already exists. Use'force=True' to unzip."
         )
@@ -79,7 +124,7 @@ def unzip_file(src, dst, force=False, preserve_datetime=False):
         for f in zipf.infolist():
             zipf.extract(f, path=dst)
             date_time = time.mktime(f.date_time + (0, 0, -1))
-            os.utime(os.path.join(dst, f.filename), (date_time, date_time))
+            os.utime(dst / f.filename, (date_time, date_time))
         zipf.close()
     else:
         zipf = zipfile.ZipFile(src, "r")
@@ -95,11 +140,11 @@ def get_files(
 
     Parameters
     ----------
-    file_or_dir : str
+    file_or_dir : str or pathlib.Path
         file or path to data.
     ext : str
         extension of filenames to store in list.
-    unpackdir : str
+    unpackdir : str or pathlib.Path
         directory to story unpacked zip file, only used in case of a zipfile.
     force_unpack : bool, optional
         force unzip, by default False.
@@ -107,25 +152,24 @@ def get_files(
         preserve datetime of unzipped files, by default False. Used for
         checking whether data has changed.
     """
+    file_or_dir = Path(file_or_dir)
+    if unpackdir is not None:
+        unpackdir = Path(unpackdir)
+
     # check if unpackdir is same as file_or_dir, if same, this can cause
     # problems when the unpackdir still contains zips that will be unpacked
     # again.
-    if (unpackdir is not None) and (
-        os.path.normcase(unpackdir) == os.path.normcase(file_or_dir)
-    ):
+    if (unpackdir is not None) and (unpackdir.resolve() == file_or_dir.resolve()):
         raise ValueError("Please specify a different folder to unpack files!")
 
     # identify whether file_or_dir started as zip
-    if str(file_or_dir).endswith(".zip"):
-        iszip = True
-    else:
-        iszip = False
+    iszip = file_or_dir.suffix == ".zip"
 
     # unzip dir
     if iszip:
         zipf = file_or_dir
         if unpackdir is None:
-            file_or_dir = tempfile.TemporaryDirectory().name
+            file_or_dir = Path(tempfile.TemporaryDirectory().name)
         else:
             file_or_dir = unpackdir
         unzip_file(
@@ -133,40 +177,40 @@ def get_files(
         )
 
     # file_or_dir is directory
-    if os.path.isdir(file_or_dir):
+    if file_or_dir.is_dir():
         # check for zips in dir
-        zip_fnames = [i for i in os.listdir(file_or_dir) if i.endswith(".zip")]
+        zip_fnames = [i for i in file_or_dir.iterdir() if i.suffix == ".zip"]
         if len(zip_fnames) > 0:
             # unzip zips
             if unpackdir is None:
-                dirname = tempfile.TemporaryDirectory().name
+                dirname = Path(tempfile.TemporaryDirectory().name)
             else:
                 dirname = unpackdir
             for zipf in zip_fnames:
                 unzip_file(
-                    os.path.join(file_or_dir, zipf),
+                    zipf,
                     dirname,
                     force=True,
                     preserve_datetime=preserve_datetime,
                 )
                 # remove intermediate zipfiles if initial file_or_dir was zip
                 if iszip:
-                    os.remove(os.path.join(file_or_dir, zipf))
+                    zipf.unlink()
         else:
             dirname = file_or_dir
         # get all files with extension ext
-        unzip_fnames = [i for i in os.listdir(dirname) if i.endswith(ext)]
-    elif os.path.isfile(file_or_dir):
+        unzip_fnames = [i.name for i in dirname.iterdir() if i.name.endswith(ext)]
+    elif file_or_dir.is_file():
         # file_or_dir is actually an xml
-        unzip_fnames = [os.path.basename(file_or_dir)]  # get file name
-        dirname = os.path.dirname(file_or_dir)  # get directory path
+        unzip_fnames = [file_or_dir.name]  # get file name
+        dirname = file_or_dir.parent  # get directory path
     else:
         raise NotImplementedError(f"Cannot parse 'file_or_dir': {file_or_dir}!")
 
     return dirname, unzip_fnames
 
 
-def df2gdf(df, xcol="x", ycol="y", crs=28992):
+def df2gdf(df, xcol="x", ycol="y", crs=28992, custom_crs_28992=False):
     """Create a GeoDataFrame from a DataFrame with xy points.
 
     Parameters
@@ -179,6 +223,11 @@ def df2gdf(df, xcol="x", ycol="y", crs=28992):
         column name with y values. The default is  'x'.
     crs : int, optional
         coordinate reference system, by default 28992 (RD new).
+    custom_crs_28992 : bool, optional
+        if True, use a custom definition for EPSG:28992 instead of the default one.
+        In some cases the default EPSG:28992 definition gives incorrect results
+        when converting to another crs, so a custom definition may be necessary.
+        The default is False.
 
     Returns
     -------
@@ -188,9 +237,12 @@ def df2gdf(df, xcol="x", ycol="y", crs=28992):
     from geopandas import GeoDataFrame
     from shapely.geometry import Point
 
+    if pyproj.CRS(crs) == pyproj.CRS(28992) and custom_crs_28992:
+        crs = pyproj.CRS(EPSG_28992)
+
     gdf = GeoDataFrame(
         df.copy(),
-        geometry=[Point((s[xcol], s[ycol])) for i, s in df.iterrows()],
+        geometry=[Point((s[xcol], s[ycol])) for _, s in df.iterrows()],
         crs=crs,
     )
     return gdf

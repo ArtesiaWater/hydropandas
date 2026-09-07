@@ -14,7 +14,7 @@ def test_catalog():
             "Compartimenten": True,
         }
     }
-    url = "https://waterwebservices.rijkswaterstaat.nl/METADATASERVICES_DBO/OphalenCatalogus"
+    url = "https://ddapi20-waterwebservices.rijkswaterstaat.nl/METADATASERVICES/OphalenCatalogus"
     r = requests.post(url, json=json, timeout=300)
 
     r.raise_for_status()

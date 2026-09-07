@@ -17,15 +17,22 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
-from pyproj import Proj, Transformer
 from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from ..rcparams import rcParams
-from ..util import EPSG_28992
+from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
+
+BRO_BASE_URL = "https://publiek.broservices.nl"
+BRO_GMN_URL = BRO_BASE_URL + "/gm/gmn/v1/objects/{bro_id}"
+BRO_GMW_RELATIONS_URL = BRO_BASE_URL + "/gm/v1/gmw-relations/{bro_id}"
+BRO_GLD_URL = BRO_BASE_URL + "/gm/gld/v1/objects/{bro_id}"
+BRO_GMW_URL = BRO_BASE_URL + "/gm/gmw/v1/objects/{bro_id}"
+BRO_GMW_SEARCH_URL = BRO_BASE_URL + "/gm/gmw/v1/characteristics/searches?"
 
 
 class BroDataParseError(Exception):
@@ -40,7 +47,9 @@ class BroDataParseError(Exception):
         super().__init__(self.message)
 
 
-def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_obs=True):
+def get_obs_list_from_gmn_hpd(
+    bro_id, ObsClass, only_metadata=False, keep_all_obs=True, crs=28992
+):
     """get a list of observation from a groundwater monitoring network using the
     hydropandas engine.
 
@@ -56,6 +65,9 @@ def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_ob
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without
         measurements
+    crs : str, int, pyproj.CRS or None, optional
+        The desired coordinate reference system of the observations, if it differs from
+        the crs in BRO the coordinates are transformed, by default EPSG: 28992.
 
     Raises
     ------
@@ -70,7 +82,7 @@ def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_ob
         metadata of the groundwater monitoring net.
 
     """
-    url = f"https://publiek.broservices.nl/gm/gmn/v1/objects/{bro_id}"
+    url = BRO_GMN_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     if req.status_code > 200:
@@ -96,7 +108,7 @@ def get_obs_list_from_gmn_hpd(bro_id, ObsClass, only_metadata=False, keep_all_ob
         tube_nr = int(tube.find("xmlns:tubeNumber", ns).text)
 
         o = ObsClass.from_bro(
-            bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata
+            bro_id=gmw_id, tube_nr=tube_nr, only_metadata=only_metadata, crs=crs
         )
         if o.empty:
             logger.debug(
@@ -120,6 +132,7 @@ def get_obs_list_from_gmn(
     ObsClass,
     only_metadata=False,
     keep_all_obs=True,
+    crs=28992,
     engine="hydropandas",
 ):
     """get a list of observation from a groundwater monitoring network.
@@ -136,6 +149,9 @@ def get_obs_list_from_gmn(
     keep_all_obs : boolean, optional
         add all observation points to the collection, even without
         measurements
+    crs : str, int, pyproj.CRS or None, optional
+        The desired coordinate reference system of the observations, if it differs from
+        the crs in BRO the coordinates are transformed, by default EPSG: 28992.
     engine : str, optional
         Select how data from the bro-database is obtained, options are 'hydropandas' or
         'brodata' The default is 'hydropandas'.
@@ -178,7 +194,11 @@ def get_obs_list_from_gmn(
 
     elif engine == "hydropandas":
         obs_list, meta = get_obs_list_from_gmn_hpd(
-            bro_id, ObsClass, only_metadata=False, keep_all_obs=True
+            bro_id,
+            ObsClass,
+            only_metadata=only_metadata,
+            keep_all_obs=keep_all_obs,
+            crs=crs,
         )
     else:
         raise ValueError(f"invalid engine selected {engine=}")
@@ -187,7 +207,7 @@ def get_obs_list_from_gmn(
 
 
 def get_bro_groundwater(
-    bro_id, tube_nr=None, only_metadata=False, engine="hydropandas", **kwargs
+    bro_id, tube_nr=None, only_metadata=False, crs=28992, engine="hydropandas", **kwargs
 ):
     """get bro groundwater measurement from a GLD id or a GMW id with a
     filter number.
@@ -203,6 +223,9 @@ def get_bro_groundwater(
     only_metadata : bool, optional
         if True download only metadata, significantly faster. The default
         is False.
+    crs : str, int, pyproj.CRS or None
+        The desired coordinate reference system of the observations, if it differs from
+        the crs in BRO the coordinates are transformed, by default EPSG: 28992.
     engine : str, optional
         Select how data from the bro-database is obtained, options are 'hydropandas' or
         'brodata' The default is 'hydropandas'.
@@ -228,14 +251,17 @@ def get_bro_groundwater(
         if only_metadata:
             raise ValueError("cannot get metadata from gld id")
         if engine == "hydropandas":
-            df, meta = measurements_from_gld(bro_id, **kwargs)
+            df, meta = measurements_from_gld(bro_id, crs=pyproj.CRS(crs), **kwargs)
         elif engine == "brodata":
             import brodata
 
             gld = brodata.gld.GroundwaterLevelDossier.from_bro_id(bro_id)
             df = gld.observation.rename(columns={"value": "values"})
             meta = get_metadata_from_gmw(
-                gld.groundwaterMonitoringWell, gld.tubeNumber, engine=engine
+                gld.groundwaterMonitoringWell,
+                gld.tubeNumber,
+                pyproj.CRS(crs),
+                engine=engine,
             )
         else:
             raise ValueError(f"invalid engine selected {engine=}")
@@ -243,7 +269,7 @@ def get_bro_groundwater(
     elif bro_id.startswith("GMW"):
         if tube_nr is None:
             raise ValueError("if bro_id is GMW a tube_nr should be specified")
-        meta = get_metadata_from_gmw(bro_id, tube_nr, engine=engine)
+        meta = get_metadata_from_gmw(bro_id, tube_nr, pyproj.CRS(crs), engine=engine)
         if engine == "brodata":
             import brodata
 
@@ -263,7 +289,9 @@ def get_bro_groundwater(
 
             dfl = []
             for i, gld_id in enumerate(gld_ids):
-                df, meta_new = measurements_from_gld(gld_id, **kwargs)
+                df, meta_new = measurements_from_gld(
+                    gld_id, crs=pyproj.CRS(crs), **kwargs
+                )
                 meta.update(meta_new)
                 dfl.append(df)
             df = pd.concat(dfl, axis=0).sort_index()
@@ -299,7 +327,7 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
     if not bro_id.startswith("GMW"):
         raise ValueError("bro id should start with GMW")
 
-    url = f"https://publiek.broservices.nl/gm/v1/gmw-relations/{bro_id}"
+    url = BRO_GMW_RELATIONS_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     if req.status_code > 200:
@@ -327,7 +355,12 @@ def get_gld_ids_from_gmw(bro_id, tube_nr):
 
 
 def measurements_from_gld(
-    bro_id, tmin=None, tmax=None, to_wintertime=True, drop_duplicate_times=True
+    bro_id,
+    tmin=None,
+    tmax=None,
+    to_wintertime=True,
+    crs=28992,
+    drop_duplicate_times=True,
 ):
     """get measurements and metadata from a grondwaterstandonderzoek (gld)
     bro_id
@@ -344,6 +377,9 @@ def measurements_from_gld(
     to_wintertime : bool, optional
         if True the time index is converted to Dutch winter time. The default
         is True.
+    crs : str, int, pyproj.CRS or None, optional
+        The desired coordinate reference system of the observations, if it differs from
+        the crs in BRO the coordinates are transformed, by default EPSG: 28992.
     drop_duplicate_times : bool, optional
         if True rows with a duplicate time stamp are removed keeping only the
         first row. The default is True.
@@ -367,7 +403,7 @@ def measurements_from_gld(
     if not bro_id.startswith("GLD"):
         raise ValueError("can only get observations if bro id starts with GLD")
 
-    url = "https://publiek.broservices.nl/gm/gld/v1/objects/{}"
+    url = BRO_GLD_URL
     params = {}
     if tmin is not None:
         tmin = pd.to_datetime(tmin)
@@ -380,7 +416,7 @@ def measurements_from_gld(
     s = requests.Session()
     retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429])
     s.mount("https://", HTTPAdapter(max_retries=retries))
-    req = s.get(url.format(bro_id), params=params)
+    req = s.get(url.format(bro_id=bro_id), params=params)
 
     if req.status_code > 200:
         req.raise_for_status()
@@ -447,7 +483,9 @@ def measurements_from_gld(
     df = df.loc[tmin:tmax]
 
     # add metadata from gmw
-    meta.update(get_metadata_from_gmw(meta["location"], meta["tube_nr"]))
+    meta.update(
+        get_metadata_from_gmw(meta["location"], meta["tube_nr"], pyproj.CRS(crs))
+    )
 
     return df, meta
 
@@ -475,7 +513,7 @@ def get_full_metadata_from_gmw_hpd(bro_id, tube_nr):
     if not bro_id.startswith("GMW"):
         raise ValueError("can only get metadata if bro id starts with GMW")
 
-    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    url = BRO_GMW_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     # read results
@@ -489,11 +527,13 @@ def get_full_metadata_from_gmw_hpd(bro_id, tube_nr):
     meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO"}
     for child in gmw:
         key = child.tag.split("}", 1)[1]
+        print(key)
         if len(child) == 0:
             meta[key] = child.text
         elif key == "deliveredLocation":
             ns = "{http://www.broservices.nl/xsd/gmwcommon/1.1}"
             point = child.find(f"{ns}location")
+            meta["crs"] = point.attrib["srsName"]
             ns = "{http://www.opengis.net/gml/3.2}"
             xy = [float(x) for x in point.find(f"{ns}pos").text.split()]
             meta["x"], meta["y"] = xy
@@ -607,7 +647,7 @@ def _get_gmw_from_bro_id(bro_id, retries=0):
         "gml": "http://www.opengis.net/gml/3.2",
     }
 
-    url = f"https://publiek.broservices.nl/gm/gmw/v1/objects/{bro_id}"
+    url = BRO_GMW_URL.format(bro_id=bro_id)
     req = requests.get(url)
 
     # read results
@@ -671,17 +711,17 @@ def _brodata_gmw_to_meta(gmw, tube_nr):
         "source": "BRO",
         "x": gmw.deliveredLocation.x,
         "y": gmw.deliveredLocation.y,
+        "crs": pyproj.CRS(28992),
         "unit": "m NAP",
         "ground_level": gmw.groundLevelPosition,
         "tube_top": gmw.monitoringTube.at[tube_nr, "tubeTopPosition"],
         "screen_top": gmw.monitoringTube.at[tube_nr, "screenTopPosition"],
         "screen_bottom": gmw.monitoringTube.at[tube_nr, "screenBottomPosition"],
-        "metadata_available": True,
     }
     return meta
 
 
-def get_metadata_from_gmw_hpd(bro_id, tube_nr):
+def get_metadata_from_gmw_hpd(bro_id, tube_nr, crs):
     """get selection of metadata for a groundwater monitoring well using the
     hydropandas engine.
 
@@ -691,6 +731,9 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr):
         bro id of groundwater monitoring well e.g. 'GMW000000036287'.
     tube_nr : int
         tube number you want metadata for.
+    crs : pyproj.CRS
+        coordinate reference system to which the coordinates should be
+        transformed.
 
     Raises
     ------
@@ -716,7 +759,7 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr):
 
     gmw = _get_gmw_from_bro_id(bro_id)
 
-    meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO"}
+    meta = {"location": bro_id, "tube_nr": tube_nr, "source": "BRO", "crs": crs}
 
     # x and y
     xy_elem = gmw.find("dsgmw:deliveredLocation//gmwcommon:location//gml:pos", ns)
@@ -726,12 +769,8 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr):
     srsname = gmw.find("dsgmw:deliveredLocation//gmwcommon:location", ns).attrib[
         "srsName"
     ]
-    epsg_gwm = int(srsname.split(":")[-1])
-    proj_from = Proj(f"EPSG:{epsg_gwm}")
-    proj_to = Proj(EPSG_28992)
-    transformer = Transformer.from_proj(proj_from, proj_to)
+    transformer = get_transformer28992(pyproj.CRS(srsname), crs)
     xy = transformer.transform(xy[0], xy[1])
-
     meta["x"], meta["y"] = xy
 
     # ground_level
@@ -768,12 +807,10 @@ def get_metadata_from_gmw_hpd(bro_id, tube_nr):
     if okf.attrib["uom"] == "m":
         meta["screen_bottom"] = float(okf.text)
 
-    meta["metadata_available"] = True
-
     return meta
 
 
-def get_metadata_from_gmw(bro_id, tube_nr, engine="hydropandas"):
+def get_metadata_from_gmw(bro_id, tube_nr, crs, engine="hydropandas"):
     """get selection of metadata for a groundwater monitoring well.
     coordinates, ground_level, tube_top and tube screen
 
@@ -783,6 +820,9 @@ def get_metadata_from_gmw(bro_id, tube_nr, engine="hydropandas"):
         bro id of groundwater monitoring well e.g. 'GMW000000036287'.
     tube_nr : int
         tube number you want metadata for.
+    crs : pyproj.CRS
+        coordinate reference system to which the coordinates should be
+        transformed.
     engine : str, optional
         Select how data from the bro-database is obtained, options are 'hydropandas' or
         'brodata' The default is 'hydropandas'.
@@ -807,7 +847,7 @@ def get_metadata_from_gmw(bro_id, tube_nr, engine="hydropandas"):
         _check_tube_number(bro_id, tube_nr, gmw.monitoringTube.index)
         meta = _brodata_gmw_to_meta(gmw, tube_nr)
     elif engine == "hydropandas":
-        meta = get_metadata_from_gmw_hpd(bro_id, tube_nr)
+        meta = get_metadata_from_gmw_hpd(bro_id, tube_nr, crs)
     else:
         raise ValueError(f"invalid engine selected {engine=}")
 
@@ -829,7 +869,7 @@ def get_obs_list_from_extent(
     tmax=None,
     only_metadata=False,
     keep_all_obs=True,
-    epsg=28992,
+    crs=28992,
     ignore_max_obs=False,
     engine="hydropandas",
 ):
@@ -850,8 +890,10 @@ def get_obs_list_from_extent(
     only_metadata : bool, optional
         if True download only metadata, significantly faster. The default
         is False.
-    epsg : int, optional
-        epsg code of the extent. The default is 28992 (RD).
+    crs : str, int, pyproj.CRS or None, optional
+        The coordinate reference system of the extent and the observations, if it
+        differs from the crs in BRO the coordinates are transformed, by default
+        EPSG: 28992.
     ignore_max_obs : bool, optional
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
@@ -913,7 +955,6 @@ def get_obs_list_from_extent(
                 "y": gdf.geometry[index].y,
                 "location": index[0],
                 "tube_nr": index[1],
-                "metadata_available": True,
             }
             if engine == "brodata_gm":
                 kwargs["screen_top"] = gdf.at[index, "screen_top_position"]
@@ -932,7 +973,7 @@ def get_obs_list_from_extent(
         return obs_list
 
     elif engine == "hydropandas":
-        url = "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches?"
+        url = BRO_GMW_SEARCH_URL
 
         data = {}
         if tmin is None or tmax is None:
@@ -945,20 +986,19 @@ def get_obs_list_from_extent(
                 data["registrationPeriod"]["endDate"] = endDate
 
         data["area"] = {}
-        if epsg == 4326:
+        if pyproj.CRS(crs) == pyproj.CRS(4326):
             data["area"]["boundingBox"] = {
                 "lowerCorner": {"lat": extent[2], "lon": extent[0]},
                 "upperCorner": {"lat": extent[3], "lon": extent[1]},
             }
         else:
-            transformer = Transformer.from_crs(epsg, 4326)
-            if extent is not None:
-                lat1, lon1 = transformer.transform(extent[0], extent[2])
-                lat2, lon2 = transformer.transform(extent[1], extent[3])
-                data["area"]["boundingBox"] = {
-                    "lowerCorner": {"lat": lat1, "lon": lon1},
-                    "upperCorner": {"lat": lat2, "lon": lon2},
-                }
+            transformer = get_transformer28992(pyproj.CRS(crs), 4326)
+            lon1, lat1 = transformer.transform(extent[0], extent[2])
+            lon2, lat2 = transformer.transform(extent[1], extent[3])
+            data["area"]["boundingBox"] = {
+                "lowerCorner": {"lat": lat1, "lon": lon1},
+                "upperCorner": {"lat": lat2, "lon": lon2},
+            }
         req = requests.post(url, json=data)
         if req.status_code > 200:
             logger.error(
@@ -1004,6 +1044,7 @@ def get_obs_list_from_extent(
                     tube_nr=tube_nr,
                     tmin=tmin,
                     tmax=tmax,
+                    crs=crs,
                     only_metadata=only_metadata,
                 )
                 if o.empty:

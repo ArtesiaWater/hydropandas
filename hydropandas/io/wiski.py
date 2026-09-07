@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -37,6 +37,8 @@ def read_wiski_file(
     translate_dic=None,
     tz_localize=True,
     unit="",
+    parse_dates=None,
+    dayfirst=False,
     **kwargs,
 ):
     """
@@ -44,7 +46,7 @@ def read_wiski_file(
 
     Parameters:
     -----------
-    path : str
+    path : str or pathlib.Path
         The path of the file to be read.
     sep : str, optional (default=";")
         The delimiter used to separate fields in the file.
@@ -57,6 +59,12 @@ def read_wiski_file(
         Whether to read the time series data from the file.
     translate_dic : dict, optional (default=None)
         A dictionary mapping header field names to the desired output names.
+    parse_dates : list of int, optional (default=None)
+        A list of column indices to parse as dates. If None, no columns will be
+        parsed as dates.
+    dayfirst : bool, optional (default=False)
+        Whether to interpret the first value in a date as the day (True) or the
+        month (False).
     tz_localize : bool, optional (default=True)
         Whether to localize the datetime index to the machine's timezone.
     unit : str, optional (default="")
@@ -72,7 +80,7 @@ def read_wiski_file(
     metadata : dict
         A dictionary containing metadata about the data in the file.
     """
-    logger.info(f"reading -> {os.path.split(path)[-1]}")
+    logger.info(f"reading -> {Path(path).name}")
 
     if translate_dic is None:
         translate_dic = {}
@@ -87,7 +95,9 @@ def read_wiski_file(
     with open(path, "r") as f:
         if header_sep is None:
             line, header = _read_wiski_header(
-                f, end_header_str=end_header_str, header_identifier=header_identifier
+                f,
+                end_header_str=end_header_str,
+                header_identifier=header_identifier
             )
         else:
             line, header = _read_wiski_header(
@@ -123,8 +133,17 @@ def read_wiski_file(
                 **kwargs,
             )
 
-            if tz_localize:
-                data.index = data.index.tz_localize(None)
+            if parse_dates is not None:
+                if len(parse_dates) == 1:
+                    col = data.columns[parse_dates[0]]
+                    data.index = pd.to_datetime(data.pop(col), dayfirst=dayfirst)
+                elif len(parse_dates) == 2:
+                    col1, col2 = data.columns[parse_dates[0]], data.columns[parse_dates[1]]
+                    data.index = pd.to_datetime(data.pop(col1) + ' ' + data.pop(col2),
+                                                dayfirst=dayfirst)
+
+                if tz_localize:
+                    data.index = data.index.tz_localize(None)
 
             # convert Value to float
             col = [icol for icol in data.columns if icol.lower().startswith("value")][0]
@@ -169,14 +188,14 @@ def read_wiski_dir(
 
     Parameters
     ----------
-    dirname : str
+    dirname : str or pathlib.Path
         The path of the directory containing the WISKI CSV files.
     ObsClass : object, optional
         The observation class to use for creating observation objects. Default
         is None.
     suffix : str, optional
         The file extension of the WISKI CSV files. Default is ".csv".
-    unpackdir : str, optional
+    unpackdir : str or pathlib.Path, optional
         The directory to which the files should be unpacked. Default is None.
     force_unpack : bool, optional
         If True, forces the files to be unpacked even if they are already in the
@@ -185,7 +204,7 @@ def read_wiski_dir(
         If True, preserves the original modification times of the files when
         unpacking them. Default is False.
     keep_all_obs : bool, optional
-        If True, keeps all observation objects even if they have no metadata
+        If True, keeps all observation objects even if they have no measurements
         available. Default is True.
     **kwargs
         Additional keyword arguments to pass to the `from_wiski` method of the
@@ -213,16 +232,16 @@ def read_wiski_dir(
 
     if not unzip_fnames:
         raise FileNotFoundError(
-            f"no files were found in '{os.path.join(dirname)}' that end with '{suffix}'"
+            f"no files were found in '{Path(dirname)}' that end with '{suffix}'"
         )
 
     # gather all obs in list
     obs_list = []
     for i, csv in enumerate(unzip_fnames):
         logger.info(f"reading {i + 1}/{len(unzip_fnames)} -> {csv}")
-        obs = ObsClass.from_wiski(os.path.join(dirname, csv), **kwargs)
+        obs = ObsClass.from_wiski(Path(dirname) / csv, **kwargs)
 
-        if obs.metadata_available or keep_all_obs:
+        if (not obs.empty) or keep_all_obs:
             obs_list.append(obs)
         else:
             logger.info(f"not added to collection -> {csv}")

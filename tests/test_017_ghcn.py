@@ -1,16 +1,15 @@
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 import hydropandas as hpd
-from hydropandas.io import ghcn
 
 
 @pytest.mark.slow
 def test_read_ghcn_extent_prcp_rd():
     oc = hpd.read_ghcn(
         extent=[100000, 120000, 450000, 470000],
-        epsg=28992,
+        crs=28992,
         elements="PRCP",
         tmin="2020",
         tmax="2021",

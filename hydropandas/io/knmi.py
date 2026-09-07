@@ -22,14 +22,16 @@ import datetime as dt
 import logging
 import os
 import warnings
+from collections.abc import Iterable
 from functools import lru_cache
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
 
 logger = logging.getLogger(__name__)
@@ -41,6 +43,11 @@ URL_STATIONS = "https://klimaatscenarios-data.knmi.nl/api/v1/stations"
 URL_KNMI_TRANSFORMED_SERIES = (
     "https://klimaatscenarios-data.knmi.nl/api/v1/climate-series-data.zip"
 )
+URL_CDN_DAILY_PREC = (
+    "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
+    "gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
+)
+URL_CDN_DAILY_METEO = "https://cdn.knmi.nl/knmi/map/page/klimatologie/gegevens/daggegevens/etmgeg_{stn}.zip"
 
 KNMI_CLIMATE_YEARS = Literal["2033", "2050", "2100", "2150"]
 KNMI_CLIMATE_SCENARIOS = Literal["Ld", "Ln", "Md", "Mn", "Hd", "Hn"]
@@ -61,7 +68,7 @@ def get_knmi_obs(
     ----------
     stn : int, str or None, optional
         measurement station e.g. 829. The default is None.
-    fname : str, path object, file-like object or None, optional
+    fname : str, pathlib.Path, file-like object or None, optional
         filename of a knmi file. The default is None.
     xy : list, tuple or None, optional
         RD coördinates of a location in the Netherlands. The station nearest
@@ -188,7 +195,7 @@ def get_knmi_timeseries_fname(
 
     Parameters
     ----------
-    fname : str
+    fname : str or pathlib.Path
         filename of the knmi file.
     meteo_var : str
         observation type e.g. "RH" or "EV24". See list with all options in the
@@ -228,7 +235,7 @@ def get_timeseries_from_file(
 
     Parameters
     ----------
-    fname : str
+    fname : str or pathlib.Path
         filename of the knmi file.
     meteo_var : str
         observation type e.g. "RH" or "EV24". See list with all options in the
@@ -306,6 +313,7 @@ def get_timeseries_from_file(
             "location": stn_name,
             "source": "KNMI",
             "filename": fname,
+            "crs": pyproj.CRS(28992),
         }
     )
 
@@ -537,6 +545,7 @@ def get_timeseries_stn(
                 "name": f"{meteo_var}_{stn_name}_{stn}",
                 "location": stn_name,
                 "source": "KNMI",
+                "crs": pyproj.CRS(28992),
             }
         )
         meta.update(variables)
@@ -565,12 +574,10 @@ def get_stations(
     pandas DataFrame with stations, names and coordinates (Lat/Lon & RD)
     """
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = Path(__file__).resolve().parent
 
-    mstations = pd.read_json(os.path.join(dir_path, "../data/knmi_meteostation.json"))
-    pstations = pd.read_json(
-        os.path.join(dir_path, "../data/knmi_neerslagstation.json")
-    )
+    mstations = pd.read_json(dir_path / "../data/knmi_meteostation.json")
+    pstations = pd.read_json(dir_path / "../data/knmi_neerslagstation.json")
 
     stations = pd.concat([mstations, pstations], axis=0)
     stations = stations.where(~stations.isna(), False)
@@ -745,6 +752,7 @@ def fill_missing_measurements(
             "name": f"{meteo_var}_{stn_name}_{stn}",
             "location": stn_name,
             "source": "KNMI",
+            "crs": pyproj.CRS(28992),
         }
     )
 
@@ -1193,7 +1201,7 @@ def request_url(url: str, fname=None) -> StringIO:
     ----------
     stn : int
         station number.
-    fname : str or None, optional
+    fname : str, pathlib.Path or None, optional
         filename to save the data to, only used if not None. The default is None.
 
     Returns
@@ -1282,10 +1290,7 @@ def get_daily_rainfall_url(
         additional information about the variables
     """
     stn = f"{stn:03d}"  # make sure there are leading zeros
-    url = (
-        "https://cdn.knmi.nl/knmi/map/page/klimatologie/"
-        f"gegevens/monv_reeksen/neerslaggeg_{stn_name}_{stn}.zip"
-    )
+    url = URL_CDN_DAILY_PREC.format(stn_name=stn_name, stn=stn)
 
     strio = request_url(url)
     return parse_data(strio)
@@ -1391,7 +1396,7 @@ def request_api(url: str, params: dict[str, str], fname=None) -> StringIO:
         URL to parse the request to
     params : Dict[str, str]
         Dictionary with parameters that are parsed to the request get
-    fname : str or None, optional
+    fname : str, pathlib.Path or None, optional
         filename to save the data to only used if not None, by default None
 
     Returns
@@ -1542,10 +1547,7 @@ def get_daily_meteo_url(stn: int) -> tuple[pd.DataFrame, dict[str, Any]]:
     meta : dictionary
         additional information about the variables
     """
-    url = (
-        "https://cdn.knmi.nl/knmi/map/page/klimatologie"
-        f"/gegevens/daggegevens/etmgeg_{stn}.zip"
-    )
+    url = URL_CDN_DAILY_METEO.format(stn=stn)
 
     strio = request_url(url)
     return parse_data(strio)
@@ -1688,11 +1690,11 @@ def interpret_knmi_file(
         stn = unique_stn[0]
         if add_day or add_hour:
             if add_day and add_hour:
-                timedelta = pd.Timedelta(1, "d") + pd.Timedelta(1, "h")
+                timedelta = pd.Timedelta(1, "D") + pd.Timedelta(1, "h")
             elif add_hour:
                 timedelta = pd.Timedelta(1, "h")
             else:
-                timedelta = pd.Timedelta(1, "d")
+                timedelta = pd.Timedelta(1, "D")
 
             df = df.copy()
             df.index = df.index + timedelta
@@ -1950,7 +1952,7 @@ def get_n_nearest_stations_xy(
     Parameters
     ----------
     xy : list, tuple or numpy.array of int or float
-        sinlge pair of xy coordinates. e.g. (150_000., 400_000.)
+        single pair of xy coordinates. e.g. (150_000., 400_000.)
     meteo_var : str
         measurement variable e.g. 'RH' or 'EV24'
     start : str, datetime or None, optional
@@ -2286,6 +2288,7 @@ def get_evaporation(
     meta["name"] = f"{meteo_var}_{stn_name}_{stn}"
     meta["location"] = stn_name
     meta["unit"] = "m"
+    meta["crs"] = pyproj.CRS(28992)
 
     return et, meta
 
@@ -2547,7 +2550,7 @@ def get_knmi_scenarios_data(
     dfs = {}
     for name in zipped.namelist():
         if name.endswith(".csv"):
-            base = os.path.splitext(name)[0]
+            base = Path(name).stem
             base_ext = base.split("_")[-1]
             df = pd.read_csv(
                 zipped.open(name),
@@ -2690,6 +2693,7 @@ def get_knmi_scenarios_obs_list(
                 name=f"{variable}_{stn_num}_{location}_{scenario}",
                 unit=units.get(variable, ""),
                 source=f"KNMI-Climate-Scenario-{scenario}",
+                crs=pyproj.CRS(28992),
                 x=stations.loc[stn_num, "x"],
                 y=stations.loc[stn_num, "y"],
                 location=location,

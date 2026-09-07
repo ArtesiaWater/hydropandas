@@ -122,16 +122,24 @@ Data Sources and Import Methods
 HydroPandas supports numerous data sources with specialized import methods:
 
 **Dutch Data Sources**
+
 * **BRO (Basisregistratie Ondergrond)**: ``read_bro()``
 * **DINO Loket**: ``read_dino()``  
 * **KNMI**: ``read_knmi()``
-* **Waterinfo (RWS)**: ``read_waterinfo()``
 * **Lizard**: ``read_lizard()``
+* **Matroos**: ``read_matroos()``
+* **Waterinfo (RWS)**: ``read_waterinfo()``
 
-**International Sources**  
-* **Water Connect (Australia)**: ``read_waterconnect()``
+
+**International Sources**
+
+* **Waterconnect (Australia)**: ``read_waterconnect()``
+* **GHCN (Global Historical Climatology Network)**: ``read_ghcn()``
+* **GGMN (Global Groundwater Monitoring Network)**: ``read_ggmn()``
+
 
 **File Formats**
+
 * **CSV files**: ``from_csv()``
 * **Excel files**: ``read_excel()``
 * **JSON files**: ``from_json()``
@@ -139,6 +147,7 @@ HydroPandas supports numerous data sources with specialized import methods:
 * **WISKI exports**: ``read_wiski()``
 
 **Models**
+
 * **MODFLOW**: ``read_modflow()``
 * **IMOD**: ``read_imod()``
 

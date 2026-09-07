@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import numpy as np
 from pandas import DataFrame, Series, Timedelta, Timestamp
@@ -44,13 +44,13 @@ def matlab2datetime(tindex):
     return day + dayfrac
 
 
-def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
+def read_file(path, ObsClass, load_oseries=True, load_stresses=True, crs=28992):
     """
     Read data from a Menyanthes file and create observation objects.
 
     Parameters
     ----------
-    path : str
+    path : str or pathlib.Path
         Full path of the Menyanthes file (.men) to read.
     ObsClass : GroundwaterObs or WaterlvlObs
         Class of observation object to create.
@@ -59,6 +59,8 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
         True.
     load_stresses : bool, optional
         Flag indicating whether to load stresses or not, by default True.
+    crs : str, int or pyproj.CRS, optional
+        The coordinate reference system of the observations. By default, EPSG:28992.
 
     Returns
     -------
@@ -84,10 +86,10 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
             "x",
             "y",
             "source",
+            "crs",
             "unit",
             "location",
             "tube_nr",
-            "metadata_available",
             "ground_level",
             "tube_top",
             "screen_top",
@@ -96,18 +98,18 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
         unit = "m NAP"
     elif ObsClass == WaterlvlObs:
         _rename_dic = {"xcoord": "x", "ycoord": "y", "measpointlev": "tube_top"}
-        _keys_o = ["name", "x", "y", "source", "unit", "location"]
+        _keys_o = ["name", "x", "y", "crs", "source", "unit", "location"]
         unit = "m NAP"
     else:
         _rename_dic = {
             "xcoord": "x",
             "ycoord": "y",
         }
-        _keys_o = ["name", "x", "y", "source", "unit"]
+        _keys_o = ["name", "x", "y", "crs", "source", "unit"]
         unit = ""
 
     # Check if file is present
-    if not (os.path.isfile(path)):
+    if not Path(path).is_file():
         print("Could not find file ", path)
 
     mat = loadmat(path, struct_as_record=False, squeeze_me=True, chars_as_strings=True)
@@ -119,8 +121,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
         locations = d_h.keys()
         for location in locations:
             metadata = d_h[location]
-            metadata["projection"] = "epsg:28992"
-            metadata["metadata_available"] = True
+            metadata["crs"] = crs
             metadata["source"] = "Menyanthes"
             metadata["unit"] = unit
 
@@ -139,8 +140,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
         stresses = d_in.keys()
         for stress in stresses:
             metadata = d_in[stress]
-            metadata["projection"] = "epsg:28992"
-            metadata["metadata_available"] = True
+            metadata["crs"] = crs
             metadata["source"] = "Menyanthes"
             metadata["unit"] = unit
             s = metadata.pop("values")
@@ -154,6 +154,7 @@ def read_file(path, ObsClass, load_oseries=True, load_stresses=True):
                 name=metadata["name"],
                 x=metadata["x"],
                 y=metadata["y"],
+                crs=metadata["crs"],
                 source=metadata["source"],
                 unit=metadata["unit"],
                 filename=path,

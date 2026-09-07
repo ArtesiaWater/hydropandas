@@ -7,15 +7,22 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
 from platformdirs import user_data_dir
 from shapely.geometry import box
 from tqdm import tqdm
 
+from ..util import get_transformer28992
+
 logger = logging.getLogger(__name__)
 
 DH_zip_url = (
     "https://www.waterconnect.sa.gov.au/Content/Downloads/DEW/WATER_Drillholes_shp.zip"
+)
+WATERLEVEL_DOWNLOAD_URL = (
+    "https://www.waterconnect.sa.gov.au/_layouts/15/dfw.sharepoint.wdd/"
+    "WDDDMS.ashx/GetWaterLevelDownload?bulkOutput=CSV"
 )
 
 
@@ -28,6 +35,7 @@ def get_obs_list_from_extent(
     keep_all_obs=False,
     location_gdf=None,
     update=False,
+    crs=7844,
     **kwargs,
 ):
     """Get observations within a specific extent and optionally for a specific set of
@@ -55,6 +63,9 @@ def get_obs_list_from_extent(
     update : bool, optional
         if True new locations are downloaded and stored locally (slow) otherwise a
         cached version of the locations is used. By default False
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent and observations. By default,
+        EPSG:7844.
     **kwargs
         additional keyword arguments are passed to the ObsClass.from_waterconnect()
         method
@@ -77,10 +88,12 @@ def get_obs_list_from_extent(
         location_gdf = get_locations_gdf(update=update)
 
     if extent is not None:
-        location_gdf = get_locations_within_extent(location_gdf, extent)
+        location_gdf = get_locations_within_extent(location_gdf, extent, crs)
 
     if location_gdf.empty:
-        msg = f"No water connect measurements found within extent {extent}"
+        msg = (
+            f"No water connect measurements found within extent {extent} with crs {crs}"
+        )
         logger.warning(msg)
         return []
 
@@ -97,6 +110,7 @@ def get_obs_list_from_extent(
             tmin=tmin,
             tmax=tmax,
             only_metadata=only_metadata,
+            crs=crs,
             **kwargs,
         )
         if o.empty and not keep_all_obs:
@@ -207,8 +221,8 @@ def get_locations_gdf(fdir=None, keep_cols="all", update=False):
     return gdf_sel
 
 
-def get_locations_within_extent(gdf, extent=None):
-    """get drillhole locations within an extent
+def get_locations_within_extent(gdf, extent=None, crs=7844):
+    """get drillhole locations within an extent.
 
     Parameters
     ----------
@@ -216,6 +230,8 @@ def get_locations_within_extent(gdf, extent=None):
         all drillhole locations in Southern Australia
     extent : list, tuple, np.array, optional
         the extent, by default None
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the extent. By default, EPSG:7844.
 
     Returns
     -------
@@ -225,6 +241,12 @@ def get_locations_within_extent(gdf, extent=None):
 
     if extent is None:
         return gdf
+
+    if pyproj.CRS(crs) != gdf.crs:
+        # convert extent to the same CRS as the gdf
+        transformer = get_transformer28992(pyproj.CRS(crs), gdf.crs)
+        extent[0], extent[2] = transformer.transform(extent[0], extent[2])
+        extent[1], extent[3] = transformer.transform(extent[1], extent[3])
 
     pol_extent = box(*tuple(np.asarray(extent)[[0, 2, 1, 3]]))
     gdf_extent = gdf.loc[gdf.within(pol_extent)]
@@ -240,6 +262,7 @@ def get_waterconnect_obs(
     verify=True,
     pumping=True,
     anomalous=True,
+    crs=7844,
     **kwargs,
 ):
     """get waterconnect observations using the API
@@ -262,6 +285,8 @@ def get_waterconnect_obs(
         return observations from pumping wells
     anomalous : bool, optional
         return anomalous observations
+    crs : str, int or pyproj.CRS, optional
+        coordinate reference system of the observations. By default, EPSG:7844.
     **kwargs
         kwargs are passed to 'get_location_gdf'
 
@@ -306,10 +331,18 @@ def get_waterconnect_obs(
                 source = "water connect"
             unit = "m AHD"
 
+    # convert coordinates to the specified CRS
+    if pyproj.CRS(crs) != pyproj.CRS(7844):
+        transformer = get_transformer28992(pyproj.CRS(7844), pyproj.CRS(crs))
+        x, y = transformer.transform(meta_series.pop("LON"), meta_series.pop("LAT"))
+    else:
+        x, y = meta_series.pop("LON"), meta_series.pop("LAT")
+
     meta = {
         "name": dh_no,
-        "x": meta_series.pop("LON"),
-        "y": meta_series.pop("LAT"),
+        "x": x,
+        "y": y,
+        "crs": crs,
         "unit": unit,
         "location": meta_series.pop("UNIT_NO"),
         "ground_level": meta_series.pop("GRND_ELEV"),
@@ -383,7 +416,7 @@ def request_api(
     StringIO
 
     """
-    url = "https://www.waterconnect.sa.gov.au/_layouts/15/dfw.sharepoint.wdd/WDDDMS.ashx/GetWaterLevelDownload?bulkOutput=CSV"
+    url = WATERLEVEL_DOWNLOAD_URL
     json_data = {"DHNOs": [dh_no], "Pumping": pumping, "Anomalous": anomalous}
     r = requests.post(
         url, verify=verify, data={"exportdata": json.dumps(json_data)}, timeout=60

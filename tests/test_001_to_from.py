@@ -174,6 +174,7 @@ def obscollection_fews_lowmemory():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
     return oc
 
@@ -184,6 +185,7 @@ def test_obscollection_fews_highmemory():
         to_mnap=False,
         remove_nan=False,
         low_memory=False,
+        crs=28992,
     )
 
 
@@ -195,6 +197,7 @@ def test_obscollection_fews_selection():
     hpd.read_fews(
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=("MPN-N-2",),
+        crs=28992,
     )
 
 
@@ -209,8 +212,7 @@ def test_observation_wiskicsv_gw():
         sep=r"\s+",
         header_sep=":",
         header_identifier=":",
-        parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
+        parse_dates=[0, 1],
         dayfirst=True,
         translate_dic={"name": "Station Number", "x": "GlobalX", "y": "GlobalY"},
     )
@@ -225,8 +227,7 @@ def test_obscollection_wiskizip_gw():
         header_sep=":",
         dayfirst=True,
         header_identifier=":",
-        parse_dates={"datetime": [0, 1]},
-        index_col=["datetime"],
+        parse_dates=[0, 1],
     )
 
 
@@ -234,7 +235,7 @@ def test_obscollection_wiskizip_gw():
 def test_to_pastastore():
     dino_gw = obscollection_dinozip_gw()
     # drop duplicate
-    dino_gw.drop("B22D0155-001", inplace=True)
+    dino_gw.drop(["B22D0155-001", "B02H0092-001", "B02H1007-001"], inplace=True)
     pstore = dino_gw.to_pastastore()
     # export to zip for read test
     pstore.to_zip("test_pastastore.zip")
@@ -256,6 +257,7 @@ def test_to_excel():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
 
     oc.to_excel("tests/data/excel/test.xlsx")
@@ -273,6 +275,7 @@ def test_to_csv():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
 
     oc.to_csv("tests/data/csv/test")
@@ -291,6 +294,7 @@ def test_to_json():
         fewsdir / "WaalenBurg_201810-20190215_prod.zip",
         locations=None,
         low_memory=True,
+        crs=28992,
     )
 
     oc.to_json("tests/data/test.json")
@@ -439,6 +443,7 @@ def test_waterinfo_ddlpy():
         proces_type=proces_type,
         tmin=tmin,
         tmax=tmax,
+        crs=28992,
     )
 
 
