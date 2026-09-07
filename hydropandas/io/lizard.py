@@ -27,10 +27,6 @@ from ..util import get_transformer28992
 
 logger = logging.getLogger(__name__)
 
-# TODO:
-# - check transformation from EPSG:28992 to WGS84 (elsewhere in hydropandas we use
-#   another definition for EPSG:28992 that is provided in util.py)
-
 # Generic Lizard API endpoint (with 'organisation' as placeholder, following the Lizard documentation
 lizard_api_endpoint = "https://{organisation}.lizard.net/api/v4/"
 
