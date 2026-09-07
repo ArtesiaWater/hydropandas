@@ -14,7 +14,6 @@ knmidir = Path(__file__).parent / "data" / "2023-KNMI-test"
 
 
 # compare api calls with pre-downloaded files
-@pytest.mark.xfail
 def test_knmi_meteo_station_hourly_api_values():
     stn = 260
     start = pd.Timestamp("2000-01-01")
