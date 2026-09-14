@@ -37,6 +37,7 @@ def read_bro(
     only_metadata=False,
     keep_all_obs=True,
     crs=28992,
+    epsg=None,
     ignore_max_obs=False,
     engine="hydropandas",
 ):
@@ -65,6 +66,8 @@ def read_bro(
         The coordinate reference system of the extent and the observations, if it
         differs from the crs in BRO the coordinates are transformed, by default
         EPSG: 28992.
+    epsg : int or None, optional
+        Deprecated, use crs instead.
     ignore_max_obs : bool, optional
         by default you get a prompt if you want to download over a 1000
         observations at once. if ignore_max_obs is True you won't get the
@@ -88,6 +91,7 @@ def read_bro(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         crs=crs,
+        epsg=epsg,
         ignore_max_obs=ignore_max_obs,
         engine=engine,
     )
@@ -379,6 +383,7 @@ def read_ggmn(
     only_metadata=False,
     keep_all_obs=True,
     crs=4326,
+    epsg=None,
     max_locations=200,
     max_pages=20,
     timeout=120,
@@ -410,6 +415,8 @@ def read_ggmn(
     crs : str, int or pyproj.CRS, optional
         The coordinate reference system of the extent, this crs is also
         used for the observations. The default is 4326 (WGS84).
+    epsg : int or None, optional
+        Deprecated, use crs instead. The default is None.
     max_locations : int, optional
         maximum number of locations to download, by default 200
     max_pages : int, optional
@@ -432,6 +439,7 @@ def read_ggmn(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         crs=crs,
+        epsg=epsg,
         max_locations=max_locations,
         max_pages=max_pages,
         timeout=timeout,
@@ -449,6 +457,7 @@ def read_ghcn(
     only_metadata=False,
     keep_all_obs=True,
     crs=4326,
+    epsg=None,
 ):
     """Get GHCN (Global Historical Climatology Network) observations within an extent.
 
@@ -480,6 +489,8 @@ def read_ghcn(
     crs : str, int or pyproj.CRS, optional
         The coordinate reference system of the extent, this crs is also
         used for the observations. The default is 4326 (WGS84).
+    epsg : int or None, optional
+        Deprecated, use crs instead. The default is None.
 
     Returns
     -------
@@ -496,6 +507,7 @@ def read_ghcn(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         crs=crs,
+        epsg=epsg,
     )
     return oc
 
@@ -1238,6 +1250,7 @@ def read_waterinfo(
     only_metadata=False,
     keep_all_obs=False,
     crs=28992,
+    epsg=None,
     progressbar=True,
     location_gdf=None,
     **kwargs,
@@ -1277,6 +1290,8 @@ def read_waterinfo(
         is True.
     crs : str, int or pyproj.CRS, optional
         coordinate reference system of the extent and observations. The default is 28992 (RD).
+    epsg : int or None, optional
+        Deprecated, use crs instead. The default is None.
     progressbar : bool, optional
         show progressbar, by default True
     location_gdf : GeoDataFrame, optional
@@ -1304,6 +1319,7 @@ def read_waterinfo(
         only_metadata=only_metadata,
         keep_all_obs=keep_all_obs,
         crs=crs,
+        epsg=epsg,
         progressbar=progressbar,
         location_gdf=location_gdf,
         **kwargs,
@@ -1879,6 +1895,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=True,
         crs=28992,
+        epsg=None,
         ignore_max_obs=False,
         engine="hydropandas",
     ):
@@ -1908,6 +1925,8 @@ class ObsCollection(pd.DataFrame):
             The coordinate reference system of the extent and the observations, if it
             differs from the crs in BRO the coordinates are transformed, by default
             EPSG: 28992.
+        epsg : int or None, optional
+            Deprecated, use crs instead. The default is None.
         ignore_max_obs : bool, optional
             by default you get a prompt if you want to download over a 1000
             observations at once. if ignore_max_obs is True you won't get the
@@ -1931,6 +1950,13 @@ class ObsCollection(pd.DataFrame):
         """
 
         from .io.bro import get_obs_list_from_extent, get_obs_list_from_gmn
+
+        if epsg is not None:
+            warnings.warn(
+                "The 'epsg' parameter is deprecated, use 'crs' instead.",
+                DeprecationWarning,
+            )
+            crs = epsg
 
         if bro_id is None and (extent is not None):
             obs_list = get_obs_list_from_extent(
@@ -2497,6 +2523,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=True,
         crs=4326,
+        epsg=None,
         max_locations=200,
         max_pages=20,
         timeout=120,
@@ -2528,6 +2555,8 @@ class ObsCollection(pd.DataFrame):
         crs : str, int or pyproj.CRS, optional
             The coordinate reference system of the extent, this crs is also
             used for the observations. The default is 4326 (WGS84).
+        epsg : int or None, optional
+            Deprecated, use crs instead. The default is None.
         max_locations : int, optional
             maximum number of locations to download, by default 200
         max_pages : int, optional
@@ -2543,6 +2572,13 @@ class ObsCollection(pd.DataFrame):
         from .io.ggmn import get_obs_list_from_extent
 
         meta = {"name": name, "type": ObsClass}
+
+        if epsg is not None:
+            warnings.warn(
+                "The 'epsg' parameter is deprecated, use 'crs' instead.",
+                DeprecationWarning,
+            )
+            crs = epsg
 
         obs_list = get_obs_list_from_extent(
             extent,
@@ -2572,6 +2608,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=True,
         crs=4326,
+        epsg=None,
     ):
         """Get GHCN (Global Historical Climatology Network) observations within an extent.
 
@@ -2603,6 +2640,8 @@ class ObsCollection(pd.DataFrame):
         crs : str, int or pyproj.CRS, optional
             The coordinate reference system of the extent, this crs is also
             used for the observations. The default is 4326 (WGS84).
+        epsg : int or None, optional
+            Deprecated, use crs instead. The default is None.
 
         Returns
         -------
@@ -2612,6 +2651,13 @@ class ObsCollection(pd.DataFrame):
         from .io.ghcn import get_obs_list_from_extent
 
         meta = {"name": name, "type": ObsClass}
+
+        if epsg is not None:
+            warnings.warn(
+                "The 'epsg' parameter is deprecated, use 'crs' instead.",
+                DeprecationWarning,
+            )
+            crs = epsg
 
         obs_list = get_obs_list_from_extent(
             extent,
@@ -3195,6 +3241,7 @@ class ObsCollection(pd.DataFrame):
         only_metadata=False,
         keep_all_obs=False,
         crs=28992,
+        epsg=None,
         progressbar=True,
         location_gdf=None,
         **kwargs,
@@ -3234,6 +3281,8 @@ class ObsCollection(pd.DataFrame):
             is True.
         crs : str, int or pyproj.CRS, optional
             coordinate reference system of the extent and observations. The default is 28992 (RD).
+        epsg : int or None, optional
+            Deprecated, use crs instead. The default is None.
         progressbar : bool, optional
             show progressbar, by default True
         location_gdf : GeoDataFrame, optional
@@ -3248,6 +3297,15 @@ class ObsCollection(pd.DataFrame):
         from .io import waterinfo
 
         meta = {"name": name, "type": ObsClass}
+
+        if epsg is not None:
+            import warnings
+
+            warnings.warn(
+                "The 'epsg' parameter is deprecated, use 'crs' instead.",
+                DeprecationWarning,
+            )
+            crs = epsg
 
         if (extent is not None) or (location_gdf is not None):
             obs_list = waterinfo.get_obs_list_from_extent(
