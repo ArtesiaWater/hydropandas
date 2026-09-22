@@ -182,7 +182,7 @@ class CollectionPlots:
             if True interactive plots will be created, if False the iplot_fname
             in the meta ditctionary of the observations is used.
         popup_width : int, optional
-            popup width in pixels, optional.
+            popup width in pixels, default is 300.
         **kwargs :
             will be passed to the interactive_plots method options are:
 
