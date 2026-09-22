@@ -128,7 +128,7 @@ class CollectionPlots:
         col_name_lat=None,  # deprecated argument
         col_name_lon=None,  # deprecated argument
         zoom_start=13,
-        popup_width=620,
+        popup_width=300,
         create_interactive_plots=True,
         **kwargs,
     ):
