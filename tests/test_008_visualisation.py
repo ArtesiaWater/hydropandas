@@ -68,3 +68,21 @@ def test_obscollection_to_imap():
         map_label="locationId",
         map_label_size=10,
     )
+
+
+def test_interactive_map_default_popup_width(monkeypatch):
+    dino_gw = ttf.obscollection_dinozip_gw()
+    dino_gw.geo.set_lat_lon()
+    for obs in dino_gw.obs.values:
+        obs.meta["iplot_fname"] = None
+
+    captured = {}
+
+    def mock_interactive_plots(*args, **kwargs):
+        captured["width"] = kwargs["width"]
+
+    monkeypatch.setattr(dino_gw.plots, "interactive_plots", mock_interactive_plots)
+
+    dino_gw.plots.interactive_map(plot_dir)
+
+    assert captured["width"] == 300
