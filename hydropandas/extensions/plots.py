@@ -237,7 +237,7 @@ class CollectionPlots:
 
         # convert to epsg 3857
         if self._obj.crs != pyproj.CRS(3857):
-            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
+            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(3857))
             xmid, ymid = transformer.transform(xmid, ymid)
 
         # create map if no map is given
