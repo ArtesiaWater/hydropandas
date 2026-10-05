@@ -128,7 +128,7 @@ class CollectionPlots:
         col_name_lat=None,  # deprecated argument
         col_name_lon=None,  # deprecated argument
         zoom_start=13,
-        popup_width=620,
+        popup_width=300,
         create_interactive_plots=True,
         **kwargs,
     ):
@@ -182,7 +182,7 @@ class CollectionPlots:
             if True interactive plots will be created, if False the iplot_fname
             in the meta ditctionary of the observations is used.
         popup_width : int, optional
-            popup width in pixels, optional.
+            popup width in pixels, default is 300.
         **kwargs :
             will be passed to the interactive_plots method options are:
 
@@ -237,7 +237,7 @@ class CollectionPlots:
 
         # convert to epsg 3857
         if self._obj.crs != pyproj.CRS(3857):
-            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
+            transformer = get_transformer28992(self._obj.crs, pyproj.CRS(3857))
             xmid, ymid = transformer.transform(xmid, ymid)
 
         # create map if no map is given
