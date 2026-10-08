@@ -70,6 +70,10 @@ A: Yes, use pandas resampling methods:
     # Annual statistics
     annual_stats = obs.resample('YE').agg(['mean', 'min', 'max', 'std'])
 
+**Q: Which timezone is used for the datasources in Hydropandas?**
+
+A: Dutch datasources such as KNMI are converted to Dutch winter time (UTC + 1).
+
 
 Visualization
 -------------
