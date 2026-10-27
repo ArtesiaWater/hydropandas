@@ -498,7 +498,7 @@ def get_timeseries_uuid(
 
     timeseries_sel = timeseries_sel[~timeseries_sel["time"].isnull()]
 
-    timeseries_sel.set_index("time", inplace=True)
+    timeseries_sel = timeseries_sel.set_index("time")
     timeseries_sel.index.rename("peil_datum_tijd", inplace=True)
 
     logger.info(

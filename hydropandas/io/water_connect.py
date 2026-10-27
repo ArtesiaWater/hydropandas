@@ -212,7 +212,7 @@ def get_locations_gdf(fdir=None, keep_cols="all", update=False):
     gdf_sel = gdf_gda2020[keep_cols]
 
     # set index column
-    gdf_sel.set_index("DHNO", inplace=True)
+    gdf_sel = gdf_sel.set_index("DHNO")
 
     # write to feather
     logger.debug(f"Write Water Connect locations to feather {fname_feather}")

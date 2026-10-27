@@ -532,7 +532,7 @@ def read_waterinfo_file(
     df.index = pd.to_datetime(
         df[index_cols[0]] + " " + df[index_cols[1]], dayfirst=True
     )
-    df.drop(columns=index_cols, inplace=True)
+    df = df.drop(columns=index_cols)
 
     # do some conversions
     df.loc[df[value_col] == 999999999, value_col] = np.nan

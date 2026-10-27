@@ -741,7 +741,7 @@ class Obs(pd.DataFrame):
             if col not in o.columns:
                 o = pd.concat([o, self[[col]]], axis=1)
 
-        o.sort_index(inplace=True)
+        o = o.sort_index()
 
         return o
 

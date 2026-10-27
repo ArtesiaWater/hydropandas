@@ -84,7 +84,7 @@ def _obslist_to_frame(obs_list):
             )
         crs = next(iter(crs), "")
 
-        obs_df.set_index("name", inplace=True)
+        obs_df = obs_df.set_index("name")
         if obs_df.index.duplicated().any():
             logger.warning("multiple observations with the same name")
     else:

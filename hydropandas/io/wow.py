@@ -325,7 +325,7 @@ def get_nearest_station_df(
     """
 
     if ignore is not None:
-        stations = stations.drop(ignore, inplace=False)
+        stations = stations.drop(ignore)
         if stations.empty:
             return None
 
