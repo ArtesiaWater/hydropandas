@@ -19,6 +19,7 @@ requires-python = ">=3.11"
 dependencies = [
         "scipy",
         "pandas",
+        "platformdirs",
         "matplotlib",
         "tqdm",
         "requests",
