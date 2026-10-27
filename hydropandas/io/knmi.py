@@ -1976,7 +1976,7 @@ def get_n_nearest_stations_xy(
     if stations is None:
         stations = get_stations(meteo_var=meteo_var, start=start, end=end)
     if ignore is not None:
-        stations.drop(ignore, inplace=True)
+        stations = stations.drop(ignore)
         if stations.empty:
             return None
 

@@ -66,7 +66,7 @@ def read_solinst_file(
         path,
         xpath="/Body_xle/Data/Log",
     )
-    df.rename(columns={"ch1": colname_ch1, "ch2": colname_ch2}, inplace=True)
+    df = df.rename(columns={"ch1": colname_ch1, "ch2": colname_ch2})
     if "ms" in df.columns:
         df["date_time"] = pd.to_datetime(
             df["Date"] + " " + df["Time"]
@@ -75,9 +75,9 @@ def read_solinst_file(
     else:
         df["date_time"] = pd.to_datetime(df["Date"] + " " + df["Time"])
         drop_cols = ["id", "Date", "Time"]
-    df.set_index("date_time", inplace=True)
+    df = df.set_index("date_time")
 
-    df.drop(columns=drop_cols, inplace=True)
+    df = df.drop(columns=drop_cols)
 
     # parse meta into dict, per group in XLE file
     meta = {}

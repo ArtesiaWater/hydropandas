@@ -1629,7 +1629,7 @@ class ObsCollection(pd.DataFrame):
 
         if att_name == "name":
             # name is the index of the ObsCollection dataframe
-            self.rename(index={oname: value}, inplace=True)
+            self._update_inplace(self.rename(index={oname: value}))
         else:
             self.loc[oname, att_name] = value
         logger.debug(f"set {oname}, {att_name} to {value} in obscollection")
@@ -2246,7 +2246,7 @@ class ObsCollection(pd.DataFrame):
                 "multiple crs values in observations, an ObsCollection can only have one crs value"
             )
         crs = next(iter(crs_set), "")
-        df.drop(columns=["crs"], errors="ignore", inplace=True)
+        df = df.drop(columns=["crs"], errors="ignore")
 
         return cls(df, obs_list=obs_list, crs=crs)
 
@@ -3796,7 +3796,7 @@ class ObsCollection(pd.DataFrame):
 
         # remove obs column
         if "obs" in gdf.columns:
-            gdf.drop(columns="obs", inplace=True)
+            gdf = gdf.drop(columns="obs")
 
         # change dtypes that are not accepted for shapefiles
         for colname, coltype in gdf.dtypes.items():

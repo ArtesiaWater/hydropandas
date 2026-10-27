@@ -261,7 +261,7 @@ def iterparse_pi_xml(
                     [d + " " + t for d, t in zip(df["date"], df["time"])],
                     errors="coerce",
                 )
-                df.drop(columns=["date", "time"], inplace=True)
+                df = df.drop(columns=["date", "time"])
                 if return_events:
                     df["value"] = pd.to_numeric(df["value"], errors="coerce")
                     df["flag"] = pd.to_numeric(df["flag"])
@@ -422,7 +422,7 @@ def read_xml_root(
                 ts["value"] = ts["value"].astype(float)
 
                 if remove_nan:
-                    ts.dropna(subset=["value"], inplace=True)
+                    ts = ts.dropna(subset=["value"])
                     header["unit"] = "m NAP"
 
             o, header = _obs_from_meta(ts, header, translate_dic, ObsClass, crs)
