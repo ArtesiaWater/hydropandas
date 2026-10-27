@@ -1629,7 +1629,7 @@ class ObsCollection(pd.DataFrame):
 
         if att_name == "name":
             # name is the index of the ObsCollection dataframe
-            self._update_inplace(self.rename(index={oname: value}))
+            self.index = self.rename(index={oname: value}).index
         else:
             self.loc[oname, att_name] = value
         logger.debug(f"set {oname}, {att_name} to {value} in obscollection")
