@@ -1517,7 +1517,7 @@ class ObsCollection(pd.DataFrame):
 
     @property
     def crs(self):
-        return self._crs
+        return getattr(self, "_crs", "")
 
     @crs.setter
     def crs(self, value):
