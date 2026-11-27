@@ -267,7 +267,7 @@ class CollectionPlots:
 
             x = self._obj.loc[o.name, "x"]
             y = self._obj.loc[o.name, "y"]
-            if self._obj.crs != pyproj.CRS(4326):
+            if self._obj.crs != pyproj.CRS(4326): 
                 transformer = get_transformer28992(self._obj.crs, pyproj.CRS(4326))
                 x, y = transformer.transform(x, y)
 
